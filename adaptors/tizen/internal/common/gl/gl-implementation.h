@@ -32,6 +32,7 @@
 
 // INTERNAL INCLUDES
 #include <internal/common/gl/gl-extensions.h>
+#include <base/performance-logging/resource-tracking/resource-tracking.h>
 
 namespace Dali
 {
@@ -164,8 +165,14 @@ public:
     glCompileShader(shader);
   }
 
-  void CompressedTexImage2D (GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void* data)
+  void CompressedTexImage2D (GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void* data, GLint id)
   {
+    DALI_RESOURCE_TRACKING( ResourceTrackMessage::UPLOAD_TEXTURE,
+                            data,
+                            width,
+                            height,
+                            id,
+                            imageSize );
     glCompressedTexImage2D(target,level,internalformat,width,height,border,imageSize,data);
   }
 
@@ -226,6 +233,12 @@ public:
 
   void DeleteTextures (GLsizei n, const GLuint* textures)
   {
+    DALI_RESOURCE_TRACKING( ResourceTrackMessage::DELETE_TEXTURE,
+                            NULL,
+                            *textures,
+                            0,
+                            0,
+                            0 );
     glDeleteTextures(n,textures);
   }
 
@@ -584,8 +597,15 @@ public:
     glStencilOpSeparate(face,fail,zfail,zpass);
   }
 
-  void TexImage2D (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void* pixels)
+  void TexImage2D (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void* pixels, GLint id)
   {
+    DALI_RESOURCE_TRACKING( pixels == NULL ? ResourceTrackMessage::CREATE_BUFFER : ResourceTrackMessage::UPLOAD_TEXTURE,
+                            pixels,
+                            width,
+                            height,
+                            id,
+                            width * height * 4 );
+
     glTexImage2D(target,level,internalformat,width,height,border,format,type,pixels);
   }
 
