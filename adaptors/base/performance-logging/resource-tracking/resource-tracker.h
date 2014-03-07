@@ -1,3 +1,6 @@
+#ifndef __DALI_INTERNAL_ADAPTOR_RESOURCE_TRACKER_H__
+#define __DALI_INTERNAL_ADAPTOR_RESOURCE_TRACKER_H__
+
 //
 // Copyright (c) 2014 Samsung Electronics Co., Ltd.
 //
@@ -14,38 +17,34 @@
 // limitations under the License.
 //
 
-// FUNCTION HEADER
-#include "slp-logging.h"
-
 // EXTERNAL INCLUDES
+
 #include <dlog.h>
+
+// INTERNAL INCLUDES
+
+#include <base/performance-logging/resource-tracking/resource-tracking-manager.h>
 
 namespace Dali
 {
 
-namespace SlpPlatform
+namespace Internal
 {
 
-void LogMessage(Dali::Integration::Log::DebugPriority level, std::string& message)
+namespace Adaptor
 {
-  const char* DALI_TAG = "DALI";
-  switch(level)
-  {
-    case Dali::Integration::Log::DebugInfo:
-      LOG(LOG_INFO, DALI_TAG, "%s", message.c_str());
-      break;
-    case Dali::Integration::Log::DebugWarning:
-      LOG(LOG_WARN, DALI_TAG, "%s", message.c_str());
-      break;
-    case Dali::Integration::Log::DebugError:
-      LOG(LOG_ERROR, DALI_TAG, "%s", message.c_str());
-      break;
-    default:
-      LOG(LOG_DEFAULT, DALI_TAG, "%s", message.c_str());
-      break;
-  }
-}
 
-} // namespace SlpPlatform
+/**
+ * @brief Logging function to output tracked resources
+ *
+ * @param rtm pointer to the Resource Tracking Manager
+ */
+void ResourceLogger();
+
+} // namespace Internal
+
+} // namespace Adaptor
 
 } // namespace Dali
+
+#endif

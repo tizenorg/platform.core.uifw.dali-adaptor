@@ -48,7 +48,7 @@ NativeBitmapBuffer::~NativeBitmapBuffer()
   delete mBuffer;
 }
 
-void NativeBitmapBuffer::PrepareTexture()
+void NativeBitmapBuffer::PrepareTexture(int id)
 {
   DALI_ASSERT_ALWAYS( mBuffer );
   GLenum pixelFormat = GL_RGBA;
@@ -63,7 +63,7 @@ void NativeBitmapBuffer::PrepareTexture()
     mLastReadBuffer = buf;
 
     // The active texture has already been set to a sampler and bound.
-    mGlAbstraction->TexImage2D( GL_TEXTURE_2D, 0, pixelFormat, mWidth, mHeight, 0, pixelFormat, pixelDataType, buf );
+    mGlAbstraction->TexImage2D( GL_TEXTURE_2D, 0, pixelFormat, mWidth, mHeight, 0, pixelFormat, pixelDataType, buf, id );
   }
 }
 
