@@ -17,6 +17,9 @@
 // limitations under the License.
 //
 
+// EXTERNAL HEADERS
+#include <dali/integration-api/resource-tracking.h>
+
 namespace boost
 {
 

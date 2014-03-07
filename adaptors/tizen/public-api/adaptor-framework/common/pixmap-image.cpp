@@ -71,7 +71,7 @@ unsigned int PixmapImage::TargetTexture()
   return mImpl->TargetTexture();
 }
 
-void PixmapImage::PrepareTexture()
+void PixmapImage::PrepareTexture(int id)
 {
 
 }

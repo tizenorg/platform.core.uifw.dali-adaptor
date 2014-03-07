@@ -29,6 +29,7 @@
 #include <base/environment-variables.h>
 #include <base/performance-logging/performance-interface-factory.h>
 #include <base/lifecycle-observer.h>
+#include <base/performance-logging/resource-tracking/resource-tracker.h>
 
 #include <internal/common/callback-manager.h>
 #include <internal/common/trigger-event.h>
@@ -91,26 +92,35 @@ Dali::Adaptor* Adaptor::New( RenderSurface *surface, const DeviceLayout& baseLay
 
 void Adaptor::ParseLogOptions()
 {
-  const char* resourceLogOption = std::getenv(DALI_ENV_ENABLE_LOG);
-  unsigned int logOpts = Integration::Log::ParseLogOptions(resourceLogOption);
 
   // get logging options
-  unsigned int logFrameRateFrequency = GetIntegerEnvironmentVariable( DALI_ENV_FPS_TRACKING, 0 ); ;
+  unsigned int logFrameRateFrequency = GetIntegerEnvironmentVariable( DALI_ENV_FPS_TRACKING, 0 );
   unsigned int logupdateStatusFrequency = GetIntegerEnvironmentVariable( DALI_ENV_UPDATE_STATUS_INTERVAL, 0 );
   unsigned int logPerformanceLevel = GetIntegerEnvironmentVariable( DALI_ENV_LOG_PERFORMANCE, 0 );
 
   Dali::Integration::Log::LogFunction  logFunction(Dali::SlpPlatform::LogMessage);
 
-  mLogOptions.SetOptions( logFunction, logOpts, logFrameRateFrequency, logupdateStatusFrequency, logPerformanceLevel );
+  mLogOptions.SetOptions( logFunction, logFrameRateFrequency, logupdateStatusFrequency, logPerformanceLevel );
 
   // all threads here (event, update, and render) will send their logs to SLP Platform's LogMessage handler.
   // Dali::Integration::Log::LogFunction logFunction(Dali::SlpPlatform::LogMessage);
-  if( mLogOptions.IsFilterEnabled(  Debug::LogEventThread ))
-  {
-    mLogOptions.InstallLogFunction();
-  }
 
+  mLogOptions.InstallLogFunction();
+
+  // Install the resource tracking manager, if the environment variable is set!
+  Integration::Log::SetResourceTrackingEnabled( false );
+
+  const char* resourceLogOption = std::getenv( "DALI_ENABLE_LOG" );
+  if ( resourceLogOption )
+  {
+    if (!strcmp(resourceLogOption, "RESOURCE_LOG"))
+    {
+      Dali::Internal::Adaptor::g_ResourceTrackingManager = new ResourceTrackingManager( &ResourceLogger );
+      Integration::Log::SetResourceTrackingEnabled( true );
+    }
+  }
 }
+
 void Adaptor::Initialize()
 {
   ParseLogOptions();
@@ -143,7 +153,6 @@ void Adaptor::Initialize()
   mUpdateRenderController = new UpdateRenderController( *this, mLogOptions );
 
   mDaliFeedbackPlugin = new FeedbackPluginProxy( FeedbackPluginProxy::DEFAULT_OBJECT_NAME );
-  DALI_LOG_RESOURCE("[INIT] Resource log start\n");
 }
 
 Adaptor::~Adaptor()
@@ -229,10 +238,15 @@ Adaptor::~Adaptor()
     mPerformanceInterface = NULL;
   }
 
+  if ( Dali::Internal::Adaptor::g_ResourceTrackingManager )
+  {
+    delete Dali::Internal::Adaptor::g_ResourceTrackingManager;
+    Dali::Internal::Adaptor::g_ResourceTrackingManager = NULL;
+  }
+
   // uninstall it on this thread (main actor thread)
   Dali::Integration::Log::UninstallLogFunction();
 
-  DALI_LOG_RESOURCE("[FIN] Resource log end\n");
 }
 
 void Adaptor::Start()

@@ -20,6 +20,7 @@
 // INTERNAL INCLUDES
 #include <dali/integration-api/debug.h>
 #include <base/interfaces/adaptor-internal-services.h>
+#include <base/performance-logging/resource-tracking/resource-tracking.h>
 
 namespace Dali
 {
@@ -313,6 +314,11 @@ bool UpdateRenderSynchronization::VSyncNotifierSyncWithUpdateAndRender( unsigned
   mVSyncMicroseconds = microseconds;
 
   mVSyncReceivedCondition.notify_all();
+
+  if ( g_ResourceTrackingManager )
+  {
+    g_ResourceTrackingManager->LogFunction();
+  }
 
   AddPerformanceMarker( PerformanceMarker::V_SYNC );
 
