@@ -17,6 +17,7 @@
 // limitations under the License.
 //
 
+#include <base/performance-logging/resource-tracking/resource-tracker.h>
 #include <dali/integration-api/platform-abstraction.h>
 #include <dali/integration-api/glyph-set.h>
 #include <dali/integration-api/resource-cache.h>

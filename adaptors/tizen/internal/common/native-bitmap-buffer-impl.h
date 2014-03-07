@@ -87,7 +87,7 @@ public:
   /**
    * @copydoc Dali::NativeImage::PrepareTexture()
    */
-  virtual void PrepareTexture();
+  virtual void PrepareTexture( int id);
 
   /**
    * @copydoc Dali::NativeImage::GetWidth()

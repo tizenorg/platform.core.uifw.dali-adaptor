@@ -18,6 +18,7 @@
 #include <dali/public-api/common/ref-counted-dali-vector.h>
 #include <dali/integration-api/bitmap.h>
 #include <dali/integration-api/debug.h>
+#include <base/performance-logging/resource-tracking/resource-tracking.h>
 #include <dali/integration-api/resource-cache.h>
 
 #include "loader-bmp.h"
@@ -368,13 +369,12 @@ void ResourceThreadImage::Load(const ResourceRequest& request)
   // Log the load if it worked:
   if ( bitmap )
   {
-    const unsigned int width  = bitmap->GetImageWidth();
-    const unsigned int height = bitmap->GetImageHeight();
-    const unsigned int bufSize   = bitmap->GetBufferSize();
-    Pixel::Format pixelFormat = bitmap->GetPixelFormat();
-    const int formatVal = pixelFormat;
-
-    DALI_LOG_RESOURCE("[LOAD] Resource id: %d - image loaded from file %s to Bitmap %p - size %u bytes (logical width x logical height = %ux%u, and pixel format = %d)\n", request.GetId(), request.GetPath().c_str(), bitmap.Get(), bufSize, width, height, formatVal);
+    DALI_RESOURCE_TRACKING( ResourceTrackMessage::LOAD_BITMAP,
+                            bitmap.Get()->GetBuffer(),
+                            Dali::Internal::Adaptor::ResourceTracking::GetResourceHash( request.GetPath() ),
+                            bitmap->GetImageWidth() << 16 | ( bitmap->GetImageHeight() & 0xFFFF ),
+                            request.GetId(),
+                            bitmap->GetBufferSize() );
   }
   else
   {
@@ -429,13 +429,14 @@ void ResourceThreadImage::Decode(const ResourceRequest& request)
   // Log the decode if it worked:
   if (bitmap)
   {
-    const unsigned int width  = bitmap->GetImageWidth();
-    const unsigned int height = bitmap->GetImageHeight();
-    const unsigned int bufSize   = bitmap->GetBufferSize();
-    Pixel::Format pixelFormat = bitmap->GetPixelFormat();
-    const int formatVal = pixelFormat;
 
-    DALI_LOG_RESOURCE("[DECODE] Resource id: %d - image loadedto Bitmap %p - size %u bytes (logical width x logical height = %ux%u, and pixel format = %d)\n", request.GetId(), bitmap.Get(), bufSize, width, height, formatVal);
+
+    DALI_RESOURCE_TRACKING( ResourceTrackMessage::LOAD_BITMAP,
+                            bitmap.Get()->GetBuffer(),
+                            Dali::Internal::Adaptor::ResourceTracking::GetResourceHash( request.GetPath() ),
+                            bitmap->GetImageWidth(),
+                            bitmap->GetImageHeight(),
+                            bitmap->GetBufferSize() );
   }
   else
   {
@@ -498,7 +499,8 @@ BitmapPtr ResourceThreadImage::ConvertStreamToBitmap(const ResourceRequest& requ
   if ( result )
   {
     // Construct LoadedResource and ResourcePointer for image data
-    LoadedResource resource( request.GetId(), request.GetType()->id, ResourcePointer( bitmap.Get() ) );
+    LoadedResource resource( request.GetId(), request.GetType()->id, ResourcePointer(bitmap.Get()) );
+
     // Queue the loaded resource
     mResourceLoader.AddLoadedResource( resource );
   }

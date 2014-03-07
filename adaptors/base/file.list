@@ -9,6 +9,10 @@ base_adaptor_src_files = \
   $(base_adaptor_src_dir)/performance-logging/frame-time-stamp.cpp \
   $(base_adaptor_src_dir)/log-options.cpp \
   $(base_adaptor_src_dir)/performance-logging/frame-time-stats.cpp \
+  $(base_adaptor_src_dir)/performance-logging/resource-tracking/resource-tracker.cpp \
+  $(base_adaptor_src_dir)/performance-logging/resource-tracking/resource-tracking.cpp \
+  $(base_adaptor_src_dir)/performance-logging/resource-tracking/resource-tracking-message.cpp \
+  $(base_adaptor_src_dir)/performance-logging/resource-tracking/resource-tracking-manager.cpp \
   $(base_adaptor_src_dir)/performance-logging/performance-marker.cpp \
   $(base_adaptor_src_dir)/performance-logging/performance-server.cpp \
   $(base_adaptor_src_dir)/performance-logging/performance-interface-factory.cpp
