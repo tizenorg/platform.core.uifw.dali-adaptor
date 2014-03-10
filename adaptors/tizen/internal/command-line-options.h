@@ -42,7 +42,7 @@ public:
    * @param[in]  argc  The number of arguments
    * @param[in]  argv  The argument list
    */
-  CommandLineOptions(int argc, char *argv[]);
+  CommandLineOptions(int *argc, char **argv[]);
 
   /**
    * Destructor
