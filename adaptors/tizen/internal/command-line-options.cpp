@@ -34,98 +34,106 @@ namespace Adaptor
 
 namespace
 {
-  const char * RENDER_NO_VSYNC_OPTION = "no-vsync";
-  const char * RENDER_NO_VSYNC_DETAIL = "Disable VSync on Render";
+struct Argument
+{
+  const char * const opt;
+  const char * const optDescription;
 
-  const char * RENDER_WIDTH_OPTION = "width";
-  const char * RENDER_WIDTH_DETAIL = "Stage Width";
-
-  const char * RENDER_HEIGHT_OPTION = "height";
-  const char * RENDER_HEIGHT_DETAIL = "Stage Height";
-
-  const char * RENDER_DPI_OPTION = "dpi";
-  const char * RENDER_DPI_DETAIL = "Emulated DPI";
-
-  const char * USAGE = "help";
-
-  struct Arguments
+  void Print()
   {
-    const char * opt;
-    const char * optDescription;
+    std::cout << std::left << "  --";
+    std::cout.width( 15 );
+    std::cout << opt;
+    std::cout << optDescription;
+    std::cout << std::endl;
+  }
+};
 
-    void Print()
-    {
-      std::cout << "--" << opt << " " << optDescription;
-    }
-  };
+Argument EXPECTED_ARGS[] =
+{
+  { "no-vsync", "Disable VSync on Render" },
+  { "width",    "Stage Width"             },
+  { "height",   "Stage Height"            },
+  { "dpi",      "Emulated DPI"            },
+  { "usage",    "Usage"                   },
 
-  Arguments arguments[] =
-  {
-    { RENDER_NO_VSYNC_OPTION, RENDER_NO_VSYNC_DETAIL },
-    { RENDER_WIDTH_OPTION,    RENDER_WIDTH_DETAIL    },
-    { RENDER_HEIGHT_OPTION,   RENDER_HEIGHT_DETAIL   },
-    { RENDER_DPI_OPTION,      RENDER_DPI_DETAIL      },
-    { NULL, NULL }
-  };
+  { NULL,       NULL                      }
+};
 
 } // unnamed namespace
 
 
-CommandLineOptions::CommandLineOptions(int argc, char *argv[])
+CommandLineOptions::CommandLineOptions(int *argc, char **argv[])
 : noVSyncOnRender(0),
   stageWidth(0), stageHeight(0)
 {
-  const struct option options[]=
+  if ( *argc > 1 )
   {
-    { arguments[0].opt, no_argument, &noVSyncOnRender, 1 },  // "--no-vsync"
-    { arguments[1].opt, required_argument, NULL,     'w' },  // "--width"
-    { arguments[2].opt, required_argument, NULL,     'h' },  // "--height"
-    { arguments[3].opt, required_argument, NULL,     'd' },  // "--dpi"
-    { USAGE, no_argument, NULL, 'u'},
-    { 0, 0, 0, 0 } // end of options
-  };
-
-
-  int opt(0);
-  int optIndex(0);
-
-  const char* optString = "w:h:d:?";
-
-  do
-  {
-    opt = getopt_long(argc, argv, optString, options, &optIndex);
-
-    switch (opt)
+    const struct option options[]=
     {
-      case 0:
-        // if setting vsync getopt set flag already
-        break;
-      case 'w':
-        stageWidth = atoi(optarg);
-        break;
-      case 'h':
-        stageHeight = atoi(optarg);
-        break;
-      case 'd':
-        stageDPI.assign(optarg);
-        break;
-      case 'u':
-        // show usage
-        std::cout << "Available options:" << std::endl;
-        for ( int i = 0; arguments[i].opt != NULL; ++i)
-        {
-          arguments[i].Print();
-          std::cout << std::endl;
-        }
-        break;
-      default:
-        // -1 will exit here (no more options to parse)
-        break;
+      { EXPECTED_ARGS[0].opt, no_argument,       &noVSyncOnRender, 1 },  // "--no-vsync"
+      { EXPECTED_ARGS[1].opt, required_argument, NULL,             0 },  // "--width"
+      { EXPECTED_ARGS[2].opt, required_argument, NULL,             0 },  // "--height"
+      { EXPECTED_ARGS[3].opt, required_argument, NULL,             0 },  // "--dpi"
+      { EXPECTED_ARGS[4].opt, no_argument,       NULL,             0 },  // "--usage"
+      { 0, 0, 0, 0 } // end of options
+    };
+
+    int opt(0);
+    int optIndex(0);
+    int startIndex = optind;
+
+    const char* optString = "whdu?:";
+
+    while (opt != -1)
+    {
+      opt = getopt_long(*argc, *argv, optString, options, &optIndex);
+
+      switch (opt)
+      {
+        case 0:
+          // if setting vsync getopt set flag already
+          break;
+
+        case 'w':
+          stageWidth = atoi(optarg);
+          break;
+
+        case 'h':
+          stageHeight = atoi(optarg);
+          break;
+
+        case 'd':
+          stageDPI.assign(optarg);
+          break;
+
+        case 'u':
+          // show usage
+          std::cout << "Available options:" << std::endl;
+          Argument* arg = &EXPECTED_ARGS[0];
+          while ( arg->opt )
+          {
+            arg->Print();
+          }
+          break;
+
+        default:
+          break;
+      }
+    }
+
+    // Take out the options we have processed
+    if ( optind > startIndex )
+    {
+      // Just move the program name to just before the unhandled option.
+
+      (*argv)[optind - 1] = (*argv)[0];
+
+      *argv += optind - 1;
+      *argc -= optind - 1;
+      optind = 1;
     }
   }
-  while (opt != -1);
-
-  // Ignores any unknown options
 }
 
 CommandLineOptions::~CommandLineOptions()
