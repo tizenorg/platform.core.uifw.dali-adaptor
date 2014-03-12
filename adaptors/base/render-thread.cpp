@@ -167,17 +167,7 @@ void RenderThread::SetVSyncMode( EglInterface::SyncMode syncMode )
 
 void RenderThread::RenderSync()
 {
-  if( !mUsingPixmap )
-  {
-    return;
-  }
-  {
-    boost::unique_lock< boost::mutex > lock( mPixmapSyncMutex );
-    mPixmapSyncReceived = true;
-  }
-
-  // awake render thread if it was waiting for the notify
-  mPixmapSyncNotify.notify_all();
+  mCurrent.surface->RenderSync();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -369,21 +359,7 @@ bool RenderThread::PreRender()
 
 void RenderThread::PostRender( unsigned int timeDelta )
 {
-  const bool waitForSync = mCurrent.surface->PostRender( *mEGL, mGLES, timeDelta );
-
-  if( waitForSync )
-  {
-    boost::unique_lock< boost::mutex > lock( mPixmapSyncMutex );
-
-    // wait until synced,
-    // this blocks the thread here and releases the mPixmapSyncMutex (so the main thread can use it)
-    // if surface is replacing, forcely update without pixmap sync
-    if( mPixmapSyncRunning && !mPixmapSyncReceived && !mSurfaceReplacing )
-    {
-      mPixmapSyncNotify.wait( lock );
-    }
-    mPixmapSyncReceived = false;
-  }
+  mCurrent.surface->PostRender( *mEGL, mGLES, timeDelta, mPixmapSyncRunning && !mSurfaceReplacing );
 }
 
 } // namespace Adaptor
