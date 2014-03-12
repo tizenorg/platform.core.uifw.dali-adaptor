@@ -271,9 +271,25 @@ unsigned int RenderSurface::GetSurfaceId( boost::any surface ) const
   return surfaceId;
 }
 
-bool RenderSurface::RenderSync( unsigned int timeDelta )
+void RenderSurface::RenderSync()
 {
-  if( mRenderMode > Dali::RenderSurface::RENDER_SYNC )
+  // nothing to do
+}
+
+void RenderSurface::DoRenderSync( unsigned int timeDelta, bool waitSync )
+{
+  if( mRenderMode == Dali::RenderSurface::RENDER_SYNC )
+  {
+    boost::unique_lock< boost::mutex > lock( mSyncMutex );
+
+    // wait for sync
+    if( waitSync && !mSyncReceived )
+    {
+      mSyncNotify.wait( lock );
+    }
+    mSyncReceived = false;
+  }
+  else if( mRenderMode > Dali::RenderSurface::RENDER_SYNC )
   {
     unsigned int syncPeriod( MICROSECONDS_PER_SECOND / static_cast< unsigned int >( mRenderMode ) - MILLISECONDS_PER_SECOND );
     if( timeDelta < syncPeriod )
@@ -281,8 +297,6 @@ bool RenderSurface::RenderSync( unsigned int timeDelta )
       usleep( syncPeriod - timeDelta );
     }
   }
-
-  return mRenderMode == Dali::RenderSurface::RENDER_SYNC;
 }
 
 } // namespace ECoreX

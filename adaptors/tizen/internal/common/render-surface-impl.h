@@ -108,6 +108,11 @@ public: // API
   virtual void TransferDisplayOwner( Internal::Adaptor::RenderSurface& newSurface ) = 0;
 
   /**
+   * Called after offscreen is posted to onscreen
+   */
+  virtual void RenderSync() = 0;
+
+  /**
    * Invoked by render thread before Core::Render
    * @param[in] egl The Egl interface
    * @param[in] glAbstraction OpenGLES abstraction interface
@@ -120,9 +125,9 @@ public: // API
    * @param[in] egl The Egl interface
    * @param[in] glAbstraction OpenGLES abstraction interface
    * @param[in] deltaTime Time (in microseconds) since PostRender was last called.
-   * @return true if a vsync is required, otherwise false
+   * @param[in] withSync A flag, set true to wait for a RenderSync from the Adaptor.
    */
-  virtual bool PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int deltaTime ) = 0;
+  virtual void PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int deltaTime, bool withSync ) = 0;
 
   /**
    * Invoked by render thread when the thread should be stop

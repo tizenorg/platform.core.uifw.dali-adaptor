@@ -19,7 +19,7 @@
 
 // EXTERNAL INCLUDES
 #include <string>
-
+#include <boost/thread.hpp>
 #include <Ecore_X.h>
 #include <dali/public-api/common/dali-common.h>
 
@@ -172,6 +172,11 @@ public:  // from Internal::Adaptor::RenderSurface
   virtual void TransferDisplayOwner( Internal::Adaptor::RenderSurface& newSurface );
 
   /**
+   * @copydoc Dali::Internal::Adaptor::RenderSurface::RenderSync()
+   */
+  virtual void RenderSync();
+
+  /**
    * @copydoc Dali::Internal::Adaptor::RenderSurface::PreRender()
    */
   virtual bool PreRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction ) = 0;
@@ -179,7 +184,7 @@ public:  // from Internal::Adaptor::RenderSurface
   /**
    * @copydoc Dali::Internal::Adaptor::RenderSurface::PostRender()
    */
-  virtual bool PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int timeDelta ) = 0;
+  virtual void PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int timeDelta, bool withSync ) = 0;
 
   /**
    * @copydoc Dali::Internal::Adaptor::RenderSurface::StopRender()
@@ -217,9 +222,9 @@ protected:
   /**
    * Perform render sync
    * @param[in] currentTime Current time in microseconds
-   * @return true if the calling thread should wait for a RenderSync from Adaptor
+   * @param[in] withSync true if the calling thread should wait for a RenderSync from Adaptor
    */
-  bool RenderSync( unsigned int timeDelta );
+  void DoRenderSync( unsigned int timeDelta, bool withSync );
 
 protected: // Data
 
@@ -234,6 +239,9 @@ protected: // Data
   RenderMode                  mRenderMode;         ///< Render mode for pixmap surface type
   TriggerEvent*               mRenderNotification; ///< Render notificatin trigger
   bool                        mIsStopped;          ///< Render should be stopped
+  boost::mutex                mSyncMutex;          ///< mutex to lock during waiting sync
+  boost::condition_variable   mSyncNotify;         ///< condition to notify main thread that pixmap was flushed to onscreen
+  bool                        mSyncReceived;       ///< true, when a pixmap sync has occurred, (cleared after reading)
 
 };
 
