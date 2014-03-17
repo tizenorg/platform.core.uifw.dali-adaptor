@@ -24,7 +24,8 @@ namespace Dali DALI_IMPORT_API
 {
 
 /**
- * FeedbackPlugin is an abstract interface, used by Dali-adaptor to access haptic and audio feedback.
+ * @brief FeedbackPlugin is an abstract interface, used by Dali-adaptor to access haptic and audio feedback.
+ *
  * A concrete implementation must be created for each platform and provided as a dynamic library which
  * will be loaded at run time by the adaptor.
  */
@@ -35,44 +36,49 @@ public:
   typedef void (*SoundStopCallBack)( void* ptr );
 
   /**
-   * Destructor.
+   * @brief Destructor.
    */
   virtual ~FeedbackPlugin()
   {
   }
 
   /**
-   * Plays vibration in predefined patterns.
+   * @brief Plays vibration in predefined patterns.
+   *
    * @param[in] filePath Path to the file containing the effect.
    */
   virtual void PlayHaptic( const std::string& filePath ) = 0;
 
   /**
-   * Plays a monotone vibration.
+   * @brief Plays a monotone vibration.
+   *
    * @param[in]  duration  The duration of the vibration.
    */
   virtual void PlayHapticMonotone( unsigned int duration ) = 0;
 
   /**
-   * Stops the currently playing vibration effects.
+   * @brief Stops the currently playing vibration effects.
    */
   virtual void StopHaptic() = 0;
 
   /**
-   * Plays a sound file.
+   * @brief Plays a sound file.
+   *
    * @param[in] fileName Path to the sound file to play.
    * @return A handle which can be used to stop the sound playback.
    */
   virtual int PlaySound( const std::string& fileName ) = 0;
 
   /**
-   * Stops a currently playing sound.
+   * @brief Stops a currently playing sound.
+   *
    * @param[in] handle A handle to the currently playing sound.
    */
   virtual void StopSound( int handle ) = 0;
 
   /**
-   * Plays a feedback pattern.
+   * @brief Plays a feedback pattern.
+   *
    * @param[in] type The type of feedback.
    * @param[in] pattern The ID of the pattern to play.
    */
@@ -81,7 +87,8 @@ public:
   // Types for plugin factories
 
   /**
-   * Function pointer called in adaptor to create a feedback plugin instance.
+   * @brief Function pointer called in adaptor to create a feedback plugin instance.
+   *
    * @param [in] pluginName name of the plugin to load.
    * @return Pointer to the newly created plugin object
    */

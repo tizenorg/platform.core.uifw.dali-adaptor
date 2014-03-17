@@ -33,7 +33,7 @@ class PhysicalKeyboard;
 }
 
 /**
- * This is a handle to a physical keyboard connected to the device.
+ * @brief This is a handle to a physical keyboard connected to the device.
  */
 class PhysicalKeyboard : public BaseHandle
 {
@@ -44,24 +44,27 @@ public:
 public:
 
   /**
-   * Create an uninitialized PhysicalKeyboard handle; this can be initialized with GetKeyboard()
+   * @brief Create an uninitialized PhysicalKeyboard handle; this can be initialized with GetKeyboard().
+   *
    * Calling member functions with an uninitialized Dali::Object is not allowed.
    */
   PhysicalKeyboard();
 
   /**
-   * Virtual destructor.
+   * @brief Virtual destructor.
    */
   virtual ~PhysicalKeyboard();
 
   /**
-   * Gets a handle to the physical keyboard.
+   * @brief Gets a handle to the physical keyboard.
+   *
    * @return A handle to the physical keyboard.
    */
   static PhysicalKeyboard Get();
 
   /**
-   * Queries whether a physical keyboard is attached or not.
+   * @brief Queries whether a physical keyboard is attached or not.
+   *
    * @return true if a physical keyboard is attached, false otherwise.
    */
   bool IsAttached() const;
@@ -69,7 +72,8 @@ public:
   // Signals
 
   /**
-   * Emitted when the status of the physical keyboard changes.
+   * @brief Emitted when the status of the physical keyboard changes.
+   *
    * A callback of the following type may be connected:
    * @code
    *   void YourCallbackName(PhysicalKeyboard keyboard);
@@ -82,7 +86,8 @@ public:
   // Not intended for application developers
 
   /**
-   * Creates a new handle from the implementation.
+   * @brief Creates a new handle from the implementation.
+   *
    * @param[in] impl A pointer to the object.
    */
   explicit DALI_INTERNAL PhysicalKeyboard( Internal::Adaptor::PhysicalKeyboard* impl );

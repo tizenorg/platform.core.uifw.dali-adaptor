@@ -32,7 +32,7 @@ namespace Dali DALI_IMPORT_API
 typedef Dali::Rect<int> PositionSize;
 
 /**
-* Livebox's size types
+* Livebox's size types.
 * It refers "livebox-service.h"
 */
 enum LiveboxSizeType
@@ -81,7 +81,9 @@ class LiveboxPlugin;
 }
 
 /**
- * An LiveboxPlugin class object should be created by every livebox
+ * @brief A native Dali application class that draws to a livebox.
+ *
+ * A LiveboxPlugin class object should be created by every livebox.
  * that wishes to use Dali.  It provides a means for initialising the
  * resources required by the Dali::Core.
  *
@@ -123,7 +125,8 @@ public:
 public:
 
   /**
-   * This is the constructor for Linux & SLP liveboxs.
+   * @brief This is the constructor for Linux & SLP liveboxs.
+   *
    * @param  argc        A pointer to the number of arguments
    * @param  argv        A pointer the the argument list
    * @note The default base layout (DeviceLayout::DEFAULT_BASE_LAYOUT) will be used with this constructor.
@@ -131,7 +134,8 @@ public:
   LiveboxPlugin( int* argc, char **argv[] );
 
   /**
-   * This is the constructor for Linux & SLP liveboxs with a name
+   * @brief This is the constructor for Linux & SLP liveboxs with a name.
+   *
    * @param  argc  A pointer to the number of arguments
    * @param  argv  A pointer the the argument list
    * @param  name  A name of livebox
@@ -140,7 +144,8 @@ public:
   LiveboxPlugin( int* argc, char **argv[], const std::string& name );
 
   /**
-   * This is the constructor for Linux & SLP liveboxs when a layout for the livebox is specified.
+   * @brief This is the constructor for Linux & SLP liveboxs when a layout for the livebox is specified.
+   *
    * @param  argc        A pointer to the number of arguments
    * @param  argv        A pointer the the argument list
    * @param  baseLayout  The base layout that the livebox has been written for
@@ -148,7 +153,8 @@ public:
   LiveboxPlugin( int* argc, char **argv[], const DeviceLayout& baseLayout );
 
   /**
-   * This is the constructor for Linux & SLP liveboxs with a name and when a layout for the livebox is specified.
+   * @brief This is the constructor for Linux & SLP liveboxs with a name and when a layout for the livebox is specified.
+   *
    * @param  argc  A pointer to the number of arguments
    * @param  argv  A pointer the the argument list
    * @param  name  A name of livebox
@@ -157,56 +163,61 @@ public:
   LiveboxPlugin( int* argc, char **argv[], const std::string& name, const DeviceLayout& baseLayout );
 
   /**
-   * Virtual destructor
+   * @brief Virtual destructor.
    */
   virtual ~LiveboxPlugin();
 
 public:
 
   /**
-   * Set title string of the livebox
+   * @brief Set title string of the livebox.
+   *
    * @param[in] title title string
    */
   void SetTitle(const std::string& title);
 
   /**
-   * Set content string of the livebox
+   * @brief Set content string of the livebox.
+   *
    * @param[in] content content string
    */
   void SetContent(const std::string& content);
 
   /**
-   * Get glance bar's geometry information
-   * x, y mean arrow position
-   * w, h mean glance size
+   * @brief Get glance bar's geometry information.
+   *
+   * In the return value,
+   *   x, y mean arrow position
+   *   w, h mean glance size
    * User can use this method in the glance-created signal handler
    * @return PositionSize structure for glance bar information. {-1, -1, -1, -1} means invalid status for glance
    */
   const PositionSize& GetGlanceBarGeometry() const;
 
   /**
-   * Get glance bar's event information
+   * @brief Get glance bar's event information.
+   *
    * @return GlanceBarEventInfo structure for glance bar event
    */
   const GlanceBarEventInfo& GetGlanceBarEventInfo() const;
 
   /**
-   * Get current size type of livebox
+   * @brief Get current size type of livebox.
    */
   LiveboxSizeType GetLiveboxSizeType() const;
 
   /**
-   * This starts the livebox providing.
+   * @brief This starts the livebox providing.
    */
   void Run();
 
   /**
-   * This quits the livebox providing.
+   * @brief This quits the livebox providing.
    */
   void Quit();
 
   /**
-   * Ensures that the function passed in is called from the main loop when it is idle.
+   * @brief Ensures that the function passed in is called from the main loop when it is idle.
    *
    * A callback of the following type may be used:
    * @code
@@ -219,7 +230,8 @@ public:
   bool AddIdle(boost::function<void(void)> callBack);
 
   /**
-   * Returns the local thread's instance of the LiveboxPlugin class.
+   * @brief Returns the local thread's instance of the LiveboxPlugin class.
+   *
    * @return A reference to the local thread's LiveboxPlugin class instance.
    * @pre The LiveboxPlugin class has been initialised.
    * @note This is only valid in the main thread.
@@ -229,56 +241,57 @@ public:
 public:  // Signals
 
   /**
-   * The user should connect to this signal to determine when they should initialise
-   * their livebox
+   * @brief The user should connect to this signal to determine when they should initialise
+   * their livebox.
    */
   LiveboxPluginSignalV2& InitializedSignal();
 
   /**
-   * The user should connect to this signal to determine when they should terminate
-   * their livebox
+   * @brief The user should connect to this signal to determine when they should terminate
+   * their livebox.
    */
   LiveboxPluginSignalV2& TerminatedSignal();
 
   /**
-   * The user should connect to this signal if they need to perform any special
+   * @brief The user should connect to this signal if they need to perform any special
    * activities when the livebox is about to be paused.
    */
   LiveboxPluginSignalV2& PausedSignal();
 
   /**
-   * The user should connect to this signal if they need to perform any special
+   * @brief The user should connect to this signal if they need to perform any special
    * activities when the livebox has resumed.
    */
   LiveboxPluginSignalV2& ResumedSignal();
 
   /**
-   * This signal is emitted when the surface the livebox is rendering on is resized.
+   * @brief This signal is emitted when the surface the livebox is rendering on is resized.
    */
   LiveboxPluginSignalV2& ResizedSignal();
 
   /**
-   * This signal is emitted when the glance bar popup was created.
+   * @brief This signal is emitted when the glance bar popup was created.
    */
   LiveboxPluginSignalV2& GlanceCreatedSignal();
 
   /**
-   * This signal is emitted when the glance bar popup was destroyed.
+   * @brief This signal is emitted when the glance bar popup was destroyed.
    */
   LiveboxPluginSignalV2& GlanceDestroyedSignal();
 
   /**
-   * This signal is emitted when the glance bar popup was touched.
+   * @brief This signal is emitted when the glance bar popup was touched.
    */
   LiveboxPluginSignalV2& GlanceTouchedSignal();
 
   /**
-   * This signal is emitted when the glance bar popup was moved.
+   * @brief This signal is emitted when the glance bar popup was moved.
    */
   LiveboxPluginSignalV2& GlanceMovedSignal();
 
   /**
-   * This signal is emitted when the glance bar popup was got script event callback.
+   * @brief This signal is emitted when the glance bar popup got the script event callback.
+   *
    * If application registered the edje file for glance bar,
    * this signal will be emitted instead of SignalGlanceTouched.
    * Application can get the event information by using GetGlanceBarEventInfo()
@@ -286,7 +299,7 @@ public:  // Signals
   LiveboxPluginSignalV2& GlanceScriptEventSignal();
 
   /**
-   * This signal is emitted when the language is changed on the device.
+   * @brief This signal is emitted when the language is changed on the device.
    */
   LiveboxPluginSignalV2& LanguageChangedSignal();
 
@@ -305,4 +318,3 @@ private:
 } // namespace Dali
 
 #endif // __DALI_LIVEBOX_H__
-

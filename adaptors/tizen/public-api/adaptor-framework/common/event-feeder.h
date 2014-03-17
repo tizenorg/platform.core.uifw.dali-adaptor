@@ -31,7 +31,7 @@ namespace EventFeeder
 {
 
 /**
- * Feed a touch point to the adaptor.
+ * @brief Feed a touch point to the adaptor.
  *
  * @param[in] point touch point
  * @param[in] timeStamp time value of event
@@ -41,7 +41,7 @@ namespace EventFeeder
 void FeedTouchPoint( TouchPoint& point, int timeStamp );
 
 /**
- * Feed a mouse wheel event to the adaptor.
+ * @brief Feed a mouse wheel event to the adaptor.
  *
  * @param[in]  wheelEvent mouse wheel event
  *
@@ -50,7 +50,7 @@ void FeedTouchPoint( TouchPoint& point, int timeStamp );
 void FeedWheelEvent( MouseWheelEvent& wheelEvent );
 
 /**
- * Feed a key event to the adaptor.
+ * @brief Feed a key event to the adaptor.
  *
  * @param[in] keyEvent The key event holding the key information.
  *

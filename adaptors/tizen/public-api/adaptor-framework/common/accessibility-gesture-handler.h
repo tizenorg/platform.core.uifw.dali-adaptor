@@ -24,7 +24,7 @@ namespace Dali DALI_IMPORT_API
 {
 
 /**
- * AccessibilityGestureHandler is an interface used by Dali to handle accessibility gestures
+ * @brief AccessibilityGestureHandler is an interface used by Dali to handle accessibility gestures.
  * passed by the accessibility manager.
  */
 class AccessibilityGestureHandler
@@ -32,7 +32,7 @@ class AccessibilityGestureHandler
 public:
 
   /**
-   * Handle the accessibility pan gesture.
+   * @brief Handle the accessibility pan gesture.
    * @param[in]  panEvent  The pan event to be handled.
    * @return whether the gesture is handled successfully or not.
    */

@@ -23,7 +23,8 @@ namespace Dali DALI_IMPORT_API
 {
 
 /**
- * AccessibilityActionHandler is an abstract interface, used by Dali to handle accessibility actions
+ * @brief AccessibilityActionHandler is an abstract interface, used by Dali to handle accessibility actions.
+ *
  * passed by the accessibility manager.
  */
 class AccessibilityActionHandler
@@ -31,43 +32,50 @@ class AccessibilityActionHandler
 public:
 
   /**
-   * Change the accessibility status when Accessibility feature(screen-reader) turned on or off.
+   * @brief Change the accessibility status when Accessibility feature(screen-reader) turned on or off.
+   *
    * @return whether the status is changed or not.
    */
   virtual bool ChangeAccessibilityStatus() = 0;
 
   /**
-   * Clear the accessibility focus from the current focused actor.
+   * @brief Clear the accessibility focus from the current focused actor.
+   *
    * @return whether the focus is cleared or not.
    */
   virtual bool ClearAccessibilityFocus() = 0;
 
   /**
-   * Perform the accessibility action to move focus to the previous focusable actor (by one finger flick up).
+   * @brief Perform the accessibility action to move focus to the previous focusable actor (by one finger flick up).
+   *
    * @return whether the accessibility action is performed or not.
    */
   virtual bool AccessibilityActionPrevious() = 0;
 
   /**
-   * Perform the accessibility action to move focus to the next focusable actor (by one finger flick down).
+   * @brief Perform the accessibility action to move focus to the next focusable actor (by one finger flick down).
+   *
    * @return whether the accessibility action is performed or not.
    */
   virtual bool AccessibilityActionNext() = 0;
 
   /**
-   * Perform the accessibility action to move focus to the previous focusable actor (by one finger flick left).
+   * @brief Perform the accessibility action to move focus to the previous focusable actor (by one finger flick left).
+   *
    * @return whether the accessibility action is performed or not.
    */
   virtual bool AccessibilityActionReadPrevious() = 0;
 
   /**
-   * Perform the accessibility action to move focus to the next focusable actor (by one finger flick right).
+   * @brief Perform the accessibility action to move focus to the next focusable actor (by one finger flick right).
+   *
    * @return whether the accessibility action is performed or not.
    */
   virtual bool AccessibilityActionReadNext() = 0;
 
   /**
-   * Perform the accessibility action to focus and read the actor (by one finger tap or move).
+   * @brief Perform the accessibility action to focus and read the actor (by one finger tap or move).
+   *
    * @param allowReadAgain true if the action read again the same object (i.e. read action)
    *                       false if the action just read when the focus object is changed (i.e. over action)
    * @return whether the accessibility action is performed or not.
@@ -75,27 +83,31 @@ public:
   virtual bool AccessibilityActionRead(bool allowReadAgain) = 0;
 
   /**
-   * Perform the accessibility action to activate the current focused actor (by one finger double tap).
+   * @brief Perform the accessibility action to activate the current focused actor (by one finger double tap).
+   *
    * @return whether the accessibility action is performed or not.
    */
   virtual bool AccessibilityActionActivate() = 0;
 
   /**
-   * Perform the accessibility action to change the value when the current focused actor is a slider
+   * @brief Perform the accessibility action to change the value when the current focused actor is a slider.
+   *
    * (by double finger down and move up and right).
    * @return whether the accessibility action is performed or not.
    */
   virtual bool AccessibilityActionUp() = 0;
 
   /**
-   * Perform the accessibility action to change the value when the current focused actor is a slider
+   * @brief Perform the accessibility action to change the value when the current focused actor is a slider.
+   *
    * (by double finger down and move down and left).
    * @return whether the accessibility action is performed or not.
    */
   virtual bool AccessibilityActionDown() = 0;
 
   /**
-   * Perform the accessibility action to navigate back (by two fingers circle draw).
+   * @brief Perform the accessibility action to navigate back (by two fingers circle draw).
+   *
    * @return whether the accessibility action is performed or not.
    */
   virtual bool AccessibilityActionBack() = 0;

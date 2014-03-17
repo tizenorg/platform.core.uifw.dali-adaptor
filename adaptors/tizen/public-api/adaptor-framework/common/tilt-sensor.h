@@ -35,7 +35,8 @@ class TiltSensor;
 }
 
 /**
- * TiltSensor provides pitch & roll values when the device is tilted.
+ * @brief TiltSensor provides pitch & roll values when the device is tilted.
+ *
  * The basic usage is shown below:
  *
  * @code
@@ -88,43 +89,49 @@ public:
   static const float DEFAULT_UPDATE_FREQUENCY; // 60 hertz
 
   /**
-   * Create an uninitialized handle.
+   * @brief Create an uninitialized handle.
+   *
    * This can be initialized by calling TiltSensor::Get().
    */
   TiltSensor();
 
   /**
-   * Create an initialized handle to the TiltSensor.
+   * @brief Create an initialized handle to the TiltSensor.
+   *
    * @return A handle to a newly allocated Dali resource.
    */
   static TiltSensor Get();
 
   /**
-   * Virtual Destructor.
+   * @brief Virtual Destructor.
    */
   virtual ~TiltSensor();
 
   /**
-   * Attempt to enable the tilt-sensor. This will fail if the underlying sensor hardware is powered-down,
+   * @brief Attempt to enable the tilt-sensor.
+   *
+   * This will fail if the underlying sensor hardware is powered-down,
    * typically this occurs when the device is set to "sleep" mode.
    * @return True if the tilt-sensor is enabled.
    */
   bool Enable();
 
   /**
-   * Disable the tilt-sensor.
+   * @brief Disable the tilt-sensor.
    */
   void Disable();
 
   /**
-   * Query whether the tilt-sensor is disabled.
+   * @brief Query whether the tilt-sensor is disabled.
+   *
    * The sensor may be disabled automatically; typically this occurs when the device is set to "sleep" mode.
    * @return True if the tilt-sensor is enabled.
    */
   bool IsEnabled() const;
 
   /**
-   * Query the roll value. This is in the range -1 to 1.
+   * @brief Query the roll value. This is in the range -1 to 1.
+   *
    * When the device is lying face-up on a flat surface, this method will return a value close to zero.
    * A value close to 1 indicates that the right-side of the device is pointing upwards.
    * A value close to -1 indicates that the right-side of the device is pointing downwards.
@@ -134,7 +141,8 @@ public:
   float GetRoll() const;
 
   /**
-   * Query the pitch value. This is in the range -1 to 1.
+   * @brief Query the pitch value. This is in the range -1 to 1.
+   *
    * When the device is lying face-up on a flat surface, this method will return a value close to zero.
    * A value close to 1 indicates that the top of the device is pointing upwards.
    * A value close to -1 indicates that the top of the device is pointing downwards.
@@ -144,7 +152,8 @@ public:
   float GetPitch() const;
 
   /**
-   * Retrieve the rotation of the device.
+   * @brief Retrieve the rotation of the device.
+   *
    * When the device is lying face-up on a flat surface, the rotation angle will be approximately zero.
    * The roll & pitch of the device is considered to be a rotation around the Y and X axes respectively.
    * @pre The tilt-sensor is enabled.
@@ -153,27 +162,31 @@ public:
   Quaternion GetRotation() const;
 
   /**
-   * This signal will be emitted when the device is tilted, if the tilt-sensor is enabled.
+   * @brief This signal will be emitted when the device is tilted, if the tilt-sensor is enabled.
+   *
    * The frequency of the signals can be controlled using SetUpdateFrequency().
    * @return The signal to connect to.
    */
   TiltedSignalV2& TiltedSignal();
 
   /**
-   * Set the sensor update frequency.
+   * @brief Set the sensor update frequency.
+   *
    * The default is TiltSensor::DEFAULT_UPDATE_FREQUENCY.
    * @param[in] frequencyHertz The frequency in hertz.
    */
   void SetUpdateFrequency( float frequencyHertz );
 
   /**
-   * Query the sensor update frequency.
+   * @brief Query the sensor update frequency.
+   *
    * @return The frequency in hertz.
    */
   float GetUpdateFrequency() const;
 
   /**
-   * Set the threshold value for rotation in Radians, above which TiltedSignal should be emitted.
+   * @brief Set the threshold value for rotation in Radians, above which TiltedSignal should be emitted.
+   *
    * The default is 0.0f in Radians (i.e) it will be emitted always at the frequency set.
    * Example tiltSensor.SetRotationThreshold( Radian(Degree(10) ) // A rotation threshold of 10 degrees
    * @param[in] rotationThreshold The threshold value for rotation.
@@ -181,7 +194,8 @@ public:
   void SetRotationThreshold( Radian rotationThreshold );
 
   /**
-   * Query the rotation threshold above which TiltedSignal will be emitted.
+   * @brief Query the rotation threshold above which TiltedSignal will be emitted.
+   *
    * @return The rotation degree threshold in Radians.
    */
   Radian GetRotationThreshold() const;
@@ -189,7 +203,8 @@ public:
 public: // Not intended for application developers
 
   /**
-   * This constructor is used by TiltSensor::Get().
+   * @brief This constructor is used by TiltSensor::Get().
+   *
    * @param[in] sensor A pointer to the tilt sensor.
    */
   TiltSensor( Internal::Adaptor::TiltSensor* sensor );
