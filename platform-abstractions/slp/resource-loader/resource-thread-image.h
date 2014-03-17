@@ -83,11 +83,11 @@ private:
 
 private:
   /**
-   * Convert the file stream into a bitmap.
+   * Convert the file stream into in-memory image pixel data and metadata.
    * @param[in] request
    * @param[in] fp File Pointer. Closed on exit.
-   * @return Null on failure or a valid BitmapPtr on success. */
-  Integration::BitmapPtr ConvertStreamToBitmap( const Integration::ResourceRequest& request,
+   * @return Null on failure or a valid ImageDataPtr on success. */
+  Integration::ImageDataPtr ConvertStreamToBitmap( const Integration::ResourceRequest& request,
                                                 FILE * const fp );
 
 }; // class ResourceThreadImage

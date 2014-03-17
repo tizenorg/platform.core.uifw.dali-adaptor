@@ -17,6 +17,10 @@
 // limitations under the License.
 //
 
+// INTERNAL INCLUDES
+#include <dali/public-api/common/intrusive-ptr.h>
+
+// EXTERNAL INCLUDES
 #include <cstdio>
 
 namespace Dali
@@ -24,7 +28,8 @@ namespace Dali
 
 namespace Integration
 {
-  class Bitmap;
+  class ImageData;
+  typedef IntrusivePtr<ImageData> ImageDataPtr;
 }
 
 struct ImageAttributes;
@@ -46,7 +51,7 @@ const unsigned char MAGIC_BYTE_2 = 0x4D;
  * @param[in]  attributes  Describes the dimensions, pixel format and other details for loading the image data
  * @return  true if file decoded successfully, false otherwise
  */
-bool LoadBitmapFromBmp(FILE *fp, Integration::Bitmap& bitmap, ImageAttributes& attributes);
+bool LoadBitmapFromBmp( FILE *fp, ImageAttributes& attributes, Integration::ImageDataPtr& bitmap );
 
 /**
  * Loads the header of a BMP file and fills in the width and height appropriately.

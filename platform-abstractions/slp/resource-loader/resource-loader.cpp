@@ -25,7 +25,7 @@
 #include <queue>
 
 // INTERNAL HEADERS
-#include <dali/integration-api/bitmap.h>
+//#include <dali/integration-api/bitmap.h>
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/resource-cache.h>
 #include <dali/public-api/common/dali-common.h>
@@ -117,7 +117,7 @@ struct ResourceLoader::ResourceLoaderImpl
   {
     mFontController = Dali::Platform::FontController::New();
 
-    mRequestHandlers.insert(std::make_pair(ResourceBitmap, new ResourceBitmapRequester(*loader)));
+    mRequestHandlers.insert(std::make_pair(ResourceImageData, new ResourceBitmapRequester(*loader)));
     mRequestHandlers.insert(std::make_pair(ResourceShader, new ResourceShaderRequester(*loader)));
     mRequestHandlers.insert(std::make_pair(ResourceModel, new ResourceModelRequester(*loader)));
     mRequestHandlers.insert(std::make_pair(ResourceText, new ResourceTextRequester(*loader)));
@@ -298,7 +298,7 @@ struct ResourceLoader::ResourceLoaderImpl
                             const ImageAttributes& attributes,
                             Vector2& closestSize )
   {
-    ResourceRequesterBase* requester = GetRequester(ResourceBitmap);
+    ResourceRequesterBase* requester = GetRequester(ResourceImageData);
     ResourceBitmapRequester* bitmapRequester = dynamic_cast<ResourceBitmapRequester*>(requester);
     if( bitmapRequester != NULL )
     {
@@ -310,7 +310,7 @@ struct ResourceLoader::ResourceLoaderImpl
                             const ImageAttributes& attributes,
                             Vector2& closestSize )
   {
-    ResourceRequesterBase* requester = GetRequester(ResourceBitmap);
+    ResourceRequesterBase* requester = GetRequester(ResourceImageData);
     ResourceBitmapRequester* bitmapRequester = dynamic_cast<ResourceBitmapRequester*>(requester);
     if( bitmapRequester != NULL )
     {
@@ -705,13 +705,9 @@ GlyphSet* ResourceLoader::GetCachedGlyphData(const TextResourceType& textRequest
       glyphMetrics.xPosition = requestedCharacters[n].xPosition;
       glyphMetrics.yPosition = requestedCharacters[n].yPosition;
 
-      // create a new bitmap, and copy in the data
-      BitmapPtr bitmapData ( Integration::Bitmap::New(Bitmap::BITMAP_2D_PACKED_PIXELS, true) );
-      DALI_ASSERT_ALWAYS( data.length == DISTANCE_FIELD_SIZE * DISTANCE_FIELD_SIZE );
-
-      // assign the data
-      bitmapData->GetPackedPixelsProfile()->AssignBuffer( Pixel::A8, data.data, DISTANCE_FIELD_SIZE * DISTANCE_FIELD_SIZE, DISTANCE_FIELD_SIZE, DISTANCE_FIELD_SIZE );
-
+      // create a new bitmap, and transfer in the data
+      DALI_ASSERT_DEBUG( data.length == DISTANCE_FIELD_SIZE * DISTANCE_FIELD_SIZE );
+      ImageDataPtr bitmapData = ImageData::New( data.data, Integration::BufferSize( data.length ), DISTANCE_FIELD_SIZE, DISTANCE_FIELD_SIZE, Pixel::A8 );
       data.data = NULL;
 
       // add to the glyphset
