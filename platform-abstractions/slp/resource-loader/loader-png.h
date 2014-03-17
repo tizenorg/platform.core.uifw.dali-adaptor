@@ -17,17 +17,22 @@
 // limitations under the License.
 //
 
-#include <cstdio>
+// INTERNAL INCLUDES
+#include <dali/public-api/common/intrusive-ptr.h>
 #include <dali/public-api/common/vector-wrapper.h>
 #include <dali/public-api/images/pixel.h>
-#include "image-encoder.h"
+
+// EXTERNAL INCLUDES
+#include <cstdio>
+//#include "image-encoder.h"
 
 namespace Dali
 {
 
 namespace Integration
 {
-  class Bitmap;
+  class ImageData;
+  typedef IntrusivePtr<ImageData> ImageDataPtr;
 }
 struct ImageAttributes;
 
@@ -48,7 +53,7 @@ const unsigned char MAGIC_BYTE_2 = 0x50;
  * @param[in]  attributes  Describes the dimensions, pixel format and other details for loading the image data
  * @return  true if file decoded successfully, false otherwise
  */
-bool LoadBitmapFromPng(FILE *fp, Integration::Bitmap& bitmap, ImageAttributes& attributes);
+bool LoadBitmapFromPng( FILE *fp, ImageAttributes& attributes, Integration::ImageDataPtr& bitmap );
 
 /**
  * Loads the header of a PNG file and fills in the width and height appropriately.
@@ -58,7 +63,7 @@ bool LoadBitmapFromPng(FILE *fp, Integration::Bitmap& bitmap, ImageAttributes& a
  * @param[out]  height  Is set with the height of the image
  * @return true if the file's header was read successully, false otherwise
  */
-bool LoadPngHeader(FILE *fp, const ImageAttributes& attributes, unsigned int &width, unsigned int &height );
+bool LoadPngHeader( FILE *fp, const ImageAttributes& attributes, unsigned int &width, unsigned int &height );
 
 /**
  * A bucket of bytes representing a PNG image.

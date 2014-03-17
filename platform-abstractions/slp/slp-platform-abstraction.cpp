@@ -19,7 +19,7 @@
 #include <vconf.h>
 
 #include <dali/integration-api/debug.h>
-#include <dali/integration-api/bitmap.h>
+//#include <dali/integration-api/bitmap.h>
 
 #include "resource-loader/resource-loader.h"
 #include "resource-loader/loader-jpeg.h"

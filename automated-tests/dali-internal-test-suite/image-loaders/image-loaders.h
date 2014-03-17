@@ -19,7 +19,7 @@
 
 #include <tet_api.h>
 #include <dali/dali.h>
-#include <dali/integration-api/bitmap.h>
+#include <dali/integration-api/image-data.h>
 
 // Simple structure to close the file when finished with it.
 struct AutoCloseFile

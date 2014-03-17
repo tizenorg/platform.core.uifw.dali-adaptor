@@ -17,11 +17,10 @@
 // CLASS HEADER
 #include "native-bitmap-buffer-impl.h"
 
-// EXTERNAL HEADERS
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/bitmap.h>
 
-// INTERNAL HEADERS
+
 
 namespace Dali
 {
