@@ -239,6 +239,10 @@ void RenderSurface::ConsumeEvents()
   }
 }
 
+void RenderSurface::SetViewMode( ViewMode )
+{
+}
+
 void RenderSurface::SetDisplay( boost::any display )
 {
   // the render surface can be passed either EFL e-core types, or x11 types

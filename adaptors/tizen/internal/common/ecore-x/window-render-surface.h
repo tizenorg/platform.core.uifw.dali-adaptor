@@ -131,6 +131,11 @@ public:  // from Internal::Adaptor::RenderSurface
    */
   virtual bool PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int timeDelta );
 
+  /**
+   * @copydoc Dali::Internal::Adaptor::RenderSurface::SetViewMode()
+   */
+  void SetViewMode( ViewMode viewMode );
+
 protected:
 
   /**
