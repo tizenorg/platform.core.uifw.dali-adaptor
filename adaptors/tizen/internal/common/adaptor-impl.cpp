@@ -546,6 +546,12 @@ TriggerEventInterface& Adaptor::GetTriggerEventInterface()
 {
   return *mNotificationTrigger;
 }
+
+TriggerEventFactoryInterface& Adaptor::GetTriggerEventFactoryInterface()
+{
+  return mTriggerEventFactory;
+}
+
 RenderSurface* Adaptor::GetRenderSurfaceInterface()
 {
   return mSurface;

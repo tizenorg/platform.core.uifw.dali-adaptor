@@ -28,12 +28,21 @@ namespace Adaptor
 {
 
 /**
- * Interface for a trigger event class
+ * Interface for a trigger event class.
+ * The trigger event is a way of running a function call back on the main event thread of Dali.
+ * To create a trigger event interface use the factory interface.
  */
 class TriggerEventInterface
 {
 
 public:
+
+  /**
+   * Virtual destructor
+   */
+  virtual ~TriggerEventInterface()
+  {
+  }
 
   /**
    * Triggers the event.
@@ -47,17 +56,11 @@ protected:
   /**
    * Constructor
    */
-  TriggerEventInterface()
+  TriggerEventInterface( )
   {
   }
 
-  /**
-   * Virtual protected destructor, no deletion through this interface
-   */
-  virtual ~TriggerEventInterface()
-  {
-  }
-
+private:
   // Undefined copy constructor.
   TriggerEventInterface( const TriggerEventInterface& );
 
