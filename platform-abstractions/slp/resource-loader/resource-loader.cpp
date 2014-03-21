@@ -497,7 +497,7 @@ std::string ResourceLoader::GetFontFamilyForChars(const TextArray& charsRequeste
   return mImpl->mFontController->GetFontFamilyForChars( charsRequested ).first;
 }
 
-bool ResourceLoader::AllGlyphsSupported(const std::string &fontFamily, const std::string &fontStyle, const TextArray& charsRequested)
+bool ResourceLoader::AllGlyphsSupported(const std::string& fontFamily, const std::string& fontStyle, const TextArray& charsRequested)
 {
   return mImpl->mFontController->AllGlyphsSupported( Platform::FontController::StyledFontFamily( fontFamily, fontStyle ), charsRequested);
 

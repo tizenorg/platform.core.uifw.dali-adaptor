@@ -82,7 +82,7 @@ SlpPlatformAbstraction::~SlpPlatformAbstraction()
   }
 }
 
-void SlpPlatformAbstraction::GetTimeMicroseconds(unsigned int &seconds, unsigned int &microSeconds)
+void SlpPlatformAbstraction::GetTimeMicroseconds(unsigned int& seconds, unsigned int& microSeconds)
 {
   timespec time;
   clock_gettime(CLOCK_MONOTONIC, &time);
@@ -117,7 +117,7 @@ const float SlpPlatformAbstraction::GetDefaultFontSize() const
   return mDefaultFontSize;
 }
 
-const PixelSize SlpPlatformAbstraction::GetFontLineHeightFromCapsHeight(const std::string fontFamily, const std::string& fontStyle, const CapsHeight& capsHeight) const
+const PixelSize SlpPlatformAbstraction::GetFontLineHeightFromCapsHeight(const std::string& fontFamily, const std::string& fontStyle, const CapsHeight& capsHeight) const
 {
   PixelSize result(0);
 
@@ -248,7 +248,7 @@ std::string SlpPlatformAbstraction::GetFontFamilyForChars(const TextArray& chars
   return ret;
 }
 
-bool SlpPlatformAbstraction::AllGlyphsSupported(const std::string &fontFamily, const std::string& fontStyle, const TextArray& charsRequested) const
+bool SlpPlatformAbstraction::AllGlyphsSupported(const std::string& fontFamily, const std::string& fontStyle, const TextArray& charsRequested) const
 {
   bool ret = false;
   if (mResourceLoader)

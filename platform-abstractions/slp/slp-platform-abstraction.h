@@ -61,7 +61,7 @@ public: // PlatformAbstraction overrides
   /**
    * @copydoc PlatformAbstraction::GetTimeMicroseconds()
    */
-  virtual void GetTimeMicroseconds(unsigned int &seconds, unsigned int &microSeconds);
+  virtual void GetTimeMicroseconds(unsigned int& seconds, unsigned int& microSeconds);
 
   /**
    * @copydoc PlatformAbstraction::Suspend()
@@ -130,7 +130,7 @@ public: // PlatformAbstraction overrides
   /**
    *@copydoc PlatformAbstraction::GetFontLineHeightFromCapsHeight()
    */
-  virtual const PixelSize GetFontLineHeightFromCapsHeight(const std::string fontFamily, const std::string& fontStyle, const CapsHeight& capsHeight) const;
+  virtual const PixelSize GetFontLineHeightFromCapsHeight(const std::string& fontFamily, const std::string& fontStyle, const CapsHeight& capsHeight) const;
 
   /**
    * @copydoc PlatformAbstraction::GetGlyphData()
@@ -165,7 +165,7 @@ public: // PlatformAbstraction overrides
   /**
    * @copydoc PlatformAbstraction::AllGlyphsSupported()
    */
-  bool AllGlyphsSupported(const std::string &fontFamily, const std::string& fontStyle, const TextArray& charsRequested) const;
+  bool AllGlyphsSupported(const std::string& fontFamily, const std::string& fontStyle, const TextArray& charsRequested) const;
 
   /**
    * @copydoc PlatformAbstraction::ValidateFontFamilyName()
