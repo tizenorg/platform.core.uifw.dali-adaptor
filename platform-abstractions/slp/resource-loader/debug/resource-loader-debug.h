@@ -39,4 +39,5 @@ std::string DebugResourceList(LoadedResource& partialResource);
 } // Dali
 
 #endif // defined(DEBUG_ENABLED)
+
 #endif //__DALI_SLP_PLATFORM_RESOURCE_LOADER_DEBUG_H__

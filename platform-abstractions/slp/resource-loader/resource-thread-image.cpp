@@ -16,6 +16,7 @@
  */
 
 #include "resource-thread-image.h"
+#include <debug/resource-loader-debug.h>
 #include <dali/public-api/common/ref-counted-dali-vector.h>
 #include <dali/integration-api/bitmap.h>
 #include <dali/integration-api/debug.h>
@@ -31,6 +32,8 @@
 #include "loader-wbmp.h"
 
 #include "file-closer.h"
+#include "types.h"
+#include "internal-test.h"
 
 using namespace std;
 using namespace Dali::Integration;
@@ -45,6 +48,7 @@ namespace SlpPlatform
 
 namespace
 {
+using namespace Dali::Internal::Platform;
 
 typedef bool (*LoadBitmapFunction)(FILE*, Bitmap&, ImageAttributes&); ///@ToDo: Make attributes a const reference?
 typedef bool (*LoadBitmapHeaderFunction)(FILE*, const ImageAttributes& attrs, unsigned int& width, unsigned int& height );
@@ -244,6 +248,195 @@ bool GetBitmapLoaderFunctions( FILE *fp,
   return loaderFound;
 }
 
+/**
+ * @defgroup ImagePostLoadProcessing Post-load Image Processing
+ * @{
+ * Apply processing steps requested in ImageAttributes.
+ **/
+
+/**
+ * @brief Apply rules for deriving the desired dimensions for a loaded image
+ * from the raw bitmap dimensions and the optional ImageAttributes parameter.
+ * @see ImageAttributes for the rules implemented here.
+ */
+Tuple2u DetermineDesiredDimensions( const Bitmap& loadedBitmap, const ImageAttributes& requestedAttributes )
+{
+  DALI_ASSERT_DEBUG(loadedBitmap.GetImageWidth() != 0 && loadedBitmap.GetImageHeight() != 0 && "Bitmaps with zero dimensions should have been flagged as an error during or immediately after being loaded.");
+
+  // Use raw size if size not set:
+  if( requestedAttributes.GetWidth() == 0 && requestedAttributes.GetHeight() == 0 )
+  {
+    return Tuple2u( loadedBitmap.GetImageWidth(), loadedBitmap.GetImageHeight() );
+  }
+  // Use requested size if both dimensions are set:
+  if( requestedAttributes.GetWidth() != 0 && requestedAttributes.GetHeight() != 0 )
+  {
+    return Tuple2u( requestedAttributes.GetWidth(), requestedAttributes.GetHeight() );
+  }
+  // Derive the non-set dimension from the set one and the aspect ratio of the raw image:
+  if( requestedAttributes.GetWidth() != 0 )
+  {
+    return Tuple2u( requestedAttributes.GetWidth(), unsigned( 0.5f + loadedBitmap.GetImageHeight() / float(loadedBitmap.GetImageWidth()) * requestedAttributes.GetWidth() ) );
+  }
+  return Tuple2u( unsigned( 0.5f + loadedBitmap.GetImageWidth() / float(loadedBitmap.GetImageHeight()) * requestedAttributes.GetHeight() ), requestedAttributes.GetHeight() );
+}
+
+/** Unit tests for DetermineDesiredDimensions */
+DALI_BEGIN_INTERNAL_TEST( DetermineDesiredDimensions, PostProcessLoadedImages )
+  BitmapPtr tallBitmap = Bitmap::New( Bitmap::BITMAP_2D_PACKED_PIXELS, true );
+  Bitmap::PackedPixelsProfile * packedView = tallBitmap->GetPackedPixelsProfile();
+  DALI_ASSERT_DEBUG( packedView );
+  packedView->ReserveBuffer( Pixel::RGBA8888, 64, 256, 64, 256 );
+
+  DALI_INTERNAL_TEST_CHECK( tallBitmap->GetImageWidth()  == 64 );
+  DALI_INTERNAL_TEST_CHECK( tallBitmap->GetImageHeight() == 256 );
+
+  ImageAttributes attributes;
+
+  // Check explicitly set dimensions are passed-through unchanged:
+
+  attributes.SetSize( 1, 1 );
+  const Tuple2u desired1_1 = DetermineDesiredDimensions( *tallBitmap, attributes );
+  DALI_INTERNAL_TEST_CHECK( x( desired1_1 ) == 1 );
+  DALI_INTERNAL_TEST_CHECK( y( desired1_1 ) == 1 );
+
+  attributes.SetSize( 65535, 47 );
+  const Tuple2u desired1_2 = DetermineDesiredDimensions( *tallBitmap, attributes );
+  DALI_INTERNAL_TEST_CHECK( x( desired1_2 ) == 65535 );
+  DALI_INTERNAL_TEST_CHECK( y( desired1_2 ) == 47 );
+
+  // Check that downscaling and upscaling in x preserves aspect ratio:
+
+  attributes.SetSize( 32, 0 );
+  const Tuple2u desired2_1 = DetermineDesiredDimensions( *tallBitmap, attributes );
+  DALI_INTERNAL_TEST_CHECK( x( desired2_1 ) == 32 );
+  DALI_INTERNAL_TEST_CHECK( y( desired2_1 ) == 128 );
+
+  attributes.SetSize( 1024, 0 );
+  const Tuple2u desired2_2 = DetermineDesiredDimensions( *tallBitmap, attributes );
+  DALI_INTERNAL_TEST_CHECK( x( desired2_2 ) == 1024 );
+  DALI_INTERNAL_TEST_CHECK( y( desired2_2 ) == 4096 );
+
+  // Check that downscaling and upscaling in y preserves aspect ratio:
+
+  attributes.SetSize( 0, 64 );
+  const Tuple2u desired3_1 = DetermineDesiredDimensions( *tallBitmap, attributes );
+  DALI_INTERNAL_TEST_CHECK( x( desired3_1 ) == 16 );
+  DALI_INTERNAL_TEST_CHECK( y( desired3_1 ) == 64 );
+
+  attributes.SetSize( 0, 2048 );
+  const Tuple2u desired3_2 = DetermineDesiredDimensions( *tallBitmap, attributes );
+  DALI_INTERNAL_TEST_CHECK( x( desired3_2 ) == 512 );
+  DALI_INTERNAL_TEST_CHECK( y( desired3_2 ) == 2048 );
+
+  // Check that 0,0 specified dimensions pass through the original bitmap ones:
+  attributes.SetSize( 0, 0 );
+  const Tuple2u desired4_1 = DetermineDesiredDimensions( *tallBitmap, attributes );
+  DALI_INTERNAL_TEST_CHECK( x( desired4_1 ) == tallBitmap->GetImageWidth() );
+  DALI_INTERNAL_TEST_CHECK( y( desired4_1 ) == tallBitmap->GetImageHeight() );
+
+DALI_END_INTERNAL_TEST( DetermineDesiredDimensions )
+
+/**
+ * @brief Work out what size was requested for the bitmap and apply a scaling mode to it.
+ * @returns A new bitmap with processing applied, or the original bitmap if the requested processing could not be applied or no processing is required.
+ */
+BitmapPtr PostProcessLoadedBitmap( Bitmap& loadedBitmap, const ImageAttributes& requestedAttributes, Integration::Log::Filter* infoLogFilter ) ///@todo Make bitmap const and return a BitmapConstPtr
+{
+  // Apply the requested image attributes in best-effort fashion:
+  ///@ToDo, actually scale the image if it is outside some factor of the desired size.
+
+  if( !loadedBitmap.GetPackedPixelsProfile() )
+  {
+    DALI_LOG_INFO( infoLogFilter, Debug::Concise, "Skipping post-processing of compressed texture.\n" );
+  }
+  else
+  {
+    // Work out what the desired image dimensions are:
+    const Tuple2u desiredDimensions = DetermineDesiredDimensions( loadedBitmap, requestedAttributes );
+
+    const unsigned loadedWidth = loadedBitmap.GetImageWidth();
+    const unsigned loadedHeight = loadedBitmap.GetImageHeight();
+
+    // Only do the processing if the desired size differs from the loaded one and is not zero-area:
+    if( ( loadedWidth != x( desiredDimensions ) || loadedHeight != y( desiredDimensions ) ) &&
+        ( x( desiredDimensions ) >= 1U && y( desiredDimensions ) >= 1U ) )
+    {
+      DALI_LOG_INFO( infoLogFilter, Debug::Concise, "Desired dims differ from loaded ones so rescaling the bitmap. Desired(%u, %u), Loaded(%u, %u).\n", x( desiredDimensions ), y( desiredDimensions ), loadedWidth, loadedHeight );
+      const Vector2 desiredDims( x( desiredDimensions ), y( desiredDimensions ) );
+
+      // Cut the bitmap according to the desired width and height so that the
+      // resulting bitmap has the same aspect ratio as the desired dimensions:
+      if( requestedAttributes.GetScalingMode() == ImageAttributes::ScaleToFill )
+      {
+        // Scale the desired rectangle back to fit inside the rectangle of the loaded bitmap:
+        // There are two candidates (scaled by x, and scaled by y) and we choose the smallest area one.
+        const float widthsRatio = loadedWidth / float(x( desiredDimensions ));
+        const Vector2 scaledByWidth = desiredDims * widthsRatio;
+        const float heightsRatio = loadedHeight / float(y( desiredDimensions ));
+        const Vector2 scaledByHeight = desiredDims * heightsRatio;
+        // Trim top and bottom if the area of the horizontally-fitted candidate is less, else trim the sides:
+        const bool trimTopAndBottom = scaledByWidth.width * scaledByWidth.height < scaledByHeight.width * scaledByHeight.height;
+        const Vector2 scaledDims = trimTopAndBottom ? scaledByWidth : scaledByHeight;
+
+        // Work out how many pixels to trim from top and bottom, and left and right:
+        // (We only ever do one dimension)
+        const unsigned scanlinesToTrim = trimTopAndBottom ? fabsf( (scaledDims.y - loadedHeight) * 0.5f ) : 0;
+        const unsigned columnsToTrim = trimTopAndBottom ? 0 : fabsf( (scaledDims.x - loadedWidth) * 0.5f );
+
+        DALI_LOG_INFO( infoLogFilter, Debug::Verbose, "ImageAttributes::ScaleToFill - Bitmap, desired(%f, %f), loaded(%u,%u), cut_target(%f, %f), trimmed(%u, %u), vertical = %s.\n", desiredDims.x, desiredDims.y, loadedWidth, loadedHeight, scaledDims.x, scaledDims.y, columnsToTrim, scanlinesToTrim, trimTopAndBottom ? "true" : "false" );
+
+        // Make a new bitmap with the central part of the loaded one if required:
+        if( scanlinesToTrim > 0 || columnsToTrim > 0 ) ///@ToDo: Make this test a bit fuzzy (allow say a 5% difference).
+        {
+          boost::this_thread::interruption_point(); //< Check for cancellation before doing the heavy lifting (Note: This can throw an exception.)
+
+          const unsigned newWidth = loadedWidth - 2 * columnsToTrim;
+          const unsigned newHeight = loadedHeight - 2 * scanlinesToTrim;
+          BitmapPtr croppedBitmap = Bitmap::New( Bitmap::BITMAP_2D_PACKED_PIXELS, true );
+          Bitmap::PackedPixelsProfile * packedView = croppedBitmap->GetPackedPixelsProfile();
+          DALI_ASSERT_DEBUG( packedView );
+          const Pixel::Format pixelFormat = loadedBitmap.GetPixelFormat();
+          packedView->ReserveBuffer( pixelFormat, newWidth, newHeight, newWidth, newHeight );
+
+          const unsigned bytesPerPixel = Pixel::GetBytesPerPixel( pixelFormat );
+
+          const PixelBuffer * const srcPixels = loadedBitmap.GetBuffer() + scanlinesToTrim * loadedWidth * bytesPerPixel;
+          PixelBuffer * const destPixels = croppedBitmap->GetBuffer();
+          DALI_ASSERT_DEBUG( srcPixels && destPixels );
+
+          // Optimize to a single memcpy if the left and right edges don't need a crop, else copy a scanline at a time:
+          if( trimTopAndBottom )
+          {
+            memcpy( destPixels, srcPixels, newHeight * newWidth * bytesPerPixel );
+          }
+          else
+          {
+            for( unsigned y = 0; y < newHeight; ++y )
+            {
+              memcpy( &destPixels[y * newWidth * bytesPerPixel], &srcPixels[y * loadedWidth * bytesPerPixel + columnsToTrim * bytesPerPixel], newWidth * bytesPerPixel );
+            }
+          }
+          return( croppedBitmap );
+        }
+      }
+      else
+      {
+        DALI_LOG_INFO( infoLogFilter, Debug::Concise, "Skipping post-processing of image load using unsupported scaling mode (%d).\n", int( requestedAttributes.GetScalingMode() ) );
+      }
+    }
+    else
+    {
+      DALI_LOG_INFO( infoLogFilter, Debug::Concise, "Skipping post-processing of image load as requested dimensions match bitmap as loaded.\n" );
+    }
+  }
+  return BitmapPtr ( &loadedBitmap );
+}
+/**
+ * @}
+ * Group ImagePostLoadProcessing
+ */
+
 } // namespace - empty
 
 ResourceThreadImage::ResourceThreadImage(ResourceLoader& resourceLoader)
@@ -374,7 +567,7 @@ void ResourceThreadImage::Load(const ResourceRequest& request)
   BitmapPtr bitmap = 0;
   bool result = false;
 
-  Dali::Internal::Platform::FileCloser fileCloser( request.GetPath().c_str(), "rb" );
+  FileCloser fileCloser( request.GetPath().c_str(), "rb" );
   FILE * const fp = fileCloser.GetFile();
 
   if( fp != NULL )
@@ -439,7 +632,7 @@ void ResourceThreadImage::Decode(const ResourceRequest& request)
     if( blobBytes != 0 && blobSize > 0U )
     {
       // Open a file handle on the memory buffer:
-      Dali::Internal::Platform::FileCloser fileCloser( blobBytes, blobSize, "rb" );
+      FileCloser fileCloser( blobBytes, blobSize, "rb" );
       FILE * const fp = fileCloser.GetFile();
       if ( fp != NULL )
       {
@@ -505,85 +698,25 @@ bool ResourceThreadImage::ConvertStreamToBitmap(const ResourceType& resourceType
 
       result = function( fp, *bitmap, attributes );
 
-      if (!result)
+      if( !result )
       {
         DALI_LOG_WARNING("Unable to convert %s\n", path.c_str());
+        bitmap = 0;
+      }
+      else if( bitmap && (bitmap->GetImageWidth() == 0 || bitmap->GetImageHeight() == 0) )
+      {
+        DALI_LOG_WARNING("Zero-area bitmap converted from %s\n", path.c_str());
         bitmap = 0;
       }
 
       // Apply the requested image attributes in best-effort fashion:
       const ImageAttributes& requestedAttributes = resType.imageAttributes;
-      // Cut the bitmap according to the desired width and height so that the
-      // resulting bitmap has the same aspect ratio as the desired dimensions:
-      if( bitmap && bitmap->GetPackedPixelsProfile() && requestedAttributes.GetScalingMode() == ImageAttributes::ScaleToFill )
-      {
-        const unsigned loadedWidth = bitmap->GetImageWidth();
-        const unsigned loadedHeight = bitmap->GetImageHeight();
-        const unsigned desiredWidth = requestedAttributes.GetWidth();
-        const unsigned desiredHeight = requestedAttributes.GetHeight();
-
-        if( desiredWidth < 1U || desiredHeight < 1U )
-        {
-          DALI_LOG_WARNING( "Image scaling aborted for image %s as desired dimensions too small (%u, %u)\n.", path.c_str(), desiredWidth, desiredHeight );
-        }
-        else if( loadedWidth != desiredWidth || loadedHeight != desiredHeight )
-        {
-          const Vector2 desiredDims( desiredWidth, desiredHeight );
-
-          // Scale the desired rectangle back to fit inside the rectangle of the loaded bitmap:
-          // There are two candidates (scaled by x, and scaled by y) and we choose the smallest area one.
-          const float widthsRatio = loadedWidth / float(desiredWidth);
-          const Vector2 scaledByWidth = desiredDims * widthsRatio;
-          const float heightsRatio = loadedHeight / float(desiredHeight);
-          const Vector2 scaledByHeight = desiredDims * heightsRatio;
-          // Trim top and bottom if the area of the horizontally-fitted candidate is less, else trim the sides:
-          const bool trimTopAndBottom = scaledByWidth.width * scaledByWidth.height < scaledByHeight.width * scaledByHeight.height;
-          const Vector2 scaledDims = trimTopAndBottom ? scaledByWidth : scaledByHeight;
-
-          // Work out how many pixels to trim from top and bottom, and left and right:
-          // (We only ever do one dimension)
-          const unsigned scanlinesToTrim = trimTopAndBottom ? fabsf( (scaledDims.y - loadedHeight) * 0.5f ) : 0;
-          const unsigned columnsToTrim = trimTopAndBottom ? 0 : fabsf( (scaledDims.x - loadedWidth) * 0.5f );
-
-          DALI_LOG_INFO( mLogFilter, Debug::Concise, "ImageAttributes::ScaleToFill - Bitmap, desired(%f, %f), loaded(%u,%u), cut_target(%f, %f), trimmed(%u, %u), vertical = %s.\n", desiredDims.x, desiredDims.y, loadedWidth, loadedHeight, scaledDims.x, scaledDims.y, columnsToTrim, scanlinesToTrim, trimTopAndBottom ? "true" : "false" );
-
-          // Make a new bitmap with the central part of the loaded one if required:
-          if( scanlinesToTrim > 0 || columnsToTrim > 0 ) ///@ToDo: Make this test a bit fuzzy (allow say a 5% difference).
-          {
-            boost::this_thread::interruption_point(); //< Check for cancellation before doing the heavy lifting (Note: This can throw an exception.)
-
-            const unsigned newWidth = loadedWidth - 2 * columnsToTrim;
-            const unsigned newHeight = loadedHeight - 2 * scanlinesToTrim;
-            BitmapPtr croppedBitmap = Bitmap::New( Bitmap::BITMAP_2D_PACKED_PIXELS, true );
-            Bitmap::PackedPixelsProfile * packedView = croppedBitmap->GetPackedPixelsProfile();
-            DALI_ASSERT_DEBUG( packedView );
-            const Pixel::Format pixelFormat = bitmap->GetPixelFormat();
-            packedView->ReserveBuffer( pixelFormat, newWidth, newHeight, newWidth, newHeight );
-
-            const unsigned bytesPerPixel = Pixel::GetBytesPerPixel( pixelFormat );
-
-            const PixelBuffer * const srcPixels = bitmap->GetBuffer() + scanlinesToTrim * loadedWidth * bytesPerPixel;
-            PixelBuffer * const destPixels = croppedBitmap->GetBuffer();
-            DALI_ASSERT_DEBUG( srcPixels && destPixels );
-
-            // Optimize to a single memcpy if the left and right edges don't need a crop, else copy a scanline at a time:
-            if( trimTopAndBottom )
-            {
-              memcpy( destPixels, srcPixels, newHeight * newWidth * bytesPerPixel );
-            }
-            else
-            {
-              for( unsigned y = 0; y < newHeight; ++y )
-              {
-                memcpy( &destPixels[y * newWidth * bytesPerPixel], &srcPixels[y * loadedWidth * bytesPerPixel + columnsToTrim * bytesPerPixel], newWidth * bytesPerPixel );
-              }
-            }
-
-            // Overwrite the loaded bitmap with the cropped version:
-            bitmap = croppedBitmap;
-          }
-        }
-      }
+      bitmap = PostProcessLoadedBitmap( *bitmap, requestedAttributes,
+#if defined(DEBUG_ENABLED)
+        mLogFilter );
+#else
+        0 );
+#endif
     }
     else
     {
