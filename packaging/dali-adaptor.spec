@@ -37,7 +37,6 @@ BuildRequires:  pkgconfig(libexif)
 BuildRequires:  pkgconfig(capi-system-system-settings)
 BuildRequires:  pkgconfig(gles20)
 BuildRequires:  pkgconfig(libpng)
-ExclusiveArch:  armv7l
 
 %description
 The DALi Tizen Adaptor provides a Tizen specific implementation of the dali-core
