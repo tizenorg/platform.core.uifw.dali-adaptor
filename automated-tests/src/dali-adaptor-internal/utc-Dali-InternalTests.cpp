@@ -52,3 +52,11 @@ int UtcDaliInternalTestsTestTesting(void)
   DALI_TEST_CHECK( InternalTestManager::TestResultSuccess == InternalTestManager::GetInstance().RunSuite( "TestTheTesting" ) );
   END_TEST;
 }
+
+/** Tests related to processing of loaded images. */
+int UtcDaliInternalTestsPostProcessLoadedImages(void)
+{
+  DALI_TEST_CHECK( InternalTestManager::TestResultSuccess == InternalTestManager::GetInstance().RunSuite( "PostProcessLoadedImages" ) );
+  END_TEST;
+}
+
