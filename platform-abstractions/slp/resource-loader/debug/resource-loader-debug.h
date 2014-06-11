@@ -21,6 +21,9 @@
 #include <dali/integration-api/debug.h>
 #if defined(DEBUG_ENABLED)
 
+/** Choose one of two options, the first for instrumented builds and the second for release ones. */
+#define DALI_LOADER_DEBUG_OR_RELEASE_CODE( DEBUG, RELEASE ) DEBUG
+
 #include <platform-abstractions/slp/resource-loader/resource-loader.h>
 #include <dali/integration-api/resource-cache.h>
 
@@ -38,5 +41,10 @@ std::string DebugResourceList(LoadedResource& partialResource);
 } // SlpPlatform
 } // Dali
 
+#else // defined(DEBUG_ENABLED)
+
+#define DALI_LOADER_DEBUG_OR_RELEASE_CODE( DEBUG, RELEASE ) RELEASE
+
 #endif // defined(DEBUG_ENABLED)
+
 #endif //__DALI_SLP_PLATFORM_RESOURCE_LOADER_DEBUG_H__
