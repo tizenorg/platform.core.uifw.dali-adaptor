@@ -305,7 +305,7 @@ void DALI_TEST_EQUALS( const char* str1, const std::string &str2, const char* lo
 template<>
 inline void DALI_TEST_EQUALS<const Integration::TextArray&>( const Integration::TextArray& str1, const Integration::TextArray& str2, const char* location)
 {
-  if (!std::equal(str1.Begin(), str1.End(), str2.Begin()))
+  if( !std::equal( str1.Begin(), str1.End(), str2.Begin() ) )
   {
     fprintf(stderr, "%s, checking '", location);
 

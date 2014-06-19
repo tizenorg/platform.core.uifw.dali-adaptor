@@ -18,11 +18,12 @@
  *
  */
 
-// INTERNAL INCLUDES (for TextArray)
-#include <dali/integration-api/platform-abstraction.h>
-
 // EXTERNAL INCLUDES
 #include <string>
+
+// INTERNAL INCLUDES
+#include <dali/public-api/common/vector-wrapper.h>
+#include <dali/integration-api/text-array.h>
 
 namespace Dali
 {

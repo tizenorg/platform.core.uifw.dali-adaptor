@@ -71,10 +71,11 @@ struct SlpFace
  * @param [inout] freeType  A handle to the FreeType library resource
  * @return A SlpFace pointer on success, NULL on failure
  */
-SlpFace* LoadFontFace(const std::string &fileName,
-                      const PointSize pointSize,
-                      const unsigned int dpiHor, const unsigned int dpiVer,
-                      FT_Library freeType);
+SlpFace* LoadFontFace( const std::string& fileName,
+                       PointSize pointSize,
+                       unsigned int dpiHor,
+                       unsigned int dpiVer,
+                       FT_Library freeType );
 /**
  * Loads a freetype font face
  * @param [in]    fileName  Font file name
@@ -82,9 +83,9 @@ SlpFace* LoadFontFace(const std::string &fileName,
  * @param [inout] freeType  A handle to the FreeType library resource
  * @return A SlpFace pointer on success, NULL on failure
  */
-SlpFace* LoadFontFace(const std::string &fileName,
-                      const PixelSize pixelSize,
-                      FT_Library freeType);
+SlpFace* LoadFontFace( const std::string& fileName,
+                       PixelSize pixelSize,
+                       FT_Library freeType );
 
 /**
  * Gets a glyph (character) from a font face.
@@ -93,7 +94,7 @@ SlpFace* LoadFontFace(const std::string &fileName,
  * @param [in] load_flags How the glyph should be loaded
  * @return FT_Glyph object on success, NULL on failure
  */
-FT_Glyph GetGlyph(FT_Face face, FT_ULong charcode, FT_Int32 load_flags);
+FT_Glyph GetGlyph( FT_Face face, FT_ULong charcode, FT_Int32 load_flags );
 
 /**
  * Gets a glyph (character) from a font face.
@@ -105,10 +106,13 @@ FT_Glyph GetGlyph(FT_Face face, FT_ULong charcode, FT_Int32 load_flags);
  * @param [in] renderBitmap  whether to load/render bitmap data as well
  * @return Character pointer on success, NULL on failure
  */
-Integration::GlyphSet::Character* GetCharacter(FT_Face face, const FT_ULong charcode,
-                                               const unsigned int fieldSize, const unsigned int fieldPadding,
-                                               const Vector2& maxGlyphCell,
-                                               const bool renderBitmap, const bool highQuality );
+Integration::GlyphSet::Character* GetCharacter( FT_Face face,
+                                                FT_ULong charcode,
+                                                unsigned int fieldSize,
+                                                unsigned int fieldPadding,
+                                                const Vector2& maxGlyphCell,
+                                                bool renderBitmap,
+                                                bool highQuality );
 
 /**
  * Retrieves a glyph's image from the given Freetype face object.

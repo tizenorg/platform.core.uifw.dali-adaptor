@@ -160,14 +160,6 @@ private:
   bool IsAControlCharacter( uint32_t character ) const;
 
   /**
-   * Checks cached fonts to see if they support the text.
-   * @param styledFontFamily The name of the font's family and the font's style.
-   * @param text text array.
-   * @return true if the font family supports the text false if not.
-   */
-  bool FontFamilySupportsText( const StyledFontFamily& styledFontFamily, const Integration::TextArray& text );
-
-  /**
    * Clear the font family cache.
    * Should only be called by the destructor.
    */
