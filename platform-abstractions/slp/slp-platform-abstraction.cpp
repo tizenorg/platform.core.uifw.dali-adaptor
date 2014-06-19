@@ -23,6 +23,7 @@
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/bitmap.h>
 #include <dali/integration-api/resource-types.h>
+#include <dali/integration-api/text.h>
 
 #include "resource-loader/resource-loader.h"
 #include "resource-loader/loader-jpeg.h"
@@ -435,6 +436,14 @@ Integration::BitmapPtr SlpPlatformAbstraction::GetGlyphImage( const std::string&
   }
 
   return glyphImage;
+}
+
+void SlpPlatformAbstraction::ProcessText( Integration::Text& text ) const
+{
+  if( mResourceLoader )
+  {
+    mResourceLoader->ChooseFontFamilyName( text );
+  }
 }
 
 }  // namespace SlpPlatform

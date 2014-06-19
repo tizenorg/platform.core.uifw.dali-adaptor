@@ -383,6 +383,11 @@ public:
    */
   Integration::BitmapPtr GetGlyphImage( FT_Library freeType, const std::string& fontFamily, const std::string& fontStyle, float fontSize, uint32_t character );
 
+  /**
+   *
+   */
+  void ChooseFontFamilyName( Integration::Text& text );
+
 private:
 
   /**
@@ -408,4 +413,4 @@ private:
 
 } // namespace Dali
 
-#endif // __DALI_SLPPLATFORM_RESOURCE_LOADER_H_
+#endif // __DALI_SLP_PLATFORM_RESOURCE_LOADER_H_

@@ -248,6 +248,11 @@ public: // PlatformAbstraction overrides
    */
   virtual Integration::BitmapPtr GetGlyphImage( const std::string& fontFamily, const std::string& fontStyle, float fontSize, uint32_t character ) const;
 
+  /**
+   * @copydoc PlatformAbstraction::ProcessText(Integration::Text&)
+   */
+  virtual void ProcessText( Integration::Text& text ) const;
+
 private:
   ResourceLoader* mResourceLoader;
   FT_Library mFreeTypeHandle;       ///< Freetype library

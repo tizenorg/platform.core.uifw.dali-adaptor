@@ -33,7 +33,7 @@ static Integration::Log::Filter* gLogFilter = Log::Filter::New(Log::General, fal
 } // unnamed namespace
 #endif
 
-static SlpFace* LoadFontFile(const std::string &fileName, FT_Library freeType)
+static SlpFace* LoadFontFile( const std::string& fileName, FT_Library freeType )
 {
   SlpFace* slpFace = NULL;
 
@@ -91,10 +91,11 @@ static SlpFace* LoadFontFile(const std::string &fileName, FT_Library freeType)
   return slpFace;
 }
 
-SlpFace* LoadFontFace(const std::string &fileName,
-                      const PointSize pointSize,
-                      const unsigned int dpiHor, const unsigned int dpiVer,
-                      FT_Library freeType)
+SlpFace* LoadFontFace( const std::string& fileName,
+                       PointSize pointSize,
+                       unsigned int dpiHor,
+                       unsigned int dpiVer,
+                       FT_Library freeType )
 {
   SlpFace* slpFace = LoadFontFile(fileName, freeType);
 
@@ -125,9 +126,9 @@ SlpFace* LoadFontFace(const std::string &fileName,
 }
 
 
-SlpFace* LoadFontFace(const std::string &fileName,
-                      const PixelSize pixelSize,
-                      FT_Library freeType)
+SlpFace* LoadFontFace( const std::string& fileName,
+                       PixelSize pixelSize,
+                       FT_Library freeType )
 {
   SlpFace* slpFace = LoadFontFile(fileName, freeType);
 
@@ -158,7 +159,7 @@ SlpFace* LoadFontFace(const std::string &fileName,
 }
 
 // charcode must be UTF-32 representation
-FT_Glyph GetGlyph(FT_Face face, FT_ULong charcode, FT_Int32 load_flags)
+FT_Glyph GetGlyph( FT_Face face, FT_ULong charcode, FT_Int32 load_flags )
 {
   if (face == NULL)
   {
@@ -188,10 +189,13 @@ FT_Glyph GetGlyph(FT_Face face, FT_ULong charcode, FT_Int32 load_flags)
 }
 
 // use getBitmap = false to find out glyph x-advance without copying/rendering bitmap
-GlyphSet::Character* GetCharacter(FT_Face face, FT_ULong charcode,
-                                  const unsigned int fieldSize, const unsigned int fieldPadding,
-                                  const Vector2& maxGlyphCell,
-                                  const bool renderBitmap, const bool highQuality)
+GlyphSet::Character* GetCharacter( FT_Face face,
+                                   FT_ULong charcode,
+                                   unsigned int fieldSize,
+                                   unsigned int fieldPadding,
+                                   const Vector2& maxGlyphCell,
+                                   bool renderBitmap,
+                                   bool highQuality )
 {
   FT_Glyph glyph = GetGlyph(face, charcode, FT_LOAD_DEFAULT|FT_LOAD_NO_AUTOHINT);
   if(glyph == NULL)
