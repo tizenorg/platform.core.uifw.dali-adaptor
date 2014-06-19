@@ -28,6 +28,7 @@
 #include <dali/integration-api/bitmap.h>
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/resource-cache.h>
+#include <dali/integration-api/text.h>
 #include <dali/public-api/common/dali-common.h>
 #include <dali/public-api/common/set-wrapper.h>
 #include <dali/public-api/math/vector2.h>
@@ -72,6 +73,8 @@ const unsigned int DISTANCE_FIELD_SIZE = 64;       // doesn't need to be power o
 const unsigned int DISTANCE_FIELD_PADDING = 30;    // Number of pixels of padding around the source FreeType bitmap
 const unsigned int HIGH_QUALITY_PIXEL_SIZE = 200;  // Pixel size sent to FreeType2 FT_Set_Char_Size() for high quality glyphs
 const float ONE_OVER_64 = 1.0f/64.0f;
+
+const std::string EMOJI_FONT_NAME( "SamsungEmoji" ); // Emoticons font family name.
 
 #ifdef DEBUG_ENABLED
 // For DEBUG_ENABLED profiling of distance field glyph generation
@@ -508,13 +511,12 @@ void ResourceLoader::GetClosestImageSize( ResourcePointer resourceBuffer,
   mImpl->GetClosestImageSize( resourceBuffer, attributes, closestSize );
 }
 
-
-const std::string& ResourceLoader::GetFontFamilyForChars( const TextArray& charsRequested )
+const std::string& ResourceLoader::GetFontFamilyForChars( const Integration::TextArray& charsRequested )
 {
   return mImpl->mFontController->GetFontFamilyForChars( charsRequested ).first;
 }
 
-bool ResourceLoader::AllGlyphsSupported( const std::string& fontFamily, const std::string& fontStyle, const TextArray& charsRequested )
+bool ResourceLoader::AllGlyphsSupported( const std::string& fontFamily, const std::string& fontStyle, const Integration::TextArray& charsRequested )
 {
   // At this point fontFamily and fontStyle must have been validated.
 
@@ -922,6 +924,251 @@ Integration::BitmapPtr ResourceLoader::GetGlyphImage( FT_Library freeType, const
 void ResourceLoader::SetDefaultFontFamily( const std::string& fontFamily, const std::string& fontStyle )
 {
   mImpl->mFontController->SetDefaultFontFamily( Platform::FontController::StyledFontFamily( fontFamily, fontStyle ) );
+}
+
+void ResourceLoader::ChooseFontFamilyName( Integration::Text& text )
+{
+  // Keeps all the pointers with the fonts per character and clears the vector where the new fonsts per character are returned.
+  Vector<Integration::FontPerCharacter*> fontPerCharacters = text.mFontPerCharacters;
+  text.mFontPerCharacters.Clear();
+
+  // Gets the first font per character struct.
+  Vector<Integration::FontPerCharacter*>::ConstIterator fontPerCharacterIt = fontPerCharacters.Begin();
+  Integration::FontPerCharacter* fontPerCharacter( *fontPerCharacterIt );
+
+  // Stores font info per group of characters (the input)
+  bool isDefaultSystemFontFamilyName = false; // Whether the chosen font is the system default font.
+  bool isDefaultSystemFontStyle = false;      // Whether the chosen style is the system default style.
+  std::string closestFontFamilyMatch;         // The font family match.
+  std::string closestFontStyleMatch;          // The font style match.
+
+  // Stores font info specific for the current character.
+  bool isDefaultName = false;
+  bool isDefaultStyle = false;
+  std::string fontFamilyMatch;
+  std::string fontStyleMatch;
+
+  // The default font's family name.
+  const std::string nullString;
+  std::string defaultFontFamily;
+  std::string defaultFontStyle;
+
+  {
+    bool isDefaultName = false;
+    bool isDefaultStyle = false;
+
+    ValidateFontFamilyName( nullString,
+                            nullString,
+                            isDefaultName,
+                            isDefaultStyle,
+                            defaultFontFamily,
+                            defaultFontStyle );
+  }
+
+  // Validate the given font family name and font style.
+  // If it's an emoji it uses a predefined font.
+  if( !fontPerCharacter->mIsEmoji )
+  {
+    ValidateFontFamilyName( fontPerCharacter->mFontFamilyName,
+                            fontPerCharacter->mFontStyle,
+                            isDefaultSystemFontFamilyName,
+                            isDefaultSystemFontStyle,
+                            closestFontFamilyMatch,
+                            closestFontStyleMatch );
+
+    isDefaultName = isDefaultSystemFontFamilyName;
+    isDefaultStyle = isDefaultSystemFontStyle;
+  }
+
+  // Creates a struct where the font family name and font style is returned.
+  Integration::FontPerCharacter* newFontPerCharacter = new Integration::FontPerCharacter();
+  newFontPerCharacter->mFontPointSize = fontPerCharacter->mFontPointSize;
+  newFontPerCharacter->mIsFontPointSizeDefault = fontPerCharacter->mIsFontPointSizeDefault;
+  newFontPerCharacter->mIsEmoji = fontPerCharacter->mIsEmoji;
+
+  // Traverse all characters and check if the given font and style support the character.
+  const std::size_t size = text.mText.Count();
+  for( std::size_t index = 0u, traversedCharacters = 0u; index < size; )
+  {
+    if( fontPerCharacter->mIsEmoji )
+    {
+      // Current font is an emoji.
+      // If it's an emoji all characters are supported by the EMOJI_FONT_NAME.
+      // * Stores any previous font
+      // * Creates a new one for the emojis.
+      // * Traverse in one go all the emoji characters.
+
+      if( 0u < newFontPerCharacter->mNumberOfCharacters )
+      {
+        // Store any previous font if it has characters.
+        text.mFontPerCharacters.PushBack( newFontPerCharacter );
+
+        // Create a new one for the emoji font.
+        newFontPerCharacter = new Integration::FontPerCharacter();
+      }
+
+      // Set all font parameters and characters for the emoji.
+      newFontPerCharacter->mNumberOfCharacters = fontPerCharacter->mNumberOfCharacters;
+      newFontPerCharacter->mFontFamilyName = EMOJI_FONT_NAME;
+      newFontPerCharacter->mFontStyle.clear();
+      newFontPerCharacter->mFontPointSize = fontPerCharacter->mFontPointSize;
+      newFontPerCharacter->mIsFontPointSizeDefault = fontPerCharacter->mIsFontPointSizeDefault;
+      newFontPerCharacter->mIsEmoji = true;
+
+      // Will get a new font as all characters for this one are traversed.
+      index += fontPerCharacter->mNumberOfCharacters;
+
+      if( index >= size )
+      {
+        break; // terminates the iteration if the last characters of the text were emojis.
+      }
+    } // end isEmoji
+
+    if( ( index - traversedCharacters ) == fontPerCharacter->mNumberOfCharacters )
+    {
+      // All characters for that font have been traversed. Get the next one.
+      ++fontPerCharacterIt;
+      traversedCharacters = index;
+
+      fontPerCharacter = *fontPerCharacterIt;
+
+      isDefaultSystemFontFamilyName = false;
+      isDefaultSystemFontStyle = false;
+      if( !fontPerCharacter->mIsEmoji )
+      {
+        // Validate the given font family name and font style.
+        ValidateFontFamilyName( fontPerCharacter->mFontFamilyName,
+                                fontPerCharacter->mFontStyle,
+                                isDefaultSystemFontFamilyName,
+                                isDefaultSystemFontStyle,
+                                closestFontFamilyMatch,
+                                closestFontStyleMatch );
+
+        isDefaultName = isDefaultSystemFontFamilyName;
+        isDefaultStyle = isDefaultSystemFontStyle;
+      }
+    } // end all characters traversed
+
+    if( fontPerCharacter->mIsEmoji )
+    {
+      // Do not test any character if they are emojis. Jump to the next iteration.
+      continue;
+    }
+
+    bool fontSupportCharacter = false; // Whether the validated font supports the character.
+
+    const uint32_t character = text.mText[index];
+
+    TextArray charsRequested;
+    charsRequested.PushBack( character );
+
+    // First check if there is a non default font defined and if it supports the character
+    if( !isDefaultSystemFontFamilyName )
+    {
+      // std::cout << "  Test given font family and given font style." << std::endl;
+      if( AllGlyphsSupported( closestFontFamilyMatch, closestFontStyleMatch, charsRequested ) )
+      {
+        fontFamilyMatch = closestFontFamilyMatch;
+        fontStyleMatch = closestFontStyleMatch;
+        isDefaultName = isDefaultSystemFontFamilyName;
+        isDefaultStyle = isDefaultSystemFontStyle;
+        fontSupportCharacter = true;
+        // std::cout << "    Font OK" << std::endl;
+      }
+    }
+
+    // If the character is not supported by the defined font, check if it's supported by the default font.
+    if( !fontSupportCharacter )
+    {
+      // std::cout << "  Test default font family name and given font style." << std::endl;
+      // Validate the default font family name and the given font style.
+      ValidateFontFamilyName( nullString,
+                              fontPerCharacter->mFontStyle,
+                              isDefaultName,
+                              isDefaultStyle,
+                              fontFamilyMatch,
+                              fontStyleMatch );
+
+      if( AllGlyphsSupported( fontFamilyMatch, fontStyleMatch, charsRequested ) )
+      {
+        // std::cout << "    Font OK" << std::endl;
+        fontSupportCharacter = true;
+      }
+    }
+
+    if( !fontSupportCharacter )
+    {
+      // Neither font family name and font style nor default font family name and default font style support the character.
+
+      // Find an appropiate font for the character.
+      const Platform::FontController::StyledFontFamily& styledFont = mImpl->mFontController->GetFontFamilyForChars( charsRequested );
+
+      isDefaultName = defaultFontFamily == styledFont.first;
+      isDefaultStyle = defaultFontStyle == styledFont.second;
+
+      if( !isDefaultName )
+      {
+        fontFamilyMatch = styledFont.first;
+      }
+
+      if( !isDefaultStyle )
+      {
+        fontStyleMatch = styledFont.second;
+      }
+    }
+
+    // std::cout << "  Is default font family name : " << isDefaultName << std::endl;
+    // std::cout << "        Is default font style : " << isDefaultStyle << std::endl;
+    // Clear font name and font style if they are defaults.
+    if( isDefaultName )
+    {
+      fontFamilyMatch.clear();
+    }
+    if( isDefaultStyle )
+    {
+      fontStyleMatch.clear();
+    }
+
+    if( ( isDefaultName && !newFontPerCharacter->mFontFamilyName.empty() ) ||                                              // * The current character is supported by the default system font
+        ( isDefaultStyle && !newFontPerCharacter->mFontStyle.empty() ) ||                                                  //   and previous characters was supported by other font.
+        ( !isDefaultName && ( fontFamilyMatch != newFontPerCharacter->mFontFamilyName ) ) ||                               // * The current character is supported by a non default system font
+        ( !isDefaultStyle && ( fontStyleMatch != newFontPerCharacter->mFontStyle ) ) ||                                    //   and it's different than the previous one.
+        ( fabsf( newFontPerCharacter->mFontPointSize - fontPerCharacter->mFontPointSize ) > Math::MACHINE_EPSILON_1000 ) ) // * The previous font has a different size.
+    {
+      if( 0u < newFontPerCharacter->mNumberOfCharacters )
+      {
+        text.mFontPerCharacters.PushBack( newFontPerCharacter );
+        newFontPerCharacter = new Integration::FontPerCharacter();
+        newFontPerCharacter->mFontPointSize = fontPerCharacter->mFontPointSize;
+        newFontPerCharacter->mIsFontPointSizeDefault = fontPerCharacter->mIsFontPointSizeDefault;
+      }
+
+      newFontPerCharacter->mFontFamilyName = fontFamilyMatch;
+      newFontPerCharacter->mFontStyle = fontStyleMatch;
+    }
+
+    // Increase the number of characters supported by this font.
+    ++newFontPerCharacter->mNumberOfCharacters;
+
+    // Point to the next character.
+    ++index;
+  }
+
+  // Add the font for the last group of characters.
+  if( 0u < newFontPerCharacter->mNumberOfCharacters )
+  {
+    text.mFontPerCharacters.PushBack( newFontPerCharacter );
+  }
+  else
+  {
+    delete newFontPerCharacter;
+  }
+
+  // delete previously copied items.
+  for( Vector<Integration::FontPerCharacter*>::Iterator it = fontPerCharacters.Begin(), endIt = fontPerCharacters.End(); it != endIt; ++it )
+  {
+    delete *it;
+  }
 }
 
 const std::string& ResourceLoader::GetFontPath(const std::string& fontFamily, const std::string& fontStyle)

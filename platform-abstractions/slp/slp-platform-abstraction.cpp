@@ -25,6 +25,7 @@
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/bitmap.h>
 #include <dali/integration-api/resource-types.h>
+#include <dali/integration-api/text.h>
 
 #include "resource-loader/resource-loader.h"
 #include "resource-loader/loader-jpeg.h"
@@ -256,7 +257,7 @@ void SlpPlatformAbstraction::SetDpi(unsigned int dpiHor, unsigned int dpiVer)
   }
 }
 
-const std::string& SlpPlatformAbstraction::GetFontFamilyForChars(const TextArray& charsRequested) const
+const std::string& SlpPlatformAbstraction::GetFontFamilyForChars(const Integration::TextArray& charsRequested) const
 {
   if( mResourceLoader )
   {
@@ -266,7 +267,7 @@ const std::string& SlpPlatformAbstraction::GetFontFamilyForChars(const TextArray
   return NULL_FONT_FAMILY_NAME;
 }
 
-bool SlpPlatformAbstraction::AllGlyphsSupported(const std::string &fontFamily, const std::string& fontStyle, const TextArray& charsRequested) const
+bool SlpPlatformAbstraction::AllGlyphsSupported(const std::string &fontFamily, const std::string& fontStyle, const Integration::TextArray& charsRequested) const
 {
   bool ret = false;
   if (mResourceLoader)
@@ -439,6 +440,14 @@ Integration::BitmapPtr SlpPlatformAbstraction::GetGlyphImage( const std::string&
   }
 
   return glyphImage;
+}
+
+void SlpPlatformAbstraction::ProcessText( Integration::Text& text ) const
+{
+  if( mResourceLoader )
+  {
+    mResourceLoader->ChooseFontFamilyName( text );
+  }
 }
 
 }  // namespace SlpPlatform

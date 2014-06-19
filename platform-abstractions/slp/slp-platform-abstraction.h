@@ -167,12 +167,12 @@ public: // PlatformAbstraction overrides
   /**
    * @copydoc PlatformAbstraction::GetFontFamilyForChars()
    */
-  const std::string& GetFontFamilyForChars(const TextArray& charsRequested) const;
+  const std::string& GetFontFamilyForChars(const Integration::TextArray& charsRequested) const;
 
   /**
    * @copydoc PlatformAbstraction::AllGlyphsSupported()
    */
-  bool AllGlyphsSupported(const std::string &fontFamily, const std::string& fontStyle, const TextArray& charsRequested) const;
+  bool AllGlyphsSupported(const std::string &fontFamily, const std::string& fontStyle, const Integration::TextArray& charsRequested) const;
 
   /**
    * @copydoc PlatformAbstraction::ValidateFontFamilyName()
@@ -247,6 +247,11 @@ public: // PlatformAbstraction overrides
    * @copydoc PlatformAbstraction::GetGlyphImage()
    */
   virtual Integration::BitmapPtr GetGlyphImage( const std::string& fontFamily, const std::string& fontStyle, float fontSize, uint32_t character ) const;
+
+  /**
+   * @copydoc PlatformAbstraction::ProcessText(Integration::Text&)
+   */
+  virtual void ProcessText( Integration::Text& text ) const;
 
 private:
   ResourceLoader* mResourceLoader;
