@@ -394,7 +394,7 @@ const FontController::StyledFontFamily& FontController::GetFontFamilyForChars( c
       continue;
     }
 
-    const bool matched = FontFamilySupportsText( font, charsRequested );
+    const bool matched = AllGlyphsSupported( font, charsRequested );
     if( matched )
     {
       return font;
@@ -450,7 +450,41 @@ bool FontController::AllGlyphsSupported( const StyledFontFamily& styledFontFamil
 {
   // The font has already been validated by the font implementation.
 
-  return FontFamilySupportsText( styledFontFamily, text );
+  FcCharSet* charSet = GetCachedFontCharacterSet( styledFontFamily );
+
+  DALI_ASSERT_ALWAYS( charSet && "No cached character set for font family" );
+
+  const size_t textLength = text.size();
+
+  // quick early exit before accessing font config for text arrays which are just a single control character
+  if( textLength == 1u )
+  {
+    if( IsAControlCharacter( *text.begin() ) )
+    {
+      return true;
+    }
+  }
+
+  // protect font config
+  boost::mutex::scoped_lock fcLock( mFontConfigMutex );
+
+  for( TextArray::const_iterator iter = text.begin(), endIter = text.end(); iter != endIter; ++iter )
+  {
+    const uint32_t character = (*iter);
+
+    // if it's a control character then don't test it
+    if( IsAControlCharacter( character ) )
+    {
+      continue; // jump to next iteration.
+    }
+
+    // test to see if the character set supports the character
+    if( !FcCharSetHasChar( charSet, character ) )
+    {
+      return false;
+    }
+  }
+  return true;
 }
 
 void FontController::SetDefaultFontFamily( const StyledFontFamily& styledFontFamily )
@@ -562,45 +596,6 @@ bool FontController::IsAControlCharacter( uint32_t character ) const
 
   return( ( character < UNICODE_CHAR_START ) ||
           ( character == UNICODE_CR_LF ) );
-}
-
-bool FontController::FontFamilySupportsText( const StyledFontFamily& styledFontFamily, const TextArray& text )
-{
-  FcCharSet* charSet = GetCachedFontCharacterSet( styledFontFamily );
-
-  DALI_ASSERT_ALWAYS( charSet && "No cached character set for font family" );
-
-  const size_t textLength = text.size();
-
-  // quick early exit before accessing font config for text arrays which are just a single control character
-  if( textLength == 1u )
-  {
-    if( IsAControlCharacter( *text.begin() ) )
-    {
-      return true;
-    }
-  }
-
-  // protect font config
-  boost::mutex::scoped_lock fcLock( mFontConfigMutex );
-
-  for( TextArray::const_iterator iter = text.begin(), endIter = text.end(); iter != endIter; ++iter )
-  {
-    const uint32_t character = (*iter);
-
-    // if it's a control character then don't test it
-    if( IsAControlCharacter( character ) )
-    {
-      continue;
-    }
-
-    // test to see if the character set supports the character
-    if( !FcCharSetHasChar( charSet, character ) )
-    {
-      return false;
-    }
-  }
-  return true;
 }
 
 void FontController::ClearFontFamilyCache()
@@ -757,10 +752,12 @@ void FontController::CreatePreferedFontList( )
     {
       mPreferredFonts.PushBack( styledFont );
     }
+
     if( i == 0u )
     {
       mDefaultStyledFont = *styledFont;
     }
+
     previousFont = *styledFont;
   }
 
