@@ -21,6 +21,7 @@
 #include <dali/integration-api/resource-cache.h>
 
 #include "resource-thread-base.h"
+#include "image-loader-client.h"
 
 namespace Dali
 {
@@ -36,7 +37,7 @@ class Filter;
 namespace SlpPlatform
 {
 
-class ResourceThreadDistanceField : public ResourceThreadBase
+class ResourceThreadDistanceField : public ResourceThreadBase, public ImageLoaderClient
 {
 public:
   /**
@@ -62,6 +63,11 @@ private:
   virtual void Save(const Integration::ResourceRequest& request);
 
 private:
+
+  /**
+   *@copydoc ImageLoaderClient::InterruptForCancellation
+   */
+  virtual void InterruptForCancellation() const;
 
 }; // class ResourceThreadImage
 
