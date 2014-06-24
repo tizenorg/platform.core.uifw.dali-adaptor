@@ -23,6 +23,10 @@
 namespace Dali
 {
 
+namespace Internal { namespace Platform {
+  class ImageLoaderClient;
+}}
+
 namespace Integration
 {
   class Bitmap;
@@ -38,7 +42,7 @@ const unsigned char MAGIC_BYTE_1 = 0x00;
 const unsigned char MAGIC_BYTE_2 = 0x00;
 }
 
-bool LoadBitmapFromIco(FILE *fp, Integration::Bitmap& bitmap, ImageAttributes& attributes);
+bool LoadBitmapFromIco( FILE *fp, Integration::Bitmap& bitmap, ImageAttributes& attributes, const Dali::Internal::Platform::ImageLoaderClient& client );
 
 bool LoadIcoHeader(FILE *fp, const ImageAttributes& attributes, unsigned int &width, unsigned int &height );
 

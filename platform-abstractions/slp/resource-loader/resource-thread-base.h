@@ -134,13 +134,22 @@ protected:
    */
   virtual void Save(const Integration::ResourceRequest& request) = 0;
 
+  /**
+   * @brief Cancels current resource request if it matches the one latched to be cancelled.
+   *
+   * Call from the worker resource thread of a derived class.
+   */
+  void CheckForCancellation() const;
+
 protected:
   ResourceLoader& mResourceLoader;
   boost::thread* mThread;                       ///< thread instance
   boost::condition_variable mCondition;         ///< condition variable
   boost::mutex mMutex;                          ///< used to protect mQueue
   RequestQueue mQueue;                          ///< Request queue
-  Integration::ResourceId mCurrentRequestId;    ///< Request being processed on thread
+private:
+  Integration::ResourceId mCurrentRequestId;    ///< Current request, set by worker thread
+  volatile Integration::ResourceId mCancelRequestId; ///< Request to be cancelled on thread: written by external thread and read by worker.
   bool mPaused;                                ///< Whether to process work in mQueue
 
 #if defined(DEBUG_ENABLED)

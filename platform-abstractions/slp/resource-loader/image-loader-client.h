@@ -1,6 +1,5 @@
-#ifndef __DALI_SLP_PLATFORM_LOADER_WBMP_H__
-#define __DALI_SLP_PLATFORM_LOADER_WBMP_H__
-
+#ifndef _DALI_PLATFORM_IMAGE_LOADER_CLIENT_H_
+#define _DALI_PLATFORM_IMAGE_LOADER_CLIENT_H_
 /*
  * Copyright (c) 2014 Samsung Electronics Co., Ltd.
  *
@@ -18,29 +17,32 @@
  *
  */
 
-#include <cstdio>
+// INTERNAL INCLUDES
+
+// EXTERNAL INCLUDES
 
 namespace Dali
 {
-
-namespace Internal { namespace Platform {
-  class ImageLoaderClient;
-}}
-
-namespace Integration
+namespace Internal
 {
-  class Bitmap;
-}
-struct ImageAttributes;
-
-namespace SlpPlatform
+namespace Platform
 {
 
-bool LoadBitmapFromWbmp( FILE *fp, Integration::Bitmap& bitmap, ImageAttributes& attributes, const Dali::Internal::Platform::ImageLoaderClient& client );
+/**
+ * \brief Abstract interface to the caller of an image loader.
+ */
+class ImageLoaderClient
+{
+public:
+  /**
+   * \brief Check whether the current request has been cancelled.
+   * \note Only place calls to this function at exception-safe locations in loader code.
+   **/
+  virtual void CheckForCancellation() const = 0;
+};
 
-bool LoadWbmpHeader(FILE *fp, const ImageAttributes& attributes, unsigned int &width, unsigned int &height );
+} /* namespace Platform */
+} /* namespace Internal */
+} /* namespace Dali */
 
-}
-
-}
-#endif
+#endif /* _DALI_PLATFORM_IMAGE_LOADER_CLIENT_H_ */
