@@ -22,6 +22,7 @@
 #include <dali/integration-api/resource-types.h>
 #include <dali/integration-api/bitmap.h>
 #include "resource-thread-base.h"
+#include "image-loader-client.h"
 
 namespace Dali
 {
@@ -37,7 +38,7 @@ class Filter;
 namespace SlpPlatform
 {
 
-class ResourceThreadImage : public ResourceThreadBase
+class ResourceThreadImage : public ResourceThreadBase, public Internal::Platform::ImageLoaderClient
 {
 public:
   /**
@@ -103,6 +104,10 @@ private:
                               FILE * const fp,
                               Integration::BitmapPtr& ptr );
 
+  /**
+   *@copydoc ImageLoaderClient::InterruptForCancellation
+   */
+  virtual void InterruptForCancellation() const;
 
 }; // class ResourceThreadImage
 
