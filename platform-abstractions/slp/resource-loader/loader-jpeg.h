@@ -26,6 +26,10 @@
 namespace Dali
 {
 
+namespace Internal { namespace Platform {
+class ImageLoaderClient;
+}}
+
 namespace Integration
 {
   class Bitmap;
@@ -50,7 +54,7 @@ const unsigned char MAGIC_BYTE_2 = 0xD8;
  * @param[in]  attributes  Describes the dimensions, pixel format and other details for loading the image data
  * @return  true if file decoded successfully, false otherwise
  */
-bool LoadBitmapFromJpeg(FILE *fp, Integration::Bitmap& bitmap, ImageAttributes& attributes);
+bool LoadBitmapFromJpeg( FILE *fp, Integration::Bitmap& bitmap, ImageAttributes& attributes, const Dali::Internal::Platform::ImageLoaderClient& client );
 
 /**
  * Loads the header of a JPEG file and fills in the width and height appropriately.

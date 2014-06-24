@@ -41,7 +41,7 @@ namespace SlpPlatform
 namespace
 {
 
-typedef bool (*LoadBitmapFunction)(FILE*, Bitmap&, ImageAttributes&);
+typedef bool (*LoadBitmapFunction)(FILE*, Bitmap&, ImageAttributes&, const Dali::Internal::Platform::ImageLoaderClient& );
 typedef bool (*LoadBitmapHeaderFunction)(FILE*, const ImageAttributes&, unsigned int&, unsigned int&);
 
 /*
@@ -164,7 +164,7 @@ void ResourceThreadDistanceField::Load(const ResourceRequest& request)
 
     if (GetBitmapLoaderFunctions(fp, function, header))
     {
-      result = function(fp, *bitmap, attributes);
+      result = function(fp, *bitmap, attributes, *this);
 
       if (result)
       {
@@ -264,6 +264,10 @@ void ResourceThreadDistanceField::Save(const Integration::ResourceRequest& reque
   DALI_ASSERT_DEBUG(request.GetType()->id == ResourceBitmap);
 }
 
+void ResourceThreadDistanceField::InterruptForCancellation() const
+{
+  ResourceThreadBase::CheckForCancellation();
+}
 
 } // namespace SlpPlatform
 

@@ -23,6 +23,10 @@
 namespace Dali
 {
 
+namespace Internal { namespace Platform {
+class ImageLoaderClient;
+}}
+
 namespace Integration
 {
   class Bitmap;
@@ -32,7 +36,7 @@ struct ImageAttributes;
 namespace SlpPlatform
 {
 
-bool LoadBitmapFromWbmp(FILE *fp, Integration::Bitmap& bitmap, ImageAttributes& attributes);
+bool LoadBitmapFromWbmp( FILE *fp, Integration::Bitmap& bitmap, ImageAttributes& attributes, const Dali::Internal::Platform::ImageLoaderClient& client );
 
 bool LoadWbmpHeader(FILE *fp, const ImageAttributes& attributes, unsigned int &width, unsigned int &height );
 
