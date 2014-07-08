@@ -40,9 +40,7 @@ PKG_CHECK_MODULES(ECORE_X, ecore-x)
 PKG_CHECK_MODULES(ECORE_IPC, ecore-ipc)
 PKG_CHECK_MODULES(EXIF, libexif)
 PKG_CHECK_MODULES(FREETYPE, [freetype2 >= $FREETYPE_REQUIRED])
-PKG_CHECK_MODULES(FEEDBACK, feedback)
 PKG_CHECK_MODULES(FONTCONFIG, fontconfig)
-PKG_CHECK_MODULES(MMFSOUND, mm-sound)
 PKG_CHECK_MODULES(PNG, libpng)
 PKG_CHECK_MODULES(SENSOR, sensor)
 PKG_CHECK_MODULES(TTS, tts)
@@ -110,7 +108,7 @@ AM_CONDITIONAL(TURBO_JPEG_IS_ON, test $with_jpeg_turbo = yes)
 
 # Tizen Profile options
 AC_ARG_ENABLE([profile],
-              [AC_HELP_STRING([--enable-profile=COMMON,MOBILE,TV],
+              [AC_HELP_STRING([--enable-profile=COMMON,MOBILE,LITE,WEARABLE,TV],
                             [Select the variant of tizen])],
               [dali_profile=$enableval],
               [dali_profile=COMMON])
@@ -126,7 +124,16 @@ DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DDALI_PROFILE_${dali_profile}"
 DALI_PROFILE_CFLAGS=" -DDALI_PROFILE_${dali_profile}"
 AM_CONDITIONAL([COMMON_PROFILE], [test x$dali_profile = xCOMMON])
 AM_CONDITIONAL([MOBILE_PROFILE], [test x$dali_profile = xMOBILE])
+AM_CONDITIONAL([LITE_PROFILE], [test x$dali_profile = xLITE])
+AM_CONDITIONAL([WEARABLE_PROFILE], [test x$dali_profile = xWEARABLE])
 AM_CONDITIONAL([TV_PROFILE], [test x$dali_profile = xTV])
+
+if test "x$enable_profile" = "xCOMMON"; then
+PKG_CHECK_MODULES(OPENGLES20, gles20)
+PKG_CHECK_MODULES(HAPTIC, haptic)
+PKG_CHECK_MODULES(FEEDBACK, feedback)
+PKG_CHECK_MODULES(MMFSOUND, mm-sound)
+fi
 
 if test "x$enable_profile" = "xMOBILE"; then
 PKG_CHECK_MODULES(OPENGLES20, opengl-es-20)
@@ -135,17 +142,26 @@ PKG_CHECK_MODULES(DEVICED, deviced)
 PKG_CHECK_MODULES(EVAS, evas)
 PKG_CHECK_MODULES(NATIVE_BUFFER, native-buffer)
 PKG_CHECK_MODULES(NATIVE_BUFFER_POOL, native-buffer-pool)
+PKG_CHECK_MODULES(FEEDBACK, feedback)
+PKG_CHECK_MODULES(MMFSOUND, mm-sound)
+fi
+
+if test "x$enable_profile" = "xLITE"; then
+PKG_CHECK_MODULES(OPENGLES20, gles20)
+fi
+
+if test "x$enable_profile" = "xWEARABLE"; then
+PKG_CHECK_MODULES(OPENGLES20, gles20)
+PKG_CHECK_MODULES(FEEDBACK, feedback)
+PKG_CHECK_MODULES(MMFSOUND, mm-sound)
 fi
 
 if test "x$enable_profile" = "xTV"; then
 PKG_CHECK_MODULES(OPENGLES20, gles20)
 PKG_CHECK_MODULES(ASSIMP, assimp)
 PKG_CHECK_MODULES(HAPTIC, haptic)
-fi
-
-if test "x$enable_profile" = "xCOMMON"; then
-PKG_CHECK_MODULES(OPENGLES20, gles20)
-PKG_CHECK_MODULES(HAPTIC, haptic)
+PKG_CHECK_MODULES(FEEDBACK, feedback)
+PKG_CHECK_MODULES(MMFSOUND, mm-sound)
 fi
 
 if test x$DALI_DATA_RW_DIR != x; then
@@ -196,7 +212,6 @@ AC_SUBST(DALI_PROFILE_CFLAGS)
 devincludepath=${includedir}
 AC_SUBST(devincludepath)
 
-
 AC_CONFIG_FILES([
  Makefile
  common/Makefile
@@ -204,14 +219,20 @@ AC_CONFIG_FILES([
  dali.pc
  dali-application/Makefile
  dali-application.pc
+])
+
+if test "x$enable_profile" != "xLITE"; then
+AC_CONFIG_FILES([
  dali-evas/Makefile
  dali-evas.pc
  dali-native-buffer/Makefile
  dali-native-buffer.pc
  plugins/Makefile
 ])
+fi
 
 AC_OUTPUT
+
 
 echo "
 Configuration
