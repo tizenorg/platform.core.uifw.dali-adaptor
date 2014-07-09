@@ -103,6 +103,7 @@ void* ecore_timer_del(Ecore_Timer *timer)
 
 void tilt_sensor_startup(void)
 {
+  test_return_value = TET_UNDEF;
 }
 
 void tilt_sensor_cleanup(void)
