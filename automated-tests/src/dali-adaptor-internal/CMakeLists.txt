@@ -9,6 +9,7 @@ SET(TC_SOURCES
     utc-Dali-GifLoader.cpp
     utc-Dali-TiltSensor.cpp
     utc-Dali-CommandLineOptions.cpp
+    utc-Dali-InternalTests.cpp
 )
 
 LIST(APPEND TC_SOURCES
@@ -35,7 +36,10 @@ SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -O0 -ggdb --coverage -Wall -Werror=retu
 # Shouldn't have to do this!
 # But CMake's new auto-escape quote policy doesn't work right.
 CMAKE_POLICY(SET CMP0005 OLD)
-ADD_DEFINITIONS(-DTEST_IMAGE_DIR=\"\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../images\\\"\" )
+ADD_DEFINITIONS(
+  -DDEBUG_ENABLED=1
+  -DTEST_IMAGE_DIR=\"\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../images\\\"\"
+)
 
 
 FOREACH(directory ${${CAPI_LIB}_LIBRARY_DIRS})
@@ -47,6 +51,8 @@ INCLUDE_DIRECTORIES(
     ../dali-adaptor/dali-test-suite-utils
     ../../../adaptors/tizen
     ../../../
+    ../../../platform-abstractions/slp
+    ../../../platform-abstractions/portable
 )
 
 ADD_EXECUTABLE(${EXEC_NAME} ${EXEC_NAME}.cpp ${TC_SOURCES})
