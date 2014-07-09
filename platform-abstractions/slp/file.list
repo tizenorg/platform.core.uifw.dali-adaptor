@@ -1,6 +1,8 @@
 # Add local source files here:
 
 slp_platform_abstraction_src_files = \
+  $(slp_platform_abstraction_src_dir)/../portable/internal-test.cpp \
+$(slp_platform_abstraction_src_dir)/../portable/internal-test-manager.cpp \
   $(slp_platform_abstraction_src_dir)/slp-platform-abstraction.cpp \
   $(slp_platform_abstraction_src_dir)/slp-logging.cpp \
   $(slp_platform_abstraction_src_dir)/slp-font-configuration-parser.cpp \
