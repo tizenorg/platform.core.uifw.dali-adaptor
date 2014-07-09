@@ -31,6 +31,7 @@ static const LoadFunctions GifLoaders( SlpPlatform::LoadGifHeader, SlpPlatform::
 
 void gif_loader_startup(void)
 {
+  test_return_value = TET_UNDEF;
 }
 
 void gif_loader_cleanup(void)
