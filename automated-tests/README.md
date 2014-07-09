@@ -15,6 +15,8 @@ directory and contains several test cases. These are:
     attempting to have a live or mocked platform abstraction in place.
     This is the correct place for test cases which can test code in dali-adaptor
     in isolation.
+    This suite is only built in debug mode and for development environments,
+    not embedded device targets.
     Currently tied to the SLP platform abstraction directly.
     Noteworthy test cases:
     *   `utc-Dali-GifLoader.cpp`: Runs the gif loader syncronously and checks

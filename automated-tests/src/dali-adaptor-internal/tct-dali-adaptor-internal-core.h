@@ -9,6 +9,8 @@ extern void tilt_sensor_startup(void);
 extern void tilt_sensor_cleanup(void);
 extern void command_line_options_startup(void);
 extern void command_line_options_cleanup(void);
+extern void internal_test__startup(void);
+extern void internal_test_cleanup(void);
 
 extern int UtcDaliGifLoaderInterlaced(void);
 extern int UtcDaliGifLoaderErrorBits(void);
@@ -31,6 +33,8 @@ extern int UtcDaliCommandLineOptionsNonDaliArgs(void);
 extern int UtcDaliCommandLineOptionsMixture(void);
 extern int UtcDaliCommandLineOptionsMixtureDaliOpsAtStart(void);
 extern int UtcDaliCommandLineOptionsMixtureDaliOpsAtEnd(void);
+extern int UtcDaliInternalTestsDefaultSuite(void);
+extern int UtcDaliInternalTestsTestTesting(void);
 
 testcase tc_array[] = {
     {"UtcDaliGifLoaderInterlaced", UtcDaliGifLoaderInterlaced, gif_loader_startup, gif_loader_cleanup},
@@ -54,6 +58,8 @@ testcase tc_array[] = {
     {"UtcDaliCommandLineOptionsMixture", UtcDaliCommandLineOptionsMixture, command_line_options_startup, command_line_options_cleanup},
     {"UtcDaliCommandLineOptionsMixtureDaliOpsAtStart", UtcDaliCommandLineOptionsMixtureDaliOpsAtStart, command_line_options_startup, command_line_options_cleanup},
     {"UtcDaliCommandLineOptionsMixtureDaliOpsAtEnd", UtcDaliCommandLineOptionsMixtureDaliOpsAtEnd, command_line_options_startup, command_line_options_cleanup},
+    {"UtcDaliInternalTestsDefaultSuite", UtcDaliInternalTestsDefaultSuite, internal_test__startup, internal_test_cleanup},
+    {"UtcDaliInternalTestsTestTesting", UtcDaliInternalTestsTestTesting, internal_test__startup, internal_test_cleanup},
     {NULL, NULL}
 };
 
