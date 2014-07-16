@@ -19,15 +19,18 @@
  */
 
 // EXTERNAL INCLUDES
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
+#if !defined(EMSCRIPTEN)
 #include <boost/thread.hpp>
+#endif
+#include <map>
 
 // INTERNAL INCLUDES
+#include <dali/public-api/signals/function.h>
 #include <dali/public-api/common/vector-wrapper.h>
 #include <dali/public-api/common/view-mode.h>
 #include <dali/public-api/math/rect.h>
 #include <dali/integration-api/render-controller.h>
+#include <dali/integration-api/platform-abstraction.h>
 
 #include <adaptor.h>
 #include <render-surface.h>
@@ -35,8 +38,8 @@
 #include <imf-manager.h>
 #include <device-layout.h>
 #include <clipboard.h>
+#include <vsync-monitor.h>
 
-#include <slp-platform-abstraction.h>
 #include <base/interfaces/adaptor-internal-services.h>
 #include <base/environment-options.h>
 #include <base/core-event-interface.h>
@@ -72,7 +75,7 @@ class CallbackManager;
 class FeedbackPluginProxy;
 class FeedbackController;
 class RotationObserver;
-class VSyncMonitor;
+class VSyncMonitorInterface;
 class PerformanceInterface;
 class LifeCycleObserver;
 class ObjectProfiler;
@@ -505,14 +508,16 @@ private: // Data
   EglFactory*                           mEglFactory;                  ///< EGL Factory
 
   RenderSurface*                        mSurface;                     ///< Current surface
-  SlpPlatform::SlpPlatformAbstraction*  mPlatformAbstraction;         ///< Platform abstraction
+  Integration::PlatformAbstraction*     mPlatformAbstraction;         ///< Platform abstraction
 
   EventHandler*                         mEventHandler;                ///< event handler
   CallbackManager*                      mCallbackManager;             ///< Used to install callbacks
   bool                                  mNotificationOnIdleInstalled; ///< whether the idle handler is installed to send an notification event
   TriggerEvent*                         mNotificationTrigger;         ///< Notification event trigger
   GestureManager*                       mGestureManager;              ///< Gesture manager
+#if !defined(EMSCRIPTEN)
   boost::mutex                          mIdleInstaller;               ///< mutex to ensure two threads don't try to install idle handler at the same time
+#endif
   size_t                                mHDpi;                        ///< Override horizontal DPI
   size_t                                mVDpi;                        ///< Override vertical DPI
   FeedbackPluginProxy*                  mDaliFeedbackPlugin;          ///< Used to access feedback support

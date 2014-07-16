@@ -22,8 +22,10 @@
 #include <dali/integration-api/resource-cache.h>
 #include <dali/public-api/common/dali-common.h>
 
+#if !defined(EMSCRIPTEN)
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#endif
 #include <string>
 
 namespace Dali
@@ -167,7 +169,7 @@ public: // PlatformAbstraction overrides
   /**
    * @copydoc PlatformAbstraction::GetFontFamilyForChars()
    */
-  const std::string& GetFontFamilyForChars(const TextArray& charsRequested) const;
+  virtual const std::string& GetFontFamilyForChars(const TextArray& charsRequested) const;
 
   /**
    * @copydoc PlatformAbstraction::AllGlyphsSupported()
