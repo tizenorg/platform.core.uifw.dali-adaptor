@@ -30,52 +30,68 @@ namespace Internal
 namespace Adaptor
 {
 
-EglFactory::EglFactory()
-: mEglImplementation(NULL),
-  mEglImageExtensions(NULL),
-  mEglSync(new EglSyncImplementation) // Created early, as needed by Core constructor
+struct EglFactory::Impl
 {
+  EglImplementation* mEglImplementation;
+  EglImageExtensions* mEglImageExtensions;
+  EglSyncImplementation* mEglSync;
+
+  Impl()
+    : mEglImplementation(NULL),
+      mEglImageExtensions(NULL),
+      mEglSync(new EglSyncImplementation) // Created early, as needed by Core constructor
+  {
+  }
+  ~Impl()
+  {
+    // Ensure the EGL implementation is destroyed
+    delete mEglImageExtensions;
+    delete mEglImplementation;
+    delete mEglSync;
+  }
+};
+
+EglFactory::EglFactory()
+{
+  mImpl = new Impl();
 }
 
 EglFactory::~EglFactory()
 {
-  // Ensure the EGL implementation is destroyed
-  delete mEglImageExtensions;
-  delete mEglImplementation;
-  delete mEglSync;
+  delete mImpl;
 }
 
 EglInterface* EglFactory::Create()
 {
   // Created by RenderThread (After Core construction)
-  mEglImplementation = new EglImplementation();
-  mEglImageExtensions = new EglImageExtensions(mEglImplementation);
+  mImpl->mEglImplementation = new EglImplementation();
+  mImpl->mEglImageExtensions = new EglImageExtensions(mImpl->mEglImplementation);
 
-  mEglSync->Initialize(mEglImplementation); // The sync impl needs the EglDisplay
-  return mEglImplementation;
+  mImpl->mEglSync->Initialize(mImpl->mEglImplementation); // The sync impl needs the EglDisplay
+  return mImpl->mEglImplementation;
 }
 
 void EglFactory::Destroy()
 {
-  delete mEglImageExtensions;
-  mEglImageExtensions = NULL;
-  delete mEglImplementation;
-  mEglImplementation = NULL;
+  delete mImpl->mEglImageExtensions;
+  mImpl->mEglImageExtensions = NULL;
+  delete mImpl->mEglImplementation;
+  mImpl->mEglImplementation = NULL;
 }
 
 EglInterface* EglFactory::GetImplementation()
 {
-  return mEglImplementation;
+  return mImpl->mEglImplementation;
 }
 
 EglImageExtensions* EglFactory::GetImageExtensions()
 {
-  return mEglImageExtensions;
+  return mImpl->mEglImageExtensions;
 }
 
 EglSyncImplementation* EglFactory::GetSyncImplementation()
 {
-  return mEglSync;
+  return mImpl->mEglSync;
 }
 
 } // Adaptor

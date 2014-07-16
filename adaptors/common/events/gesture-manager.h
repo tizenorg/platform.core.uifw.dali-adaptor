@@ -120,7 +120,6 @@ private:
   CoreEventInterface& mCoreEventInterface;
   GestureDetectorContainer mGestureDetectors;
   Vector2 mScreenSize;
-  CallbackManager* mCallbackManager;
   EnvironmentOptions& mEnvironmentOptions;
   float mMinimumDistanceDelta; ///< The minimum distance before a pinch is applicable. (-1.0f means pinch detector uses default value)
   bool mRunning; ///< States whether the GestureManager is running or not.

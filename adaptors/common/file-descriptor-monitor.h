@@ -37,7 +37,7 @@ namespace Adaptor
 
 /**
  * Monitors the given file descriptor and whenever anything is written to it, it calls
- * the given boost function.
+ * the given callback function.
  */
 class FileDescriptorMonitor
 {
