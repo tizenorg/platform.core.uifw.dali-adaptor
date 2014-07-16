@@ -29,19 +29,32 @@ adaptor_wayland_dir = ../../../adaptors/wayland
 include ../../../adaptors/wayland/file.list
 else
 adaptor_x11_dir = ../../../adaptors/x11
+if ! UBUNTU_PROFILE
 include ../../../adaptors/x11/file.list
+else
+adaptor_ubuntu_dir = ../../../adaptors/ubuntu
+include ../../../adaptors/ubuntu/file.list
+endif
 endif
 
 lib_LTLIBRARIES = libdali-adaptor.la
 
 libdali_adaptor_la_SOURCES = $(adaptor_application_src_files)
 
-libdali_adaptor_la_SOURCES += $(adaptor_application_internal_src_files)
+if MOBILE_PROFILE
+libdali_adaptor_la_SOURCES += $(tizen_evas_plugin_public_api_src_files) \
+                              $(tizen_native_buffer_plugin_public_api_src_files)
+endif
 
+if UBUNTU_PROFILE
+libdali_adaptor_la_SOURCES += $(adaptor_ubuntu_application_src_files)
+else
+libdali_adaptor_la_SOURCES += $(adaptor_application_internal_src_files)
 if WAYLAND
 libdali_adaptor_la_SOURCES += $(adaptor_wayland_application_src_files)
 else
 libdali_adaptor_la_SOURCES += $(adaptor_x11_application_src_files)
+endif
 endif
 
 libdali_adaptor_la_DEPENDENCIES =
@@ -56,7 +69,7 @@ libdali_adaptor_includes = \
                       -I../../../platform-abstractions/portable \
                       -I../../../adaptors/public-api \
                       -I../../../adaptors/common \
-                      -I../../../adaptors/ 
+                      -I../../../adaptors/
 
 if WAYLAND
 libdali_adaptor_includes += \
@@ -64,6 +77,14 @@ libdali_adaptor_includes += \
 else
 libdali_adaptor_includes += \
                       -I../../../adaptors/x11
+endif
+
+if UBUNTU_PROFILE
+libdali_adaptor_includes += \
+                      -I../../../adaptors/ubuntu
+else
+libdali_adaptor_includes += \
+                      -I../../../adaptors/tizen
 endif
 
 daliUserFontCacheDir = ${dataReadWriteDir}/glyphcache/
