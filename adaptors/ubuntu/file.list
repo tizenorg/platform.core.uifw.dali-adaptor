@@ -1,0 +1,35 @@
+# ubuntu
+
+adaptor_ubuntu_internal_header_files = \
+  $(adaptor_x11_dir)/clipboard-impl.h \
+  $(adaptor_x11_dir)/imf-manager-impl.h \
+  $(adaptor_x11_dir)/pixmap-image-impl.h \
+  $(adaptor_x11_dir)/pixmap-render-surface.h \
+  $(adaptor_ubuntu_dir)/tilt-sensor-impl.h \
+  $(adaptor_ubuntu_dir)/tts-player-impl.h
+
+adaptor_ubuntu_application_src_files = \
+  $(adaptor_common_dir)/application-impl.cpp \
+  $(adaptor_common_dir)/command-line-options.cpp \
+  $(adaptor_common_dir)/abort-handler.cpp \
+  $(adaptor_ubuntu_dir)/framework-ubuntu.cpp
+
+adaptor_ubuntu_internal_src_files = \
+  $(adaptor_x11_dir)/clipboard-impl-x.cpp \
+  $(adaptor_x11_dir)/imf-manager-impl-x.cpp \
+  $(adaptor_x11_dir)/pixmap-image-impl-x.cpp \
+  $(adaptor_x11_dir)/server-connection-x.cpp \
+  $(adaptor_x11_dir)/virtual-keyboard-impl-x.cpp \
+  $(adaptor_x11_dir)/window-impl-x.cpp \
+  $(adaptor_x11_dir)/event-handler-x.cpp \
+  $(adaptor_x11_dir)/egl-implementation-x.cpp \
+  $(adaptor_x11_dir)/pixmap-render-surface-x.cpp \
+  $(adaptor_x11_dir)/ecore-x-render-surface.cpp \
+  $(adaptor_x11_dir)/window-render-surface-x.cpp \
+  $(adaptor_x11_dir)/ecore-x-window-interface.cpp \
+  $(adaptor_x11_dir)/key-impl-x.cpp \
+  $(adaptor_ubuntu_dir)/accessibility-manager-impl-ubuntu.cpp \
+  $(adaptor_ubuntu_dir)/vsync-monitor-ubuntu.cpp \
+  $(adaptor_ubuntu_dir)/tilt-sensor-impl-ubuntu.cpp \
+  $(adaptor_ubuntu_dir)/tts-player-impl-ubuntu.cpp
+
