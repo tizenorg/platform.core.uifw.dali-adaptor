@@ -18,6 +18,8 @@
 // CLASS HEADER
 #include "performance-server.h"
 
+#include <dali/integration-api/platform-abstraction.h>
+
 // INTERNAL INCLUDES
 #include <base/environment-options.h>
 #include <dali/integration-api/platform-abstraction.h>
