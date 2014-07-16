@@ -19,10 +19,10 @@
  */
 
 // EXTERNAL INCLUDES
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
-#include <boost/thread.hpp>
-
+#if !defined(EMSCRIPTEN)
+#include <boost/thread.hpp>  // should this be here anyway??
+#endif
+#include <dali/public-api/signals/function.h>
 #include <dali/public-api/math/rect.h>
 #include <dali/public-api/object/base-object.h>
 
@@ -43,7 +43,7 @@ namespace Internal
 
 namespace Adaptor
 {
-class CommandLineOptions;
+struct CommandLineOptions;
 class EventLoop;
 
 typedef Dali::Rect<int> PositionSize;
@@ -176,6 +176,11 @@ public: // From Framework::Observer
    */
   virtual void OnLanguageChanged();
 
+  /**
+   * Called if the main loop is aborted
+   */
+  virtual void OnAbort();
+
 public:
 
   /**
@@ -189,37 +194,37 @@ public:  // Signals
   /**
    * @copydoc Dali::Application::InitSignal()
    */
-  Dali::Application::AppSignalV2& InitSignal() { return mInitSignalV2; }
+  Dali::Application::AppSignalV2& InitSignal();
 
   /**
    * @copydoc Dali::Application::TerminateSignal()
    */
-  Dali::Application::AppSignalV2& TerminateSignal() { return mTerminateSignalV2; }
+  Dali::Application::AppSignalV2& TerminateSignal();
 
   /**
    * @copydoc Dali::Application::PauseSignal()
    */
-  Dali::Application::AppSignalV2& PauseSignal() { return mPauseSignalV2; }
+  Dali::Application::AppSignalV2& PauseSignal();
 
   /**
    * @copydoc Dali::Application::ResumeSignal()
    */
-  Dali::Application::AppSignalV2& ResumeSignal() { return mResumeSignalV2; }
+  Dali::Application::AppSignalV2& ResumeSignal();
 
   /**
    * @copydoc Dali::Application::ResetSignal()
    */
-  Dali::Application::AppSignalV2& ResetSignal() { return mResetSignalV2; }
+  Dali::Application::AppSignalV2& ResetSignal();
 
   /**
    * @copydoc Dali::Application::ResizeSignal()
    */
-  Dali::Application::AppSignalV2& ResizeSignal() { return mResizeSignalV2; }
+  Dali::Application::AppSignalV2& ResizeSignal();
 
   /**
    * @copydoc Dali::Application::LanguageChangedSignal()
    */
-  Dali::Application::AppSignalV2& LanguageChangedSignal() { return mLanguageChangedSignalV2; }
+  Dali::Application::AppSignalV2& LanguageChangedSignal();
 
 private:
 
@@ -244,30 +249,8 @@ private:
   void QuitFromMainLoop();
 
 private:
-
-  AppSignalV2                           mInitSignalV2;
-  AppSignalV2                           mTerminateSignalV2;
-  AppSignalV2                           mPauseSignalV2;
-  AppSignalV2                           mResumeSignalV2;
-  AppSignalV2                           mResetSignalV2;
-  AppSignalV2                           mResizeSignalV2;
-  AppSignalV2                           mLanguageChangedSignalV2;
-
-  EventLoop*                            mEventLoop;
-  Framework*                            mFramework;
-
-  CommandLineOptions*                   mCommandLineOptions;
-
-  Dali::SingletonService                mSingletonService;
-  Dali::Adaptor*                        mAdaptor;
-  Dali::Window                          mWindow;
-  Dali::Application::WINDOW_MODE        mWindowMode;
-  std::string                           mName;
-
-  bool                                  mInitialized;
-  DeviceLayout                          mBaseLayout;
-
-  SlotDelegate< Application >           mSlotDelegate;
+  struct Impl;
+  Impl *mImpl;
 };
 
 inline Application& GetImplementation(Dali::Application& application)

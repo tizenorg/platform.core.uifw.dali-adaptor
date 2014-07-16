@@ -19,10 +19,10 @@
  */
 
 // EXTERNAL INCLUDES
-#include <boost/function.hpp>
 #include "window.h"
 #include "tts-player.h"
 #include <dali/public-api/signals/dali-signal-v2.h>
+#include <dali/public-api/signals/function.h>
 #include <dali/public-api/math/rect.h>
 #include <dali/public-api/events/touch-event.h>
 
