@@ -131,8 +131,6 @@ GlProxyImplementation::GlProxyImplementation(EnvironmentOptions& environmentOpti
   mDrawSampler("Draw calls"),
   mUniformSampler("Uniform sets"),
   mUseProgramSampler("Used programs"),
-  mDrawCount(0),
-  mUniformCount(0),
   mFrameCount(0)
 {
 }
