@@ -19,7 +19,9 @@
  */
 
 // EXTERNAL INCLUDES
+#if !defined(EMSCRIPTEN)
 #include <boost/thread.hpp>
+#endif
 #include <list>
 
 // INTERNAL INCLUDES
@@ -117,7 +119,9 @@ private:
 
     bool                           mRunning;            ///< flag is set to true if when running
     CallbackList                   mCallbackContainer;  ///< container of live callbacks
+#if !defined(EMSCRIPTEN)
     boost::mutex                   mMutex;              ///< protect access to shared data
+#endif
 };
 
 } // namespace Adaptor

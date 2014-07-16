@@ -13,3 +13,5 @@ base_adaptor_src_files = \
   $(base_adaptor_src_dir)/performance-logging/performance-marker.cpp \
   $(base_adaptor_src_dir)/performance-logging/performance-server.cpp \
   $(base_adaptor_src_dir)/performance-logging/performance-interface-factory.cpp
+
+emscripten_base_adaptor_src_files =
