@@ -19,7 +19,9 @@
 #include "style-monitor-impl.h"
 
 // EXTERNAL INCLUDES
+#ifndef DALI_PROFILE_UBUNTU
 #include <vconf.h>
+#endif // DALI_PROFILE_UBUNTU
 
 // INTERNAL INCLUDES
 #include <dali/public-api/object/type-registry.h>

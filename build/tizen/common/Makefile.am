@@ -33,7 +33,12 @@ adaptor_wayland_dir = ../../../adaptors/wayland
 include ../../../adaptors/wayland/file.list
 else
 adaptor_x11_dir = ../../../adaptors/x11
+if ! UBUNTU_PROFILE
 include ../../../adaptors/x11/file.list
+else
+adaptor_ubuntu_dir = ../../../adaptors/ubuntu
+include ../../../adaptors/ubuntu/file.list
+endif
 endif
 
 if COMMON_PROFILE
@@ -44,6 +49,19 @@ adaptor_common_internal_src_files += $(adaptor_x11_common_internal_profile_src_f
 endif
 endif
 
+if UBUNTU_PROFILE
+adaptor_common_internal_src_files += $(adaptor_common_internal_profile_src_files)
+slp_platform_abstraction_src_files += $(slp_assimp_stubs_src_files)
+
+if ! WAYLAND
+adaptor_common_internal_src_files += $(adaptor_x11_common_internal_profile_src_files)
+endif
+adaptor_common_internal_src_files += $(adaptor_ubuntu_internal_src_files)
+else
+adaptor_common_internal_src_files += $(adaptor_tizen_internal_src_files)
+adaptor_common_internal_profile_src_files += $(adaptor_tizen_profile_src_files)
+endif
+
 if WAYLAND
 adaptor_common_internal_src_files += $(adaptor_wayland_internal_src_files)
 adaptor_common_internal_profile_src_files += $(adaptor_wayland_profile_src_files)
@@ -51,6 +69,7 @@ else
 adaptor_common_internal_src_files += $(adaptor_x11_internal_src_files)
 adaptor_common_internal_profile_src_files += $(adaptor_x11_profile_src_files)
 endif
+
 
 if MOBILE_PROFILE
 adaptor_common_internal_src_files += $(adaptor_x11_profile_src_files)
@@ -88,7 +107,6 @@ if ! LITE_PROFILE
 if ! WEARABLE_PROFILE
 plugin_themes_dir = ../../../adaptors/common/feedback
 dali_plugin_theme_files = $(plugin_themes_dir)/default-feedback-theme.json
-
 dalifeedbackthemedir = ${dataReadOnlyDir}/themes/feedback-themes/
 dalifeedbacktheme_DATA = ${dali_plugin_theme_files}
 endif
@@ -119,13 +137,21 @@ libdali_adaptor_common_la_includes = \
                       -I../../../platform-abstractions/ \
                       -I../../../adaptors/public-api \
                       -I../../../adaptors/common \
-                      -I../../../adaptors/ 
+                      -I../../../adaptors/
 if WAYLAND
 libdali_adaptor_common_la_includes += \
                       -I../../../adaptors/wayland
 else
 libdali_adaptor_common_la_includes += \
                       -I../../../adaptors/x11
+endif
+
+if UBUNTU_PROFILE
+libdali_adaptor_common_la_includes += \
+                      -I../../../adaptors/ubuntu
+else
+libdali_adaptor_common_la_includes += \
+                      -I../../../adaptors/tizen
 endif
 
 daliDefaultFontCacheDir = ${dataReadOnlyDir}/glyphcache/
@@ -233,6 +259,11 @@ endif
 if TURBO_JPEG_IS_ON
 libdali_adaptor_common_la_LIBADD += -lturbojpeg
 CFLAGS += -D_TURBO_JPEG_LOADER
+if UBUNTU_PROFILE
+#CFLAGS += -fPIC -DUSE_SHARED_TJPEG_LIBRARY=y
+libdali_adaptor_common_la_LIBADD +=  -L/usr/lib/x86_64-linux-gnu -ljpeg
+CFLAGS += -fPIC
+endif
 else
 libdali_adaptor_common_la_LIBADD += -ljpeg
 endif
