@@ -19,9 +19,6 @@
  */
 
 // EXTERNAL INCLUDES
-#include <Ecore.h>
-#include <Ecore_Ipc.h>
-
 #include <dali/public-api/common/vector-wrapper.h>
 
 namespace Dali
@@ -101,40 +98,9 @@ public:
    */
   bool SendEvent( int event, int ref, int refTo, const void *data, int size );
 
-private: // Class callbacks
-  /**
-   * Callback when server added
-   */
-  static Eina_Bool IpcServerAdd(void *data, int type, void *event);
-
-  /**
-   * Callback when server deleted
-   */
-  static Eina_Bool IpcServerDel(void *data, int type, void *event);
-
-  /**
-   * Callback when data available from server
-   */
-  static Eina_Bool IpcServerData(void *data, int type, void *event);
-
 private:
-  void CloseConnection();
-
-private:
-  typedef std::vector<Ecore_Event_Handler *> Handlers;
-
-  struct Service
-  {
-    const char *name;
-    int         num;
-    bool        isSystem;
-  };
-
-  Service           mService;
-  bool              mConnected;
-  Observer*         mObserver;
-  Ecore_Ipc_Server* mIpcServer;
-  Handlers          mIpcHandlers;
+  struct Impl;
+  Impl* mImpl;
 };
 
 } // Adaptor
@@ -142,3 +108,4 @@ private:
 } // Dali
 
 #endif // __DALI_INTERNAL_ADAPTOR_CONNECTION_H_
+

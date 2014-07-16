@@ -24,7 +24,6 @@
 // EXTERNAL INCLUDES
 #include <boost/function.hpp>
 
-
 namespace Dali
 {
 

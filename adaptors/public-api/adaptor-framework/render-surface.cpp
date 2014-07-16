@@ -20,7 +20,9 @@
 
 // INTERNAL INCLUDES
 #include <render-surface-impl.h>
+#if !defined(EMSCRIPTEN)
 #include <pixmap-render-surface.h>
+#endif
 #include <window-render-surface.h>
 
 namespace Dali
@@ -33,6 +35,8 @@ RenderSurface::RenderSurface()
 RenderSurface::~RenderSurface()
 {
 }
+
+#if !defined(EMSCRIPTEN)
 
 RenderSurface* CreateDefaultSurface( RenderSurface::SurfaceType type, PositionSize positionSize, const std::string& name )
 {
@@ -53,4 +57,12 @@ RenderSurface* CreateDefaultSurface( RenderSurface::SurfaceType type, PositionSi
   return renderSurface;
 }
 
+#else
+
+RenderSurface* CreateDefaultSurface( RenderSurface::SurfaceType type, PositionSize positionSize, const std::string& name )
+{
+  return NULL;
+}
+
+#endif
 } // namespace Dali
