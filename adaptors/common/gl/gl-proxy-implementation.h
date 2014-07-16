@@ -170,8 +170,6 @@ private: // Data
   Sampler mDrawSampler;
   Sampler mUniformSampler;
   Sampler mUseProgramSampler;
-  int mDrawCount;
-  int mUniformCount;
   int mFrameCount;
 
 };
