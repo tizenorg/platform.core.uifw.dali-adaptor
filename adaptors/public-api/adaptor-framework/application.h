@@ -19,10 +19,10 @@
  */
 
 // EXTERNAL INCLUDES
-#include <boost/function.hpp>
 #include <string>
 #include <dali/public-api/object/base-handle.h>
 #include <dali/public-api/common/view-mode.h>
+#include <boost/function.hpp>
 
 #include "style-monitor.h"
 #include "device-layout.h"
