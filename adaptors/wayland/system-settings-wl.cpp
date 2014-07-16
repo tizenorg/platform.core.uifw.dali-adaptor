@@ -16,8 +16,8 @@
  */
 
 // EXTERNAL INCLUDES
-#include <system_settings.h>
-#include <Elementary.h>
+//#include <system_settings.h>
+//#include <Elementary.h>
 
 // INTERNAL INCLUDES
 #include "system-settings.h"
