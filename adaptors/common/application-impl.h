@@ -19,10 +19,10 @@
  */
 
 // EXTERNAL INCLUDES
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
-#include <boost/thread.hpp>
-
+#if !defined(EMSCRIPTEN)
+#include <boost/thread.hpp>  // should this be here anyway??
+#endif
+#include <dali/public-api/signals/function.h>
 #include <dali/public-api/math/rect.h>
 #include <dali/public-api/object/base-object.h>
 
@@ -42,7 +42,7 @@ namespace Internal
 
 namespace Adaptor
 {
-class CommandLineOptions;
+struct CommandLineOptions;
 class EventLoop;
 
 typedef Dali::Rect<int> PositionSize;
@@ -179,6 +179,11 @@ public: // From Framework::Observer
    * Called when the framework informs the application that the language of the device has changed.
    */
   virtual void OnLanguageChanged();
+
+  /**
+   * Called if the main loop is aborted
+   */
+  virtual void OnAbort();
 
 public:
 

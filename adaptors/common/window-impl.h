@@ -56,7 +56,7 @@ typedef IntrusivePtr<Orientation> OrientationPtr;
 /**
  * Window provides a surface to render onto with orientation & indicator properties.
  */
-class Window : public Dali::BaseObject, public Indicator::Observer, public LifeCycleObserver
+class Window : public Dali::BaseObject, public Indicator::Observer // , public LifeCycleObserver
 {
 public:
   /**
@@ -178,33 +178,6 @@ private:
    */
   virtual ~Window();
 
-  /**
-   * Second stage initialization
-   */
-  void Initialize(const PositionSize& posSize, const std::string& name);
-
-  /**
-   * Shows / hides the indicator bar.
-   * Handles close/open if rotation changes whilst hidden
-   */
-  void DoShowIndicator( Dali::Window::WindowOrientation lastOrientation );
-
-  /**
-   * Close current indicator and open a connection onto the new indicator service.
-   * Effect may not be synchronous if waiting for an indicator update on existing connection.
-   */
-  void DoRotateIndicator( Dali::Window::WindowOrientation orientation );
-
-  /**
-   * Change the indicator actor's rotation to match the current orientation
-   */
-  void SetIndicatorActorRotation();
-
-  /**
-   * Set the indicator properties on the window
-   */
-  void SetIndicatorProperties( bool isShown, Dali::Window::WindowOrientation lastOrientation );
-
 private: // Indicator::Observer interface
 
   /**
@@ -219,57 +192,34 @@ private: // Indicator::Observer interface
 
 private: // Adaptor::Observer interface
 
-  /**
-   * @copydoc Dali::Internal::Adaptor::Adaptor::Observer::OnStart()
-   */
-  virtual void OnStart();
+  /* /\** */
+  /*  * @copydoc Dali::Internal::Adaptor::Adaptor::Observer::OnStart() */
+  /*  *\/ */
+  /* virtual void OnStart(); */
 
-  /**
-   * @copydoc Dali::Internal::Adaptor::Adaptor::Observer::OnPause()
-   */
-  virtual void OnPause();
+  /* /\** */
+  /*  * @copydoc Dali::Internal::Adaptor::Adaptor::Observer::OnPause() */
+  /*  *\/ */
+  /* virtual void OnPause(); */
 
-  /**
-   * @copydoc Dali::Internal::Adaptor::Adaptor::Observer::OnResume()
-   */
-  virtual void OnResume();
+  /* /\** */
+  /*  * @copydoc Dali::Internal::Adaptor::Adaptor::Observer::OnResume() */
+  /*  *\/ */
+  /* virtual void OnResume(); */
 
-  /**
-   * @copydoc Dali::Internal::Adaptor::Adaptor::Observer::OnStop()
-   */
-  virtual void OnStop();
+  /* /\** */
+  /*  * @copydoc Dali::Internal::Adaptor::Adaptor::Observer::OnStop() */
+  /*  *\/ */
+  /* virtual void OnStop(); */
 
-  /**
-   * @copydoc Dali::Internal::Adaptor::Adaptor::Observer::OnDestroy()
-   */
-  virtual void OnDestroy();
+  /* /\** */
+  /*  * @copydoc Dali::Internal::Adaptor::Adaptor::Observer::OnDestroy() */
+  /*  *\/ */
+  /* virtual void OnDestroy(); */
 
 private:
-
-  typedef std::vector<Indicator*> DiscardedIndicators;
-
-  RenderSurface*                   mSurface;
-  Dali::Window::IndicatorStyle     mIndicatorStyle;     ///< indicator style
-  Dali::Window::IndicatorVisibleMode mIndicatorVisible; ///< public state
-  bool                             mIndicatorIsShown:1; ///< private state
-  bool                             mShowRotatedIndicatorOnClose:1;
-  bool                             mStarted:1;
-  bool                             mIsTransparent:1;
-  bool                             mWMRotationAppSet:1;
-  Indicator*                       mIndicator;
-  Dali::Window::WindowOrientation  mIndicatorOrientation;
-  Dali::Window::WindowOrientation  mNextIndicatorOrientation;
-  Dali::Window::IndicatorBgOpacity mIndicatorOpacityMode;
-  Integration::SystemOverlay*      mOverlay;
-  Adaptor*                         mAdaptor;
-  Dali::DragAndDropDetector        mDragAndDropDetector;
-
-  struct EventHandler;
-  EventHandler*                    mEventHandler;
-
-  OrientationPtr                               mOrientation;
-  std::vector<Dali::Window::WindowOrientation> mAvailableOrientations;
-  Dali::Window::WindowOrientation              mPreferredOrientation;
+  struct Impl;
+  Impl* mImpl;
 };
 
 } // namespace Adaptor

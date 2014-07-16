@@ -183,7 +183,9 @@ private:
   Vector<EGLint>       mContextAttribs;
 
   EGLNativeDisplayType mEglNativeDisplay;
+#if !defined(EMSCRIPTEN)
   EGLNativeWindowType  mEglNativeWindow;
+#endif
   EGLNativePixmapType  mEglNativePixmap;
 
   EGLDisplay           mEglDisplay;

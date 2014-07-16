@@ -52,23 +52,224 @@ namespace Adaptor
 Debug::Filter* gWindowLogFilter = Debug::Filter::New(Debug::Concise, false, "LOG_WINDOW");
 #endif
 
+struct Window::Impl : public Indicator::Observer, public LifeCycleObserver, public OrientationObserver
+{
+  typedef std::vector<Indicator*> DiscardedIndicators;
+
+  RenderSurface*                   mSurface;
+  Dali::Window::IndicatorStyle     mIndicatorStyle;     ///< indicator style
+  Dali::Window::IndicatorVisibleMode mIndicatorVisible; ///< public state
+  bool                             mIndicatorIsShown:1; ///< private state
+  bool                             mShowRotatedIndicatorOnClose:1;
+  bool                             mStarted:1;
+  bool                             mIsTransparent:1;
+  bool                             mWMRotationAppSet:1;
+  Indicator*                       mIndicator;
+  Dali::Window::WindowOrientation  mIndicatorOrientation;
+  Dali::Window::WindowOrientation  mNextIndicatorOrientation;
+  Dali::Window::IndicatorBgOpacity mIndicatorOpacityMode;
+  Integration::SystemOverlay*      mOverlay;
+  Adaptor*                         mAdaptor;
+  Dali::DragAndDropDetector        mDragAndDropDetector;
+
+  struct EventHandler;
+  EventHandler*                    mEventHandler;
+
+  OrientationPtr                               mOrientation;
+  std::vector<Dali::Window::WindowOrientation> mAvailableOrientations;
+  Dali::Window::WindowOrientation              mPreferredOrientation;
+
+
+  /**
+   * @copydoc Dali::Internal::Window::SetAdaptor()
+   */
+  void SetAdaptor(Dali::Adaptor& adaptor);
+
+  /**
+   * @copydoc Dali::Internal::Window::GetSurface()
+   */
+  RenderSurface* GetSurface();
+
+  /**
+   * @copydoc Dali::Window::SetIndicatorStyle()
+   */
+  void SetIndicatorStyle( Dali::Window::IndicatorStyle style );
+
+  /**
+   * @copydoc Dali::Window::IndicatorTypeChanged()
+   */
+  void IndicatorTypeChanged( Indicator::Type type );
+
+  /**
+   * @copydoc Dali::Window::IndicatorClosed()
+   */
+  void IndicatorClosed(Indicator* indicator);
+
+  /**
+   * @copydoc Dali::Window::ShowIndicator()
+   */
+  void ShowIndicator( bool show );
+
+  /**
+   * @copydoc Dali::Window::ShowIndicator()
+   */
+  void ShowIndicator( Dali::Window::IndicatorVisibleMode visibleMode );
+
+  /**
+   * @copydoc Dali::Window::SetIndicatorBgOpacity()
+   */
+  void SetIndicatorBgOpacity( Dali::Window::IndicatorBgOpacity opacity );
+
+  /**
+   * @copydoc Dali::Window::RotateIndicator()
+   */
+  void RotateIndicator( Dali::Window::WindowOrientation orientation );
+
+  /**
+   * @copydoc Dali::Window::SetClass()
+   */
+  void SetClass( std::string name, std::string klass );
+
+  /**
+   * @copydoc Dali::Window::Raise()
+   */
+  void Raise();
+
+  /**
+   * @copydoc Dali::Window::Lower()
+   */
+  void Lower();
+
+  /**
+   * @copydoc Dali::Window::Activate()
+   */
+  void Activate();
+
+  /**
+   * @copydoc Dali::Window::GetOrientation()
+   */
+  OrientationPtr GetOrientation();
+
+  /**
+   * @copydoc Dali::Window::AddAvailableOrientation()
+   */
+  void AddAvailableOrientation(Dali::Window::WindowOrientation orientation);
+
+  /**
+   * @copydoc Dali::Window::RemoveAvailableOrientation()
+   */
+  void RemoveAvailableOrientation(Dali::Window::WindowOrientation orientation);
+
+  /**
+   * @copydoc Dali::Window::SetAvailableOrientations()
+   */
+  void SetAvailableOrientations(const std::vector<Dali::Window::WindowOrientation>& orientations);
+
+  /**
+   * @copydoc Dali::Window::GetAvailableOrientations()
+   */
+  const std::vector<Dali::Window::WindowOrientation>& GetAvailableOrientations();
+
+  /**
+   * @copydoc Dali::Window::SetPreferredOrientation()
+   */
+  void SetPreferredOrientation(Dali::Window::WindowOrientation orientation);
+
+  /**
+   * @copydoc Dali::Window::GetPreferredOrientation()
+   */
+  Dali::Window::WindowOrientation GetPreferredOrientation();
+
+  /**
+   * @copydoc Dali::Window::GetDragAndDropDetector() const
+   */
+  Dali::DragAndDropDetector GetDragAndDropDetector() const;
+
+  /**
+   * Called from Orientation after the Change signal has been sent
+   */
+  void RotationDone( int orientation, int width, int height );
+
+  /**
+   * constructor.
+   */
+  Impl();
+
+  /**
+   * Destructor
+   */
+  ~Impl();
+
+  /**
+   * Second stage initialization
+   */
+  void Initialize(const PositionSize& posSize, const std::string& name);
+
+  /**
+   * Shows / hides the indicator bar.
+   * Handles close/open if rotation changes whilst hidden
+   */
+  void DoShowIndicator( Dali::Window::WindowOrientation lastOrientation );
+
+  /**
+   * Close current indicator and open a connection onto the new indicator service.
+   * Effect may not be synchronous if waiting for an indicator update on existing connection.
+   */
+  void DoRotateIndicator( Dali::Window::WindowOrientation orientation );
+
+  /**
+   * Change the indicator actor's rotation to match the current orientation
+   */
+  void SetIndicatorActorRotation();
+
+  /**
+   * Set the indicator properties on the window
+   */
+  void SetIndicatorProperties( bool isShown, Dali::Window::WindowOrientation lastOrientation );
+
+  // LifeCycleObserver
+  virtual void OnStart();
+
+  /**
+   * Called when the adaptor is about to pause.
+   */
+  virtual void OnPause();
+
+  /**
+   * Called when the adaptor is about to resume.
+   */
+  virtual void OnResume();
+
+  /**
+   * Called when the adaptor is about to stop.
+   */
+  virtual void OnStop();
+
+  /**
+   * Called when the adaptor is about to be destroyed.
+   */
+  virtual void OnDestroy();
+
+};
+
+
 /**
  * TODO: Abstract Window class out and move this into a window implementation for Ecore
  */
-struct Window::EventHandler
+  struct Window::Impl::EventHandler
 {
   /**
    * Constructor
    * @param[in]  window  A pointer to the window class.
    */
-  EventHandler( Window* window )
-  : mWindow( window ),
+  EventHandler( Window::Impl* window )
+  : mWindowImpl( window ),
     mWindowPropertyHandler( ecore_event_handler_add( ECORE_X_EVENT_WINDOW_PROPERTY,  EcoreEventWindowPropertyChanged, this ) ),
     mClientMessagehandler( ecore_event_handler_add( ECORE_X_EVENT_CLIENT_MESSAGE,  EcoreEventClientMessage, this ) ),
     mEcoreWindow( 0 )
   {
     // store ecore window handle
-    ECore::WindowRenderSurface* x11Window( dynamic_cast< ECore::WindowRenderSurface * >( mWindow->mSurface ) );
+    ECore::WindowRenderSurface* x11Window( dynamic_cast< ECore::WindowRenderSurface * >( mWindowImpl->mSurface ) );
     if( x11Window )
     {
       mEcoreWindow = x11Window->GetXWindow();
@@ -108,9 +309,9 @@ struct Window::EventHandler
     EventHandler* handler( (EventHandler*)data );
     Eina_Bool handled( ECORE_CALLBACK_PASS_ON );
 
-    if ( handler && handler->mWindow )
+    if ( handler && handler->mWindowImpl )
     {
-      WindowVisibilityObserver* observer( handler->mWindow->mAdaptor );
+      WindowVisibilityObserver* observer( handler->mWindowImpl->mAdaptor );
       if ( observer && ( propertyChangedEvent->win == handler->mEcoreWindow ) )
       {
         Ecore_X_Window_State_Hint state( ecore_x_icccm_state_get( propertyChangedEvent->win ) );
@@ -164,8 +365,8 @@ struct Window::EventHandler
 
     if (clientMessageEvent->message_type == ECORE_X_ATOM_E_DEICONIFY_APPROVE)
     {
-      ECore::WindowRenderSurface* x11Window( dynamic_cast< ECore::WindowRenderSurface * >( handler->mWindow->mSurface ) );
-      WindowVisibilityObserver* observer( handler->mWindow->mAdaptor );
+      ECore::WindowRenderSurface* x11Window( dynamic_cast< ECore::WindowRenderSurface * >( handler->mWindowImpl->mSurface ) );
+      WindowVisibilityObserver* observer( handler->mWindowImpl->mAdaptor );
 
       if ( observer && ( (unsigned int)clientMessageEvent->data.l[0] == handler->mEcoreWindow ) )
       {
@@ -189,22 +390,14 @@ struct Window::EventHandler
   }
 
   // Data
-  Window* mWindow;
+  Window::Impl* mWindowImpl;
   Ecore_Event_Handler* mWindowPropertyHandler;
   Ecore_Event_Handler* mClientMessagehandler;
   Ecore_X_Window mEcoreWindow;
 };
 
 
-Window* Window::New(const PositionSize& posSize, const std::string& name, bool isTransparent)
-{
-  Window* window = new Window();
-  window->mIsTransparent = isTransparent;
-  window->Initialize(posSize, name);
-  return window;
-}
-
-void Window::SetAdaptor(Dali::Adaptor& adaptor)
+void Window::Impl::SetAdaptor(Dali::Adaptor& adaptor)
 {
   DALI_ASSERT_ALWAYS( !mStarted && "Adaptor already started" );
   mStarted = true;
@@ -235,17 +428,17 @@ void Window::SetAdaptor(Dali::Adaptor& adaptor)
   }
 }
 
-RenderSurface* Window::GetSurface()
+RenderSurface* Window::Impl::GetSurface()
 {
   return mSurface;
 }
 
-void Window::SetIndicatorStyle( Dali::Window::IndicatorStyle style )
+void Window::Impl::SetIndicatorStyle( Dali::Window::IndicatorStyle style )
 {
   mIndicatorStyle = style;
 }
 
-void Window::ShowIndicator( Dali::Window::IndicatorVisibleMode visibleMode )
+void Window::Impl::ShowIndicator( Dali::Window::IndicatorVisibleMode visibleMode )
 {
   DALI_LOG_TRACE_METHOD_FMT( gWindowLogFilter, "visible : %d\n", visibleMode );
   DALI_ASSERT_DEBUG(mOverlay);
@@ -283,14 +476,14 @@ void Window::ShowIndicator( Dali::Window::IndicatorVisibleMode visibleMode )
   DoShowIndicator( mIndicatorOrientation );
 }
 
-void Window::RotateIndicator(Dali::Window::WindowOrientation orientation)
+void Window::Impl::RotateIndicator(Dali::Window::WindowOrientation orientation)
 {
   DALI_LOG_TRACE_METHOD_FMT( gWindowLogFilter, "Orientation: %d\n", orientation );
 
   DoRotateIndicator( orientation );
 }
 
-void Window::SetIndicatorBgOpacity( Dali::Window::IndicatorBgOpacity opacityMode )
+void Window::Impl::SetIndicatorBgOpacity( Dali::Window::IndicatorBgOpacity opacityMode )
 {
   mIndicatorOpacityMode = opacityMode;
 
@@ -300,7 +493,7 @@ void Window::SetIndicatorBgOpacity( Dali::Window::IndicatorBgOpacity opacityMode
   }
 }
 
-void Window::SetClass(std::string name, std::string klass)
+void Window::Impl::SetClass(std::string name, std::string klass)
 {
   // Get render surface's x11 window
   if( mSurface )
@@ -313,7 +506,7 @@ void Window::SetClass(std::string name, std::string klass)
   }
 }
 
-Window::Window()
+Window::Impl::Impl()
 : mSurface(NULL),
   mIndicatorStyle(Dali::Window::CHANGEABLE_COLOR),
   mIndicatorVisible(Dali::Window::VISIBLE),
@@ -331,7 +524,7 @@ Window::Window()
 {
 }
 
-Window::~Window()
+Window::Impl::~Impl()
 {
   delete mEventHandler;
 
@@ -345,7 +538,7 @@ Window::~Window()
   delete mSurface;
 }
 
-void Window::Initialize(const PositionSize& windowPosition, const std::string& name)
+void Window::Impl::Initialize(const PositionSize& windowPosition, const std::string& name)
 {
   // create an X11 window by default
   Any surface;
@@ -357,7 +550,7 @@ void Window::Initialize(const PositionSize& windowPosition, const std::string& n
   mEventHandler = new EventHandler( this );
 }
 
-void Window::DoShowIndicator( Dali::Window::WindowOrientation lastOrientation )
+void Window::Impl::DoShowIndicator( Dali::Window::WindowOrientation lastOrientation )
 {
   if( mIndicator == NULL )
   {
@@ -397,7 +590,7 @@ void Window::DoShowIndicator( Dali::Window::WindowOrientation lastOrientation )
   mIndicatorIsShown = show;
 }
 
-void Window::DoRotateIndicator( Dali::Window::WindowOrientation orientation )
+void Window::Impl::DoRotateIndicator( Dali::Window::WindowOrientation orientation )
 {
   if( mIndicatorIsShown )
   {
@@ -413,7 +606,7 @@ void Window::DoRotateIndicator( Dali::Window::WindowOrientation orientation )
   }
 }
 
-void Window::SetIndicatorProperties( bool isShow, Dali::Window::WindowOrientation lastOrientation )
+void Window::Impl::SetIndicatorProperties( bool isShow, Dali::Window::WindowOrientation lastOrientation )
 {
   ECore::WindowRenderSurface* x11Window = dynamic_cast< ECore::WindowRenderSurface * >( mSurface );
   if( x11Window )
@@ -436,7 +629,7 @@ void Window::SetIndicatorProperties( bool isShow, Dali::Window::WindowOrientatio
   }
 }
 
-void Window::IndicatorTypeChanged(Indicator::Type type)
+void Window::Impl::IndicatorTypeChanged(Indicator::Type type)
 {
   ECore::WindowRenderSurface* x11Window = dynamic_cast< ECore::WindowRenderSurface * >( mSurface );
   if( x11Window )
@@ -461,7 +654,7 @@ void Window::IndicatorTypeChanged(Indicator::Type type)
   }
 }
 
-void Window::IndicatorClosed( Indicator* indicator )
+void Window::Impl::IndicatorClosed( Indicator* indicator )
 {
   DALI_LOG_TRACE_METHOD( gWindowLogFilter );
 
@@ -475,7 +668,7 @@ void Window::IndicatorClosed( Indicator* indicator )
   }
 }
 
-void Window::SetIndicatorActorRotation()
+void Window::Impl::SetIndicatorActorRotation()
 {
   DALI_LOG_TRACE_METHOD( gWindowLogFilter );
   DALI_ASSERT_DEBUG( mIndicator != NULL );
@@ -506,7 +699,7 @@ void Window::SetIndicatorActorRotation()
   }
 }
 
-void Window::Raise()
+void Window::Impl::Raise()
 {
   ECore::WindowRenderSurface* x11Window = dynamic_cast< ECore::WindowRenderSurface * >( mSurface );
   if( x11Window )
@@ -516,7 +709,7 @@ void Window::Raise()
   }
 }
 
-void Window::Lower()
+void Window::Impl::Lower()
 {
   ECore::WindowRenderSurface* x11Window = dynamic_cast< ECore::WindowRenderSurface * >( mSurface );
   if( x11Window )
@@ -526,7 +719,7 @@ void Window::Lower()
   }
 }
 
-void Window::Activate()
+void Window::Impl::Activate()
 {
   ECore::WindowRenderSurface* x11Window = dynamic_cast< ECore::WindowRenderSurface * >( mSurface );
   if( x11Window )
@@ -536,21 +729,21 @@ void Window::Activate()
   }
 }
 
-Dali::DragAndDropDetector Window::GetDragAndDropDetector() const
+Dali::DragAndDropDetector Window::Impl::GetDragAndDropDetector() const
 {
   return mDragAndDropDetector;
 }
 
-void Window::OnStart()
+void Window::Impl::OnStart()
 {
   DoShowIndicator( mIndicatorOrientation );
 }
 
-void Window::OnPause()
+void Window::Impl::OnPause()
 {
 }
 
-void Window::OnResume()
+void Window::Impl::OnResume()
 {
   // resume indicator status
   if( mIndicator != NULL )
@@ -561,7 +754,7 @@ void Window::OnResume()
   }
 }
 
-void Window::OnStop()
+void Window::Impl::OnStop()
 {
   if( mIndicator )
   {
@@ -572,17 +765,17 @@ void Window::OnStop()
   mIndicator = NULL;
 }
 
-void Window::OnDestroy()
+void Window::Impl::OnDestroy()
 {
   mAdaptor = NULL;
 }
 
-OrientationPtr Window::GetOrientation()
+OrientationPtr Window::Impl::GetOrientation()
 {
   return mOrientation;
 }
 
-void Window::AddAvailableOrientation(Dali::Window::WindowOrientation orientation)
+void Window::Impl::AddAvailableOrientation(Dali::Window::WindowOrientation orientation)
 {
   bool found = false;
 
@@ -602,7 +795,7 @@ void Window::AddAvailableOrientation(Dali::Window::WindowOrientation orientation
   }
 }
 
-void Window::RemoveAvailableOrientation(Dali::Window::WindowOrientation orientation)
+void Window::Impl::RemoveAvailableOrientation(Dali::Window::WindowOrientation orientation)
 {
   for( std::vector<Dali::Window::WindowOrientation>::iterator iter = mAvailableOrientations.begin();
        iter != mAvailableOrientations.end(); ++iter )
@@ -616,7 +809,7 @@ void Window::RemoveAvailableOrientation(Dali::Window::WindowOrientation orientat
   SetAvailableOrientations( mAvailableOrientations );
 }
 
-void Window::SetAvailableOrientations(const std::vector<Dali::Window::WindowOrientation>& orientations)
+void Window::Impl::SetAvailableOrientations(const std::vector<Dali::Window::WindowOrientation>& orientations)
 {
   DALI_ASSERT_ALWAYS( mAvailableOrientations.size() <= 4 && "Incorrect number of available orientations" );
 
@@ -642,12 +835,12 @@ void Window::SetAvailableOrientations(const std::vector<Dali::Window::WindowOrie
   }
 }
 
-const std::vector<Dali::Window::WindowOrientation>& Window::GetAvailableOrientations()
+const std::vector<Dali::Window::WindowOrientation>& Window::Impl::GetAvailableOrientations()
 {
   return mAvailableOrientations;
 }
 
-void Window::SetPreferredOrientation(Dali::Window::WindowOrientation orientation)
+void Window::Impl::SetPreferredOrientation(Dali::Window::WindowOrientation orientation)
 {
   mPreferredOrientation = orientation;
 
@@ -668,12 +861,12 @@ void Window::SetPreferredOrientation(Dali::Window::WindowOrientation orientation
   }
 }
 
-Dali::Window::WindowOrientation Window::GetPreferredOrientation()
+Dali::Window::WindowOrientation Window::Impl::GetPreferredOrientation()
 {
   return mPreferredOrientation;
 }
 
-void Window::RotationDone( int orientation, int width, int height )
+void Window::Impl::RotationDone( int orientation, int width, int height )
 {
   // Tell window manager we're done
   ECore::WindowRenderSurface* x11Window = dynamic_cast< ECore::WindowRenderSurface * >( mSurface );
@@ -701,6 +894,139 @@ void Window::RotationDone( int orientation, int width, int height )
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Window* Window::New(const PositionSize& posSize, const std::string& name, bool isTransparent)
+{
+  Window* window = new Window();
+  window->mImpl->mIsTransparent = isTransparent;
+  window->mImpl->Initialize(posSize, name);
+  return window;
+}
+
+Window::Window()
+{
+  mImpl = new Window::Impl();
+}
+
+Window::~Window()
+{
+  delete mImpl;
+}
+
+void Window::SetAdaptor(Dali::Adaptor& adaptor)
+{
+  mImpl->SetAdaptor(adaptor);
+}
+
+RenderSurface* Window::GetSurface()
+{
+  return mImpl->GetSurface();
+}
+
+void Window::SetIndicatorStyle( Dali::Window::IndicatorStyle style )
+{
+  mImpl->SetIndicatorStyle( style );
+}
+
+// void Window::ShowIndicator( bool show )
+// {
+//   mImpl->ShowIndicator( show );
+// }
+
+void Window::ShowIndicator( Dali::Window::IndicatorVisibleMode visibleMode )
+{
+  mImpl->ShowIndicator( visibleMode );
+}
+
+void Window::SetIndicatorBgOpacity( Dali::Window::IndicatorBgOpacity opacity )
+{
+  mImpl->SetIndicatorBgOpacity( opacity );
+}
+
+void Window::RotateIndicator( Dali::Window::WindowOrientation orientation )
+{
+  mImpl->RotateIndicator( orientation );
+}
+
+void Window::SetClass( std::string name, std::string klass )
+{
+  mImpl->SetClass( name, klass );
+}
+
+void Window::Raise()
+{
+  mImpl->Raise();
+}
+
+void Window::Lower()
+{
+  mImpl->Lower();
+}
+
+void Window::Activate()
+{
+  mImpl->Activate();
+}
+
+OrientationPtr Window::GetOrientation()
+{
+  return mImpl->GetOrientation();
+}
+
+void Window::AddAvailableOrientation(Dali::Window::WindowOrientation orientation)
+{
+  mImpl->AddAvailableOrientation( orientation );
+}
+
+void Window::RemoveAvailableOrientation(Dali::Window::WindowOrientation orientation)
+{
+  mImpl->RemoveAvailableOrientation( orientation );
+}
+
+void Window::SetAvailableOrientations(const std::vector<Dali::Window::WindowOrientation>& orientations)
+{
+  mImpl->SetAvailableOrientations( orientations );
+}
+
+const std::vector<Dali::Window::WindowOrientation>& Window::GetAvailableOrientations()
+{
+  return mImpl->GetAvailableOrientations();
+}
+
+void Window::SetPreferredOrientation(Dali::Window::WindowOrientation orientation)
+{
+  return mImpl->SetPreferredOrientation( orientation );
+}
+
+Dali::Window::WindowOrientation Window::GetPreferredOrientation()
+{
+  return mImpl->GetPreferredOrientation();
+}
+
+Dali::DragAndDropDetector Window::GetDragAndDropDetector() const
+{
+  return mImpl->GetDragAndDropDetector();
+}
+
+void Window::RotationDone( int orientation, int width, int height )
+{
+  mImpl->RotationDone( orientation, width, height );
+}
+
+void Window::IndicatorTypeChanged( Indicator::Type type )
+{
+  mImpl->IndicatorTypeChanged( type );
+}
+
+void Window::IndicatorClosed(Indicator* indicator)
+{
+  mImpl->IndicatorClosed( indicator );
+}
 
 } // Adaptor
 } // Internal

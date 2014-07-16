@@ -22,8 +22,7 @@
 #include <base/interfaces/trigger-event-interface.h>
 
 // EXTERNAL INCLUDES
-#include <boost/function.hpp>
-
+#include <dali/public-api/signals/function.h>
 
 namespace Dali
 {

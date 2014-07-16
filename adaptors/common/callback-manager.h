@@ -19,7 +19,7 @@
  */
 
 // EXTERNAL INCLUDES
-#include <boost/function.hpp>
+#include <dali/public-api/signals/function.h>
 #include <dali/public-api/common/dali-common.h>
 
 namespace Dali
