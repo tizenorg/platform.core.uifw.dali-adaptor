@@ -19,8 +19,6 @@
 #include "gesture-manager.h"
 
 // EXTERNAL INCLUDES
-#include <boost/bind.hpp>
-
 #include <dali/integration-api/debug.h>
 
 // INTERNAL INCLUDES
@@ -97,10 +95,9 @@ const char * GetGestureTypeString( Gesture::Type type )
 const float MINIMUM_DISTANCE_DELTA_DIVISOR = 85.0f;
 } // unnamed namespace
 
-GestureManager::GestureManager(CoreEventInterface& coreEventInterface, Vector2 screenSize,CallbackManager* callbackManager, EnvironmentOptions& environmentOptions)
+GestureManager::GestureManager(CoreEventInterface& coreEventInterface, Vector2 screenSize,CallbackManager* /* callbackManager */, EnvironmentOptions& environmentOptions)
 : mCoreEventInterface( coreEventInterface ),
   mScreenSize( screenSize ),
-  mCallbackManager( callbackManager ),
   mEnvironmentOptions( environmentOptions ),
   mMinimumDistanceDelta(-1.0f),
   mRunning( true ) // This allows gestures to be created before Adaptor::Start() is called e.g. by Indicator

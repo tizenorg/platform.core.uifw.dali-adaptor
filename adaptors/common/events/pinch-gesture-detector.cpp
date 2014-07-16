@@ -50,13 +50,6 @@ inline float GetDistance(const TouchPoint& point1, const TouchPoint& point2)
   return vector.Length();
 }
 
-inline float GetGradient(const TouchPoint& point1, const TouchPoint& point2)
-{
-  return (point2.screen.y - point1.screen.y)
-         /
-         (point2.screen.x - point1.screen.x);
-}
-
 inline Vector2 GetCenterPoint(const TouchPoint& point1, const TouchPoint& point2)
 {
   return Vector2(point1.screen + point2.screen) * 0.5f;
