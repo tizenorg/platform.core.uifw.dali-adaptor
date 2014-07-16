@@ -34,6 +34,9 @@
 #include <server-connection.h>
 #include <shared-file.h>
 
+struct _Ecore_Ipc_Event_Server_Data;
+typedef struct _Ecore_Ipc_Event_Server_Data Ecore_Ipc_Event_Server_Data;
+
 namespace Dali
 {
 namespace Integration

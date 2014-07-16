@@ -30,7 +30,7 @@ namespace Dali
 namespace Integration
 {
 class Core;
-class GestureRequest;
+struct GestureRequest;
 struct TouchEvent;
 }
 
