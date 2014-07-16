@@ -28,7 +28,6 @@
 #include <dali/integration-api/events/touch-event-integ.h>
 
 // INTERNAL INCLUDES
-#include <base/update-render-controller.h>
 #include <base/environment-variables.h>
 #include <base/performance-logging/performance-interface-factory.h>
 #include <base/lifecycle-observer.h>
@@ -55,7 +54,7 @@
 
 #include <slp-logging.h>
 
-
+#include <sdl-render-controller.h>
 
 namespace Dali
 {
@@ -68,50 +67,6 @@ namespace Adaptor
 
 namespace
 {
-boost::thread_specific_ptr<Adaptor> gThreadLocalAdaptor;
-
-unsigned int GetIntegerEnvironmentVariable( const char* variable, unsigned int defaultValue )
-{
-  const char* variableParameter = std::getenv(variable);
-
-  // if the parameter exists convert it to an integer, else return the default value
-  unsigned int intValue = variableParameter ? atoi(variableParameter) : defaultValue;
-  return intValue;
-}
-
-bool GetIntegerEnvironmentVariable( const char* variable, int& intValue )
-{
-  const char* variableParameter = std::getenv(variable);
-
-  if( !variableParameter )
-  {
-    return false;
-  }
-  // if the parameter exists convert it to an integer, else return the default value
-  intValue = atoi(variableParameter);
-  return true;
-}
-
-bool GetBooleanEnvironmentVariable( const char* variable, bool& boolValue )
-{
-  const char* variableParameter = std::getenv(variable);
-
-  boolValue = variableParameter ? true : false;
-  return boolValue;
-}
-
-bool GetFloatEnvironmentVariable( const char* variable, float& floatValue )
-{
-  const char* variableParameter = std::getenv(variable);
-
-  if( !variableParameter )
-  {
-    return false;
-  }
-  // if the parameter exists convert it to an integer, else return the default value
-  floatValue = atof(variableParameter);
-  return true;
-}
 
 } // unnamed namespace
 
@@ -130,90 +85,17 @@ Dali::Adaptor* Adaptor::New( RenderSurface *surface, const DeviceLayout& baseLay
 
 void Adaptor::ParseEnvironmentOptions()
 {
-  // get logging options
-  unsigned int logFrameRateFrequency = GetIntegerEnvironmentVariable( DALI_ENV_FPS_TRACKING, 0 );
-  unsigned int logupdateStatusFrequency = GetIntegerEnvironmentVariable( DALI_ENV_UPDATE_STATUS_INTERVAL, 0 );
-  unsigned int logPerformanceLevel = GetIntegerEnvironmentVariable( DALI_ENV_LOG_PERFORMANCE, 0 );
-  unsigned int logPanGesture = GetIntegerEnvironmentVariable( DALI_ENV_LOG_PAN_GESTURE, 0 );
-
-  // all threads here (event, update, and render) will send their logs to SLP Platform's LogMessage handler.
-  Dali::Integration::Log::LogFunction  logFunction(Dali::SlpPlatform::LogMessage);
-
-  mEnvironmentOptions.SetLogOptions( logFunction, logFrameRateFrequency, logupdateStatusFrequency, logPerformanceLevel, logPanGesture );
-
-  int predictionMode;
-  if( GetIntegerEnvironmentVariable(DALI_ENV_PAN_PREDICTION_MODE, predictionMode) )
-  {
-    mEnvironmentOptions.SetPanGesturePredictionMode(predictionMode);
-  }
-  int predictionAmount = -1;
-  if( GetIntegerEnvironmentVariable(DALI_ENV_PAN_PREDICTION_AMOUNT, predictionAmount) )
-  {
-    if( predictionAmount < 0 )
-    {
-      // do not support times in the past
-      predictionAmount = 0;
-    }
-    mEnvironmentOptions.SetPanGesturePredictionAmount(predictionAmount);
-  }
-  int smoothingMode;
-  if( GetIntegerEnvironmentVariable(DALI_ENV_PAN_SMOOTHING_MODE, smoothingMode) )
-  {
-    mEnvironmentOptions.SetPanGestureSmoothingMode(smoothingMode);
-  }
-  float smoothingAmount = 1.0f;
-  if( GetFloatEnvironmentVariable(DALI_ENV_PAN_SMOOTHING_AMOUNT, smoothingAmount) )
-  {
-    smoothingAmount = Clamp(smoothingAmount, 0.0f, 1.0f);
-    mEnvironmentOptions.SetPanGestureSmoothingAmount(smoothingAmount);
-  }
-
-  int minimumDistance(-1);
-  if ( GetIntegerEnvironmentVariable(DALI_ENV_PAN_MINIMUM_DISTANCE, minimumDistance ))
-  {
-    mEnvironmentOptions.SetMinimumPanDistance( minimumDistance );
-  }
-
-  int minimumEvents(-1);
-  if ( GetIntegerEnvironmentVariable(DALI_ENV_PAN_MINIMUM_EVENTS, minimumEvents ))
-  {
-    mEnvironmentOptions.SetMinimumPanEvents( minimumEvents );
-  }
-
-  int glesCallTime(0);
-  if ( GetIntegerEnvironmentVariable(DALI_GLES_CALL_TIME, glesCallTime ))
-  {
-    mEnvironmentOptions.SetGlesCallTime( glesCallTime );
-  }
-
-  mEnvironmentOptions.InstallLogFunction();
 }
 
 void Adaptor::Initialize()
 {
-  ParseEnvironmentOptions();
-
-  mPlatformAbstraction = new SlpPlatform::SlpPlatformAbstraction;
-
-  if( mEnvironmentOptions.GetPerformanceLoggingLevel() > 0 )
-  {
-    mPerformanceInterface = PerformanceInterfaceFactory::CreateInterface( *this, mEnvironmentOptions );
-  }
-
-  mCallbackManager = CallbackManager::New();
+  mPlatformAbstraction = new SdlPlatformAbstraction();
 
   PositionSize size = mSurface->GetPositionSize();
 
   mGestureManager = new GestureManager(*this, Vector2(size.width, size.height), mCallbackManager, mEnvironmentOptions);
 
-  if( mEnvironmentOptions.GetGlesCallTime() > 0 )
-  {
-    mGLES = new GlProxyImplementation( mEnvironmentOptions );
-  }
-  else
-  {
-    mGLES = new GlImplementation();
-  }
+  mGLES = new GlImplementation();
 
   mEglFactory = new EglFactory();
 
@@ -221,46 +103,15 @@ void Adaptor::Initialize()
 
   mCore = Integration::Core::New( *this, *mPlatformAbstraction, *mGLES, *eglSyncImpl, *mGestureManager );
 
-  mObjectProfiler = new ObjectProfiler();
+  mNotificationTrigger = new TriggerEvent( Dali::Callback(this, &Adaptor::ProcessCoreEvents) );
 
-  mNotificationTrigger = new TriggerEvent( boost::bind(&Adaptor::ProcessCoreEvents, this) );
-
-  mVSyncMonitor = new VSyncMonitor;
-
-  mUpdateRenderController = new UpdateRenderController( *this, mEnvironmentOptions );
-
-  mDaliFeedbackPlugin = new FeedbackPluginProxy( FeedbackPluginProxy::DEFAULT_OBJECT_NAME );
-
-  // Should be called after Core creation
-  if( mEnvironmentOptions.GetPanGestureLoggingLevel() )
-  {
-    Integration::EnableProfiling( Dali::Integration::PROFILING_TYPE_PAN_GESTURE );
-  }
-  if( mEnvironmentOptions.GetPanGesturePredictionMode() >= 0 )
-  {
-    Integration::SetPanGesturePredictionMode(mEnvironmentOptions.GetPanGesturePredictionMode());
-  }
-  if( mEnvironmentOptions.GetPanGesturePredictionAmount() >= 0.0f )
-  {
-    Integration::SetPanGesturePredictionAmount(mEnvironmentOptions.GetPanGesturePredictionAmount());
-  }
-  if( mEnvironmentOptions.GetPanGestureSmoothingMode() >= 0 )
-  {
-    Integration::SetPanGestureSmoothingMode(mEnvironmentOptions.GetPanGestureSmoothingMode());
-  }
-  if( mEnvironmentOptions.GetPanGestureSmoothingAmount() >= 0.0f )
-  {
-    Integration::SetPanGestureSmoothingAmount(mEnvironmentOptions.GetPanGestureSmoothingAmount());
-  }
+  mUpdateRenderController = new SdlRenderController();
 }
 
 Adaptor::~Adaptor()
 {
   // Ensure stop status
   Stop();
-
-  // Release first as we do not want any access to Adaptor as it is being destroyed.
-  gThreadLocalAdaptor.release();
 
   for ( ObserverContainer::iterator iter = mObservers.begin(), endIter = mObservers.end(); iter != endIter; ++iter )
   {
@@ -295,9 +146,6 @@ void Adaptor::Start()
   {
     return;
   }
-
-  // Start the callback manager
-  mCallbackManager->Start();
 
   // create event handler
   mEventHandler = new EventHandler( mSurface, *this, *mGestureManager, *this, mDragAndDropDetector );
@@ -335,12 +183,6 @@ void Adaptor::Start()
   mState = RUNNING;
 
   ProcessCoreEvents(); // Ensure any startup messages are processed.
-
-  if ( !mFeedbackController )
-  {
-    // Start sound & haptic feedback
-    mFeedbackController = new FeedbackController( *mDaliFeedbackPlugin );
-  }
 
   for ( ObserverContainer::iterator iter = mObservers.begin(), endIter = mObservers.end(); iter != endIter; ++iter )
   {
@@ -426,8 +268,6 @@ void Adaptor::Stop()
 
     delete mNotificationTrigger;
     mNotificationTrigger = NULL;
-
-    mCallbackManager->Stop();
 
     mState = STOPPED;
   }
@@ -523,38 +363,23 @@ Dali::TtsPlayer Adaptor::GetTtsPlayer(Dali::TtsPlayer::Mode mode)
 bool Adaptor::AddIdle(boost::function<void(void)> callBack)
 {
   bool idleAdded(false);
-
-  // Only add an idle if the Adaptor is actually running
-  if( RUNNING == mState )
-  {
-    idleAdded = mCallbackManager->AddCallback(callBack, CallbackManager::IDLE_PRIORITY);
-  }
-
   return idleAdded;
 }
 
 bool Adaptor::CallFromMainLoop(boost::function<void(void)> callBack)
 {
   bool callAdded(false);
-
-  // Only allow the callback if the Adaptor is actually running
-  if ( RUNNING == mState )
-  {
-    callAdded = mCallbackManager->AddCallback(callBack, CallbackManager::DEFAULT_PRIORITY);
-  }
-
   return callAdded;
 }
 
 Dali::Adaptor& Adaptor::Get()
 {
-  DALI_ASSERT_ALWAYS( gThreadLocalAdaptor.get() != NULL && "Adaptor not instantiated" );
-  return gThreadLocalAdaptor->mAdaptor;
+  return *this;
 }
 
 bool Adaptor::IsAvailable()
 {
-  return gThreadLocalAdaptor.get() != NULL;
+  return true;
 }
 
 Dali::Integration::Core& Adaptor::GetCore()
@@ -731,18 +556,6 @@ void Adaptor::RequestUpdate()
 
 void Adaptor::RequestProcessEventsOnIdle()
 {
-  // Only request a notification if the Adaptor is actually running
-  if ( RUNNING == mState )
-  {
-    boost::unique_lock<boost::mutex> lock( mIdleInstaller );
-
-    // check if the idle handle is already installed
-    if( mNotificationOnIdleInstalled )
-    {
-      return;
-    }
-    mNotificationOnIdleInstalled = AddIdle( boost::bind( &Adaptor::ProcessCoreEventsFromIdle, this ) );
-  }
 }
 
 void Adaptor::OnWindowShown()
@@ -857,8 +670,6 @@ Adaptor::Adaptor(Dali::Adaptor& adaptor, RenderSurface* surface, const DeviceLay
   mPerformanceInterface(NULL),
   mObjectProfiler(NULL)
 {
-  DALI_ASSERT_ALWAYS( gThreadLocalAdaptor.get() == NULL && "Cannot create more than one Adaptor per thread" );
-  gThreadLocalAdaptor.reset(this);
 }
 
 // Stereoscopy

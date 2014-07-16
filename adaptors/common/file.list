@@ -33,7 +33,6 @@ adaptor_common_internal_src_files = \
   $(adaptor_common_dir)/ecore-callback-manager.cpp \
   $(adaptor_common_dir)/file-descriptor-monitor.cpp \
   $(adaptor_common_dir)/haptic-player-impl.cpp \
-  $(adaptor_common_dir)/indicator-impl.cpp  \
   $(adaptor_common_dir)/indicator-buffer.cpp  \
   $(adaptor_common_dir)/kernel-trace.cpp  \
   $(adaptor_common_dir)/locale-utils.cpp  \
@@ -42,7 +41,6 @@ adaptor_common_internal_src_files = \
   $(adaptor_common_dir)/orientation-impl.cpp  \
   $(adaptor_common_dir)/physical-keyboard-impl.cpp \
   $(adaptor_common_dir)/render-surface-impl.cpp \
-  $(adaptor_common_dir)/server-connection.cpp \
   $(adaptor_common_dir)/shared-file.cpp \
   $(adaptor_common_dir)/sound-player-impl.cpp \
   $(adaptor_common_dir)/style-monitor-impl.cpp \
@@ -63,7 +61,6 @@ adaptor_common_internal_src_files = \
   \
   $(adaptor_common_dir)/gl/egl-factory.cpp \
   $(adaptor_common_dir)/gl/egl-image-extensions.cpp \
-  $(adaptor_common_dir)/gl/egl-sync-implementation.cpp \
   $(adaptor_common_dir)/gl/gl-proxy-implementation.cpp \
   $(adaptor_common_dir)/gl/gl-extensions.cpp
 

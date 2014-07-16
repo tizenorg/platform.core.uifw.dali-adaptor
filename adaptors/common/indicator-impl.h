@@ -300,29 +300,11 @@ private:
   void Disconnect();
 
   /**
-   * Close existing lock file and open the new lock file.
-   * @param[in] epcEvent Current ecore event.
-   */
-  void NewLockFile(Ecore_Ipc_Event_Server_Data *epcEvent);
-
-  /**
    * Handle Resize event
    * @param[in] width The new width
    * @param[in] height The new height
    */
   void Resize(int width, int height);
-
-  /**
-   * Load the shared indicator image
-   * @param[in] epcEvent The event containing the image data
-   */
-  void LoadSharedImage(Ecore_Ipc_Event_Server_Data *epcEvent);
-
-  /**
-   * Load the pixmap indicator image
-   * @param[in] epcEvent The event containing the image data
-   */
-  void LoadPixmapImage( Ecore_Ipc_Event_Server_Data *epcEvent );
 
   /**
    * Inform dali that the indicator data has been updated.

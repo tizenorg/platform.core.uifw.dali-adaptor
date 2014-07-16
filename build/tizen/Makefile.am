@@ -19,9 +19,13 @@ SUBDIRS = common dali-application
 if ! LITE_PROFILE
 if ! WEARABLE_PROFILE
 if ! UBUNTU_PROFILE
+if ! EMSCRIPTEN_PROFILE
 SUBDIRS += plugins
 endif
 endif
+
+if MOBILE_PROFILE
+SUBDIRS += dali-evas dali-native-buffer
 endif
 
 pkgconfigdir = $(libdir)/pkgconfig

@@ -20,6 +20,7 @@
 
 // EXTERNAL INCLUDES
 #include <Ecore.h>
+#include <Ecore_Ipc.h>
 
 #include <dali/integration-api/debug.h>
 
@@ -31,12 +32,74 @@ namespace Internal
 {
 namespace Adaptor
 {
+
 #if defined(DEBUG_ENABLED)
 extern Debug::Filter* gIndicatorLogFilter;
 #endif
 
+struct ServerConnection::Impl
+{
+  typedef std::vector<Ecore_Event_Handler *> Handlers;
 
-ServerConnection::ServerConnection(
+  struct Service
+  {
+    const char *name;
+    int         num;
+    bool        isSystem;
+  };
+
+  Service           mService;
+  bool              mConnected;
+  Observer*         mObserver;
+  Ecore_Ipc_Server* mIpcServer;
+  Handlers          mIpcHandlers;
+
+  Impl( const char*                 serviceName,
+        int                         serviceNumber,
+        bool                        isSystem,
+        ServerConnection::Observer* observer);
+  ~Impl();
+
+  bool IsConnected();
+  void OnDisconnect();
+  bool SendEvent( int event, const void *data, int size );
+  bool SendEvent( int event, int ref, int ref_to, const void *data, int size );
+  void CloseConnection();
+  Eina_Bool IpcServerAdd( void *data, int type, void *event );
+  Eina_Bool IpcServerDel( void *data, int type, void *event );
+  Eina_Bool IpcServerData( void *data, int type, void *event );
+
+};
+
+ServerConnection::ServerConnection( const char*                 serviceName,
+                                    int                         serviceNumber,
+                                    bool                        isSystem,
+                                    ServerConnection::Observer* observer)
+{
+  mImpl = new impl(serviceName, serviceNumber, isSystem, observer);
+}
+
+ServerConnection::~ServerConnection()
+{
+  delete mImpl;
+}
+
+bool ServerConnection::SendEvent( int event, const void *data, int size )
+{
+  return mImpl->SendEvent(event, 0, 0, data, size);
+}
+
+bool ServerConnection::SendEvent( int event, int ref, int ref_to, const void *data, int size )
+{
+  return mImpl->SendEvent( event, ref, ref_to, data, size );
+}
+
+void ServerConnection::CloseConnection()
+{
+  mImpl->CloseConnection();
+}
+
+ServerConnection::Impl(
   const char*                 serviceName,
   int                         serviceNumber,
   bool                        isSystem,
@@ -68,20 +131,141 @@ ServerConnection::ServerConnection(
   else
   {
     mIpcHandlers.push_back( ecore_event_handler_add( ECORE_IPC_EVENT_SERVER_ADD,
-                                                     &ServerConnection::IpcServerAdd,
+                                                     &ServerConnection::Impl::IpcServerAdd,
                                                      this ) );
 
     mIpcHandlers.push_back( ecore_event_handler_add( ECORE_IPC_EVENT_SERVER_DEL,
-                                                     &ServerConnection::IpcServerDel,
+                                                     &ServerConnection::Impl::IpcServerDel,
                                                      this ) );
 
     mIpcHandlers.push_back( ecore_event_handler_add( ECORE_IPC_EVENT_SERVER_DATA,
-                                                     &ServerConnection::IpcServerData,
+                                                     &ServerConnection::Impl::IpcServerData,
                                                      this));
 
     mConnected = true;
   }
 }
+
+
+~ServerConnection::Impl()
+{
+  CloseConnection();
+
+  if( mService.name != NULL )
+  {
+    eina_stringshare_del(mService.name);
+  }
+
+  for( Handlers::iterator iter = mIpcHandlers.begin(); iter != mIpcHandlers.end(); ++iter )
+  {
+    ecore_event_handler_del(*iter);
+  }
+  mIpcHandlers.clear();
+}
+
+bool ServerConnection::Impl::IsConnected()
+{
+  return mConnected;
+}
+
+void ServerConnection::Impl::OnDisconnect()
+{
+  mConnected = false;
+  mIpcServer = NULL;
+  ecore_ipc_shutdown();
+  if( mObserver )
+  {
+    mObserver->ConnectionClosed();
+  }
+}
+
+bool ServerConnection::Impl::SendEvent( int event, const void *data, int size )
+{
+  return SendEvent(event, 0, 0, data, size);
+}
+
+bool ServerConnection::Impl::SendEvent( int event, int ref, int ref_to, const void *data, int size )
+{
+  if( mIpcServer != NULL  && ecore_ipc_server_send(mIpcServer, MAJOR, event, ref, ref_to, 0, data, size) )
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+void ServerConnection::Impl::CloseConnection()
+{
+  if( mConnected )
+  {
+    DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "ServerConnection: CloseConnection\n" );
+
+    if( mIpcServer )
+    {
+      ecore_ipc_server_del( mIpcServer );
+      mIpcServer = NULL;
+    }
+
+    ecore_ipc_shutdown();
+    mConnected = false;
+  }
+}
+
+Eina_Bool ServerConnection::Impl::IpcServerAdd( void *data, int /*type*/, void *event )
+{
+  DALI_LOG_INFO(gIndicatorLogFilter, Debug::General, "ServerConnection: IpcServerAdd\n" );
+
+  return ECORE_CALLBACK_PASS_ON;
+}
+
+Eina_Bool ServerConnection::Impl::IpcServerDel( void *data, int /*type*/, void *event )
+{
+  DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "ServerConnection: IpcServerDel\n" );
+
+  Ecore_Ipc_Event_Server_Del *e = static_cast<Ecore_Ipc_Event_Server_Del *>( event );
+  ServerConnection* connection = static_cast<ServerConnection*>( data );
+
+  if( connection != NULL )
+  {
+    if( connection->mIpcServer == e->server)
+    {
+      // No longer have a server connection
+      connection->OnDisconnect();
+    }
+  }
+
+  return ECORE_CALLBACK_PASS_ON;
+}
+
+Eina_Bool ServerConnection::Impl::IpcServerData( void *data, int /*type*/, void *event )
+{
+  DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "ServerConnection: IpcServerData\n" );
+
+  Ecore_Ipc_Event_Server_Data *e = static_cast<Ecore_Ipc_Event_Server_Data *>( event );
+  ServerConnection* connection = static_cast<ServerConnection*>( data );
+
+  if( connection != NULL )
+  {
+    if( connection != ecore_ipc_server_data_get( e->server ) )
+    {
+      return ECORE_CALLBACK_PASS_ON;
+    }
+
+    if( e->major != MAJOR )
+    {
+      return ECORE_CALLBACK_PASS_ON;
+    }
+
+    if( connection->mObserver )
+    {
+      connection->mObserver->DataReceived( event );
+    }
+  }
+  return ECORE_CALLBACK_PASS_ON;
+}
+
 
 } // Adaptor
 } // Internal

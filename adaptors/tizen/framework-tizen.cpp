@@ -191,11 +191,13 @@ Framework::Framework(Framework::Observer& observer, int *argc, char ***argv, con
   mName(name),
   mBundleName(""),
   mBundleId(""),
-  mAbortHandler(boost::bind(&Framework::AbortCallback, this)),
   mImpl(NULL)
 {
   InitThreads();
   mImpl = new Impl(this);
+
+  AbortHandler::Instance()->SetCallback(boost::bind(&Framework::AbortCallback, this));
+
 }
 
 Framework::~Framework()
@@ -227,11 +229,6 @@ bool Framework::IsMainLoopRunning()
   return mRunning;
 }
 
-void Framework::AddAbortCallback(boost::function<void(void)> callBack)
-{
-  mImpl->mAbortCallBack = callBack;
-}
-
 std::string Framework::GetBundleName() const
 {
   return mBundleName;
@@ -254,15 +251,9 @@ void Framework::SetBundleId(const std::string& id)
 
 void Framework::AbortCallback( )
 {
-  // if an abort call back has been installed run it.
-  if (mImpl->mAbortCallBack)
-  {
-    mImpl->mAbortCallBack();
-  }
-  else
-  {
-    Quit();
-  }
+  mObserver.OnAbort();
+
+  Quit();
 }
 
 bool Framework::SlpAppStatusHandler(int type)
@@ -274,9 +265,9 @@ bool Framework::SlpAppStatusHandler(int type)
       mInitialised = true;
 
       // Connect to abnormal exit signals
-      mAbortHandler.AbortOnSignal( SIGINT );
-      mAbortHandler.AbortOnSignal( SIGQUIT );
-      mAbortHandler.AbortOnSignal( SIGKILL );
+      AbortHandler::instance()->AbortOnSignal( SIGINT );
+      AbortHandler::instance()->AbortOnSignal( SIGQUIT );
+      AbortHandler::instance()->AbortOnSignal( SIGKILL );
 
       mObserver.OnInit();
       break;

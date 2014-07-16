@@ -35,16 +35,30 @@ endif
 if UBUNTU_PROFILE
 adaptor_ubuntu_dir = ../../../adaptors/ubuntu
 include ../../../adaptors/ubuntu/file.list
+
+else
+
+if EMSCRIPTEN_PROFILE
+adaptor_emscripten_dir = ../../../adaptors/emscripten
+include ../../../adaptors/emscripten/file.list
 else
 adaptor_tizen_dir = ../../../adaptors/tizen
 include ../../../adaptors/tizen/file.list
-endif
+endif # EMSCRIPTEN_PROFILE
+
+endif # UBUNTU_PROFILE
 
 lib_LTLIBRARIES = libdali-application.la
 
 libdali_application_la_SOURCES = $(adaptor_common_application_src_files)
 
 libdali_application_la_SOURCES += $(adaptor_common_application_internal_src_files)
+
+if EMSCRIPTEN_PROFILE
+libdali_application_la_SOURCES += $(adaptor_emscripten_src_files)
+libdali_application_la_SOURCES += $(adaptor_emscripten_internal_src_files)
+libdali_application_la_SOURCES += $(adaptor_emscripten_application_src_files)
+else
 
 if UBUNTU_PROFILE
 libdali_application_la_SOURCES += $(adaptor_ubuntu_application_src_files)
@@ -58,6 +72,8 @@ libdali_application_la_SOURCES += $(adaptor_x11_tizen_application_src_files)
 endif # WAYLAND
 
 endif # UBUNTU_PROFILE
+
+endif # EMSCRIPTEN_PROFILE
 
 libdali_application_la_DEPENDENCIES =
 
@@ -82,6 +98,12 @@ libdali_application_includes += \
 else
 libdali_application_includes += \
                       -I../../../adaptors/x11
+endif
+
+if EMSCRIPTEN_PROFILE
+libdali_application_includes += \
+                      -I../../../adaptors/emscripten \
+                      -I../../../platform-abstractions/emscripten
 endif
 
 daliUserFontCacheDir = ${dataReadWriteDir}/glyphcache/

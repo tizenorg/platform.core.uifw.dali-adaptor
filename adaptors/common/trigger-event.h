@@ -19,10 +19,10 @@
  */
 
 // EXTERNAL INCLUDES
-#include <boost/function.hpp>
 
 // INTERNAL INCLUDES
 #include <dali/public-api/common/dali-common.h>
+#include <dali/public-api/signals/callback.h>
 #include <base/interfaces/trigger-event-interface.h>
 
 namespace Dali
@@ -58,7 +58,7 @@ public:
    * @param[in]  functor to call
    * @param[in] options, trigger event options.
    */
-  TriggerEvent( boost::function<void()> functor, TriggerEventInterface::Options options = TriggerEventInterface::NONE );
+  TriggerEvent( Dali::Callback functor, TriggerEventInterface::Options options = TriggerEventInterface::NONE );
 
   /**
    * Destructor
@@ -88,7 +88,7 @@ private:
 private:
 
   FileDescriptorMonitor* mFileDescriptorMonitor;
-  boost::function<void()> mFunctor; ///< Function object to call
+  Dali::Callback mFunctor; ///< Function object to call
   int mFileDescriptor;
   TriggerEventInterface::Options mOptions;
 };

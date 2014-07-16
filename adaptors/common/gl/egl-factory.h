@@ -80,9 +80,8 @@ private:
   EglFactory& operator=(const EglFactory& rhs);
 
 private:
-  EglImplementation* mEglImplementation;
-  EglImageExtensions* mEglImageExtensions;
-  EglSyncImplementation* mEglSync;
+  struct Impl;
+  Impl* mImpl;
 };
 
 }

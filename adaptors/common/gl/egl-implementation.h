@@ -183,7 +183,6 @@ private:
   Vector<EGLint>       mContextAttribs;
 
   EGLNativeDisplayType mEglNativeDisplay;
-  EGLNativeWindowType  mEglNativeWindow;
   EGLNativePixmapType  mEglNativePixmap;
 
   EGLDisplay           mEglDisplay;

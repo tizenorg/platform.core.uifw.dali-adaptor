@@ -36,7 +36,7 @@ namespace Adaptor
 struct FileDescriptorMonitor::Impl
 {
   // Construction
-  Impl(int fileDescriptor, boost::function<void()> functor)
+  Impl(int fileDescriptor, Dali::Callback functor)
   : mFileDescriptor(fileDescriptor),
     mFunctor(functor),
     mHandler(NULL)
@@ -45,7 +45,7 @@ struct FileDescriptorMonitor::Impl
 
   // Data
   int mFileDescriptor;
-  boost::function<void()> mFunctor;
+  Dali::Callback mFunctor;
   Ecore_Fd_Handler* mHandler;
 
   // Static Methods
@@ -57,13 +57,13 @@ struct FileDescriptorMonitor::Impl
   {
     Impl* impl = reinterpret_cast<Impl*>(data);
 
-    impl->mFunctor();
+    Dali::Callback::Execute(impl->mFunctor);
 
     return ECORE_CALLBACK_RENEW;
   }
 };
 
-FileDescriptorMonitor::FileDescriptorMonitor(int fileDescriptor, boost::function<void()> functor)
+FileDescriptorMonitor::FileDescriptorMonitor(int fileDescriptor, Dali::Callback functor)
 {
   mImpl = new Impl(fileDescriptor, functor);
 

@@ -20,7 +20,6 @@
 
 // EXTERNAL INCLUDES
 #include <sys/eventfd.h>
-#include <boost/bind.hpp>
 
 #include <dali/integration-api/debug.h>
 
@@ -37,7 +36,7 @@ namespace Internal
 namespace Adaptor
 {
 
-TriggerEvent::TriggerEvent( boost::function<void()> functor, TriggerEventInterface::Options options )
+TriggerEvent::TriggerEvent( Dali::Callback functor, TriggerEventInterface::Options options )
 : mFileDescriptorMonitor(NULL),
   mFunctor(functor),
   mFileDescriptor(-1),
@@ -48,7 +47,7 @@ TriggerEvent::TriggerEvent( boost::function<void()> functor, TriggerEventInterfa
   if (mFileDescriptor >= 0)
   {
     // Now Monitor the created event file descriptor
-    mFileDescriptorMonitor = new FileDescriptorMonitor(mFileDescriptor, boost::bind(&TriggerEvent::Triggered, this));
+    mFileDescriptorMonitor = new FileDescriptorMonitor(mFileDescriptor, Dali::Callback(this, &TriggerEvent::Triggered));
   }
   else
   {
@@ -105,7 +104,7 @@ void TriggerEvent::Triggered()
   }
 
   // Call the connected boost function.
-  mFunctor();
+  Dali::Callback::Execute(mFunctor);
 
   //check if we should delete ourselves after the trigger
   if( mOptions == TriggerEventInterface::DELETE_AFTER_TRIGGER )

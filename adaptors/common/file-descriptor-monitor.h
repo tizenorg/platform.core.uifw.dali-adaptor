@@ -19,7 +19,7 @@
  */
 
 // EXTERNAL INCLUDES
-#include <boost/function.hpp>
+#include <dali/public-api/signals/callback.h>
 
 namespace Dali
 {
@@ -37,7 +37,7 @@ namespace Adaptor
 
 /**
  * Monitors the given file descriptor and whenever anything is written to it, it calls
- * the given boost function.
+ * the given callback function.
  */
 class FileDescriptorMonitor
 {
@@ -48,7 +48,7 @@ public:
    * @param[in]  fileDescriptor  The file descriptor to monitor
    * @param[in]  functor         The function to call when anything is written to the file descriptor
    */
-  FileDescriptorMonitor(int fileDescriptor, boost::function<void()> functor);
+  FileDescriptorMonitor(int fileDescriptor, Dali::Callback functor);
 
   /**
    * Destructor

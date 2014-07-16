@@ -4,8 +4,15 @@ adaptor_tizen_internal_src_files = \
   $(adaptor_tizen_dir)/accessibility-manager-impl-tizen.cpp \
   $(adaptor_tizen_dir)/vsync-monitor-tizen.cpp \
   $(adaptor_tizen_dir)/tilt-sensor-impl-tizen.cpp \
-  $(adaptor_tizen_dir)/tts-player-impl-tizen.cpp
+  $(adaptor_tizen_dir)/tts-player-impl-tizen.cpp \
+  $(adaptor_tizen_dir)/vsync-monitor.cpp \
+  $(adaptor_tizen_dir)/indicator-impl-tizen.cpp \
+  $(adaptor_tizen_dir)/adaptor-impl-tizen.cpp \
+  $(adaptor_tizen_dir)/egl-sync-implementation-tizen.cpp
 
 adaptor_tizen_application_src_files = \
-  $(adaptor_tizen_dir)/framework-tizen.cpp
+  $(adaptor_tizen_dir)/abort-handler-tizen.cpp \
+  $(adaptor_tizen_dir)/framework-tizen.cpp \
+  $(adaptor_tizen_dir)/application-impl-tizen.cpp
+
 

@@ -112,7 +112,7 @@ void SlpPlatformAbstraction::Resume()
   }
 }
 
-const std::string& SlpPlatformAbstraction::GetDefaultFontFamily() const
+const std::string SlpPlatformAbstraction::GetDefaultFontFamily() const
 {
   // VCC TODO: return default font style as well.
   return mDefaultFontFamily;
@@ -256,7 +256,7 @@ void SlpPlatformAbstraction::SetDpi(unsigned int dpiHor, unsigned int dpiVer)
   }
 }
 
-const std::string& SlpPlatformAbstraction::GetFontFamilyForChars(const TextArray& charsRequested) const
+const std::string SlpPlatformAbstraction::GetFontFamilyForChars(const TextArray& charsRequested) const
 {
   if( mResourceLoader )
   {
