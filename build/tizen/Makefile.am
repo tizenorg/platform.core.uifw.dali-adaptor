@@ -19,7 +19,9 @@ SUBDIRS = adaptor
 if ! LITE_PROFILE
 if ! WEARABLE_PROFILE
 if ! UBUNTU_PROFILE
+if ! EMSCRIPTEN_PROFILE
 SUBDIRS += plugins
+endif
 endif
 endif
 endif
