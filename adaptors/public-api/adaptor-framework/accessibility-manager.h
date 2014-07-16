@@ -20,8 +20,6 @@
 
 
 // EXTERNAL INCLUDES
-#include <boost/function.hpp>
-
 #include <dali/public-api/object/base-handle.h>
 #include <dali/public-api/signals/dali-signal-v2.h>
 #include <dali/public-api/events/touch-event.h>
@@ -39,7 +37,7 @@ class AccessibilityManager;
 
 class AccessibilityActionHandler;
 class AccessibilityGestureHandler;
-class TouchPoint;
+struct TouchPoint;
 
 /**
  * @brief The AccessibilityManager provides signals when accessibility & screen reader feature turned on in device.
