@@ -33,17 +33,38 @@ AC_SUBST(DALI_ADAPTOR_VERSION)
 
 FREETYPE_REQUIRED=9.16.3
 
-PKG_CHECK_MODULES(DALICORE, dali-core)
-PKG_CHECK_MODULES(ELEMENTARY, elementary)
-PKG_CHECK_MODULES(ECORE, ecore)
-PKG_CHECK_MODULES(ECORE_IPC, ecore-ipc)
-PKG_CHECK_MODULES(EXIF, libexif)
-PKG_CHECK_MODULES(FREETYPE, [freetype2 >= $FREETYPE_REQUIRED])
-PKG_CHECK_MODULES(FONTCONFIG, fontconfig)
-PKG_CHECK_MODULES(PNG, libpng)
-PKG_CHECK_MODULES(XML, libxml-2.0)
-PKG_CHECK_MODULES(LIBEXIF, libexif)
-PKG_CHECK_MODULES(LIBDRM, libdrm)
+# Tizen Profile options
+AC_ARG_ENABLE([profile],
+              [AC_HELP_STRING([--enable-profile=COMMON,MOBILE,LITE,WEARABLE,TV,UBUNTU,EMSCRIPTEN],
+                            [Select the variant of tizen])],
+              [enable_profile=$enableval],
+              [enable_profile=COMMON])
+
+# Ensure valid profile selected
+AS_IF([test "x$enable_profile" != "xCOMMON" -a "x$enable_profile" != "xMOBILE" -a "x$enable_profile" != "xLITE" -a "x$enable_profile" != "xWEARABLE" -a "x$enable_profile" != "xTV" -a "x$enable_profile" != "xUBUNTU"  -a "x$enable_profile" != "xEMSCRIPTEN"], [
+  AC_MSG_ERROR([$enable_profile is an invalid profile])
+])
+
+
+AS_IF([test "x$enable_profile" = "xEMSCRIPTEN"], [
+  #AC_MSG_ERROR([aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaargprofile])
+  PKG_CHECK_MODULES(DALICORE, dali-core)
+  # gles2 library in emscripten
+  # DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -std=c+11"
+  #AC_MSG_ERROR([profile])
+],[
+  PKG_CHECK_MODULES(DALICORE, dali-core)
+  PKG_CHECK_MODULES(ELEMENTARY, elementary)
+  PKG_CHECK_MODULES(ECORE, ecore)
+  PKG_CHECK_MODULES(ECORE_IPC, ecore-ipc)
+  PKG_CHECK_MODULES(EXIF, libexif)
+  PKG_CHECK_MODULES(FREETYPE, [freetype2 >= $FREETYPE_REQUIRED])
+  PKG_CHECK_MODULES(FONTCONFIG, fontconfig)
+  PKG_CHECK_MODULES(PNG, libpng)
+  PKG_CHECK_MODULES(XML, libxml-2.0)
+  PKG_CHECK_MODULES(LIBEXIF, libexif)
+  PKG_CHECK_MODULES(LIBDRM, libdrm)
+])
 
 # Check for availability of BulletPhysics
 PKG_CHECK_EXISTS(bullet, [
@@ -75,13 +96,13 @@ AC_ARG_ENABLE([debug],
               [enable_debug=$enableval],
               [enable_debug=no])
 
-if test "x$enable_debug" = "xyes"; then
+AS_IF([test "x$enable_debug" = "xyes"], [
   DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DDEBUG_ENABLED"
-fi
+])
 
-if test "x$enable_debug" = "xno" -a "x$enable_exportall" = "xno"; then
+AS_IF([test "x$enable_debug" = "xno" -a "x$enable_exportall" = "xno"], [
   DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -fvisibility=hidden -DHIDE_DALI_INTERNALS"
-fi
+])
 
 AC_ARG_ENABLE([gles],
               [AC_HELP_STRING([--enable-gles],
@@ -99,18 +120,6 @@ AC_ARG_WITH([jpeg-turbo],
 
 AM_CONDITIONAL(TURBO_JPEG_IS_ON, test $with_jpeg_turbo = yes)
 
-# Tizen Profile options
-AC_ARG_ENABLE([profile],
-              [AC_HELP_STRING([--enable-profile=COMMON,MOBILE,LITE,WEARABLE,TV,UBUNTU],
-                            [Select the variant of tizen])],
-              [enable_profile=$enableval],
-              [enable_profile=COMMON])
-
-# Ensure valid profile selected
-if test "x$enable_profile" != "xCOMMON" -a "x$enable_profile" != "xMOBILE" -a "x$enable_profile" != "xLITE" -a "x$enable_profile" != "xWEARABLE" -a "x$enable_profile" != "xTV" -a "x$enable_profile" != "xUBUNTU"; then
-  AC_MSG_ERROR([$enable_profile is an invalid profile])
-fi
-
 AC_ARG_ENABLE(wayland,
               [  --enable-wayland       Build on Wayland],
               enable_wayland=yes,
@@ -124,36 +133,45 @@ AM_CONDITIONAL([LITE_PROFILE], [test x$enable_profile = xLITE])
 AM_CONDITIONAL([WEARABLE_PROFILE], [test x$enable_profile = xWEARABLE])
 AM_CONDITIONAL([TV_PROFILE], [test x$enable_profile = xTV])
 AM_CONDITIONAL([UBUNTU_PROFILE], [test x$enable_profile = xUBUNTU])
+AM_CONDITIONAL([EMSCRIPTEN_PROFILE], [test x$enable_profile = xEMSCRIPTEN])
 AM_CONDITIONAL([WAYLAND], [test x$enable_wayland = xyes])
 
-if test "x$enable_profile" = "xCOMMON"; then
-PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
-PKG_CHECK_MODULES(HAPTIC, haptic)
-fi
+AS_IF([test "x$enable_profile" = "xCOMMON"], [
+  AS_IF([test "x$enable_wayland" = "xyes"],[
+    PKG_CHECK_MODULES(OPENGLES20, glesv2)
+  ],[
+    PKG_CHECK_MODULES(OPENGLES20, gles20)
+  ])], [
+  AS_IF([test "x$enable_profile" != "xEMSCRIPTEN"], [
+    PKG_CHECK_MODULES(HAPTIC, haptic)
+  	 ])
+])
 
-if test "x$enable_profile" = "xMOBILE"; then
+AS_IF([test "x$enable_profile" = "xMOBILE"], [
 PKG_CHECK_MODULES(OPENGLES20, opengl-es-20)
 PKG_CHECK_MODULES(ASSIMP, assimp)
 PKG_CHECK_MODULES(DEVICED, deviced)
-fi
+])
 
-if test "x$enable_profile" = "xLITE"; then
+AS_IF([test "x$enable_profile" = "xLITE"], [
 PKG_CHECK_MODULES(OPENGLES20, gles20)
-fi
+])
 
-if test "x$enable_profile" = "xWEARABLE"; then
+AS_IF([test "x$enable_profile" = "xWEARABLE"], [
 PKG_CHECK_MODULES(OPENGLES20, gles20)
-fi
+])
 
-if test "x$enable_profile" = "xTV"; then
+AS_IF([test "x$enable_profile" = "xTV"], [
 PKG_CHECK_MODULES(OPENGLES20, gles20)
 PKG_CHECK_MODULES(ASSIMP, assimp)
 PKG_CHECK_MODULES(HAPTIC, haptic)
-fi
+])
 
-if test "x$enable_profile" = "xUBUNTU"; then
+AS_IF([test "x$enable_profile" = "xUBUNTU"], [
 PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
-else
+], [
+
+AS_IF([test "x$enable_profile" != "xEMSCRIPTEN"], [
 PKG_CHECK_MODULES(CAPI_APPFW_APPLICATION, capi-appfw-application)
 PKG_CHECK_MODULES(DLOG, dlog)
 PKG_CHECK_MODULES(FEEDBACK, feedback)
@@ -163,54 +181,60 @@ PKG_CHECK_MODULES(TTS, tts)
 PKG_CHECK_MODULES(VCONF, vconf)
 PKG_CHECK_MODULES(CAPI_SYSTEM_SYSTEM_SETTINGS, capi-system-system-settings)
 PKG_CHECK_MODULES(EFL_ASSIST, efl-assist)
-fi
+])
 
-if test "x$enable_wayland" = "xyes"; then
+])
+
+AS_IF([test "x$enable_wayland" = "xyes"], [
 PKG_CHECK_MODULES(WAYLAND, [ecore-wayland egl wayland-egl wayland-client >= 1.2.0 xkbcommon],
                   [DALI_HAS_ECOREWL=yes],
                   [DALI_HAS_ECOREWL=no])
-else
+], [
+
+AS_IF([test "x$enable_profile" != "xEMSCRIPTEN"], [
 PKG_CHECK_MODULES(ECORE_X, [ecore-x],
                   [DALI_HAS_ECOREX=yes],
                   [DALI_HAS_ECOREX=no])
 PKG_CHECK_MODULES(X11, [x11],
                   [DALI_HAS_X11=yes],
                   [DALI_HAS_X11=no])
-fi
+])
 
-if test x$DALI_DATA_RW_DIR != x; then
+])
+
+AS_IF([test x$DALI_DATA_RW_DIR != x], [
   dataReadWriteDir=$DALI_DATA_RW_DIR
-else
+], [
   dataReadWriteDir=${prefix}/share/dali/
-fi
+])
 
-if test x$DALI_DATA_RO_DIR != x; then
+AS_IF([test x$DALI_DATA_RO_DIR != x], [
   dataReadOnlyDir=$DALI_DATA_RO_DIR
-else
+], [
   dataReadOnlyDir=${prefix}/share/dali/
-fi
+])
 
-if test x$FONT_PRELOADED_PATH != x; then
+AS_IF([test x$FONT_PRELOADED_PATH != x], [
   fontPreloadedPath=$FONT_PRELOADED_PATH
-else
+], [
   fontPreloadedPath=/usr/share/fonts/
-fi
+])
 
-if test x$FONT_DOWNLOADED_PATH != x; then
+AS_IF([test x$FONT_DOWNLOADED_PATH != x], [
   fontDownloadedPath=$FONT_DOWNLOADED_PATH
-else
+], [
   fontDownloadedPath=/opt/share/fonts/
-fi
+])
 
-if test x$FONT_APPLICATION_PATH != x; then
+AS_IF([test x$FONT_APPLICATION_PATH != x], [
   fontApplicationPath=$FONT_APPLICATION_PATH
-else
+], [
   fontApplicationPath=~/.fonts/
-fi
+])
 
-if test x$FONT_CONFIGURATION_FILE != x; then
+AS_IF([test x$FONT_CONFIGURATION_FILE != x], [
   fontConfigurationFilePath=$FONT_CONFIGURATION_FILE
-fi
+])
 
 AC_SUBST(dataReadWriteDir)
 AC_SUBST(dataReadOnlyDir)
@@ -232,11 +256,11 @@ AC_CONFIG_FILES([
  dali.pc
 ])
 
-if test "x$enable_profile" != "xLITE"; then
+AS_IF([test "x$enable_profile" != "xLITE"], [
 AC_CONFIG_FILES([
  plugins/Makefile
 ])
-fi
+])
 
 AC_OUTPUT
 

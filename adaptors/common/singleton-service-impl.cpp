@@ -19,7 +19,9 @@
 #include <singleton-service-impl.h>
 
 // EXTERNAL INCLUDES
+#if !defined(EMSCRIPTEN)
 #include <boost/thread/tss.hpp>
+#endif
 #include <dali/integration-api/debug.h>
 
 // INTERNAL INCLUDES
@@ -53,6 +55,8 @@ namespace Adaptor
 namespace
 {
 
+#if !defined(EMSCRIPTEN)
+
 /*
  * Dummy cleanup function required as boost::thread_specific_ptr requires access to destructor but
  * we should not make the destructor of SingletonService public as it is a ref-counted object.
@@ -64,6 +68,38 @@ void DummyCleanup( SingletonService* )
 }
 
 boost::thread_specific_ptr< SingletonService > gSingletonService( &DummyCleanup );
+
+#else
+
+/*
+ * emscripten isnt threaded but again we don't want to destroy
+*/
+template <typename T>
+struct NoDestruction
+{
+  T* mPointer;
+  NoDestruction()
+    : mPointer( NULL )
+  {
+  }
+  void reset(T* newPtr)
+  {
+    mPointer = newPtr;
+  }
+  T* get()
+  {
+    return mPointer;
+  }
+  void release()
+  {
+    mPointer = NULL;
+  }
+};
+
+NoDestruction<SingletonService> gSingletonService;
+
+#endif
+
 } // unnamed namespace
 
 Dali::SingletonService SingletonService::New()

@@ -19,15 +19,18 @@
  */
 
 // EXTERNAL INCLUDES
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
+#if !defined(EMSCRIPTEN)
 #include <boost/thread.hpp>
+#endif
+#include <map>
+#include <boost/function.hpp>
 
 // INTERNAL INCLUDES
 #include <dali/public-api/common/vector-wrapper.h>
 #include <dali/public-api/common/view-mode.h>
 #include <dali/public-api/math/rect.h>
 #include <dali/integration-api/render-controller.h>
+#include <dali/integration-api/platform-abstraction.h>
 
 #include <adaptor.h>
 #include <render-surface.h>
@@ -35,8 +38,8 @@
 #include <imf-manager.h>
 #include <device-layout.h>
 #include <clipboard.h>
+#include <vsync-monitor.h>
 
-#include <slp-platform-abstraction.h>
 #include <base/interfaces/adaptor-internal-services.h>
 #include <base/environment-options.h>
 #include <base/core-event-interface.h>
@@ -45,6 +48,10 @@
 #include <window-visibility-observer.h>
 #include <kernel-trace.h>
 #include <trigger-event-factory.h>
+
+#if defined(EMSCRIPTEN)
+#include <base/frame-time.h>
+#endif
 
 namespace Dali
 {
@@ -72,7 +79,7 @@ class CallbackManager;
 class FeedbackPluginProxy;
 class FeedbackController;
 class RotationObserver;
-class VSyncMonitor;
+class VSyncMonitorInterface;
 class PerformanceInterface;
 class LifeCycleObserver;
 class ObjectProfiler;
@@ -496,14 +503,16 @@ private: // Data
   EglFactory*                           mEglFactory;                  ///< EGL Factory
 
   RenderSurface*                        mSurface;                     ///< Current surface
-  SlpPlatform::SlpPlatformAbstraction*  mPlatformAbstraction;         ///< Platform abstraction
+  Integration::PlatformAbstraction*     mPlatformAbstraction;         ///< Platform abstraction
 
   EventHandler*                         mEventHandler;                ///< event handler
   CallbackManager*                      mCallbackManager;             ///< Used to install callbacks
   bool                                  mNotificationOnIdleInstalled; ///< whether the idle handler is installed to send an notification event
   TriggerEvent*                         mNotificationTrigger;         ///< Notification event trigger
   GestureManager*                       mGestureManager;              ///< Gesture manager
+#if !defined(EMSCRIPTEN)
   boost::mutex                          mIdleInstaller;               ///< mutex to ensure two threads don't try to install idle handler at the same time
+#endif
   size_t                                mHDpi;                        ///< Override horizontal DPI
   size_t                                mVDpi;                        ///< Override vertical DPI
   FeedbackPluginProxy*                  mDaliFeedbackPlugin;          ///< Used to access feedback support
@@ -518,6 +527,14 @@ private: // Data
   KernelTrace                           mKernelTracer;                ///< Kernel tracer
   TriggerEventFactory                   mTriggerEventFactory;         ///< Trigger event factory
   ObjectProfiler*                       mObjectProfiler;              ///< Tracks object lifetime for profiling
+#if defined(EMSCRIPTEN)
+  unsigned int mMicroSeconds;
+  unsigned int mSeconds;
+  unsigned int mFrame;
+  FrameTime* mFrameTime;          ///< Frame timer predicts next vsync time
+  RenderController* mRenderController;
+#endif
+
 public:
   inline static Adaptor& GetImplementation(Dali::Adaptor& adaptor) {return *adaptor.mImpl;}
 };
