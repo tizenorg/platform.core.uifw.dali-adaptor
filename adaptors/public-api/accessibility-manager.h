@@ -44,7 +44,7 @@ class AccessibilityManager;
 
 class AccessibilityActionHandler;
 class AccessibilityGestureHandler;
-class TouchPoint;
+struct TouchPoint;
 
 /**
  * @brief The AccessibilityManager provides signals when accessibility & screen reader feature turned on in device.

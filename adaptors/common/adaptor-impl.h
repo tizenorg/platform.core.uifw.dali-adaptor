@@ -21,7 +21,9 @@
 // EXTERNAL INCLUDES
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
+#if !defined(EMSCRIPTEN)
 #include <boost/thread.hpp>
+#endif
 
 // INTERNAL INCLUDES
 #include <dali/public-api/common/vector-wrapper.h>
@@ -72,7 +74,7 @@ class CallbackManager;
 class FeedbackPluginProxy;
 class FeedbackController;
 class RotationObserver;
-class VSyncMonitor;
+class VSyncMonitorInterface;
 class PerformanceInterface;
 class LifeCycleObserver;
 class ObjectProfiler;
@@ -512,7 +514,9 @@ private: // Data
   bool                                  mNotificationOnIdleInstalled; ///< whether the idle handler is installed to send an notification event
   TriggerEvent*                         mNotificationTrigger;         ///< Notification event trigger
   GestureManager*                       mGestureManager;              ///< Gesture manager
+#if !defined(EMSCRIPTEN)
   boost::mutex                          mIdleInstaller;               ///< mutex to ensure two threads don't try to install idle handler at the same time
+#endif
   size_t                                mHDpi;                        ///< Override horizontal DPI
   size_t                                mVDpi;                        ///< Override vertical DPI
   FeedbackPluginProxy*                  mDaliFeedbackPlugin;          ///< Used to access feedback support

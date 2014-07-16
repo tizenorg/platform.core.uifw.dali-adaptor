@@ -159,20 +159,26 @@ void Application::Quit()
 
 void Application::QuitFromMainLoop()
 {
-  mAdaptor->Stop();
+  if( mAdaptor )
+  {
+    mAdaptor->Stop();
 
-  Dali::Application application(this);
-  mTerminateSignalV2.Emit( application );
+    Dali::Application application(this);
+    mTerminateSignalV2.Emit( application );
 
-  mFramework->Quit();
+  }
+
+  if(mFramework)
+  {
+    mFramework->Quit();
+  }
+
   // This will trigger OnTerminate(), below, after the main loop has completed.
   mInitialized = false;
 }
 
 void Application::OnInit()
 {
-  mFramework->AddAbortCallback(boost::bind(&Application::QuitFromMainLoop, this));
-
   CreateWindow();
   CreateAdaptor();
 
@@ -212,6 +218,11 @@ void Application::OnTerminate()
 
   mWindow.Reset();
   mInitialized = false;
+}
+
+void Application::OnAbort()
+{
+  QuitFromMainLoop();
 }
 
 void Application::OnPause()

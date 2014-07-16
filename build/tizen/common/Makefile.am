@@ -21,10 +21,15 @@ base_adaptor_src_dir = ../../../adaptors/base
 include ../../../adaptors/base/file.list
 
 # Platform Abstraction
+if ! EMSCRIPTEN_PROFILE
 slp_platform_abstraction_src_dir = ../../../platform-abstractions/slp
 include ../../../platform-abstractions/slp/file.list
+else
+slp_platform_abstraction_src_files =
+endif
 
 # Internal Common
+if ! EMSCRIPTEN_PROFILE
 adaptor_common_dir = ../../../adaptors/common
 include ../../../adaptors/common/file.list
 
@@ -35,6 +40,20 @@ else
 adaptor_x11_dir = ../../../adaptors/x11
 include ../../../adaptors/x11/file.list
 endif
+
+else # EMSCRIPTEN_PROFILE
+adaptor_common_src_files =
+adaptor_application_src_files =
+adaptor_application_internal_src_files =
+adaptor_common_internal_src_files =
+adaptor_common_internal_profile_src_files =
+endif # EMSCRIPTEN_PROFILE
+
+# emscripten
+adaptor_emscripten_dir = ../../../adaptors/emscripten
+include ../../../adaptors/emscripten/file.list # adaptor_emscripten_src_files
+
+if ! EMSCRIPTEN_PROFILE
 
 if COMMON_PROFILE
 adaptor_common_internal_src_files += $(adaptor_common_internal_profile_src_files)
@@ -79,6 +98,13 @@ slp_platform_abstraction_src_files += $(slp_assimp_src_files)
 include ../../../adaptors/tv/file.list
 endif
 
+endif # ! EMSCRIPTEN_PROFILE
+
+if EMSCRIPTEN_PROFILE
+adaptor_common_internal_src_files += $(adaptor_emscripten_src_files)
+slp_platform_abstraction_src_files += $(slp_assimp_stubs_src_files)
+endif
+
 # Public API
 adaptor_public_api_dir = ../../../adaptors/public-api
 include ../../../adaptors/public-api/file.list
@@ -94,16 +120,18 @@ dalifeedbacktheme_DATA = ${dali_plugin_theme_files}
 endif
 endif
 
+if ! EMSCRIPTEN_PROFILE
 if TURBO_JPEG_IS_ON
   slp_platform_abstraction_src_files += $(slp_platform_abstraction_src_dir)/resource-loader/loader-jpeg-turbo.cpp
 else
   slp_platform_abstraction_src_files += $(slp_platform_abstraction_src_dir)/resource-loader/loader-jpeg.cpp
 endif
+endif
 
 lib_LTLIBRARIES = libdali-adaptor-common.la
 
+# $(base_adaptor_src_files)
 libdali_adaptor_common_la_SOURCES = \
-                     $(base_adaptor_src_files) \
                      $(slp_platform_abstraction_src_files) \
                      $(adaptor_common_src_files) \
                      $(adaptor_common_internal_src_files)
@@ -119,7 +147,7 @@ libdali_adaptor_common_la_includes = \
                       -I../../../platform-abstractions/ \
                       -I../../../adaptors/public-api \
                       -I../../../adaptors/common \
-                      -I../../../adaptors/ 
+                      -I../../../adaptors/
 if WAYLAND
 libdali_adaptor_common_la_includes += \
                       -I../../../adaptors/wayland

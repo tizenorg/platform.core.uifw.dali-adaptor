@@ -20,7 +20,6 @@
 
 // EXTERNAL INCLUDES
 #include <string>
-#include <boost/function.hpp>
 
 // INTERNAL INCLUDES
 #include "abort-handler.h"
@@ -79,6 +78,12 @@ public:
      * Invoked when the language of the device is changed.
      */
     virtual void OnLanguageChanged() {}
+
+    /**
+     * Invoked when the main loop aborts unexpectedly
+     */
+    virtual void OnAbort() {}
+
   };
 
 public:
@@ -113,13 +118,6 @@ public:
    * @return true, if the main loop is running, false otherwise.
    */
   bool IsMainLoopRunning();
-
-  /**
-   * If the main loop aborts unexpectedly, then the connected callback function is called.
-   * @param[in]  callBack  The function to call.
-   * @note Only one callback can be registered.  The last callback to be set will be called on abort.
-   */
-  void AddAbortCallback(boost::function<void(void)> callBack);
 
   /**
    * Gets bundle name which was passed in app_reset callback.
@@ -173,7 +171,6 @@ private:
   std::string        mName;
   std::string        mBundleName;
   std::string        mBundleId;
-  AbortHandler       mAbortHandler;
 
 private: // impl members
 

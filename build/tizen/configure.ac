@@ -29,46 +29,79 @@ LT_INIT
 DALI_ADAPTOR_VERSION=dali_version
 AC_SUBST(DALI_ADAPTOR_VERSION)
 
-FREETYPE_REQUIRED=9.16.3
 
-PKG_CHECK_MODULES(CAPI_APPFW_APPLICATION, capi-appfw-application)
-PKG_CHECK_MODULES(DALICORE, dali-core)
-PKG_CHECK_MODULES(DLOG, dlog)
-PKG_CHECK_MODULES(ELEMENTARY, elementary)
-PKG_CHECK_MODULES(ECORE, ecore)
-PKG_CHECK_MODULES(ECORE_IPC, ecore-ipc)
-PKG_CHECK_MODULES(EXIF, libexif)
-PKG_CHECK_MODULES(FREETYPE, [freetype2 >= $FREETYPE_REQUIRED])
-PKG_CHECK_MODULES(FEEDBACK, feedback)
-PKG_CHECK_MODULES(FONTCONFIG, fontconfig)
-PKG_CHECK_MODULES(MMFSOUND, mm-sound)
-PKG_CHECK_MODULES(PNG, libpng)
-PKG_CHECK_MODULES(SENSOR, sensor)
-PKG_CHECK_MODULES(TTS, tts)
-PKG_CHECK_MODULES(VCONF, vconf)
-PKG_CHECK_MODULES(XML, libxml-2.0)
-PKG_CHECK_MODULES(LIBDRM, libdrm)
-PKG_CHECK_MODULES(LIBEXIF, libexif)
-PKG_CHECK_MODULES(CAPI_SYSTEM_SYSTEM_SETTINGS, capi-system-system-settings)
-PKG_CHECK_MODULES(EFL_ASSIST, efl-assist)
+# Tizen Profile options
+DALI_ADAPTOR_CFLAGS=-DPLATFORM_SLP
 
-# Check for availability of BulletPhysics
-PKG_CHECK_EXISTS(bullet, [
-  BULLET_CFLAGS=`pkg-config --cflags bullet`
-  BULLET_LIBS=`pkg-config --libs bullet`
-  BULLET=yes
-], [
-  AC_MSG_WARN([BulletPhysics development files not found, not building bullet plugin])
-  BULLET_CFLAGS=
-  BULLET_LIBS=
-  BULLET=no
-])
+AC_ARG_ENABLE([profile],
+              [AC_HELP_STRING([--enable-profile=COMMON,MOBILE,LITE,WEARABLE,TV,EMSCRIPTEN],
+                            [Select the variant of tizen])],
+              [enable_profile=$enableval],
+              [enable_profile=COMMON])
+
+AC_ARG_ENABLE(wayland,
+              [  --enable-wayland       Build on Wayland],
+              enable_wayland=yes,
+              enable_wayland=no)
+
+DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DDALI_PROFILE_${enable_profile}"
+DALI_PROFILE_CFLAGS=" -DDALI_PROFILE_${enable_profile}"
+AM_CONDITIONAL([COMMON_PROFILE], [test x$enable_profile = xCOMMON])
+AM_CONDITIONAL([MOBILE_PROFILE], [test x$enable_profile = xMOBILE])
+AM_CONDITIONAL([LITE_PROFILE], [test x$enable_profile = xLITE])
+AM_CONDITIONAL([WEARABLE_PROFILE], [test x$enable_profile = xWEARABLE])
+AM_CONDITIONAL([TV_PROFILE], [test x$enable_profile = xTV])
+AM_CONDITIONAL([EMSCRIPTEN_PROFILE], [test x$enable_profile = xEMSCRIPTEN])
+AM_CONDITIONAL([WAYLAND], [test x$enable_wayland = xyes])
+
+
+if test "x$enable_profile" = "xEMSCRIPTEN"; then
+  PKG_CHECK_MODULES(DALICORE, dali-core)
+
+  DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -std=c++11 -DEMSCRIPTEN"
+
+else
+
+  FREETYPE_REQUIRED=9.16.3
+
+  PKG_CHECK_MODULES(CAPI_APPFW_APPLICATION, capi-appfw-application)
+  PKG_CHECK_MODULES(DALICORE, dali-core)
+  PKG_CHECK_MODULES(DLOG, dlog)
+  PKG_CHECK_MODULES(ELEMENTARY, elementary)
+  PKG_CHECK_MODULES(ECORE, ecore)
+  PKG_CHECK_MODULES(ECORE_IPC, ecore-ipc)
+  PKG_CHECK_MODULES(EXIF, libexif)
+  PKG_CHECK_MODULES(FREETYPE, [freetype2 >= $FREETYPE_REQUIRED])
+  PKG_CHECK_MODULES(FEEDBACK, feedback)
+  PKG_CHECK_MODULES(FONTCONFIG, fontconfig)
+  PKG_CHECK_MODULES(MMFSOUND, mm-sound)
+  PKG_CHECK_MODULES(PNG, libpng)
+  PKG_CHECK_MODULES(SENSOR, sensor)
+  PKG_CHECK_MODULES(TTS, tts)
+  PKG_CHECK_MODULES(VCONF, vconf)
+  PKG_CHECK_MODULES(XML, libxml-2.0)
+  PKG_CHECK_MODULES(LIBDRM, libdrm)
+  PKG_CHECK_MODULES(LIBEXIF, libexif)
+  PKG_CHECK_MODULES(CAPI_SYSTEM_SYSTEM_SETTINGS, capi-system-system-settings)
+  PKG_CHECK_MODULES(EFL_ASSIST, efl-assist)
+
+  # Check for availability of BulletPhysics
+  PKG_CHECK_EXISTS(bullet, [
+    BULLET_CFLAGS=`pkg-config --cflags bullet`
+    BULLET_LIBS=`pkg-config --libs bullet`
+    BULLET=yes
+  ], [
+    AC_MSG_WARN([BulletPhysics development files not found, not building bullet plugin])
+    BULLET_CFLAGS=
+    BULLET_LIBS=
+    BULLET=no
+  ])
+
+fi
 
 AC_SUBST(BULLET_CFLAGS)
 AC_SUBST(BULLET_LIBS)
 AM_CONDITIONAL([USE_BULLET], [test x$BULLET = xyes])
-
-DALI_ADAPTOR_CFLAGS=-DPLATFORM_SLP
 
 AC_ARG_ENABLE(exportall,
               [AC_HELP_STRING([--enable-exportall],
@@ -106,26 +139,6 @@ AC_ARG_WITH([jpeg-turbo],
 
 AM_CONDITIONAL(TURBO_JPEG_IS_ON, test $with_jpeg_turbo = yes)
 
-# Tizen Profile options
-AC_ARG_ENABLE([profile],
-              [AC_HELP_STRING([--enable-profile=COMMON,MOBILE,LITE,WEARABLE,TV],
-                            [Select the variant of tizen])],
-              [enable_profile=$enableval],
-              [enable_profile=COMMON])
-
-AC_ARG_ENABLE(wayland,
-              [  --enable-wayland       Build on Wayland],
-              enable_wayland=yes,
-              enable_wayland=no)
-
-DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DDALI_PROFILE_${enable_profile}"
-DALI_PROFILE_CFLAGS=" -DDALI_PROFILE_${enable_profile}"
-AM_CONDITIONAL([COMMON_PROFILE], [test x$enable_profile = xCOMMON])
-AM_CONDITIONAL([MOBILE_PROFILE], [test x$enable_profile = xMOBILE])
-AM_CONDITIONAL([LITE_PROFILE], [test x$enable_profile = xLITE])
-AM_CONDITIONAL([WEARABLE_PROFILE], [test x$enable_profile = xWEARABLE])
-AM_CONDITIONAL([TV_PROFILE], [test x$enable_profile = xTV])
-AM_CONDITIONAL([WAYLAND], [test x$enable_wayland = xyes])
 
 if test "x$enable_profile" = "xCOMMON"; then
 if test "x$enable_wayland" = "xyes"; then
@@ -159,17 +172,25 @@ PKG_CHECK_MODULES(ASSIMP, assimp)
 PKG_CHECK_MODULES(HAPTIC, haptic)
 fi
 
+if test "x$enable_profile" = "xEMSCRIPTEN"; then
+PKG_CHECK_MODULES(OPENGLES20, gles20)
+fi
+
 if test "x$enable_wayland" = "xyes"; then
 PKG_CHECK_MODULES(WAYLAND, [ecore-wayland egl wayland-egl wayland-client >= 1.2.0 xkbcommon],
                   [DALI_HAS_ECOREWL=yes],
                   [DALI_HAS_ECOREWL=no])
 else
+
+if test "x$enable_profile" != "xEMSCRIPTEN"; then
 PKG_CHECK_MODULES(ECORE_X, [ecore-x],
                   [DALI_HAS_ECOREX=yes],
                   [DALI_HAS_ECOREX=no])
 PKG_CHECK_MODULES(X11, [x11],
                   [DALI_HAS_X11=yes],
                   [DALI_HAS_X11=no])
+fi
+
 fi
 
 if test x$DALI_DATA_RW_DIR != x; then

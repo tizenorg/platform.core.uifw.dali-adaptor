@@ -30,6 +30,8 @@ include ../../../adaptors/wayland/file.list
 else
 adaptor_x11_dir = ../../../adaptors/x11
 include ../../../adaptors/x11/file.list
+adaptor_tizen_dir = ../../../adaptors/tizen
+include ../../../adaptors/tizen/file.list
 endif
 
 if MOBILE_PROFILE
@@ -74,7 +76,7 @@ libdali_adaptor_includes = \
                       -I../../../platform-abstractions/portable \
                       -I../../../adaptors/public-api \
                       -I../../../adaptors/common \
-                      -I../../../adaptors/ 
+                      -I../../../adaptors/
 
 if WAYLAND
 libdali_adaptor_includes += \
@@ -83,6 +85,9 @@ else
 libdali_adaptor_includes += \
                       -I../../../adaptors/x11
 endif
+
+libdali_adaptor_includes += \
+                      -I../../../adaptors/tizen
 
 daliUserFontCacheDir = ${dataReadWriteDir}/glyphcache/
 daliDefaultThemeDir  = ${dataReadWriteDir}/theme/

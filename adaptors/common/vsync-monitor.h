@@ -19,7 +19,6 @@
  */
 
 // EXTERNAL INCLUDES
-#include <xf86drm.h>
 
 // INTERNAL INCLUDES
 #include <base/interfaces/vsync-monitor-interface.h>
@@ -79,11 +78,10 @@ private: // From Dali::Internal::Adaptor::VSyncMonitorInterface
    */
   virtual bool DoSync( unsigned int& frameNumber, unsigned int& seconds, unsigned int& microseconds );
 
-private:
+private: // impl members
 
-  int       mFileDescriptor;  ///< DRM dev node file descriptor
-  drmVBlank mVBlankInfo;
-  bool      mUseHardware;     ///< Hardware VSyncs available flag
+  struct Impl;
+  Impl* mImpl;
 
 };
 
