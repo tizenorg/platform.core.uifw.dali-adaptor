@@ -27,8 +27,10 @@
 
 #include <sys/time.h>
 
+#ifndef DALI_PROFILE_UBUNTU
 #include <vconf.h>
 #include <vconf-keys.h>
+#endif // DALI_PROFILE_UBUNTU
 
 #include <dali/public-api/common/vector-wrapper.h>
 #include <dali/public-api/events/touch-point.h>
@@ -73,7 +75,9 @@ Integration::Log::Filter* gSelectionEventLogFilter = Integration::Log::Filter::N
 
 namespace
 {
+#ifndef DALI_PROFILE_UBUNTU
 const char * DALI_VCONFKEY_SETAPPL_ACCESSIBILITY_FONT_NAME = "db/setting/accessibility/font_name"; // It will be update at vconf-key.h and replaced.
+#endif // DALI_PROFILE_UBUNTU
 
 // Currently this code is internal to dali/dali/internal/event/text/utf8.h but should be made Public and used from there instead.
 size_t Utf8SequenceLength(const unsigned char leadByte)
@@ -256,12 +260,14 @@ struct EventHandler::Impl
       mEcoreEventHandler.push_back( ecore_event_handler_add( ECORE_X_EVENT_SELECTION_CLEAR, EcoreEventSelectionClear, handler ) );
       mEcoreEventHandler.push_back( ecore_event_handler_add( ECORE_X_EVENT_SELECTION_NOTIFY, EcoreEventSelectionNotify, handler ) );
 
+#ifndef DALI_PROFILE_UBUNTU
       // Register Vconf notify - font name, font size and style
       vconf_notify_key_changed( DALI_VCONFKEY_SETAPPL_ACCESSIBILITY_FONT_NAME, VconfNotifyFontNameChanged, handler );
       vconf_notify_key_changed( VCONFKEY_SETAPPL_ACCESSIBILITY_FONT_SIZE, VconfNotifyFontSizeChanged, handler );
 #if defined(DALI_PROFILE_MOBILE) || defined(DALI_PROFILE_LITE)
       vconf_notify_key_changed( VCONFKEY_SETAPPL_CHANGE_UI_THEME_INT, VconfNotifyThemeChanged, handler );
 #endif
+#endif // DALI_PROFILE_UBUNTU
     }
   }
 
@@ -270,11 +276,13 @@ struct EventHandler::Impl
    */
   ~Impl()
   {
+#ifndef DALI_PROFILE_UBUNTU
 #if defined(DALI_PROFILE_MOBILE) || defined(DALI_PROFILE_LITE)
     vconf_ignore_key_changed( VCONFKEY_SETAPPL_CHANGE_UI_THEME_INT, VconfNotifyThemeChanged );
 #endif
     vconf_ignore_key_changed( VCONFKEY_SETAPPL_ACCESSIBILITY_FONT_SIZE, VconfNotifyFontSizeChanged );
     vconf_ignore_key_changed( DALI_VCONFKEY_SETAPPL_ACCESSIBILITY_FONT_NAME, VconfNotifyFontNameChanged );
+#endif // DALI_PROFILE_UBUNTU
 
     for( std::vector<Ecore_Event_Handler*>::iterator iter = mEcoreEventHandler.begin(), endIter = mEcoreEventHandler.end(); iter != endIter; ++iter )
     {

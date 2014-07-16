@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+AUTOMAKE_OPTIONS = subdir-objects
+
 # Build the Dali Adaptor common intermediate library
 
 # Base Adaptor
@@ -44,6 +46,19 @@ adaptor_common_internal_src_files += $(adaptor_x11_common_internal_profile_src_f
 endif
 endif
 
+if UBUNTU_PROFILE
+adaptor_common_internal_src_files += $(adaptor_common_internal_profile_src_files)
+slp_platform_abstraction_src_files += $(slp_assimp_stubs_src_files)
+if ! WAYLAND
+adaptor_common_internal_src_files += $(adaptor_x11_common_internal_profile_src_files)
+endif
+adaptor_common_internal_src_files += $(adaptor_ubuntu_internal_src_files)
+adaptor_common_internal_profile_src_files += $(adaptor_ubuntu_profile_src_files)
+else
+adaptor_common_internal_src_files += $(adaptor_tizen_internal_src_files)
+adaptor_common_internal_profile_src_files += $(adaptor_tizen_profile_src_files)
+endif
+
 if WAYLAND
 adaptor_common_internal_src_files += $(adaptor_wayland_internal_src_files)
 adaptor_common_internal_profile_src_files += $(adaptor_wayland_profile_src_files)
@@ -51,6 +66,7 @@ else
 adaptor_common_internal_src_files += $(adaptor_x11_internal_src_files)
 adaptor_common_internal_profile_src_files += $(adaptor_x11_profile_src_files)
 endif
+
 
 if MOBILE_PROFILE
 adaptor_common_internal_src_files += $(adaptor_x11_profile_src_files)
@@ -119,13 +135,21 @@ libdali_adaptor_common_la_includes = \
                       -I../../../platform-abstractions/ \
                       -I../../../adaptors/public-api \
                       -I../../../adaptors/common \
-                      -I../../../adaptors/ 
+                      -I../../../adaptors/
 if WAYLAND
 libdali_adaptor_common_la_includes += \
                       -I../../../adaptors/wayland
 else
 libdali_adaptor_common_la_includes += \
                       -I../../../adaptors/x11
+endif
+
+if UBUNTU_PROFILE
+libdali_adaptor_common_la_includes += \
+                      -I../../../adaptors/ubuntu
+else
+libdali_adaptor_common_la_includes += \
+                      -I../../../adaptors/tizen
 endif
 
 daliDefaultFontCacheDir = ${dataReadOnlyDir}/glyphcache/

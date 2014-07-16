@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+AUTOMAKE_OPTIONS = subdir-objects
+
 # Build the Dali Adaptor + Livebox Plugin library
 
 tizen_application_internal_src_dir = ../../../adaptors/tizen/internal

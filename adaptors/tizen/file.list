@@ -1,0 +1,12 @@
+# tizen
+
+adaptor_tizen_internal_header_files = \
+  $(adaptor_tizen_dir)/clipboard-impl.h
+
+adaptor_tizen_application_src_files =
+
+adaptor_tizen_internal_src_files =
+
+adaptor_tizen_profile_src_files = \
+  $(adaptor_tizen_dir)/tts-player-impl-tizen.cpp
+

@@ -20,8 +20,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#ifndef DALI_PROFILE_UBUNTU
 #include <vconf.h>
 #include <vconf-keys.h>
+#endif // DALI_PROFILE_UBUNTU
 
 #include <dali/integration-api/debug.h>
 
@@ -52,7 +54,9 @@ void ScreenStatusChanged(keynode_t* node, void* data)
   VSyncMonitor* vsyncMonitor( static_cast< VSyncMonitor* >( data ) );
 
   int status = 0;
+#ifndef DALI_PROFILE_UBUNTU
   vconf_get_int( VCONFKEY_PM_STATE, &status );
+#endif // DALI_PROFILE_UBUNTU
 
   // status values
   //  - VCONFKEY_PM_STATE_NORMAL : turn vsync on
@@ -72,14 +76,18 @@ VSyncMonitor::VSyncMonitor()
 : mFileDescriptor( FD_NONE ),
   mUseHardware( true )
 {
+#ifndef DALI_PROFILE_UBUNTU
   vconf_notify_key_changed( VCONFKEY_PM_STATE, ScreenStatusChanged, this );
+#endif // DALI_PROFILE_UBUNTU
 }
 
 VSyncMonitor::~VSyncMonitor()
 {
   Terminate();
 
+#ifndef DALI_PROFILE_UBUNTU
   vconf_ignore_key_changed( VCONFKEY_PM_STATE, ScreenStatusChanged );
+#endif // DALI_PROFILE_UBUNTU
 }
 
 void VSyncMonitor::SetUseHardware( bool useHardware )

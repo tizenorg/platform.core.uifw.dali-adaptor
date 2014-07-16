@@ -19,7 +19,9 @@
 #include "accessibility-manager-impl.h"
 
 // EXTERNAL INCLUDES
+#ifndef DALI_PROFILE_UBUNTU
 #include <vconf.h>
+#endif // DALI_PROFILE_UBUNTU
 #include <Ecore_X.h>
 #include <Elementary.h>
 

@@ -22,11 +22,10 @@
 #include <tts.h>
 #include <string>
 
+// INTERNAL INCLUDES
 #include <dali/integration-api/debug.h>
 #include <dali/public-api/object/base-object.h>
 #include <tts-player.h>
-
-// INTERNAL INCLUDES
 
 namespace Dali
 {

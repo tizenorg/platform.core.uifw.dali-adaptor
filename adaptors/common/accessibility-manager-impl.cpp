@@ -19,7 +19,9 @@
 #include "accessibility-manager-impl.h"
 
 // EXTERNAL INCLUDES
+#ifndef DALI_PROFILE_UBUNTU
 #include <vconf.h>
+#endif // DALI_PROFILE_UBUNTU
 
 #include <dali/public-api/dali-core.h>
 #include <dali/integration-api/debug.h>
@@ -46,7 +48,9 @@ void AccessibilityOnOffNotification(keynode_t* node, void* data)
 {
   AccessibilityManager* manager = static_cast<AccessibilityManager*>(data);
   int isEnabled = 0;
+#ifndef DALI_PROFILE_UBUNTU
   vconf_get_bool(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &isEnabled);
+#endif // DALI_PROFILE_UBUNTU
 
   DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, isEnabled?"ENABLED":"DISABLED");
 
@@ -284,7 +288,9 @@ AccessibilityManager::AccessibilityManager()
   mIndicatorFocused(false)
 {
   int isEnabled = 0;
+#ifndef DALI_PROFILE_UBUNTU
   vconf_get_bool(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &isEnabled);
+#endif // DALI_PROFILE_UBUNTU
   DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, isEnabled?"ENABLED":"DISABLED");
 
   if(isEnabled == 1)
@@ -296,14 +302,18 @@ AccessibilityManager::AccessibilityManager()
     mIsEnabled = false;
   }
 
+#ifndef DALI_PROFILE_UBUNTU
   vconf_notify_key_changed( VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, AccessibilityOnOffNotification, this );
+#endif // DALI_PROFILE_UBUNTU
 
   mAccessibilityGestureDetector = new AccessibilityGestureDetector();
 }
 
 AccessibilityManager::~AccessibilityManager()
 {
+#ifndef DALI_PROFILE_UBUNTU
   vconf_ignore_key_changed( VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, AccessibilityOnOffNotification );
+#endif // DALI_PROFILE_UBUNTU
 }
 
 } // namespace Adaptor

@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+AUTOMAKE_OPTIONS = subdir-objects
+
 # Build the Dali Adaptor + Application library
 
 # Common

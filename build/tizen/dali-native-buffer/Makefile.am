@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+AUTOMAKE_OPTIONS = subdir-objects
+
 # Build the Dali Adaptor + Native Buffer Plugin library
 
 tizen_native_buffer_plugin_internal_src_dir = ../../../adaptors/mobile

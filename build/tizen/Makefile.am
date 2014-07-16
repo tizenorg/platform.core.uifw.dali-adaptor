@@ -35,6 +35,8 @@ pkgconfig_DATA += dali-evas.pc \
                   dali-native-buffer.pc
 endif
 
+AUTOMAKE_OPTIONS = subdir-objects
+
 MAINTAINERCLEANFILES = \
     aclocal.m4 \
     autom4te.cache \
