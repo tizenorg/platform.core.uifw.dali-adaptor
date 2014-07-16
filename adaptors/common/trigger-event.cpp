@@ -20,7 +20,6 @@
 
 // EXTERNAL INCLUDES
 #include <sys/eventfd.h>
-#include <boost/bind.hpp>
 
 #include <dali/integration-api/debug.h>
 

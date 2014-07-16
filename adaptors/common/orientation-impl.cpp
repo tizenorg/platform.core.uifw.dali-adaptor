@@ -33,15 +33,15 @@ namespace Internal
 namespace Adaptor
 {
 
-Orientation* Orientation::New(Window* window)
+Orientation* Orientation::New(OrientationObserver* observer)
 {
-  Orientation* orientation = new Orientation(window);
+  Orientation* orientation = new Orientation(observer);
 
   return orientation;
 }
 
-Orientation::Orientation(Window* window)
-: mWindow(window),
+Orientation::Orientation(OrientationObserver* observer)
+: mObserver(observer),
   mOrientation(0),
   mWindowWidth(0),
   mWindowHeight(0)
@@ -90,9 +90,9 @@ void Orientation::OnRotationRequest()
     mChangedSignal.Emit( handle );
   }
 
-  if( mWindow != NULL )
+  if( mObserver != NULL )
   {
-    mWindow->RotationDone( mOrientation, mWindowWidth, mWindowHeight );
+    mObserver->RotationDone( mOrientation, mWindowWidth, mWindowHeight );
   }
 }
 

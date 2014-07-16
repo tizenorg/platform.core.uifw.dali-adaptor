@@ -1,0 +1,19 @@
+# Common
+
+adaptor_emscripten_src_files =
+
+adaptor_emscripten_internal_src_files = \
+  $(adaptor_emscripten_dir)/accessibility-manager-impl-emscripten.cpp \
+  $(adaptor_emscripten_dir)/adaptor-impl-emscripten.cpp \
+  $(adaptor_emscripten_dir)/egl-implementation-emscripten.cpp \
+  $(adaptor_emscripten_dir)/gl-sync-implementation-emscripten.cpp \
+  $(adaptor_emscripten_dir)/server-connection-emscripten.cpp \
+  $(adaptor_emscripten_dir)/tilt-sensor-impl-emscripten.cpp \
+  $(adaptor_emscripten_dir)/tts-player-impl-emscripten.cpp \
+  $(adaptor_emscripten_dir)/vsync-monitor-emscripten.cpp \
+  $(adaptor_emscripten_dir)/window-impl-emscripten.cpp
+
+adaptor_emscripten_application_src_files = \
+  $(adaptor_emscripten_dir)/application-impl-emscripten.cpp \
+  $(adaptor_emscripten_dir)/framework-emscripten.cpp
+

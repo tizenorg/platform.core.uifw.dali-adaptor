@@ -53,7 +53,6 @@ const unsigned int DEFAULT_WINDOW_HEIGHT  = 800;
 const float        DEFAULT_HORIZONTAL_DPI = 220;
 const float        DEFAULT_VERTICAL_DPI   = 217;
 
-boost::thread_specific_ptr<Application> gThreadLocalApplication;
 }
 
 ApplicationPtr Application::New(
@@ -83,12 +82,6 @@ Application::Application(
   mBaseLayout(baseLayout),
   mSlotDelegate( this )
 {
-  // make sure we don't create the local thread application instance twice
-  DALI_ASSERT_ALWAYS(gThreadLocalApplication.get() == NULL && "Cannot create more than one Application per thread" );
-
-  // reset is used to store a new value associated with this thread
-  gThreadLocalApplication.reset(this);
-
   mCommandLineOptions = new CommandLineOptions(argc, argv);
 
   mFramework = new Framework(*this, argc, argv, name);
@@ -100,21 +93,12 @@ Application::~Application()
   delete mCommandLineOptions;
   delete mAdaptor;
   mWindow.Reset();
-  gThreadLocalApplication.release();
 }
 
 void Application::CreateWindow()
 {
-#ifndef __arm__
-   PositionSize windowPosition(0, 0, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
-#else
-   PositionSize windowPosition(0, 0, 0, 0);  // this will use full screen
-#endif
-  if (mCommandLineOptions->stageWidth > 0 && mCommandLineOptions->stageHeight > 0)
-  {
-    // let the command line options over ride
-    windowPosition = PositionSize(0,0,mCommandLineOptions->stageWidth,mCommandLineOptions->stageHeight);
-  }
+  // window position checked at run time
+  PositionSize windowPosition(0, 0, 0, 0);
 
   mWindow = Dali::Window::New( windowPosition, mName, mWindowMode == Dali::Application::TRANSPARENT );
 }
@@ -123,17 +107,12 @@ void Application::CreateAdaptor()
 {
   DALI_ASSERT_ALWAYS( mWindow && "Window required to create adaptor" );
 
-  mAdaptor = &Dali::Adaptor::New( mWindow, mBaseLayout);
+  mAdaptor = &Dali::Adaptor::New( mWindow, mBaseLayout );
 
   // Allow DPI to be overridden from command line.
   unsigned int hDPI=DEFAULT_HORIZONTAL_DPI;
   unsigned int vDPI=DEFAULT_VERTICAL_DPI;
 
-  std::string dpiStr = mCommandLineOptions->stageDPI;
-  if(!dpiStr.empty())
-  {
-    sscanf(dpiStr.c_str(), "%ux%u", &hDPI, &vDPI);
-  }
   Internal::Adaptor::Adaptor::GetImplementation( *mAdaptor ).SetDpi(hDPI, vDPI);
 
   mAdaptor->ResizedSignal().Connect( mSlotDelegate, &Application::OnResize );
@@ -141,8 +120,49 @@ void Application::CreateAdaptor()
 
 void Application::MainLoop()
 {
+  //
+  // We actually don't loop here for emscripten.
+  // MainLoop() is called from a browser Javascript idle type function
+  // and needs to return to single threaded Javascript so as not to block
+  //
+
   // Run the application
   mFramework->Run();
+
+  //
+  // Update Once
+  //
+  unsigned int intervalMilliseconds = 16; // DEFAULT_RENDER_INTERVAL
+
+  // pump events
+  // Integration::NotificationEvent event;
+  // // mCore->SendEvent(event);
+  // mCore->QueueEvent(event);
+  mCore->ProcessEvents();
+
+  // Update Time values
+  mMicroSeconds += intervalMilliseconds * 1000u;
+  unsigned int additionalSeconds = mMicroSeconds / 1000000u;
+
+  mSeconds += additionalSeconds;
+  mMicroSeconds -= additionalSeconds * 1000000u;
+
+  mPlatformAbstraction.IncrementGetTimeResult( intervalMilliseconds ) ; // size_t milliseconds)
+
+  mCore->VSync( mFrame, mSeconds, mMicroSeconds );
+
+  mCore->Update( mStatus );
+
+  //
+  // Render Once
+  //
+  mCore->Render( mRenderStatus );
+
+  mFrame++;
+
+  mEglImplementation.SwapBuffers();
+
+
 }
 
 void Application::Lower()
@@ -159,47 +179,36 @@ void Application::Quit()
 
 void Application::QuitFromMainLoop()
 {
-  mAdaptor->Stop();
+  if( mAdaptor )
+  {
+    mAdaptor->Stop();
 
-  Dali::Application application(this);
-  mTerminateSignalV2.Emit( application );
+    Dali::Application application(this);
+    mTerminateSignalV2.Emit( application );
 
-  mFramework->Quit();
+  }
+
+  if(mFramework)
+  {
+    mFramework->Quit();
+  }
+
   // This will trigger OnTerminate(), below, after the main loop has completed.
   mInitialized = false;
 }
 
 void Application::OnInit()
 {
-  mFramework->AddAbortCallback(boost::bind(&Application::QuitFromMainLoop, this));
-
   CreateWindow();
   CreateAdaptor();
 
   // Run the adaptor
   mAdaptor->Start();
 
-  // Check if user requires no vsyncing and set on X11 Adaptor
-  if (mCommandLineOptions->noVSyncOnRender)
-  {
-    Internal::Adaptor::Adaptor::GetImplementation( *mAdaptor ).DisableVSync();
-  }
-
-  Internal::Adaptor::Adaptor::GetImplementation( *mAdaptor ).SetStereoBase( mCommandLineOptions->stereoBase );
-  if( mCommandLineOptions->viewMode != 0 )
-  {
-    ViewMode viewMode = MONO;
-    if( mCommandLineOptions->viewMode <= STEREO_INTERLACED )
-    {
-      viewMode = static_cast<ViewMode>( mCommandLineOptions->viewMode );
-    }
-    Internal::Adaptor::Adaptor::GetImplementation( *mAdaptor ).SetViewMode( viewMode );
-  }
-
   mInitialized = true;
 
-  // in default, auto hide indicator mode
-  mWindow.ShowIndicator(Dali::Window::AUTO);
+  // // in default, auto hide indicator mode
+  // mWindow.ShowIndicator(Dali::Window::AUTO);
 
   Dali::Application application(this);
   mInitSignalV2.Emit( application );
@@ -207,11 +216,13 @@ void Application::OnInit()
 
 void Application::OnTerminate()
 {
-  // we've been told to quit by AppCore, ecore_x_destroy has been called, need to quit synchronously
-  // delete the window as ecore_x has been destroyed by AppCore
-
   mWindow.Reset();
   mInitialized = false;
+}
+
+void Application::OnAbort()
+{
+  QuitFromMainLoop();
 }
 
 void Application::OnPause()
@@ -268,9 +279,7 @@ Dali::Window Application::GetWindow()
 
 Dali::Application Application::Get()
 {
-  DALI_ASSERT_ALWAYS( gThreadLocalApplication.get() != NULL && "Application not instantiated" );
-
-  Dali::Application application(gThreadLocalApplication.get());
+  Dali::Application application(this);
 
   return application;
 }
