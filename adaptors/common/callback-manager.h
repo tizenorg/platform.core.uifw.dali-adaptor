@@ -19,8 +19,8 @@
  */
 
 // EXTERNAL INCLUDES
-#include <boost/function.hpp>
 #include <dali/public-api/common/dali-common.h>
+#include <boost/function.hpp>
 
 namespace Dali
 {

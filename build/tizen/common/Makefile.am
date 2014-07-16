@@ -22,10 +22,14 @@
 # Base Adaptor
 base_adaptor_src_dir = ../../../adaptors/base
 include ../../../adaptors/base/file.list
-
 # Platform Abstraction
+if ! EMSCRIPTEN_PROFILE
 slp_platform_abstraction_src_dir = ../../../platform-abstractions/slp
 include ../../../platform-abstractions/slp/file.list
+else
+slp_platform_abstraction_src_dir = ../../../platform-abstractions/emscripten
+include ../../../platform-abstractions/emscripten/file.list
+endif
 
 # Internal Common
 adaptor_common_dir = ../../../adaptors/common
@@ -61,11 +65,13 @@ adaptor_tv_dir = ../../../adaptors/tv
 include ../../../adaptors/tv/file.list
 endif
 
+# Emscripten
+adaptor_emscripten_dir = ../../../adaptors/emscripten
+include ../../../adaptors/emscripten/file.list # adaptor_emscripten_src_files
+
 # Public API
 adaptor_public_api_dir = ../../../adaptors/public-api
 include ../../../adaptors/public-api/file.list
-
-
 
 ############# source files #############
 
@@ -74,8 +80,7 @@ if COMMON_PROFILE
 slp_platform_abstraction_src_files += $(slp_assimp_stubs_src_files)
 
 adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
-                             $(adaptor_common_internal_default_profile_src_files) \
-                             $(adaptor_tizen_internal_src_files)
+                             $(adaptor_common_internal_default_profile_src_files)
 
 if WAYLAND
 adaptor_internal_src_files += $(adaptor_wayland_tizen_internal_src_files) \
@@ -144,6 +149,17 @@ adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
                              $(adaptor_x11_tv_internal_src_files)
 endif
 
+
+# EMSCRIPTEN
+if EMSCRIPTEN_PROFILE
+slp_platform_abstraction_src_files 	+= $(slp_assimp_stubs_src_files)
+
+adaptor_internal_src_files  = $(adaptor_emscripten_common_internal_src_files) \
+										$(adaptor_emscripten_src_files)
+
+endif
+
+
 # Feedback Plugin
 if ! LITE_PROFILE
 if ! WEARABLE_PROFILE
@@ -154,19 +170,31 @@ dalifeedbacktheme_DATA = ${dali_plugin_theme_files}
 endif
 endif
 
+if ! EMSCRIPTEN_PROFILE
 if TURBO_JPEG_IS_ON
   slp_platform_abstraction_src_files += $(slp_turbo_jpeg_loader)
 else
   slp_platform_abstraction_src_files += $(slp_jpeg_loader)
 endif
+endif
 
 lib_LTLIBRARIES = libdali-adaptor-common.la
 
+if EMSCRIPTEN_PROFILE
+libdali_adaptor_common_la_SOURCES = \
+                     $(emscripten_base_adaptor_src_files) \
+                     $(slp_platform_abstraction_src_files) \
+                     $(emscripten_public_api_src_files) \
+                     $(adaptor_internal_src_files)
+else
 libdali_adaptor_common_la_SOURCES = \
                      $(base_adaptor_src_files) \
                      $(slp_platform_abstraction_src_files) \
                      $(public_api_src_files) \
                      $(adaptor_internal_src_files)
+endif
+
+
 
 libdali_adaptor_common_la_DEPENDENCIES =
 
@@ -185,8 +213,13 @@ if WAYLAND
 libdali_adaptor_common_la_includes += \
                       -I../../../adaptors/wayland
 else
+if EMSCRIPTEN_PROFILE
+libdali_adaptor_common_la_includes += \
+                      -I../../../adaptors/emscripten
+else
 libdali_adaptor_common_la_includes += \
                       -I../../../adaptors/x11
+endif
 endif
 
 if UBUNTU_PROFILE
@@ -258,13 +291,18 @@ libdali_adaptor_common_la_LIBADD = \
                       -lgif \
                       -lboost_thread
 
+
 if WAYLAND
 libdali_adaptor_common_la_CXXFLAGS += $(WAYLAND_CFLAGS)
 libdali_adaptor_common_la_LIBADD += $(WAYLAND_LIBS)
 else
+
+if ! EMSCRIPTEN_PROFILE
 libdali_adaptor_common_la_CXXFLAGS += $(X11_CFLAGS)
 libdali_adaptor_common_la_LIBADD += $(X11_LIBS)
 libdali_adaptor_common_la_LIBADD += $(ECORE_X_LIBS)
+endif
+
 endif
 
 if COMMON_PROFILE
@@ -298,6 +336,10 @@ libdali_adaptor_common_la_CXXFLAGS += $(ASSIMP_CFLAGS) \
 
 libdali_adaptor_common_la_LIBADD += $(ASSIMP_LIBS)
 endif
+
+#if EMSCRIPTEN_PROFILE
+#libdali_adaptor_common_la_CXXFLAGS += "-Wall -g -O1 -std=c++11"
+#endif
 
 if TURBO_JPEG_IS_ON
 libdali_adaptor_common_la_LIBADD += -lturbojpeg

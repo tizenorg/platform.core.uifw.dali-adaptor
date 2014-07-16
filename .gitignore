@@ -34,5 +34,7 @@ dali-adaptor.includes
 *.swp
 tags
 /build/desktop
+/build/emscripten/build
 /packaging/home*
+/docs/generated
 
