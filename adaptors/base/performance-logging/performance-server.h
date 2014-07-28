@@ -20,6 +20,7 @@
 
 // INTERNAL INCLUDES
 #include <base/performance-logging/frame-time-stats.h>
+#include <base/performance-logging/networking/network-performance-server.h>
 #include <dali/public-api/common/dali-vector.h>
 #include <base/interfaces/adaptor-internal-services.h>
 
@@ -36,6 +37,7 @@ namespace Adaptor
 {
 
 class EnvironmentOptions;
+class SocketInterface;
 /**
  * Concrete implementation of performance interface.
  * Adaptor classes should never include this file, they
@@ -106,6 +108,7 @@ private:
   boost::mutex mDataMutex;            ///< mutex
   const EnvironmentOptions& mEnvironmentOptions;      ///< environment options
   KernelTraceInterface& mKernelTrace; ///< kernel trace interface
+  NetworkPerformanceServer mNetworkServer; ///< network server
 
 };
 
