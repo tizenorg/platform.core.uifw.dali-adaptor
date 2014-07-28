@@ -18,6 +18,12 @@
 // CLASS HEADER
 #include "performance-marker.h"
 
+// INTERNAL INCLUDES
+#include <dali/integration-api/debug.h>
+
+// EXTERNAL INCLUDES
+#include <string.h>
+
 namespace Dali
 {
 
@@ -34,23 +40,27 @@ struct NamePair
 {
   PerformanceMarker::MarkerType type;
   const char* name;
+  PerformanceMarker::MarkerFilter group;
 };
 
 const NamePair MarkerLookup[] =
 {
-    { PerformanceMarker::V_SYNC       ,        "V_SYNC"                },
-    { PerformanceMarker::UPDATE_START ,        "UPDATE_START"          },
-    { PerformanceMarker::UPDATE_END   ,        "UPDATE_END"            },
-    { PerformanceMarker::RENDER_START ,        "RENDER_START"          },
-    { PerformanceMarker::RENDER_END   ,        "RENDER_END"            },
-    { PerformanceMarker::SWAP_START   ,        "SWAP_START"            },
-    { PerformanceMarker::SWAP_END     ,        "SWAP_END"              },
-    { PerformanceMarker::PROCESS_EVENTS_START, "PROCESS_EVENT_START"   },
-    { PerformanceMarker::PROCESS_EVENTS_END,   "PROCESS_EVENT_END"     },
-    { PerformanceMarker::PAUSED       ,        "PAUSED"                },
-    { PerformanceMarker::RESUME       ,        "RESUMED"               }
+    { PerformanceMarker::V_SYNC       ,        "V_SYNC"               , PerformanceMarker::V_SYNC_EVENTS },
+    { PerformanceMarker::UPDATE_START ,        "UPDATE_START"         , PerformanceMarker::UPDATE },
+    { PerformanceMarker::UPDATE_END   ,        "UPDATE_END"           , PerformanceMarker::UPDATE },
+    { PerformanceMarker::RENDER_START ,        "RENDER_START"         , PerformanceMarker::RENDER },
+    { PerformanceMarker::RENDER_END   ,        "RENDER_END"           , PerformanceMarker::RENDER },
+    { PerformanceMarker::SWAP_START   ,        "SWAP_START"           , PerformanceMarker::SWAP_BUFFERS  },
+    { PerformanceMarker::SWAP_END     ,        "SWAP_END"             , PerformanceMarker::SWAP_BUFFERS  },
+    { PerformanceMarker::PROCESS_EVENTS_START, "PROCESS_EVENT_START"  , PerformanceMarker::EVENT_PROCESS },
+    { PerformanceMarker::PROCESS_EVENTS_END,   "PROCESS_EVENT_END"    , PerformanceMarker::EVENT_PROCESS },
+    { PerformanceMarker::PAUSED       ,        "PAUSED"               , PerformanceMarker::LIFE_CYCLE_EVENTS },
+    { PerformanceMarker::RESUME       ,        "RESUMED"              , PerformanceMarker::LIFE_CYCLE_EVENTS }
 };
-}
+} // un-named name space
+
+const unsigned int PerformanceMarker::SERIALIZED_SIZE = sizeof( PerformanceMarker );
+
 PerformanceMarker::PerformanceMarker( MarkerType type )
 :mType(type)
 {
@@ -70,6 +80,18 @@ const char* PerformanceMarker::GetName( ) const
 unsigned int PerformanceMarker::MicrosecondDiff( const PerformanceMarker& start,const PerformanceMarker& end )
 {
   return FrameTimeStamp::MicrosecondDiff( start.mTimeStamp, end.mTimeStamp );
+}
+
+bool PerformanceMarker::IsFilterEnabled( MarkerFilter filter ) const
+{
+  return  (filter & MarkerLookup[ mType ].group);
+}
+
+void PerformanceMarker::Serialize( void *buffer, unsigned int lengthInBytes) const
+{
+  DALI_ASSERT_DEBUG( lengthInBytes == SERIALIZED_SIZE );
+
+  memcpy( buffer, &mTimeStamp, SERIALIZED_SIZE );
 }
 
 } // namespace Adaptor

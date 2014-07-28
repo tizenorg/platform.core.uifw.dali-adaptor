@@ -128,7 +128,7 @@ void Adaptor::ParseEnvironmentOptions()
   // get logging options
   unsigned int logFrameRateFrequency = GetIntegerEnvironmentVariable( DALI_ENV_FPS_TRACKING, 0 );
   unsigned int logupdateStatusFrequency = GetIntegerEnvironmentVariable( DALI_ENV_UPDATE_STATUS_INTERVAL, 0 );
-  unsigned int logPerformanceLevel = GetIntegerEnvironmentVariable( DALI_ENV_LOG_PERFORMANCE, 0 );
+  unsigned int logPerformanceLevel = PerformanceInterface::LOG_NETWORK;//GetIntegerEnvironmentVariable( DALI_ENV_LOG_PERFORMANCE, 0 );
   unsigned int logPanGesture = GetIntegerEnvironmentVariable( DALI_ENV_LOG_PAN_GESTURE, 0 );
 
   // all threads here (event, update, and render) will send their logs to SLP Platform's LogMessage handler.
@@ -640,6 +640,12 @@ TriggerEventFactoryInterface& Adaptor::GetTriggerEventFactoryInterface()
 {
   return mTriggerEventFactory;
 }
+
+SocketFactoryInterface& Adaptor::GetSocketFactoryInterface()
+{
+  return mSocketFactory;
+}
+
 RenderSurface* Adaptor::GetRenderSurfaceInterface()
 {
   return mSurface;
