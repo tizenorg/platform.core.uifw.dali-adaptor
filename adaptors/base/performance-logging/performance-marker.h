@@ -58,6 +58,22 @@ public:
   };
 
   /**
+   * Bitmask used to filter different types of markers based
+   * on what group they belong to.
+   */
+  enum MarkerFilter
+  {
+    FILTERING_DISABLED        = 0,
+    V_SYNC_EVENTS        = 1 << 0, ///< v-sync
+    UPDATE               = 1 << 1, ///< update start / end
+    RENDER               = 1 << 2, ///< update start / end
+    EVENT_PROCESS        = 1 << 3, ///< process events start / end
+    SWAP_BUFFERS         = 1 << 4, ///< swap buffers start / end
+    LIFE_CYCLE_EVENTS    = 1 << 5, ///< pause / resume
+    RESOURCE_EVENTS      = 1 << 6  ///< resource events
+  };
+
+  /**
    * Constructor
    * @param type marker type
    */
@@ -98,12 +114,23 @@ public:
    */
   static unsigned int MicrosecondDiff( const PerformanceMarker& start, const PerformanceMarker& end  );
 
+  /**
+   * @return if a marker is enabled as part of a group
+   */
+  bool IsFilterEnabled( MarkerFilter filter ) const;
+
+  static const unsigned int SERIALIZED_SIZE;    ///< size of the marker after it's been converted into a bit stream
+
+
+  void Serialize( void *buffer, unsigned int lengthInBytes ) const;
+
 private:
 
   MarkerType           mType;         ///< marker type
   FrameTimeStamp       mTimeStamp;    ///< frame time stamp
 
 };
+typedef void* MarkerBuffer[sizeof( PerformanceMarker )];  ///< typedef for serialized data
 
 } // namespace Adaptor
 

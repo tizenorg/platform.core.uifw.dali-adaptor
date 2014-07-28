@@ -45,6 +45,7 @@
 #include <window-visibility-observer.h>
 #include <kernel-trace.h>
 #include <trigger-event-factory.h>
+#include <networking/socket-factory.h>
 
 namespace Dali
 {
@@ -329,6 +330,11 @@ public:  //AdaptorInternalServices
   virtual TriggerEventInterface& GetTriggerEventInterface();
 
   /**
+   * @copydoc Dali::Internal::Adaptor::AdaptorInternalServices::GetSocketFactoryInterface()
+   */
+  virtual SocketFactoryInterface& GetSocketFactoryInterface();
+
+  /**
    * @copydoc Dali::Internal::Adaptor::AdaptorInternalServices::GetTriggerEventFactoryInterface()
    */
   virtual TriggerEventFactoryInterface& GetTriggerEventFactoryInterface();
@@ -528,6 +534,7 @@ private: // Data
   KernelTrace                           mKernelTracer;                ///< Kernel tracer
   TriggerEventFactory                   mTriggerEventFactory;         ///< Trigger event factory
   ObjectProfiler*                       mObjectProfiler;              ///< Tracks object lifetime for profiling
+  SocketFactory                         mSocketFactory;               ///< Socket factory
 public:
   inline static Adaptor& GetImplementation(Dali::Adaptor& adaptor) {return *adaptor.mImpl;}
 };

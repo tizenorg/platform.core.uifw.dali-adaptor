@@ -49,13 +49,16 @@ PerformanceServer::PerformanceServer( AdaptorInternalServices& adaptorServices,
  mLogFrequencyMicroseconds( 0),
  mPlatformAbstraction( adaptorServices.GetPlatformAbstractionInterface() ),
  mEnvironmentOptions(environmentOptions),
- mKernelTrace( adaptorServices.GetKernelTraceInterface() )
+ mKernelTrace( adaptorServices.GetKernelTraceInterface() ),
+ mNetworkServer( adaptorServices, environmentOptions )
 {
   SetLogging( mEnvironmentOptions.GetPerformanceLoggingLevel(), mEnvironmentOptions.GetFrameRateLoggingFrequency());
 }
 
 PerformanceServer::~PerformanceServer()
 {
+  mNetworkServer.Stop();
+
   if( mLogFunctionInstalled )
   {
     mEnvironmentOptions.UnInstallLogFunction();
@@ -69,6 +72,11 @@ void PerformanceServer::SetLogging( unsigned int level, unsigned int interval)
     return;
   }
   mLogLevel = level;
+
+  if( mLogLevel & LOG_NETWORK )
+  {
+    mNetworkServer.Start();
+  }
 
   mLogFrequencyMicroseconds = interval * MICROSECONDS_PER_SECOND;
 
@@ -110,6 +118,11 @@ void PerformanceServer::AddMarkerToLog( PerformanceMarker marker )
   if( mLogLevel & LOG_EVENTS_TO_KERNEL )
   {
     mKernelTrace.Trace(marker.GetName());
+  }
+
+  if( mLogLevel & LOG_NETWORK )
+  {
+    mNetworkServer.TransmitMarker( marker );
   }
 
   // only log on the v-sync thread, so we have less impact on update/render
