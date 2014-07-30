@@ -7,6 +7,15 @@ SET(CAPI_LIB "dali-adaptor")
 SET(TC_SOURCES
     utc-Dali-Key.cpp
     utc-Dali-Timer.cpp
+    utc-Dali-AccessibilityManager.cpp
+    utc-Dali-Adaptor.cpp
+    utc-Dali-PixmapImage.cpp
+    utc-Dali-RenderSurface.cpp
+    utc-Dali-VirtualKeyboard.cpp
+    utc-Dali-HapticPlayer.cpp
+    utc-Dali-SoundPlayer.cpp
+    utc-Dali-DeviceLayout.cpp
+    utc-Dali-DragAndDropDetector.cpp
 )
 
 LIST(APPEND TC_SOURCES
@@ -26,6 +35,7 @@ PKG_CHECK_MODULES(${CAPI_LIB} REQUIRED
     dali
     utilX
     ecore
+    ecore-x
 )
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -O0 -ggdb --coverage -Wall -Werror=return-type")
