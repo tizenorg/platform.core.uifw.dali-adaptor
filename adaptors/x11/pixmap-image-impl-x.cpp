@@ -31,8 +31,8 @@
 
 // Allow this to be encoded and saved:
 #include <platform-abstractions/slp/resource-loader/resource-loader.h>
-#include <platform-abstractions/slp/resource-loader/loader-jpeg.h>
-#include <platform-abstractions/slp/resource-loader/loader-png.h>
+#include <platform-abstractions/slp/image-loaders/loader-jpeg.h>
+#include <platform-abstractions/slp/image-loaders/loader-png.h>
 
 namespace Dali
 {
