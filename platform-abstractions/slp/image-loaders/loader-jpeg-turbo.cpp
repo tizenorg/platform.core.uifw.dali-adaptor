@@ -531,6 +531,8 @@ bool JpegRotate270(unsigned char *buffer, int width, int height, int bpp)
   return true;
 }
 
+
+///@todo  Also put into public API
 bool EncodeToJpeg( const unsigned char* const pixelBuffer, std::vector< unsigned char >& encodedPixels, const std::size_t width, const std::size_t height, const Pixel::Format pixelFormat, unsigned quality)
 {
   if( !pixelBuffer )
