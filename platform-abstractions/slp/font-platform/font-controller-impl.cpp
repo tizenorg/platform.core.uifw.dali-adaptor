@@ -570,12 +570,12 @@ bool FontController::FontFamilySupportsText( const StyledFontFamily& styledFontF
 
   DALI_ASSERT_ALWAYS( charSet && "No cached character set for font family" );
 
-  const size_t textLength = text.size();
+  const size_t textLength = text.Count();
 
   // quick early exit before accessing font config for text arrays which are just a single control character
   if( textLength == 1u )
   {
-    if( IsAControlCharacter( *text.begin() ) )
+    if( IsAControlCharacter( *text.Begin() ) )
     {
       return true;
     }
@@ -584,7 +584,7 @@ bool FontController::FontFamilySupportsText( const StyledFontFamily& styledFontF
   // protect font config
   boost::mutex::scoped_lock fcLock( mFontConfigMutex );
 
-  for( TextArray::const_iterator iter = text.begin(), endIter = text.end(); iter != endIter; ++iter )
+  for( TextArray::ConstIterator iter = text.Begin(), endIter = text.End(); iter != endIter; ++iter )
   {
     const uint32_t character = (*iter);
 
@@ -680,7 +680,7 @@ _FcCharSet* FontController::CreateCharacterSet( const TextArray& charsRequested 
   bool validCharAdded(false);
 
   // add valid characters to the character set.
-  for( TextArray::const_iterator iter = charsRequested.begin(), endIter = charsRequested.end(); iter != endIter; ++iter )
+  for( TextArray::ConstIterator iter = charsRequested.Begin(), endIter = charsRequested.End(); iter != endIter; ++iter )
   {
     const uint32_t character = (*iter);
 
