@@ -60,14 +60,10 @@ Then run the following commands:
 3. Troubleshooting
 ==================
 
-3.1. JPEG Library Linking Errors
---------------------------------
+3.1. Turbo JPEG Library Linking Errors
+--------------------------------------
 
-If you have linking problems with libjpeg, then you may have to create a symbolic link to the library:
-
- - Navigate to where the library is (for example /usr/lib/x86_64-linux-gnu).
- - Create a symbolic link:
-    sudo ln -s libjpeg.so.8 libjpeg.so
-    sudo chmod 777 libjpeg.so
-   (Change the version number of your libjpeg library accordingly)
+If you have linking problems with libturbojpeg, then you will need to create a symbolic link that
+DALi expects using the command below:
+  sudo ln -s /usr/lib/`uname -i`-linux-gnu/libturbojpeg.so.0 /usr/lib/`uname -i`-linux-gnu/libturbojpeg.so
 
