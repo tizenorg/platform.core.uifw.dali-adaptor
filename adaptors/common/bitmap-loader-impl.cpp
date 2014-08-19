@@ -48,32 +48,62 @@ void BitmapLoader::Initialize(const std::string& filename)
   Integration::BitmapResourceType bitmapResourceType( attributes );
   Integration::ResourcePointer resource = SlpPlatform::ImageLoader::LoadResourceSynchronously( bitmapResourceType, filename );
 
+  // If this is null, then the file was not opened or some other error occured
   mBitmap = static_cast<Integration::Bitmap*>(resource.Get());
 }
 
 unsigned char* BitmapLoader::GetPixelData() const
 {
-  return mBitmap->GetBuffer();
+  unsigned char* pixelData = NULL;
+
+  if( mBitmap != NULL )
+  {
+    pixelData = mBitmap->GetBuffer();
+  }
+
+  return pixelData;
 }
 
 unsigned int BitmapLoader::GetImageHeight() const
 {
-  return mBitmap->GetImageHeight();
+  unsigned int imageHeight = 0.0f;
+  if( mBitmap != NULL )
+  {
+    imageHeight = mBitmap->GetImageHeight();
+  }
+  return imageHeight;
 }
 
 unsigned int BitmapLoader::GetImageWidth() const
 {
-  return mBitmap->GetImageWidth();
+  unsigned int imageWidth = 0.0f;
+  if( mBitmap != NULL )
+  {
+    imageWidth = mBitmap->GetImageWidth();
+  }
+  return imageWidth;
 }
+
 
 unsigned int BitmapLoader::GetBufferStride() const
 {
-  return mBitmap->GetPackedPixelsProfile()->GetBufferStride();
+  unsigned int bufferStride = 0;
+  if( mBitmap != NULL  )
+  {
+    bufferStride = mBitmap->GetPackedPixelsProfile()->GetBufferStride();
+  }
+
+  return bufferStride;
 }
 
 Pixel::Format BitmapLoader::GetPixelFormat() const
 {
-  return mBitmap->GetPixelFormat();
+  Pixel::Format pixelFormat = Pixel::RGBA8888;
+  if( mBitmap != NULL )
+  {
+    pixelFormat = mBitmap->GetPixelFormat();
+  }
+  return pixelFormat;
 }
 
 } // namespace Internal
