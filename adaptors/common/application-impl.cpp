@@ -176,6 +176,8 @@ void Application::OnInit()
   CreateWindow();
   CreateAdaptor();
 
+  std::cout << "Application::OnInit()" << std::endl;
+
   // Run the adaptor
   mAdaptor->Start();
 
@@ -192,8 +194,10 @@ void Application::OnInit()
     if( mCommandLineOptions->viewMode <= STEREO_INTERLACED )
     {
       viewMode = static_cast<ViewMode>( mCommandLineOptions->viewMode );
+      std::cout << "Application::OnInit() -viewMode: " << viewMode << std::endl;
     }
     Internal::Adaptor::Adaptor::GetImplementation( *mAdaptor ).SetViewMode( viewMode );
+    std::cout << "Application::OnInit() - GetImplementation( *mAdaptor ).SetViewMode( viewMode )" << std::endl;
   }
 
   mInitialized = true;
