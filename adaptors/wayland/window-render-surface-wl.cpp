@@ -221,6 +221,14 @@ void WindowRenderSurface::CreateWlRenderable()
     mPosition.y = 0;
 
     ecore_wl_screen_size_get( &mPosition.width, &mPosition.height );
+    std::cout << "1st mPosition.width: " <<  mPosition.width <<  "mPosition.height: " <<  mPosition.height << std::endl;
+
+    if ( (mPosition.width == 0) || (mPosition.height == 0) )
+    {
+        mPosition.width = 720;
+        mPosition.height = 1280;
+    }
+    std::cout << "2nd mPosition.width: " <<  mPosition.width <<  "mPosition.height: " <<  mPosition.height << std::endl;
   }
 
   mWlWindow = ecore_wl_window_new( 0, mPosition.x, mPosition.y, mPosition.width, mPosition.height, ECORE_WL_WINDOW_BUFFER_TYPE_EGL_WINDOW );
