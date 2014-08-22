@@ -91,6 +91,11 @@ RenderSurface& Adaptor::GetSurface()
   return mImpl->GetSurface();
 }
 
+void Adaptor::SetNumberOfFramesPerRender( unsigned int numFramesPerRender )
+{
+  mImpl->SetNumberOfFramesPerRender( numFramesPerRender );
+}
+
 Adaptor& Adaptor::Get()
 {
   return Internal::Adaptor::Adaptor::Get();

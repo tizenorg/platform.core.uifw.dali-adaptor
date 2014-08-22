@@ -219,7 +219,17 @@ public:
   virtual Dali::Integration::Core& GetCore();
 
   /**
+   * Sets the render frequency. Suggest that this is in powers of two:
+   * 1 - render each vsync frame
+   * 2 - render every other vsync frame
+   * 4 - render every fourth vsync frame
+   * 8 - render every eighth vsync frame
+   */
+  void SetNumFramesPerRender( unsigned int numFramesPerRender );
+
+  /**
    * Disables GL draw synchronisation with the display.
+   * Will ignore frequency set by SetRenderFrequency().
    */
   DALI_IMPORT_API void DisableVSync();
 

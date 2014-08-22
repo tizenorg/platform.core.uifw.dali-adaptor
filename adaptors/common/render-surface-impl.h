@@ -22,7 +22,7 @@
 #include <render-surface.h>
 #include <dali/public-api/common/dali-common.h>
 #include <dali/public-api/common/view-mode.h>
-
+#include <base/egl-interface.h>
 namespace Dali
 {
 
@@ -146,15 +146,18 @@ public: // API
    * @param[in] egl The Egl interface
    * @param[in] glAbstraction OpenGLES abstraction interface
    * @param[in] deltaTime Time (in microseconds) since PostRender was last called.
-   * @param[in] syncMode Wait for render sync flag.
-   *                     RenderSync will be skipped if this or SetSyncMode() is set to SYNC_MODE_NONE.
    */
-  virtual void PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int deltaTime, SyncMode syncMode ) = 0;
+  virtual void PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int deltaTime ) = 0;
 
   /**
    * Invoked by render thread when the thread should be stop
    */
   virtual void StopRender() = 0;
+
+  /**
+   * Set the refresh sync mode ( render every nth frame )
+   */
+  virtual void SetRefreshSync( EglInterface::SyncMode refreshSyncMode ) = 0;
 
   /**
    * Set whether the surface should wait for RenderSync notifications

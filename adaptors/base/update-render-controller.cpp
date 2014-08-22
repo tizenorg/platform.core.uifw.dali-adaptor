@@ -41,9 +41,10 @@ UpdateRenderController::UpdateRenderController( AdaptorInternalServices& adaptor
 : mUpdateThread( NULL ),
   mRenderThread( NULL ),
   mVSyncNotifier( NULL ),
-  mUpdateRenderSync( NULL )
+  mUpdateRenderSync( NULL ),
+  mNumFramesPerRender( 1 )
 {
-  mUpdateRenderSync = new UpdateRenderSynchronization( adaptorInterfaces );
+  mUpdateRenderSync = new UpdateRenderSynchronization( adaptorInterfaces, mNumFramesPerRender );
 
   mUpdateThread = new UpdateThread( *mUpdateRenderSync, adaptorInterfaces, environmentOptions );
 

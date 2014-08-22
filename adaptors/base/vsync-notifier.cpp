@@ -43,7 +43,7 @@ namespace Adaptor
 namespace
 {
 
-const unsigned int MICROSECONDS_PER_SECOND( 100000u );
+const unsigned int MICROSECONDS_PER_SECOND( 1000000u );
 const unsigned int TIME_PER_FRAME_IN_MICROSECONDS( 16667u );
 
 #if defined(DEBUG_ENABLED)
@@ -105,7 +105,7 @@ void VSyncNotifier::Stop()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void VSyncNotifier::Run()
+void VSyncNotifier::Run(unsigned int numFramesToSkip)
 {
   // install a function for logging
   mEnvironmentOptions.InstallLogFunction();
@@ -122,38 +122,41 @@ void VSyncNotifier::Run()
   {
     bool validSync( true );
 
-    // Hardware VSyncs available?
-    if( mVSyncMonitor->UseHardware() )
+    for( unsigned int i=0; i<numFramesToSkip; ++i )
     {
-      // Yes..wait for hardware VSync
-      validSync = mVSyncMonitor->DoSync( currentSequenceNumber, currentSeconds, currentMicroseconds );
-    }
-    else
-    {
-      // No..use software timer
-      mPlatformAbstraction.GetTimeMicroseconds( seconds, microseconds );
-
-      unsigned int timeDelta( MICROSECONDS_PER_SECOND * (seconds - currentSeconds) );
-      if( microseconds < currentMicroseconds)
+      // Hardware VSyncs available?
+      if( mVSyncMonitor->UseHardware() )
       {
-        timeDelta += (microseconds + MICROSECONDS_PER_SECOND) - currentMicroseconds;
+        // Yes..wait for hardware VSync
+        validSync = mVSyncMonitor->DoSync( currentSequenceNumber, currentSeconds, currentMicroseconds );
       }
       else
       {
-        timeDelta += microseconds - currentMicroseconds;
-      }
+        // No..use software timer
+        mPlatformAbstraction.GetTimeMicroseconds( seconds, microseconds );
 
-      if( timeDelta < TIME_PER_FRAME_IN_MICROSECONDS )
-      {
+        unsigned int timeDelta( MICROSECONDS_PER_SECOND * (seconds - currentSeconds) );
+        if( microseconds < currentMicroseconds)
+        {
+          timeDelta += (microseconds + MICROSECONDS_PER_SECOND) - currentMicroseconds;
+        }
+        else
+        {
+          timeDelta += microseconds - currentMicroseconds;
+        }
+
+        if( timeDelta < TIME_PER_FRAME_IN_MICROSECONDS )
+        {
           usleep( TIME_PER_FRAME_IN_MICROSECONDS - timeDelta );
-      }
-      else
-      {
-        usleep( TIME_PER_FRAME_IN_MICROSECONDS );
+        }
+        else
+        {
+          usleep( TIME_PER_FRAME_IN_MICROSECONDS );
+        }
       }
     }
 
-    running = mUpdateRenderSync.VSyncNotifierSyncWithUpdateAndRender( validSync, ++frameNumber, currentSeconds, currentMicroseconds );
+    running = mUpdateRenderSync.VSyncNotifierSyncWithUpdateAndRender( validSync, ++frameNumber, currentSeconds, currentMicroseconds, numFramesToSkip );
   }
 
   // uninstall a function for logging

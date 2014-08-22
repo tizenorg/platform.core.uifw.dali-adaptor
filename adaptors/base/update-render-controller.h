@@ -101,6 +101,11 @@ public:
   void RenderSync();
 
   /**
+   * @copydoc Dali::Adaptor::SetNumFramesPerRender()
+   */
+  void SetNumFramesPerRender(unsigned int numFramesPerRender );
+
+  /**
    * @copydoc Dali::Internal::Adaptor::RenderSync()
    */
   void DisableVSync();
@@ -117,6 +122,7 @@ private:
   RenderThread*                mRenderThread;     ///< The render-thread owned by UpdateRenderController
   VSyncNotifier*               mVSyncNotifier;    ///< The vsync-thread owned by UpdateRenderController
   UpdateRenderSynchronization* mUpdateRenderSync; ///< Used to synchronize the update & render threads; also owned by UpdateRenderController
+  unsigned int                 mNumFramesPerRender; ///< Frame skipping count
 };
 
 } // namespace Adaptor

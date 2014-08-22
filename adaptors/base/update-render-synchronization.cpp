@@ -39,8 +39,10 @@ const unsigned int INPUT_EVENT_UPDATE_PERIOD( MICROSECONDS_PER_SECOND / 90 ); //
 
 } // unnamed namespace
 
-UpdateRenderSynchronization::UpdateRenderSynchronization( AdaptorInternalServices& adaptorInterfaces )
+UpdateRenderSynchronization::UpdateRenderSynchronization( unsigned int numFramesToSkip,
+                                                          AdaptorInternalServices& adaptorInterfaces )
 : mMaximumUpdateCount( adaptorInterfaces.GetCore().GetMaximumUpdateCount()),
+  mNumFramesPerRender( numFramesPerRender ),
   mUpdateReadyCount( 0u ),
   mRunning( false ),
   mUpdateRequired( false ),
@@ -306,7 +308,7 @@ void UpdateRenderSynchronization::WaitVSync()
   mAllowUpdateWhilePaused = false;
 }
 
-bool UpdateRenderSynchronization::VSyncNotifierSyncWithUpdateAndRender( bool validSync, unsigned int frameNumber, unsigned int seconds, unsigned int microseconds )
+bool UpdateRenderSynchronization::VSyncNotifierSyncWithUpdateAndRender( bool validSync, unsigned int frameNumber, unsigned int seconds, unsigned int microseconds, unsigned int& numFramesPerRender )
 {
   if( validSync )
   {
@@ -373,7 +375,7 @@ void UpdateRenderSynchronization::PredictNextVSyncTime(
   unsigned int& lastVSyncTimeMilliseconds,
   unsigned int& nextVSyncTimeMilliseconds )
 {
-  mFrameTime.PredictNextVSyncTime( lastFrameDeltaSeconds, lastVSyncTimeMilliseconds, nextVSyncTimeMilliseconds );
+  mFrameTime.PredictNextVSyncTime( mNumFramesToSkip, lastFrameDeltaSeconds, lastVSyncTimeMilliseconds, nextVSyncTimeMilliseconds );
 }
 
 } // namespace Adaptor

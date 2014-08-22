@@ -51,6 +51,8 @@ class AdaptorInternalServices;
  * The Core::GetMaximumUpdateCount() method determines how many frames may be prepared, ahead of the rendering.
  * For example if the maximum update count is 2, then Core::Update() for frame N+1 may be processed whilst frame N is being rendered.
  * However the Core::Update() for frame N+2 may not be called, until the Core::Render() method for frame N has returned.
+ *
+ * This object also manages frame skipping for rate limited applications.
  */
 class UpdateRenderSynchronization
 {
@@ -158,9 +160,10 @@ public:
    * @param[in] frameNumber The current frame number
    * @param[in] seconds The current time
    * @param[in] microseconds The current time
+   * @param[out] numFramesPerRender The number of frames per render.
    * @return true if VSync monitoring/notifications should continue.
    */
-  bool VSyncNotifierSyncWithUpdateAndRender( bool validSync, unsigned int frameNumber, unsigned int seconds, unsigned int microseconds );
+  bool VSyncNotifierSyncWithUpdateAndRender( bool validSync, unsigned int frameNumber, unsigned int seconds, unsigned int microseconds, unsigned int& numFramesToSkip );
 
   /**
    * Sets the expected minimum frame time interval.
@@ -210,6 +213,9 @@ private:
 private:
 
   const unsigned int mMaximumUpdateCount;             ///< How many frames may be prepared, ahead of the rendering.
+
+  unsigned int mNumFramesPerRender;                   ///< How many vsync frames for each update/render cycle.
+
   volatile unsigned int mUpdateReadyCount;            ///< Incremented after each update, decremented after each render (protected by mMutex)
   // ARM CPUs perform aligned 32 bit read/writes atomically, so the following variables do not require mutex protection on modification
   volatile int mRunning;                              ///< Used during UpdateThread::Stop() to exit the update & render loops

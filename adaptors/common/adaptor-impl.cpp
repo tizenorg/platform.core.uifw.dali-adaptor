@@ -572,6 +572,11 @@ Dali::Integration::Core& Adaptor::GetCore()
   return *mCore;
 }
 
+void Adaptor::SetNumFramesPerRender( unsigned int numFramesPerRender )
+{
+  mUpdateRenderController->SetNumFramesPerRender( numFramesPerRender );
+}
+
 void Adaptor::DisableVSync()
 {
   mUpdateRenderController->DisableVSync();

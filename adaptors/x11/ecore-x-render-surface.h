@@ -235,13 +235,6 @@ protected:
    */
   virtual void UseExistingRenderable( unsigned int surfaceId ) = 0;
 
-  /**
-   * Perform render sync
-   * @param[in] currentTime Current time in microseconds
-   * @param[in] syncMode Wait for RenderSync (from Adaptor) flag. A member of SyncMode
-   */
-  void DoRenderSync( unsigned int timeDelta, SyncMode syncMode );
-
 protected: // Data
 
   XDisplay*                   mMainDisplay;        ///< X-connection for rendering
@@ -250,11 +243,8 @@ protected: // Data
   PositionSize                mPosition;           ///< Position
   std::string                 mTitle;              ///< Title of window which shows from "xinfo -topvwins" command
   ColorDepth                  mColorDepth;         ///< Color depth of surface (32 bit or 24 bit)
-  RenderMode                  mRenderMode;         ///< Render mode for pixmap surface type
-  TriggerEvent*               mRenderNotification; ///< Render notificatin trigger
-  boost::mutex                mSyncMutex;          ///< mutex to lock during waiting sync
-  boost::condition_variable   mSyncNotify;         ///< condition to notify main thread that pixmap was flushed to onscreen
-  SyncMode                    mSyncMode;
+  TriggerEvent*               mRenderNotification; ///< Render notification trigger
+
   bool                        mSyncReceived;       ///< true, when a pixmap sync has occurred, (cleared after reading)
   bool                        mOwnSurface;         ///< Whether we own the surface (responsible for deleting it)
   bool                        mOwnDisplay;         ///< Whether we own the display (responsible for deleting it)

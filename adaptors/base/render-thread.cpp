@@ -238,8 +238,6 @@ void RenderThread::InitializeEgl()
 
   // set the initial sync mode
 
-  //@todo This needs to call the render surface instead
-  mEGL->SetRefreshSync( mCurrent.syncMode );
 
   // tell core it has a context
   mCore.ContextCreated();
@@ -267,9 +265,6 @@ void RenderThread::CheckForUpdates()
       if( mCurrent.syncMode != mNewValues.syncMode )
       {
         mCurrent.syncMode = mNewValues.syncMode;
-
-        //@todo This needs to call the render surface instead
-        mEGL->SetRefreshSync( mCurrent.syncMode );
       }
 
       // check if the surface needs replacing
