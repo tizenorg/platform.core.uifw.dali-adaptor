@@ -179,11 +179,6 @@ public:  // from Internal::Adaptor::RenderSurface
   virtual void ConsumeEvents();
 
   /**
-   * @copydoc Dali::Internal::Adaptor::RenderSurface::RenderSync()
-   */
-  virtual void RenderSync();
-
-  /**
    * @copydoc Dali::Internal::Adaptor::RenderSurface::SetViewMode()
    */
   void SetViewMode( ViewMode );
@@ -196,17 +191,12 @@ public:  // from Internal::Adaptor::RenderSurface
   /**
    * @copydoc Dali::Internal::Adaptor::RenderSurface::PostRender()
    */
-  virtual void PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int timeDelta, SyncMode syncMode ) = 0;
+  virtual void PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int timeDelta ) = 0;
 
   /**
    * @copydoc Dali::Internal::Adaptor::RenderSurface::StopRender()
    */
   virtual void StopRender();
-
-  /**
-   * @copydoc Dali::Internal::Adaptor::RenderSurface::SetSyncMode()
-   */
-  virtual void SetSyncMode( SyncMode syncMode ) { mSyncMode = syncMode; }
 
 private:
 
@@ -236,13 +226,6 @@ protected:
    */
   virtual void UseExistingRenderable( unsigned int surfaceId ) = 0;
 
-  /**
-   * Perform render sync
-   * @param[in] currentTime Current time in microseconds
-   * @param[in] syncMode Wait for RenderSync (from Adaptor) flag. A member of SyncMode
-   */
-  void DoRenderSync( unsigned int timeDelta, SyncMode syncMode );
-
 protected: // Data
 
   WlDisplay*                  mMainDisplay;        ///< Wayland-connection for rendering
@@ -254,7 +237,6 @@ protected: // Data
   TriggerEvent*               mRenderNotification; ///< Render notificatin trigger
   boost::mutex                mSyncMutex;          ///< mutex to lock during waiting sync
   boost::condition_variable   mSyncNotify;         ///< condition to notify main thread that pixmap was flushed to onscreen
-  SyncMode                    mSyncMode;
   bool                        mSyncReceived;       ///< true, when a pixmap sync has occurred, (cleared after reading)
   bool                        mOwnSurface;         ///< Whether we own the surface (responsible for deleting it)
   bool                        mOwnDisplay;         ///< Whether we own the display (responsible for deleting it)

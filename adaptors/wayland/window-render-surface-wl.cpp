@@ -184,7 +184,7 @@ bool WindowRenderSurface::PreRender( EglInterface&, Integration::GlAbstraction& 
   return true;
 }
 
-void WindowRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int, SyncMode )
+void WindowRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int )
 {
   EglImplementation& eglImpl = static_cast<EglImplementation&>( egl );
   eglImpl.SwapBuffers();
@@ -197,6 +197,10 @@ void WindowRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstract
 
     mNeedToApproveDeiconify = false;
   }
+}
+
+void WindowRenderSurface::StopRender()
+{
 }
 
 void WindowRenderSurface::SetViewMode( ViewMode viewMode )

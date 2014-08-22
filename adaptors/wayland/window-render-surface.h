@@ -131,7 +131,12 @@ public:  // from Internal::Adaptor::RenderSurface
   /**
    * @copydoc Dali::Internal::Adaptor::RenderSurface::PostRender()
    */
-  virtual void PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int timeDelta, SyncMode syncMode );
+  virtual void PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int timeDelta );
+
+  /**
+   * @copydoc Dali::Internal::Adaptor::RenderSurface::StopRender()
+   */
+  virtual void StopRender();
 
   /**
    * @copydoc Dali::Internal::Adaptor::RenderSurface::SetViewMode()

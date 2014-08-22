@@ -97,9 +97,9 @@ public: // from Internal::Adaptor::RenderSurface
   virtual bool ReplaceEGLSurface( EglInterface& egl );
 
   /**
-   * @copydoc Dali::Internal::Adaptor::RenderSurface::RenderSync()
+   * @copydoc Dali::Internal::Adaptor::RenderSurface::StartRender()
    */
-  virtual void RenderSync();
+  virtual void StartRender();
 
   /**
    * @copydoc Dali::Internal::Adaptor::RenderSurface::PreRender()
@@ -109,7 +109,12 @@ public: // from Internal::Adaptor::RenderSurface
   /**
    * @copydoc Dali::Internal::Adaptor::RenderSurface::PostRender()
    */
-  virtual void PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int timeDelta, SyncMode syncMode );
+  virtual void PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int timeDelta );
+
+  /**
+   * @copydoc Dali::Internal::Adaptor::RenderSurface::StopRender()
+   */
+  virtual void StopRender();
 
 private:
 
