@@ -91,6 +91,16 @@ RenderSurface& Adaptor::GetSurface()
   return mImpl->GetSurface();
 }
 
+void Adaptor::SetNumberOfFramesPerRender( unsigned int numberOfFramesPerRender )
+{
+  mImpl->SetNumberOfFramesPerRender( numberOfFramesPerRender );
+}
+
+void Adaptor::SetUseHardwareVSync(bool useHardware)
+{
+  mImpl->SetUseHardwareVSync( useHardware );
+}
+
 Adaptor& Adaptor::Get()
 {
   return Internal::Adaptor::Adaptor::Get();

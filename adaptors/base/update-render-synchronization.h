@@ -51,6 +51,8 @@ class AdaptorInternalServices;
  * The Core::GetMaximumUpdateCount() method determines how many frames may be prepared, ahead of the rendering.
  * For example if the maximum update count is 2, then Core::Update() for frame N+1 may be processed whilst frame N is being rendered.
  * However the Core::Update() for frame N+2 may not be called, until the Core::Render() method for frame N has returned.
+ *
+ * This object also manages frame skipping for rate limited applications.
  */
 class UpdateRenderSynchronization
 {
@@ -59,8 +61,9 @@ public:
   /**
    * Create an update/render synchronization object.
    * @param[in] adaptorInterfaces base adaptor interface
+   * @param[in] numberOfFramesPerRender The number of frames per render
   */
-  UpdateRenderSynchronization( AdaptorInternalServices& adaptorInterfaces );
+  UpdateRenderSynchronization( AdaptorInternalServices& adaptorInterfaces, unsigned int numberOfFramesPerRender );
 
   /**
    * Non virtual destructor. Not inteded as base class.
@@ -158,9 +161,10 @@ public:
    * @param[in] frameNumber The current frame number
    * @param[in] seconds The current time
    * @param[in] microseconds The current time
+   * @param[out] numberOfFramesPerRender The number of frames per render.
    * @return true if VSync monitoring/notifications should continue.
    */
-  bool VSyncNotifierSyncWithUpdateAndRender( bool validSync, unsigned int frameNumber, unsigned int seconds, unsigned int microseconds );
+  bool VSyncNotifierSyncWithUpdateAndRender( bool validSync, unsigned int frameNumber, unsigned int seconds, unsigned int microseconds, unsigned int& numberOfFramesPerRender );
 
   /**
    * Sets the expected minimum frame time interval.
@@ -193,6 +197,12 @@ public:
    */
   uint64_t GetTimeMicroseconds();
 
+  /**
+   * Set the number of frames per render
+   * @param[in] numberOfFramesPerRender The number of frames per render
+   */
+  void SetNumberOfFramesPerRender( unsigned int numberOfFramesPerRender );
+
 private:
 
   // Undefined copy constructor.
@@ -210,6 +220,9 @@ private:
 private:
 
   const unsigned int mMaximumUpdateCount;             ///< How many frames may be prepared, ahead of the rendering.
+
+  unsigned int mNumberOfFramesPerRender;              ///< How many frames for each update/render cycle.
+
   volatile unsigned int mUpdateReadyCount;            ///< Incremented after each update, decremented after each render (protected by mMutex)
   // ARM CPUs perform aligned 32 bit read/writes atomically, so the following variables do not require mutex protection on modification
   volatile int mRunning;                              ///< Used during UpdateThread::Stop() to exit the update & render loops
@@ -218,9 +231,9 @@ private:
   volatile int mUpdateRequested;                      ///< An update has been requested
   volatile int mAllowUpdateWhilePaused;               ///< whether to allow (one) update while paused
   volatile int mVSyncSleep;                           ///< Set true when the VSync thread should sleep
-  volatile unsigned int mVSyncFrameNumber;            ///< Frame number of latest VSync
-  volatile unsigned int mVSyncSeconds;                ///< Timestamp (seconds) of latest VSync
-  volatile unsigned int mVSyncMicroseconds;           ///< Timestamp (microseconds) of latest VSync
+  volatile unsigned int mSyncFrameNumber;            ///< Frame number of latest Sync
+  volatile unsigned int mSyncSeconds;                ///< Timestamp (seconds) of latest Sync
+  volatile unsigned int mSyncMicroseconds;           ///< Timestamp (microseconds) of latest Sync
 
   boost::mutex mMutex;                                ///< This mutex must be locked before reading/writing mUpdateReadyCount
   boost::condition_variable mUpdateFinishedCondition; ///< The render thread waits for this condition

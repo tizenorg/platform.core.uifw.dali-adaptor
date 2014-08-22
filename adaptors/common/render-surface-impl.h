@@ -22,6 +22,7 @@
 #include <render-surface.h>
 #include <dali/public-api/common/dali-common.h>
 #include <dali/public-api/common/view-mode.h>
+#include <base/interfaces/egl-interface.h>
 
 namespace Dali
 {
@@ -46,14 +47,6 @@ class EglInterface;
  */
 class DALI_IMPORT_API RenderSurface : public Dali::RenderSurface
 {
-public:
-
-  enum SyncMode
-  {
-    SYNC_MODE_NONE,               ///< Do not wait for RenderSync
-    SYNC_MODE_WAIT                ///< Wait for RenderSync
-  };
-
 public:
 
   /**
@@ -129,11 +122,6 @@ public: // API
   virtual void SetViewMode( ViewMode viewMode ) = 0;
 
   /**
-   * Called after offscreen is posted to onscreen
-   */
-  virtual void RenderSync() = 0;
-
-  /**
    * Invoked by render thread before Core::Render
    * @param[in] egl The Egl interface
    * @param[in] glAbstraction OpenGLES abstraction interface
@@ -146,21 +134,13 @@ public: // API
    * @param[in] egl The Egl interface
    * @param[in] glAbstraction OpenGLES abstraction interface
    * @param[in] deltaTime Time (in microseconds) since PostRender was last called.
-   * @param[in] syncMode Wait for render sync flag.
-   *                     RenderSync will be skipped if this or SetSyncMode() is set to SYNC_MODE_NONE.
    */
-  virtual void PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int deltaTime, SyncMode syncMode ) = 0;
+  virtual void PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int deltaTime ) = 0;
 
   /**
    * Invoked by render thread when the thread should be stop
    */
   virtual void StopRender() = 0;
-
-  /**
-   * Set whether the surface should wait for RenderSync notifications
-   * @param[in] syncMode Wait for render sync flag. A member of SyncMode
-   */
-  virtual void SetSyncMode( SyncMode syncMode ) = 0;
 };
 
 } // namespace Adaptor

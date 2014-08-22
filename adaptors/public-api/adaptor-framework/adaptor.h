@@ -173,6 +173,27 @@ public:
   RenderSurface& GetSurface();
 
   /**
+   * @brief Set the number of frames per render.
+   *
+   * This enables an application to deliberately render with a reduced FPS.
+   * @param[in] numberOfFramesPerRender The number of frames between successive renders.
+   * Suggest this is a power of two:
+   * 1 - render each vsync frame
+   * 2 - render every other vsync frame
+   * 4 - render every fourth vsync frame
+   * 8 - render every eighth vsync frame
+   */
+  void SetNumberOfFramesPerRender( unsigned int numberOfFramesPerRender );
+
+  /**
+   * @brief Set whether the frame count per render is managed using the hardware VSync or
+   * manually timed.
+   *
+   * @param[in] useHardware True if the hardware VSync should be used
+   */
+  void SetUseHardwareVSync(bool useHardware);
+
+  /**
    * @brief Returns a reference to the instance of the adaptor used by the current thread.
    *
    * @return A reference to the adaptor.

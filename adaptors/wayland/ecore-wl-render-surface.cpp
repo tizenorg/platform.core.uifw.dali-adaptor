@@ -213,10 +213,9 @@ void RenderSurface::ConsumeEvents()
 
 void RenderSurface::StopRender()
 {
-  // Stop blocking waiting for sync
-  SetSyncMode( RenderSurface::SYNC_MODE_NONE );
   // Simulate a RenderSync in case render-thread is currently blocked
-  RenderSync();
+  //@todo Do what instead?
+  //RenderSync();
 
   mIsStopped = true;
 }
@@ -265,38 +264,6 @@ unsigned int RenderSurface::GetSurfaceId( Any surface ) const
     surfaceId = AnyCast<unsigned int>( surface );
   }
   return surfaceId;
-}
-
-void RenderSurface::RenderSync()
-{
-  // nothing to do
-}
-
-void RenderSurface::DoRenderSync( unsigned int timeDelta, SyncMode syncMode )
-{
-  // Should block waiting for RenderSync?
-  if( mRenderMode == Dali::RenderSurface::RENDER_SYNC )
-  {
-    boost::unique_lock< boost::mutex > lock( mSyncMutex );
-
-    // wait for sync
-    if( syncMode != SYNC_MODE_NONE &&
-        mSyncMode != SYNC_MODE_NONE &&
-        !mSyncReceived )
-    {
-      mSyncNotify.wait( lock );
-    }
-    mSyncReceived = false;
-  }
-  // Software sync based on a timed delay?
-  else if( mRenderMode > Dali::RenderSurface::RENDER_SYNC )
-  {
-    unsigned int syncPeriod( MICROSECONDS_PER_SECOND / static_cast< unsigned int >( mRenderMode ) - MILLISECONDS_PER_SECOND );
-    if( timeDelta < syncPeriod )
-    {
-      usleep( syncPeriod - timeDelta );
-    }
-  }
 }
 
 } // namespace ECore
