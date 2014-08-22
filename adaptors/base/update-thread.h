@@ -112,7 +112,6 @@ private: // Data
   UpdateRenderSynchronization&        mUpdateRenderSync;    ///< Used to synchronize the update & render threads
 
   Dali::Integration::Core&            mCore;                ///< Dali core reference
-
   unsigned int                        mFpsTrackingSeconds;  ///< fps tracking time length in seconds
   std::vector<float>                  mFpsRecord;           ///< Record of frame rate
   float                               mElapsedTime;         ///< time elapsed within current second
