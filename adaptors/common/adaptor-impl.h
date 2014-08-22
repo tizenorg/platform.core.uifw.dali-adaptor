@@ -175,11 +175,6 @@ public: // AdaptorInternalServices implementation
   virtual void ReplaceSurface( Dali::RenderSurface& surface );
 
   /**
-   * @copydoc AdaptorInterface::RenderSync()
-   */
-  virtual void RenderSync();
-
-  /**
    * @copydoc Dali::Adaptor::GetSurface()
    */
   virtual Dali::RenderSurface& GetSurface() const;
@@ -219,9 +214,14 @@ public:
   virtual Dali::Integration::Core& GetCore();
 
   /**
-   * Disables GL draw synchronisation with the display.
+   * @copydoc Dali::Adaptor::SetNumberOfFramesPerRender()
    */
-  DALI_IMPORT_API void DisableVSync();
+  void SetNumberOfFramesPerRender( unsigned int numberOfFramesPerRender );
+
+  /**
+   * @copydoc Dali::Adaptor::SetUseHardwareVSync()
+   */
+  void SetUseHardwareVSync(bool useHardware);
 
   /**
    * Overrides DPI.

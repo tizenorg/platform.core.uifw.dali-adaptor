@@ -509,11 +509,6 @@ void Adaptor::ReplaceSurface( Dali::RenderSurface& surface )
   mUpdateRenderController->ReplaceSurface(internalSurface);
 }
 
-void Adaptor::RenderSync()
-{
-  mUpdateRenderController->RenderSync();
-}
-
 Dali::RenderSurface& Adaptor::GetSurface() const
 {
   return *mSurface;
@@ -572,9 +567,14 @@ Dali::Integration::Core& Adaptor::GetCore()
   return *mCore;
 }
 
-void Adaptor::DisableVSync()
+void Adaptor::SetNumberOfFramesPerRender( unsigned int numberOfFramesPerRender )
 {
-  mUpdateRenderController->DisableVSync();
+  mUpdateRenderController->SetNumberOfFramesPerRender( numberOfFramesPerRender );
+}
+
+void Adaptor::SetUseHardwareVSync( bool useHardware )
+{
+  mVSyncMonitor->SetUseHardwareVSync( useHardware );
 }
 
 void Adaptor::SetDpi(size_t hDpi, size_t vDpi)

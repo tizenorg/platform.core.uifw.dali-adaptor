@@ -33,14 +33,16 @@ namespace Adaptor
 
 namespace
 {
-
+const unsigned int TIME_PER_FRAME_IN_MICROSECONDS = 16667;
 const unsigned int MICROSECONDS_PER_SECOND( 1000000 );
 const unsigned int INPUT_EVENT_UPDATE_PERIOD( MICROSECONDS_PER_SECOND / 90 ); // period between ecore x event updates
 
 } // unnamed namespace
 
-UpdateRenderSynchronization::UpdateRenderSynchronization( AdaptorInternalServices& adaptorInterfaces )
+UpdateRenderSynchronization::UpdateRenderSynchronization( AdaptorInternalServices& adaptorInterfaces,
+                                                          unsigned int numberOfFramesPerRender)
 : mMaximumUpdateCount( adaptorInterfaces.GetCore().GetMaximumUpdateCount()),
+  mNumberOfFramesPerRender( numberOfFramesPerRender ),
   mUpdateReadyCount( 0u ),
   mRunning( false ),
   mUpdateRequired( false ),
@@ -48,9 +50,9 @@ UpdateRenderSynchronization::UpdateRenderSynchronization( AdaptorInternalService
   mUpdateRequested( false ),
   mAllowUpdateWhilePaused( false ),
   mVSyncSleep( false ),
-  mVSyncFrameNumber( 0u ),
-  mVSyncSeconds( 0u ),
-  mVSyncMicroseconds( 0u ),
+  mSyncFrameNumber( 0u ),
+  mSyncSeconds( 0u ),
+  mSyncMicroseconds( 0u ),
   mFrameTime( adaptorInterfaces.GetPlatformAbstractionInterface() ),
   mPerformanceInterface( adaptorInterfaces.GetPerformanceInterface() )
 {
@@ -62,6 +64,7 @@ UpdateRenderSynchronization::~UpdateRenderSynchronization()
 
 void UpdateRenderSynchronization::Start()
 {
+  mFrameTime.SetMinimumFrameTimeInterval( mNumberOfFramesPerRender * TIME_PER_FRAME_IN_MICROSECONDS );
   mRunning = true;
 }
 
@@ -291,11 +294,11 @@ void UpdateRenderSynchronization::WaitVSync()
   // then we should wait for the next frame as the Video output will also
   // do this (lock-step to 60Hz)
 
-  unsigned int updateFrameNumber = mVSyncFrameNumber;
+  unsigned int updateFrameNumber = mSyncFrameNumber;
 
   boost::unique_lock< boost::mutex > lock( mMutex );
 
-  while ( mRunning && ( updateFrameNumber == mVSyncFrameNumber ) )
+  while ( mRunning && ( updateFrameNumber == mSyncFrameNumber ) )
   {
     // Wait will atomically add the thread to the set of threads waiting on
     // the condition variable mVSyncReceivedCondition and unlock the mutex.
@@ -306,8 +309,14 @@ void UpdateRenderSynchronization::WaitVSync()
   mAllowUpdateWhilePaused = false;
 }
 
-bool UpdateRenderSynchronization::VSyncNotifierSyncWithUpdateAndRender( bool validSync, unsigned int frameNumber, unsigned int seconds, unsigned int microseconds )
+bool UpdateRenderSynchronization::VSyncNotifierSyncWithUpdateAndRender( bool validSync, unsigned int frameNumber, unsigned int seconds, unsigned int microseconds, unsigned int& numberOfFramesPerRender )
 {
+  if( numberOfFramesPerRender != mNumberOfFramesPerRender )
+  {
+    numberOfFramesPerRender = mNumberOfFramesPerRender; // save it back
+    mFrameTime.SetMinimumFrameTimeInterval( mNumberOfFramesPerRender * TIME_PER_FRAME_IN_MICROSECONDS );
+  }
+
   if( validSync )
   {
     mFrameTime.SetVSyncTime( frameNumber );
@@ -315,9 +324,9 @@ bool UpdateRenderSynchronization::VSyncNotifierSyncWithUpdateAndRender( bool val
 
   boost::unique_lock< boost::mutex > lock( mMutex );
 
-  mVSyncFrameNumber = frameNumber;
-  mVSyncSeconds = seconds;
-  mVSyncMicroseconds = microseconds;
+  mSyncFrameNumber = frameNumber;
+  mSyncSeconds = seconds;
+  mSyncMicroseconds = microseconds;
 
   mVSyncReceivedCondition.notify_all();
 
@@ -337,7 +346,7 @@ bool UpdateRenderSynchronization::VSyncNotifierSyncWithUpdateAndRender( bool val
 
 unsigned int UpdateRenderSynchronization::GetFrameNumber() const
 {
-  return mVSyncFrameNumber;
+  return mSyncFrameNumber;
 }
 
 uint64_t UpdateRenderSynchronization::GetTimeMicroseconds()
@@ -347,12 +356,18 @@ uint64_t UpdateRenderSynchronization::GetTimeMicroseconds()
   {
     boost::unique_lock< boost::mutex > lock( mMutex );
 
-    currentTime = mVSyncSeconds;
+    currentTime = mSyncSeconds;
     currentTime *= MICROSECONDS_PER_SECOND;
-    currentTime += mVSyncMicroseconds;
+    currentTime += mSyncMicroseconds;
   }
 
   return currentTime;
+}
+
+void UpdateRenderSynchronization::SetNumberOfFramesPerRender( unsigned int numberOfFramesPerRender )
+{
+  //@todo Protect me?
+  mNumberOfFramesPerRender = numberOfFramesPerRender;
 }
 
 inline void UpdateRenderSynchronization::AddPerformanceMarker( PerformanceMarker::MarkerType type )
@@ -363,17 +378,12 @@ inline void UpdateRenderSynchronization::AddPerformanceMarker( PerformanceMarker
   }
 }
 
-void UpdateRenderSynchronization::SetMinimumFrameTimeInterval( unsigned int timeInterval )
-{
-  mFrameTime.SetMinimumFrameTimeInterval( timeInterval );
-}
-
 void UpdateRenderSynchronization::PredictNextVSyncTime(
   float& lastFrameDeltaSeconds,
   unsigned int& lastVSyncTimeMilliseconds,
   unsigned int& nextVSyncTimeMilliseconds )
 {
-  mFrameTime.PredictNextVSyncTime( lastFrameDeltaSeconds, lastVSyncTimeMilliseconds, nextVSyncTimeMilliseconds );
+  mFrameTime.PredictNextVSyncTime( mNumberOfFramesPerRender, lastFrameDeltaSeconds, lastVSyncTimeMilliseconds, nextVSyncTimeMilliseconds );
 }
 
 } // namespace Adaptor

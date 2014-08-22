@@ -143,7 +143,7 @@ void FrameTime::WakeUp()
   mRunning = true;
 }
 
-void FrameTime::PredictNextVSyncTime( float& lastFrameDeltaSeconds, unsigned int& lastVSyncTimeMilliseconds, unsigned int& nextVSyncTimeMilliseconds )
+void FrameTime::PredictNextVSyncTime( unsigned int numberOfFramesPerRender, float& lastFrameDeltaSeconds, unsigned int& lastVSyncTimeMilliseconds, unsigned int& nextVSyncTimeMilliseconds )
 {
   if ( mRunning )
   {
@@ -157,6 +157,7 @@ void FrameTime::PredictNextVSyncTime( float& lastFrameDeltaSeconds, unsigned int
     unsigned int framesInLastUpdate( lastVSyncFrameNumber - mLastUpdateFrameNumber );
     lastFrameDelta = lastVSyncTime - mLastVSyncTimeAtUpdate;
 
+    //@todo Fix this algorithm to work with numberOfFramesPerRender > 1
     // We should only evaluate the previous frame values if this is not the first frame.
     if ( !mFirstFrame )
     {

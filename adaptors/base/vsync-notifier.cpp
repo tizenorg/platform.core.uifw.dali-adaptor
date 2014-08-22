@@ -43,7 +43,7 @@ namespace Adaptor
 namespace
 {
 
-const unsigned int MICROSECONDS_PER_SECOND( 100000u );
+const unsigned int MICROSECONDS_PER_SECOND( 1000000u );
 const unsigned int TIME_PER_FRAME_IN_MICROSECONDS( 16667u );
 
 #if defined(DEBUG_ENABLED)
@@ -112,8 +112,8 @@ void VSyncNotifier::Run()
 
   unsigned int frameNumber( 0u );             // frameCount, updated when the thread is paused
   unsigned int currentSequenceNumber( 0u );   // platform specific vsync sequence number (increments with each vsync)
-  unsigned int currentSeconds( 0u );          // timestamp at latest vsync
-  unsigned int currentMicroseconds( 0u );     // timestamp at latest vsync
+  unsigned int currentSeconds( 0u );          // timestamp at latest sync
+  unsigned int currentMicroseconds( 0u );     // timestamp at latest sync
   unsigned int seconds( 0u );
   unsigned int microseconds( 0u );
 
@@ -125,8 +125,11 @@ void VSyncNotifier::Run()
     // Hardware VSyncs available?
     if( mVSyncMonitor->UseHardware() )
     {
-      // Yes..wait for hardware VSync
-      validSync = mVSyncMonitor->DoSync( currentSequenceNumber, currentSeconds, currentMicroseconds );
+      for( unsigned int i=0; i<mNumberOfFramesPerRender; ++i )
+      {
+        // Yes..wait for N hardware VSync ticks
+        validSync = mVSyncMonitor->DoSync( currentSequenceNumber, currentSeconds, currentMicroseconds );
+      }
     }
     else
     {
@@ -143,17 +146,22 @@ void VSyncNotifier::Run()
         timeDelta += microseconds - currentMicroseconds;
       }
 
+      currentSeconds = seconds;
+      currentMicroseconds = microseconds;
+
+      unsigned int sleepTimeInMicroseconds = 0;
+
       if( timeDelta < TIME_PER_FRAME_IN_MICROSECONDS )
       {
-          usleep( TIME_PER_FRAME_IN_MICROSECONDS - timeDelta );
+        sleepTimeInMicroseconds = TIME_PER_FRAME_IN_MICROSECONDS - timeDelta;
       }
-      else
-      {
-        usleep( TIME_PER_FRAME_IN_MICROSECONDS );
-      }
+      sleepTimeInMicroseconds += mNumberOfFramesPerRender * TIME_PER_FRAME_IN_MICROSECONDS;
+      usleep( sleepTimeInMicroseconds );
     }
 
-    running = mUpdateRenderSync.VSyncNotifierSyncWithUpdateAndRender( validSync, ++frameNumber, currentSeconds, currentMicroseconds );
+    // @todo should frameNumber be incremented by mNumberOfFramesPerRender?
+
+    running = mUpdateRenderSync.VSyncNotifierSyncWithUpdateAndRender( validSync, ++frameNumber, currentSeconds, currentMicroseconds, mNumberOfFramesPerRender );
   }
 
   // uninstall a function for logging

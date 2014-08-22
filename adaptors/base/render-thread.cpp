@@ -35,13 +35,6 @@ namespace Internal
 namespace Adaptor
 {
 
-namespace
-{
-
-const unsigned int TIME_PER_FRAME_IN_MICROSECONDS = 16667;
-
-} // unnamed namespace
-
 RenderThread::RenderThread( UpdateRenderSynchronization& sync,
                             AdaptorInternalServices& adaptorInterfaces,
                             const EnvironmentOptions& environmentOptions )
@@ -71,14 +64,8 @@ void RenderThread::Start()
   // initialise GL and kick off render thread
   DALI_ASSERT_ALWAYS( !mEGL && "Egl already initialized" );
 
-  // Tell frame timer what the minimum frame interval is
-  mUpdateRenderSync.SetMinimumFrameTimeInterval( mCurrent.syncMode * TIME_PER_FRAME_IN_MICROSECONDS );
-
   // create the render thread, initially we are rendering
   mThread = new boost::thread(boost::bind(&RenderThread::Run, this));
-
-  // Inform surface to block waiting for RenderSync
-  mCurrent.surface->SetSyncMode( RenderSurface::SYNC_MODE_WAIT );
 }
 
 void RenderThread::Stop()
@@ -120,7 +107,8 @@ void RenderThread::ReplaceSurface( RenderSurface* surface )
    * Reset the mPixmapFlushed condition if surface was changed.
    * : in this case, client can not handle the previous damage because surface was changed.
    */
-  RenderSync();
+  // @todo - do what now?!
+  //RenderSync();
 }
 
 void RenderThread::WaitForSurfaceReplaceComplete()
@@ -132,19 +120,6 @@ void RenderThread::WaitForSurfaceReplaceComplete()
   {
     mSurfaceChangedNotify.wait( lock ); // Block the main thread here and releases mSurfaceChangedMutex so the render-thread can notify us
   }
-}
-
-void RenderThread::SetVSyncMode( EglInterface::SyncMode syncMode )
-{
-  // lock cache and set update flag at the end of function
-  SendMessageGuard msg( *this );
-  // set new values to cache
-  mNewValues.syncMode = syncMode;
-}
-
-void RenderThread::RenderSync()
-{
-  mCurrent.surface->RenderSync();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -238,8 +213,6 @@ void RenderThread::InitializeEgl()
 
   // set the initial sync mode
 
-  //@todo This needs to call the render surface instead
-  mEGL->SetRefreshSync( mCurrent.syncMode );
 
   // tell core it has a context
   mCore.ContextCreated();
@@ -262,15 +235,6 @@ void RenderThread::CheckForUpdates()
     {
       // need to lock to access new values
       boost::unique_lock< boost::mutex > lock( mThreadDataLock );
-
-      // did the sync mode change
-      if( mCurrent.syncMode != mNewValues.syncMode )
-      {
-        mCurrent.syncMode = mNewValues.syncMode;
-
-        //@todo This needs to call the render surface instead
-        mEGL->SetRefreshSync( mCurrent.syncMode );
-      }
 
       // check if the surface needs replacing
       if( mNewValues.replaceSurface )
@@ -350,8 +314,12 @@ void RenderThread::PostRender( unsigned int timeDelta )
   mGLES.PostRender(timeDelta);
 
   // Inform the surface that rendering this frame has finished.
-  mCurrent.surface->PostRender( *mEGL, mGLES, timeDelta,
-                                mSurfaceReplacing ? RenderSurface::SYNC_MODE_NONE : RenderSurface::SYNC_MODE_WAIT );
+  mCurrent.surface->PostRender( *mEGL, mGLES, timeDelta );
+
+  if( mSurfaceReplacing )
+  {
+    // @todo Prevent wait for sync?
+  }
 }
 
 } // namespace Adaptor

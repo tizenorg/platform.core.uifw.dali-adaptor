@@ -120,7 +120,7 @@ bool PixmapRenderSurface::PreRender( EglInterface&, Integration::GlAbstraction& 
   return true;
 }
 
-void PixmapRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int timeDelta, SyncMode syncMode )
+void PixmapRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int timeDelta )
 {
   // flush gl instruction queue
   glAbstraction.Flush();
@@ -140,7 +140,7 @@ void PixmapRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstract
   }
 
   // Do render synchronisation
-  DoRenderSync( timeDelta, syncMode );
+  // DoRenderSync( timeDelta, syncMode );
 }
 
 void PixmapRenderSurface::CreateWlRenderable()
@@ -153,17 +153,6 @@ void PixmapRenderSurface::CreateWlRenderable()
 
 void PixmapRenderSurface::UseExistingRenderable( unsigned int surfaceId )
 {
-}
-
-void PixmapRenderSurface::RenderSync()
-{
-  {
-    boost::unique_lock< boost::mutex > lock( mSyncMutex );
-    mSyncReceived = true;
-  }
-
-  // wake render thread if it was waiting for the notify
-  mSyncNotify.notify_all();
 }
 
 } // namespace ECore
