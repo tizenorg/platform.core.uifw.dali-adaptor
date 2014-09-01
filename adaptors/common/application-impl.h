@@ -28,14 +28,15 @@
 
 // INTERNAL INCLUDES
 #include <application.h>
+#include <singleton-service.h>
 
 #include <framework.h>
 #include <window-impl.h>
 
 namespace Dali
 {
-class Window;
 class Adaptor;
+class Window;
 
 namespace Internal
 {
@@ -72,7 +73,7 @@ public:
                             const DeviceLayout& baseLayout,
                             Dali::Application::WINDOW_MODE windowMode);
 
-  Application(int* argc, char **argv[], const std::string& name, const DeviceLayout& baseLayout, Dali::Application::WINDOW_MODE windowMode );
+  Application( int* argc, char **argv[], const std::string& name, const DeviceLayout& baseLayout, Dali::Application::WINDOW_MODE windowMode );
 
   /**
    * Destructor
@@ -102,6 +103,13 @@ public:
   bool AddIdle(boost::function<void(void)> callBack);
 
   /**
+   * @brief Retrieve a handle to the SingletonService
+   *
+   * @return Handle to the SingletonService
+   */
+  Dali::SingletonService GetSingletonService() const;
+
+  /**
    * @copydoc Dali::Application::GetAdaptor();
    */
   Dali::Adaptor& GetAdaptor();
@@ -115,6 +123,13 @@ public:
    * @copydoc Dali::Application::Get();
    */
   static Dali::Application Get();
+
+  /**
+   * @brief Checks if the Application is available.
+   *
+   * @return true if available, false otherwise
+   */
+  static bool IsAvailable();
 
   /**
    * @copydoc Dali::Application::GetTheme();
@@ -262,6 +277,7 @@ private:
 
   CommandLineOptions*                   mCommandLineOptions;
 
+  Dali::SingletonService                mSingletonService;
   Dali::Adaptor*                        mAdaptor;
   Dali::Window                          mWindow;
   Dali::Application::WINDOW_MODE        mWindowMode;
