@@ -33,47 +33,12 @@ namespace Internal
 namespace Adaptor
 {
 
-namespace
-{
-BaseHandle Create()
-{
-  BaseHandle handle( ClipboardEventNotifier::Get() );
-
-  if ( !handle && Adaptor::IsAvailable() )
-  {
-    Adaptor& adaptorImpl( Adaptor::GetImplementation( Adaptor::Get() ) );
-    Dali::ClipboardEventNotifier notifier( ClipboardEventNotifier::New() );
-    adaptorImpl.RegisterSingleton( typeid( notifier ), notifier );
-    handle = notifier;
-  }
-
-  return handle;
-}
-TypeRegistration CLIPBOARD_EVENT_NOTIFIER_TYPE( typeid(Dali::ClipboardEventNotifier), typeid(Dali::BaseHandle), Create, true /* Create Instance At Startup */ );
-
-} // unnamed namespace
-
 Dali::ClipboardEventNotifier ClipboardEventNotifier::New()
 {
   Dali::ClipboardEventNotifier notifier = Dali::ClipboardEventNotifier(new ClipboardEventNotifier());
 
-  return notifier;
-}
-
-Dali::ClipboardEventNotifier ClipboardEventNotifier::Get()
-{
-  Dali::ClipboardEventNotifier notifier;
-
-  if ( Adaptor::IsAvailable() )
-  {
-    // Check whether the singleton is already created
-    Dali::BaseHandle handle = Adaptor::Get().GetSingleton( typeid( Dali::ClipboardEventNotifier ) );
-    if(handle)
-    {
-      // If so, downcast the handle
-      notifier = Dali::ClipboardEventNotifier( dynamic_cast< ClipboardEventNotifier* >( handle.GetObjectPtr() ) );
-    }
-  }
+  // Register the object
+  GetImplementation(notifier).RegisterObject();
 
   return notifier;
 }

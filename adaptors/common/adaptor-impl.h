@@ -25,26 +25,29 @@
 
 // INTERNAL INCLUDES
 #include <dali/public-api/common/vector-wrapper.h>
-#include <dali/public-api/common/view-mode.h>
 #include <dali/public-api/math/rect.h>
+#include <dali/integration-api/core.h>
 #include <dali/integration-api/render-controller.h>
 
-#include <adaptor.h>
-#include <render-surface.h>
-#include <tts-player.h>
-#include <imf-manager.h>
-#include <device-layout.h>
-#include <clipboard.h>
+// INTERNAL INCLUDES
+#include <slp-platform-abstraction.h>
+
+#include <dali/public-api/adaptor-framework/common/adaptor.h>
+#include <dali/public-api/adaptor-framework/common/render-surface.h>
+#include <public-api/adaptor-framework/common/tilt-sensor.h>
+#include <dali/public-api/adaptor-framework/common/haptic-player.h>
+#include <dali/public-api/adaptor-framework/common/sound-player.h>
+#include <dali/public-api/adaptor-framework/common/tts-player.h>
+#include <dali/public-api/adaptor-framework/common/device-layout.h>
 
 #include <slp-platform-abstraction.h>
 #include <base/interfaces/adaptor-internal-services.h>
-#include <base/environment-options.h>
+#include <base/log-options.h>
 #include <base/core-event-interface.h>
-#include <drag-and-drop-detector-impl.h>
-#include <damage-observer.h>
-#include <window-visibility-observer.h>
-#include <kernel-trace.h>
-#include <trigger-event-factory.h>
+#include <internal/common/drag-and-drop-detector-impl.h>
+#include <internal/common/damage-observer.h>
+#include <internal/common/window-visibility-observer.h>
+#include <internal/common/kernel-trace.h>
 
 namespace Dali
 {
@@ -75,7 +78,6 @@ class RotationObserver;
 class VSyncMonitor;
 class PerformanceInterface;
 class LifeCycleObserver;
-class ObjectProfiler;
 
 /**
  * Implementation of the Adaptor class.
@@ -83,7 +85,6 @@ class ObjectProfiler;
 class Adaptor : public Integration::RenderController,
                 public AdaptorInternalServices,
                 public CoreEventInterface,
-                public DamageObserver,
                 public WindowVisibilityObserver
 {
 public:
@@ -143,6 +144,16 @@ public: // AdaptorInternalServices implementation
    * @copydoc Dali::Adaptor::Stop()
    */
   virtual void Stop();
+
+  /**
+   * @copydoc Dali::Adaptor::SurfaceLost()
+   */
+  virtual void SurfaceLost();
+
+  /*
+   * @copydoc Dali::Adaptor::SurfaceCreated()
+   */
+  virtual void SurfaceCreated();
 
   /**
    * @copydoc Dali::EventFeeder::FeedTouchPoint()
@@ -267,14 +278,6 @@ public:
    */
   void DestroyTtsPlayer(Dali::TtsPlayer::Mode mode);
 
-  /**
-   * @brief Sets minimum distance in pixels that the fingers must move towards/away from each other in order to
-   * trigger a pinch gesture
-   *
-   * @param[in] distance The minimum pinch distance in pixels
-   */
-  void SetMinimumPinchDistance(float distance);
-
 public:
 
   /**
@@ -329,11 +332,6 @@ public:  //AdaptorInternalServices
   virtual TriggerEventInterface& GetTriggerEventInterface();
 
   /**
-   * @copydoc Dali::Internal::Adaptor::AdaptorInternalServices::GetTriggerEventFactoryInterface()
-   */
-  virtual TriggerEventFactoryInterface& GetTriggerEventFactoryInterface();
-
-  /**
    * @copydoc Dali::Internal::Adaptor::AdaptorInternalServices::GetRenderSurfaceInterface()
    */
   virtual RenderSurface* GetRenderSurfaceInterface();
@@ -352,28 +350,6 @@ public:  //AdaptorInternalServices
    * copydoc Dali::Internal::Adaptor::AdaptorInternalServices::GetKernelTraceInterface()
    */
   virtual KernelTraceInterface& GetKernelTraceInterface();
-
-public: // Stereoscopy
-
-  /**
-   * @copydoc Dali::Integration::Core::SetViewMode()
-   */
-  DALI_IMPORT_API void SetViewMode( ViewMode viewMode );
-
-  /**
-   * @copydoc Dali::Integration::Core::GetViewMode()
-   */
-  DALI_IMPORT_API ViewMode GetViewMode() const;
-
-  /**
-   * @copydoc Dali::Integration::Core::SetStereoBase()
-   */
-  DALI_IMPORT_API void SetStereoBase( float stereoBase );
-
-  /**
-   * @copydoc Dali::Integration::Core::GetStereoBase()
-   */
-  DALI_IMPORT_API float GetStereoBase() const;
 
 public: // Signals
 
@@ -447,7 +423,7 @@ private:
   /**
    * Helper to parse log options
    */
-  void ParseEnvironmentOptions();
+  void ParseLogOptions();
 
   /**
    * Informs core the surface size has changed
@@ -515,19 +491,20 @@ private: // Data
   boost::mutex                          mIdleInstaller;               ///< mutex to ensure two threads don't try to install idle handler at the same time
   size_t                                mHDpi;                        ///< Override horizontal DPI
   size_t                                mVDpi;                        ///< Override vertical DPI
-  FeedbackPluginProxy*                  mDaliFeedbackPlugin;          ///< Used to access feedback support
+  // FeedbackPluginProxy*                  mDaliFeedbackPlugin;          ///< Used to access feedback support
   FeedbackController*                   mFeedbackController;          ///< Plays feedback effects for Dali-Toolkit UI Controls.
+  Dali::TiltSensor                      mTiltSensor;                  ///< Provides pitch & roll values when the device is tilted
   SingletonContainer                    mSingletonContainer;          ///< The container to look up singleton by its type name
+  Dali::HapticPlayer                    mHapticPlayer;                ///< Provides haptic support
+  Dali::SoundPlayer                     mSoundPlayer;                 ///< Provides sound playback support
   Dali::TtsPlayer                       mTtsPlayers[Dali::TtsPlayer::MODE_NUM];                   ///< Provides TTS support
   ObserverContainer                     mObservers;                   ///< A list of adaptor observer pointers
   DragAndDropDetectorPtr                mDragAndDropDetector;         ///< The Drag & Drop detector
   RotationObserver*                     mDeferredRotationObserver;    ///< deferred Rotation observer needs event handler
   DeviceLayout                          mBaseLayout;                  ///< The base layout of the application
-  EnvironmentOptions                    mEnvironmentOptions;          ///< environment options
+  LogOptions                            mLogOptions;                  ///< log options
   PerformanceInterface*                 mPerformanceInterface;        ///< Performance interface
-  KernelTrace                           mKernelTracer;                ///< Kernel tracer
-  TriggerEventFactory                   mTriggerEventFactory;         ///< Trigger event factory
-  ObjectProfiler*                       mObjectProfiler;              ///< Tracks object lifetime for profiling
+  KernelTrace                           mKernelTracer;
 public:
   inline static Adaptor& GetImplementation(Dali::Adaptor& adaptor) {return *adaptor.mImpl;}
 };

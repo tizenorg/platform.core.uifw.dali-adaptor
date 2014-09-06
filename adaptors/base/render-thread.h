@@ -20,26 +20,20 @@
 
 // EXTERNAL INCLUDES
 #include <boost/thread.hpp>
+#include <dali/integration-api/core.h>
+#include <dali/integration-api/debug.h>
 
 // INTERNAL INCLUDES
 #include <base/interfaces/egl-interface.h>
-#include <render-surface-impl.h> // needed for Dali::Internal::Adaptor::RenderSurface
+#include <internal/common/render-surface-impl.h> // needed for Dali::Internal::Adaptor::RenderSurface
 
 
 namespace Dali
 {
-
-namespace Integration
-{
-class GlAbstraction;
-class Core;
-}
-
 namespace Internal
 {
 namespace Adaptor
 {
-
 class AdaptorInternalServices;
 class RenderSurface;
 class UpdateRenderSynchronization;
@@ -79,6 +73,7 @@ public:
    * Stops the render-thread
    */
   void Stop();
+
 
   /**
    * Replaces the rendering surface. This method returns immediately
@@ -168,17 +163,16 @@ private: // Data
 
   UpdateRenderSynchronization&        mUpdateRenderSync; ///< Used to synchronize the update & render threads
   Dali::Integration::Core&            mCore;             ///< Dali core reference
-  Integration::GlAbstraction&         mGLES;             ///< GL abstraction reference
+  Integration::GlAbstraction&         mGLES;             ///< GL abstraction rerefence
   EglFactoryInterface*                mEglFactory;       ///< Factory class to create EGL implementation
   EglInterface*                       mEGL;              ///< Interface to EGL implementation
 
   boost::thread*                      mThread;           ///< render thread
   bool                                mUsingPixmap;      ///< whether we're using a pixmap or a window
-  bool                                mSurfaceReplacing; ///< whether the surface is replacing. If true, need to notify surface changing after rendering
 
   /**
    * Structure to hold values that are set by main thread and read in render thread
-   * There are two copies of this data to avoid locking and prevent concurrent access
+   * There is two copies of this data to avoid locking and prevent concurrent access
    */
   struct RenderData
   {
@@ -228,6 +222,13 @@ private: // Data
     boost::unique_lock< boost::mutex > mLock;
     volatile int* mFlag;
   };
+
+  // sync for waiting offscreen flushed to onscreen
+  boost::mutex              mPixmapSyncMutex;      ///< mutex to lock during waiting sync
+  boost::condition_variable mPixmapSyncNotify;     ///< condition to notify main thread that pixmap was flushed to onscreen
+  bool                      mPixmapSyncReceived;   ///< true, when a pixmap sync has occurred, (cleared after reading)
+  bool                      mPixmapSyncRunning;    ///< true, while render thread is running and needs to wait for pixmap syncs
+  unsigned long             mCurrentMicroSec;
 
   // sync for waiting for surface change
   boost::mutex              mSurfaceChangedMutex;  ///< mutex to lock during surface replacing

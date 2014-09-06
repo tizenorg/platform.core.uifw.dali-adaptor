@@ -36,6 +36,7 @@ namespace Adaptor
 AccessibilityGestureDetector::AccessibilityGestureDetector()
 : PanGestureDetectorBase(Vector2::ZERO, Integration::PanGestureRequest(), NULL),
   mGestureHandler(NULL),
+  mPpdScale( 1.0f ),
   mPanning(false)
 {
 }
@@ -49,6 +50,11 @@ void AccessibilityGestureDetector::SetGestureHandler(AccessibilityGestureHandler
   mGestureHandler = &handler;
 }
 
+void AccessibilityGestureDetector::SetPpdScale(float ppdScale)
+{
+  mPpdScale = ppdScale;
+}
+
 void AccessibilityGestureDetector::EmitPan(const Integration::PanGestureEvent gesture)
 {
   if( mGestureHandler )
@@ -60,7 +66,7 @@ void AccessibilityGestureDetector::EmitPan(const Integration::PanGestureEvent ge
 
     if( mPanning )
     {
-      mGestureHandler->HandlePanGesture(gesture);
+      mGestureHandler->HandlePanGesture(gesture, mPpdScale);
 
       if( (gesture.state == Gesture::Finished) ||
           (gesture.state == Gesture::Cancelled) )

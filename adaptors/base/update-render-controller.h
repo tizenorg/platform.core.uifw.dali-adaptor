@@ -21,6 +21,8 @@
 namespace Dali
 {
 
+class RenderSurface;
+
 namespace Internal
 {
 
@@ -94,6 +96,16 @@ public:
    * @param surface new surface
    */
   void ReplaceSurface( RenderSurface* surface );
+
+  /**
+   * Terminates the render thread synchronously
+   */
+  void TerminateRenderThread();
+
+  /**
+   * Start the render thread
+   */
+  void StartRenderThread();
 
   /**
    * @copydoc Dali::Adaptor::RenderSync()

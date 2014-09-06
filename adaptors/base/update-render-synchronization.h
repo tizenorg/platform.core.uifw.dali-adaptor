@@ -26,6 +26,11 @@
 #include <stdint.h>
 #include <boost/thread.hpp>
 #include <boost/thread/condition_variable.hpp>
+#include <stdint.h>
+
+// INTERNAL INCLUDES
+#include <base/interfaces/performance-interface.h>
+#include <base/interfaces/adaptor-internal-services.h>
 
 namespace Dali
 {
@@ -91,6 +96,8 @@ public:
    * Resume the frame time predictor
    */
   void ResumeFrameTime();
+  void AltSetRunning(bool running);
+  void SetRenderRunning(bool running);
 
   /**
    * Wake update thread if sleeping. If the update thread is not sleeping
@@ -154,32 +161,9 @@ public:
 
   /**
    * Called by the VSync notifier thread so it can sleep if Update/Render threads are sleeping/paused
-   * @param[in] validSync True if the sync was valid (@see VSyncMonitor::DoSync)
-   * @param[in] frameNumber The current frame number
-   * @param[in] seconds The current time
-   * @param[in] microseconds The current time
    * @return true if VSync monitoring/notifications should continue.
    */
-  bool VSyncNotifierSyncWithUpdateAndRender( bool validSync, unsigned int frameNumber, unsigned int seconds, unsigned int microseconds );
-
-  /**
-   * Sets the expected minimum frame time interval.
-   * @param[in]  interval  The interval in microseconds.
-   */
-  void SetMinimumFrameTimeInterval( unsigned int timeInterval );
-
-  /**
-   * Predicts when the next render time will occur.
-   *
-   * @param[out]  lastFrameDeltaSeconds      The delta, in seconds (with float precision), between the last two renders.
-   * @param[out]  lastVSyncTimeMilliseconds  The time, in milliseconds, of the last VSync.
-   * @param[out]  nextVSyncTimeMilliseconds  The estimated time, in milliseconds, at the next VSync.
-   *
-   * @note Should only be called once per tick, from the update thread.
-   */
-  void PredictNextVSyncTime( float& lastFrameDeltaSeconds,
-                             unsigned int& lastVSyncTimeMilliseconds,
-                             unsigned int& nextVSyncTimeMilliseconds );
+  bool VSyncNotifierSyncWithUpdateAndRender( unsigned int frameNumber, unsigned int seconds, unsigned int microseconds );
 
   /**
    * Retrieves the last VSync frame number
@@ -193,13 +177,19 @@ public:
    */
   uint64_t GetTimeMicroseconds();
 
-private:
+  /**
+   * Retrieves the current state of the threads, as in running or not.
+   * @return True if the threads are set to be running.
+   */
+  int GetRunning() const
+  {
+    return mRunning;
+  }
 
-  // Undefined copy constructor.
-  UpdateRenderSynchronization( const UpdateRenderSynchronization& );
-
-  // Undefined assignment operator.
-  UpdateRenderSynchronization& operator=( const UpdateRenderSynchronization& );
+  int GetRenderRunning() const
+  {
+    return mRenderRunning;
+  }
 
   /**
    * Helper to add a performance marker to the performance server (if its active)
@@ -209,10 +199,19 @@ private:
 
 private:
 
+  // Undefined copy constructor.
+  UpdateRenderSynchronization( const UpdateRenderSynchronization& );
+
+  // Undefined assignment operator.
+  UpdateRenderSynchronization& operator=( const UpdateRenderSynchronization& );
+
+private:
+
   const unsigned int mMaximumUpdateCount;             ///< How many frames may be prepared, ahead of the rendering.
   volatile unsigned int mUpdateReadyCount;            ///< Incremented after each update, decremented after each render (protected by mMutex)
   // ARM CPUs perform aligned 32 bit read/writes atomically, so the following variables do not require mutex protection on modification
   volatile int mRunning;                              ///< Used during UpdateThread::Stop() to exit the update & render loops
+  volatile int mRenderRunning;                        ///< Used during RenderThread::Stop to exit the render loop
   volatile int mUpdateRequired;                       ///< Used to inform the update thread, that render requires another update
   volatile int mPaused;                               ///< The paused flag
   volatile int mUpdateRequested;                      ///< An update has been requested
@@ -230,8 +229,10 @@ private:
   boost::condition_variable mVSyncSleepCondition;     ///< The vsync thread waits for this condition
   boost::condition_variable mPausedCondition;         ///< The controller waits for this condition while paused
 
-  FrameTime mFrameTime;                               ///< Frame timer predicts next vsync time
-  PerformanceInterface* mPerformanceInterface;        ///< The performance logging interface
+  Dali::Integration::Core&            mCore;                ///< Dali core reference
+  PerformanceInterface*               mPerformanceInterface;///< The performance logging interface
+
+  bool mSkipNextVSync; ///< Is set on resumption so that we start an update straight away rather than wait for the Vsync
 
 }; // class UpdateRenderSynchronization
 

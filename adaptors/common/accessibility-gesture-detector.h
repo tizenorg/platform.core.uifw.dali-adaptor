@@ -65,6 +65,12 @@ public:
    */
   void SetGestureHandler(AccessibilityGestureHandler& handler);
 
+  /**
+   * Set the PPD scale that should be applied to when processing accessibility gesture.
+   * @param[in]  ppdScale  The PPD Scale.
+   */
+  void SetPpdScale(float ppdScale);
+
 private:
 
   /**
@@ -76,6 +82,7 @@ private:
 private:
 
   AccessibilityGestureHandler* mGestureHandler; ///< The pointer of accessibility gesture handler
+  float mPpdScale;  ///< The PPD Scale that should be applied to gesture event when passing values back to the application.
   bool mPanning;    ///< Keep track of panning state, when panning is occuring, this is true.
 };
 

@@ -24,10 +24,6 @@
 #include <string.h>
 #include <iostream>
 
-#include <dali/public-api/common/vector-wrapper.h>
-
-using namespace std;
-
 namespace Dali
 {
 
@@ -39,202 +35,98 @@ namespace Adaptor
 
 namespace
 {
-struct Argument
-{
-  const char * const opt;
-  const char * const optDescription;
+  const char * RENDER_NO_VSYNC_OPTION = "no-vsync";
+  const char * RENDER_NO_VSYNC_DETAIL = "Disable VSync on Render";
 
-  void Print()
+  const char * RENDER_WIDTH_OPTION = "width";
+  const char * RENDER_WIDTH_DETAIL = "Stage Width";
+
+  const char * RENDER_HEIGHT_OPTION = "height";
+  const char * RENDER_HEIGHT_DETAIL = "Stage Height";
+
+  const char * RENDER_DPI_OPTION = "dpi";
+  const char * RENDER_DPI_DETAIL = "Emulated DPI";
+
+  const char * USAGE = "help";
+
+  struct Arguments
   {
-    const ios_base::fmtflags flags = cout.flags();
-    cout << left << "  --";
-    cout.width( 18 );
-    cout << opt;
-    cout << optDescription;
-    cout << endl;
-    cout.flags( flags );
-  }
-};
+    const char * opt;
+    const char * optDescription;
 
-Argument EXPECTED_ARGS[] =
-{
-  { "no-vsync",    "Disable VSync on Render" },
-  { "width",       "Stage Width"             },
-  { "height",      "Stage Height"            },
-  { "dpi",         "Emulated DPI"            },
-  { "view",        "Stereocopic 3D view mode ([0]=MONO, 1=STEREO_HORZ, 2=STEREO_VERT, 3=STEREO_INTERLACED)" },
-  { "stereo-base", "Distance in millimeters between left/right cameras [65.0]" },
-  { "help",        "Help"                    },
-  { NULL,          NULL                      }
-};
+    void Print()
+    {
+      std::cout << "--" << opt << " " << optDescription;
+    }
+  };
 
-enum Option
-{
-  OPTION_NO_VSYNC = 0,
-  OPTION_STAGE_WIDTH,
-  OPTION_STAGE_HEIGHT,
-  OPTION_DPI,
-  OPTION_STEREO_MODE,
-  OPTION_STEREO_BASE,
-  OPTION_HELP
-};
-
-typedef vector< int > UnhandledContainer;
-
-void ShowHelp()
-{
-  cout << "Available options:" << endl;
-  Argument* arg = EXPECTED_ARGS;
-  while ( arg->opt )
+  Arguments arguments[] =
   {
-    arg->Print();
-    ++arg;
-  }
-}
+    { RENDER_NO_VSYNC_OPTION, RENDER_NO_VSYNC_DETAIL },
+    { RENDER_WIDTH_OPTION,    RENDER_WIDTH_DETAIL    },
+    { RENDER_HEIGHT_OPTION,   RENDER_HEIGHT_DETAIL   },
+    { RENDER_DPI_OPTION,      RENDER_DPI_DETAIL      },
+    { NULL, NULL }
+  };
 
 } // unnamed namespace
 
-CommandLineOptions::CommandLineOptions(int *argc, char **argv[])
+
+CommandLineOptions::CommandLineOptions(int argc, char *argv[])
 : noVSyncOnRender(0),
-  stageWidth(0), stageHeight(0),
-  viewMode(0),
-  stereoBase(65)
+  stageWidth(0), stageHeight(0)
 {
-  if ( *argc > 1 )
+  const struct option options[]=
   {
-    // We do not want to print out errors.
-    int origOptErrValue( opterr );
-    opterr = 0;
+    { arguments[0].opt, no_argument, &noVSyncOnRender, 1 },  // "--no-vsync"
+    { arguments[1].opt, required_argument, NULL,     'w' },  // "--width"
+    { arguments[2].opt, required_argument, NULL,     'h' },  // "--height"
+    { arguments[3].opt, required_argument, NULL,     'd' },  // "--dpi"
+    { USAGE, no_argument, NULL, 'u'},
+    { 0, 0, 0, 0 } // end of options
+  };
 
-    int help( 0 );
 
-    const struct option options[]=
+  int opt(0);
+  int optIndex(0);
+
+  const char* optString = "w:h:d:?";
+
+  do
+  {
+    opt = getopt_long(argc, argv, optString, options, &optIndex);
+
+    switch (opt)
     {
-      { EXPECTED_ARGS[OPTION_NO_VSYNC].opt,     no_argument,       &noVSyncOnRender, 1   },  // "--no-vsync"
-      { EXPECTED_ARGS[OPTION_STAGE_WIDTH].opt,  required_argument, NULL,             'w' },  // "--width"
-      { EXPECTED_ARGS[OPTION_STAGE_HEIGHT].opt, required_argument, NULL,             'h' },  // "--height"
-      { EXPECTED_ARGS[OPTION_DPI].opt,          required_argument, NULL,             'd' },  // "--dpi"
-      { EXPECTED_ARGS[OPTION_STEREO_MODE].opt,  required_argument, NULL,             'v' },  // "--view"
-      { EXPECTED_ARGS[OPTION_STEREO_BASE].opt,  required_argument, NULL,             's' },  // "--stereo-base"
-      { EXPECTED_ARGS[OPTION_HELP].opt,         no_argument,       &help,            '?' },  // "--help"
-      { 0, 0, 0, 0 } // end of options
-    };
-
-    int shortOption( 0 );
-    int optionIndex( 0 );
-
-    const char* optString = "-w:h:d:v:s:"; // The '-' ensures that argv is NOT permuted
-    bool optionProcessed( false );
-
-    UnhandledContainer unhandledOptions; // We store indices of options we do not handle here
-
-    do
-    {
-      shortOption = getopt_long( *argc, *argv, optString, options, &optionIndex );
-
-      switch ( shortOption )
-      {
-        case 0:
+      case 0:
+        // if setting vsync getopt set flag already
+        break;
+      case 'w':
+        stageWidth = atoi(optarg);
+        break;
+      case 'h':
+        stageHeight = atoi(optarg);
+        break;
+      case 'd':
+        stageDPI.assign(optarg);
+        break;
+      case 'u':
+        // show usage
+        std::cout << "Available options:" << std::endl;
+        for ( int i = 0; arguments[i].opt != NULL; ++i)
         {
-          // Check if we want help
-          if ( help )
-          {
-            ShowHelp();
-            optionProcessed = true;
-          }
-          break;
+          arguments[i].Print();
+          std::cout << std::endl;
         }
-
-        case 'w':
-        {
-          if ( optarg )
-          {
-            stageWidth = atoi( optarg );
-            optionProcessed = true;
-          }
-          break;
-        }
-
-        case 'h':
-        {
-          if ( optarg )
-          {
-            stageHeight = atoi( optarg );
-            optionProcessed = true;
-          }
-          break;
-        }
-
-        case 'd':
-        {
-          if ( optarg )
-          {
-            stageDPI.assign( optarg );
-            optionProcessed = true;
-          }
-          break;
-        }
-
-        case 'v':
-        {
-          if ( optarg )
-          {
-            viewMode = atoi(optarg);
-            optionProcessed = true;
-          }
-          break;
-        }
-
-        case 's':
-        {
-          if ( optarg )
-          {
-            stereoBase = atoi(optarg);
-            optionProcessed = true;
-          }
-          break;
-        }
-
-        case -1:
-        {
-          // All command-line options have been parsed.
-          break;
-        }
-
-        default:
-        {
-          unhandledOptions.push_back( optind - 1 );
-          break;
-        }
-      }
-    } while ( shortOption != -1 );
-
-    // Take out the options we have processed
-    if ( optionProcessed )
-    {
-      if ( !unhandledOptions.empty() )
-      {
-        int index( 1 );
-
-        // Overwrite the argv with the values from the unhandled indices
-        const UnhandledContainer::const_iterator endIter = unhandledOptions.end();
-        for ( UnhandledContainer::iterator iter = unhandledOptions.begin(); iter != endIter; ++iter )
-        {
-          (*argv)[ index++ ] = (*argv)[ *iter ];
-        }
-        *argc = unhandledOptions.size() + 1; // +1 for the program name
-      }
-      else
-      {
-        // There are no unhandled options, so we should just have the program name
-        *argc = 1;
-      }
-
-      optind = 1; // Reset to start
+        break;
+      default:
+        // -1 will exit here (no more options to parse)
+        break;
     }
-
-    opterr = origOptErrValue; // Reset opterr value.
   }
+  while (opt != -1);
+
+  // Ignores any unknown options
 }
 
 CommandLineOptions::~CommandLineOptions()
