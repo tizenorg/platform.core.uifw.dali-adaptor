@@ -1,0 +1,4 @@
+usr/include/dali
+usr/lib/libdali-adaptor.la
+usr/lib/libdali-adaptor.a
+usr/lib/pkgconfig/dali.pc

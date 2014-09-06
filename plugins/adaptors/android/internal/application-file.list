@@ -1,0 +1,7 @@
+# Application
+
+tizen_application_internal_src_files = \
+  $(tizen_application_internal_src_dir)/application-impl.cpp \
+  $(tizen_application_internal_src_dir)/livebox-plugin-impl.cpp \
+  $(tizen_application_internal_src_dir)/evas-plugin-impl.cpp
+

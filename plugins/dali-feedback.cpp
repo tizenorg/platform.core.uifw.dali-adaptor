@@ -1,19 +1,23 @@
 /*
- * Copyright (c) 2014 Samsung Electronics Co., Ltd.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
+Copyright (c) 2000-2013 Samsung Electronics Co., Ltd All Rights Reserved
+
+This file is part of Dali feedback plugin
+
+PROPRIETARY/CONFIDENTIAL
+
+This software is the confidential and proprietary information of
+SAMSUNG ELECTRONICS ("Confidential Information"). You shall not
+disclose such Confidential Information and shall use it only in
+accordance with the terms of the license agreement you entered
+into with SAMSUNG ELECTRONICS.
+
+SAMSUNG make no representations or warranties about the suitability
+of the software, either express or implied, including but not limited
+to the implied warranties of merchantability, fitness for a particular
+purpose, or non-infringement. SAMSUNG shall not be liable for any
+damages suffered by licensee as a result of using, modifying or
+distributing this software or its derivatives.
+*/
 
 #define LOG_TAG "DALI_FEEDBACK"
 
@@ -25,7 +29,6 @@
 #include <fstream>
 #include <feedback.h>
 #include <mm_sound.h>
-#include <mm_sound_private.h>
 
 #include <dlog.h>
 
@@ -129,10 +132,11 @@ void DaliFeedback::StopHaptic()
   }
 }
 
-int DaliFeedback::PlaySound( const std::string& fileName )
+int DaliFeedback::PlaySound( const std::string& fileName, Dali::FeedbackPlugin::SoundStopCallBack callback, void* callbackData )
 {
   int handle = -1;
-  int errorCode = mm_sound_play_keysound( fileName.c_str(), VOLUME_TYPE_SYSTEM & VOLUME_GAIN_TOUCH );
+
+  int errorCode = mm_sound_play_sound( fileName.c_str(), VOLUME_TYPE_MEDIA, callback, callbackData, &handle );
   if( errorCode < 0 )
   {
     DEBUG_PRINTF( "PlaySound() %s failed with error code = %d\n", fileName.c_str(), errorCode );

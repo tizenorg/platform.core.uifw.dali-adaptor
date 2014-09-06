@@ -1,0 +1,62 @@
+Source: dali-adaptor
+Section: libs
+Priority: optional
+Maintainer: Kimmo Hoikka <kimmo.hoikka@samsung.com>
+Build-Depends: gettext,
+               pkg-config,
+               autotools-dev,
+               opengl-es-dev,
+               gnome-pkg-tools (>= 0.11),
+               quilt,
+               gawk,
+               libfreetype6-dev,
+               libboost-dev,
+               libboost-thread,
+               libboost-program-options,
+               libassimp-dev,
+               libassimp,
+               libpng12-dev,
+               libgif-dev,
+               libboost-dev,
+               libfontconfig1-dev,
+               libdali-integration-dev,
+               libelm-dev,
+               libcairo2-dev,
+               libappcore-efl-dev,
+               dlog-dev,
+               libxml2-dev
+Standards-Version: 3.7.2
+
+Package: libdali-adaptor
+Section: libs
+Architecture: any
+Depends: ${misc:Depends},
+         libdali,
+         libassimp,
+         libboost-program-options,
+         libboost-thread,
+         libelm,
+         libappcore-efl-0,
+         libxml2
+Description: The OpenGLES Canvas Core Library SLP Adaptor
+
+Package: libdali-adaptor-dev
+Section: libdevel
+Architecture: any
+Depends: libdali-adaptor (= ${binary:Version}),
+         ${misc:Depends},
+         libdali-dev,
+         opengl-es-dev,
+         libboost-dev,
+         libelm-dev,
+         libassimp-dev,
+         libassimp,
+         libappcore-efl-dev,
+Description: Application development package for the OpenGLES Canvas adaptor
+
+Package: libdali-adaptor-dbg
+Section: debug
+Architecture: any
+Depends: ${misc:Depends},
+         libdali-adaptor
+Description: The OpenGLES Canvas Core Library SLP Adpator (unstripped).

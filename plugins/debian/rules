@@ -1,0 +1,95 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+
+CXXFLAGS ?= -Wall -g -DNDEBUG
+LDFLAGS ?=
+PREFIX ?= /usr
+DATADIR ?= /opt
+
+BUILDDIR = build/slp
+
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -O0
+	CXXFLAGS += -O0
+else
+	CFLAGS += -O2
+	CXXFLAGS += -O2
+endif
+
+CFLAGS += -fPIC -fpie -rdynamic
+CXXFLAGS += -fPIC -fpie -rdynamic
+LDFLAGS += -Wl,--rpath=$(PREFIX)/lib -Wl,--as-needed -pie
+
+ifeq (armel,$(DEB_HOST_ARCH))
+CXXFLAGS += -D_ARCH_ARM_
+endif
+
+CONFIGURE_OPTIONS = --prefix=${PREFIX}
+
+ifneq (,$(findstring dalilog,$(DEB_BUILD_OPTIONS)))
+  CONFIGURE_OPTIONS += --enable-debug
+endif
+
+# shared library versions, option 1
+version=0.1.0
+major=1
+
+debian/config.status:
+	dh_testdir
+	-cd $(BUILDDIR) && autoreconf --install
+	-cd $(BUILDDIR) && ./configure $(CONFIGURE_OPTIONS) CXXFLAGS="$(CXXFLAGS)"
+	touch $@
+
+build: debian/build-stamp
+debian/build-stamp:  debian/config.status
+	dh_testdir
+	touch $@
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f debian/build-stamp
+	rm -f debian/config.status
+	-cd $(BUILDDIR) && $(MAKE) maintainer-clean
+	dh_clean
+	rm -rf obj-*
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+	cd $(BUILDDIR) && $(MAKE) DESTDIR=$(CURDIR)/debian/tmp install
+
+# Build architecture-independent files here.
+binary-indep: build install
+# We have nothing to do by default.
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs
+	dh_installdocs
+	dh_installexamples
+	dh_install --sourcedir debian/tmp
+	dh_installman
+	dh_link
+	dh_strip --dbg-package=libdali-adaptor-dbg
+	dh_compress
+	dh_fixperms
+	dh_makeshlibs
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install

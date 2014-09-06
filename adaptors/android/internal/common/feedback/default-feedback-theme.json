@@ -1,0 +1,33 @@
+//******************************************************************************
+//
+// Default feedback theme for dali-toolkit
+//
+//******************************************************************************
+{
+  "style":
+  {
+    "PushButton":
+    {
+      "signals":
+      [
+        {
+          "type": "pressed",
+          "haptic-feedback-pattern": "FEEDBACK_PATTERN_SIP",
+          "sound-feedback-pattern": "FEEDBACK_PATTERN_TAP"
+        }
+      ]
+    },
+
+    "TextInput":
+    {
+      "signals":
+      [
+        {
+          "type": "max-input-characters-reached",
+          "haptic-feedback-pattern": "FEEDBACK_PATTERN_MAX_CHARACTER",
+          "sound-feedback-pattern": "FEEDBACK_PATTERN_MAX_CHARACTER"
+        }
+      ]
+    }
+  }
+}
