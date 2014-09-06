@@ -54,13 +54,13 @@ Integration::Log::Filter* gLogFilter = Integration::Log::Filter::New(Debug::Conc
 
 VSyncNotifier::VSyncNotifier( UpdateRenderSynchronization& sync,
                               AdaptorInternalServices& adaptorInterfaces,
-                              const LogOptions& logOptions )
+                              const EnvironmentOptions& environmentOptions )
 : mUpdateRenderSync( sync ),
   mCore( adaptorInterfaces.GetCore() ),
   mPlatformAbstraction( adaptorInterfaces.GetPlatformAbstractionInterface() ),
   mVSyncMonitor( adaptorInterfaces.GetVSyncMonitorInterface() ),
   mThread( NULL ),
-  mLogOptions( logOptions )
+  mEnvironmentOptions( environmentOptions )
 {
 }
 
@@ -77,17 +77,9 @@ void VSyncNotifier::Start()
 
   if ( !mThread )
   {
-    if( mVSyncMonitor->Initialize() )
-    {
-      // Create and run the vsync monitoring thread
-      mThread = new boost::thread( boost::bind( &VSyncNotifier::Run, this ) );
-    }
-    else
-    {
-      DALI_LOG_WARNING( "using fallback timed thread.\n");
-      // Create and run fallback thread timed to give vsyncs at 60fps
-      mThread = new boost::thread( boost::bind( &VSyncNotifier::RunTimed, this ) );
-    }
+    mVSyncMonitor->Initialize();
+
+    mThread = new boost::thread( boost::bind( &VSyncNotifier::Run, this ) );
   }
 }
 
@@ -115,8 +107,6 @@ void VSyncNotifier::Stop()
 
 void VSyncNotifier::Run()
 {
-  prctl(PR_SET_NAME, "vsync_thread");
-  nice(-19);
   // install a function for logging
   mEnvironmentOptions.InstallLogFunction();
 
@@ -124,69 +114,88 @@ void VSyncNotifier::Run()
   unsigned int currentSequenceNumber( 0u );   // platform specific vsync sequence number (increments with each vsync)
   unsigned int currentSeconds( 0u );          // timestamp at latest vsync
   unsigned int currentMicroseconds( 0u );     // timestamp at latest vsync
-
-  bool running( true );
-  while( running )
-  {
-    if( mVSyncMonitor->DoSync( currentSequenceNumber, currentSeconds, currentMicroseconds ) )
-    {
-      // call Core::VSync with frame number and time stamp
-      mCore.VSync( ++frameNumber, currentSeconds, currentMicroseconds );
-    }
-
-    running = mUpdateRenderSync.VSyncNotifierSyncWithUpdateAndRender( frameNumber, currentSeconds, currentMicroseconds );
-  }
-  
-   // uninstall a function for logging
-  mLogOptions.UnInstallLogFunction();
-}
-
-void VSyncNotifier::RunTimed()
-{
-  // install a function for logging
-  mLogOptions.InstallLogFunction();
-
-
-  unsigned int frameNumber( 0u );
-  unsigned int currentSeconds( 0u );
-  unsigned int currentMicroseconds( 0u );
   unsigned int seconds( 0u );
   unsigned int microseconds( 0u );
-  bool running( true );
 
+  bool running( true );
   while( running )
   {
-    mPlatformAbstraction.GetTimeMicroseconds( currentSeconds, currentMicroseconds );
+    bool validSync( true );
 
-    // call Core::VSync with frame number and time stamp
-    mCore.VSync( ++frameNumber, currentSeconds, currentMicroseconds );
-
-    running = mUpdateRenderSync.VSyncNotifierSyncWithUpdateAndRender( frameNumber, currentSeconds, currentMicroseconds );
-
-    mPlatformAbstraction.GetTimeMicroseconds( seconds, microseconds );
-
-    unsigned int timeDelta( MICROSECONDS_PER_SECOND * (seconds - currentSeconds) );
-    if( microseconds < currentMicroseconds)
+    // Hardware VSyncs available?
+    if( mVSyncMonitor->UseHardware() )
     {
-      timeDelta += (microseconds + MICROSECONDS_PER_SECOND) - currentMicroseconds;
+      // Yes..wait for hardware VSync
+      validSync = mVSyncMonitor->DoSync( currentSequenceNumber, currentSeconds, currentMicroseconds );
     }
     else
     {
-      timeDelta += microseconds - currentMicroseconds;
+      // No..use software timer
+      mPlatformAbstraction.GetTimeMicroseconds( seconds, microseconds );
+
+      unsigned int timeDelta( MICROSECONDS_PER_SECOND * (seconds - currentSeconds) );
+      if( microseconds < currentMicroseconds)
+      {
+        timeDelta += (microseconds + MICROSECONDS_PER_SECOND) - currentMicroseconds;
+      }
+      else
+      {
+        timeDelta += microseconds - currentMicroseconds;
+      }
+
+      if( timeDelta < TIME_PER_FRAME_IN_MICROSECONDS )
+      {
+          usleep( TIME_PER_FRAME_IN_MICROSECONDS - timeDelta );
+      }
+      else
+      {
+        usleep( TIME_PER_FRAME_IN_MICROSECONDS );
+      }
     }
 
-    if( timeDelta < TIME_PER_FRAME_IN_MICROSECONDS )
-    {
-        usleep( TIME_PER_FRAME_IN_MICROSECONDS - timeDelta );
-    }
-    else
-    {
-      usleep( TIME_PER_FRAME_IN_MICROSECONDS );
-    }
+    running = mUpdateRenderSync.VSyncNotifierSyncWithUpdateAndRender( validSync, ++frameNumber, currentSeconds, currentMicroseconds );
   }
+
   // uninstall a function for logging
-  mLogOptions.UnInstallLogFunction();
+  mEnvironmentOptions.UnInstallLogFunction();
+
 }
+
+} // namespace Adaptor
+
+} // namespace Internal
+
+} // namespace Dali
+
+
+// CLASS HEADER
+#include "android-window-interface.h"
+
+// EXTERNAL INCLUDES
+
+// INTERNAL INCLUDES
+#include <dali/integration-api/debug.h>
+
+namespace Dali
+{
+
+namespace Internal
+{
+
+namespace Adaptor
+{
+
+namespace Android
+{
+
+namespace WindowInterface
+{
+
+
+} // namespace WindowInterface
+
+
+} // namespace Android
 
 } // namespace Adaptor
 

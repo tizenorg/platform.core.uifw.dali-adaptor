@@ -25,6 +25,7 @@
 #include <clipboard-event-notifier.h>
 
 // INTERNAL INCLUDES
+#include <dali/public-api/adaptor-framework/common/clipboard-event-notifier.h>
 
 namespace Dali
 {
@@ -34,6 +35,8 @@ namespace Internal
 
 namespace Adaptor
 {
+
+typedef Dali::IntrusivePtr< ClipboardEventNotifier > ClipboardEventNotifierPtr;
 
 /**
  * This class listens to Clipboard events.
@@ -48,14 +51,10 @@ public:
 
   /**
    * Create a ClipboardEventNotifier.
+   * This should only be called once by the Window class.
    * @return A newly allocated clipboard-event-notifier.
    */
   static Dali::ClipboardEventNotifier New();
-
-  /**
-   * @copydoc Dali::ClipboardEventNotifier::Get()
-   */
-  static Dali::ClipboardEventNotifier Get();
 
   // Public API
 

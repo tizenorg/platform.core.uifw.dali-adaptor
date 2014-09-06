@@ -69,151 +69,38 @@ namespace Adaptor
 namespace
 {
 boost::thread_specific_ptr<Adaptor> gThreadLocalAdaptor;
-
-unsigned int GetIntegerEnvironmentVariable( const char* variable, unsigned int defaultValue )
-{
-  const char* variableParameter = std::getenv(variable);
-
-  // if the parameter exists convert it to an integer, else return the default value
-  unsigned int intValue = variableParameter ? atoi(variableParameter) : defaultValue;
-  return intValue;
 }
 
-bool GetIntegerEnvironmentVariable( const char* variable, int& intValue )
-{
-  const char* variableParameter = std::getenv(variable);
-
-  if( !variableParameter )
-  {
-    return false;
-  }
-  // if the parameter exists convert it to an integer, else return the default value
-  intValue = atoi(variableParameter);
-  return true;
-}
-
-bool GetBooleanEnvironmentVariable( const char* variable, bool& boolValue )
-{
-  const char* variableParameter = std::getenv(variable);
-
-  boolValue = variableParameter ? true : false;
-  return boolValue;
-}
-
-bool GetFloatEnvironmentVariable( const char* variable, float& floatValue )
-{
-  const char* variableParameter = std::getenv(variable);
-
-  if( !variableParameter )
-  {
-    return false;
-  }
-  // if the parameter exists convert it to an integer, else return the default value
-  floatValue = atof(variableParameter);
-  return true;
-}
-
-} // unnamed namespace
-
-Dali::Adaptor* Adaptor::New( RenderSurface *surface, const DeviceLayout& baseLayout )
+Dali::Adaptor* Adaptor::New(RenderSurface* surface, const DeviceLayout& baseLayout)
 {
   DALI_ASSERT_ALWAYS( surface->GetType() != Dali::RenderSurface::NO_SURFACE && "No surface for adaptor" );
 
   Dali::Adaptor* adaptor = new Dali::Adaptor;
   Adaptor* impl = new Adaptor( *adaptor, surface, baseLayout );
   adaptor->mImpl = impl;
-
   impl->Initialize();
 
   return adaptor;
 }
 
-void Adaptor::ParseEnvironmentOptions()
-{
-  // get logging options
-  unsigned int logFrameRateFrequency = GetIntegerEnvironmentVariable( DALI_ENV_FPS_TRACKING, 0 );
-  unsigned int logupdateStatusFrequency = GetIntegerEnvironmentVariable( DALI_ENV_UPDATE_STATUS_INTERVAL, 0 );
-  unsigned int logPerformanceLevel = GetIntegerEnvironmentVariable( DALI_ENV_LOG_PERFORMANCE, 0 );
-  unsigned int logPanGesture = GetIntegerEnvironmentVariable( DALI_ENV_LOG_PAN_GESTURE, 0 );
-
-  // all threads here (event, update, and render) will send their logs to SLP Platform's LogMessage handler.
-  Dali::Integration::Log::LogFunction  logFunction(Dali::SlpPlatform::LogMessage);
-
-  mEnvironmentOptions.SetLogOptions( logFunction, logFrameRateFrequency, logupdateStatusFrequency, logPerformanceLevel, logPanGesture );
-
-  int predictionMode;
-  if( GetIntegerEnvironmentVariable(DALI_ENV_PAN_PREDICTION_MODE, predictionMode) )
-  {
-    mEnvironmentOptions.SetPanGesturePredictionMode(predictionMode);
-  }
-  int predictionAmount = -1;
-  if( GetIntegerEnvironmentVariable(DALI_ENV_PAN_PREDICTION_AMOUNT, predictionAmount) )
-  {
-    if( predictionAmount < 0 )
-    {
-      // do not support times in the past
-      predictionAmount = 0;
-    }
-    mEnvironmentOptions.SetPanGesturePredictionAmount(predictionAmount);
-  }
-  int smoothingMode;
-  if( GetIntegerEnvironmentVariable(DALI_ENV_PAN_SMOOTHING_MODE, smoothingMode) )
-  {
-    mEnvironmentOptions.SetPanGestureSmoothingMode(smoothingMode);
-  }
-  float smoothingAmount = 1.0f;
-  if( GetFloatEnvironmentVariable(DALI_ENV_PAN_SMOOTHING_AMOUNT, smoothingAmount) )
-  {
-    smoothingAmount = Clamp(smoothingAmount, 0.0f, 1.0f);
-    mEnvironmentOptions.SetPanGestureSmoothingAmount(smoothingAmount);
-  }
-
-  int minimumDistance(-1);
-  if ( GetIntegerEnvironmentVariable(DALI_ENV_PAN_MINIMUM_DISTANCE, minimumDistance ))
-  {
-    mEnvironmentOptions.SetMinimumPanDistance( minimumDistance );
-  }
-
-  int minimumEvents(-1);
-  if ( GetIntegerEnvironmentVariable(DALI_ENV_PAN_MINIMUM_EVENTS, minimumEvents ))
-  {
-    mEnvironmentOptions.SetMinimumPanEvents( minimumEvents );
-  }
-
-  int glesCallTime(0);
-  if ( GetIntegerEnvironmentVariable(DALI_GLES_CALL_TIME, glesCallTime ))
-  {
-    mEnvironmentOptions.SetGlesCallTime( glesCallTime );
-  }
-
-  mEnvironmentOptions.InstallLogFunction();
-}
-
 void Adaptor::Initialize()
 {
-  ParseEnvironmentOptions();
+  // ParseLogOptions();
 
   mPlatformAbstraction = new SlpPlatform::SlpPlatformAbstraction;
 
-  if( mEnvironmentOptions.GetPerformanceLoggingLevel() > 0 )
+  if( mLogOptions.GetPerformanceLoggingLevel() > 0 )
   {
-    mPerformanceInterface = PerformanceInterfaceFactory::CreateInterface( *this, mEnvironmentOptions );
+    mPerformanceInterface = PerformanceInterfaceFactory::CreateInterface( *this, mLogOptions );
   }
 
   mCallbackManager = CallbackManager::New();
 
   PositionSize size = mSurface->GetPositionSize();
 
-  mGestureManager = new GestureManager(*this, Vector2(size.width, size.height), mCallbackManager, mEnvironmentOptions);
+  mGestureManager = new GestureManager(*this, Vector2(1440, 2560), mCallbackManager);
 
-  if( mEnvironmentOptions.GetGlesCallTime() > 0 )
-  {
-    mGLES = new GlProxyImplementation( mEnvironmentOptions );
-  }
-  else
-  {
-    mGLES = new GlImplementation();
-  }
+  mGLES = new GlImplementation;
 
   mEglFactory = new EglFactory();
 
@@ -221,37 +108,41 @@ void Adaptor::Initialize()
 
   mCore = Integration::Core::New( *this, *mPlatformAbstraction, *mGLES, *eglSyncImpl, *mGestureManager );
 
-  mObjectProfiler = new ObjectProfiler();
-
   mNotificationTrigger = new TriggerEvent( boost::bind(&Adaptor::ProcessCoreEvents, this) );
 
   mVSyncMonitor = new VSyncMonitor;
 
-  mUpdateRenderController = new UpdateRenderController( *this, mEnvironmentOptions );
+  mUpdateRenderController = new UpdateRenderController( *this, mLogOptions );
 
-  mDaliFeedbackPlugin = new FeedbackPluginProxy( FeedbackPluginProxy::DEFAULT_OBJECT_NAME );
+  // mDaliFeedbackPlugin = new FeedbackPluginProxy( FeedbackPluginProxy::DEFAULT_OBJECT_NAME );
+}
 
-  // Should be called after Core creation
-  if( mEnvironmentOptions.GetPanGestureLoggingLevel() )
-  {
-    Integration::EnableProfiling( Dali::Integration::PROFILING_TYPE_PAN_GESTURE );
-  }
-  if( mEnvironmentOptions.GetPanGesturePredictionMode() >= 0 )
-  {
-    Integration::SetPanGesturePredictionMode(mEnvironmentOptions.GetPanGesturePredictionMode());
-  }
-  if( mEnvironmentOptions.GetPanGesturePredictionAmount() >= 0.0f )
-  {
-    Integration::SetPanGesturePredictionAmount(mEnvironmentOptions.GetPanGesturePredictionAmount());
-  }
-  if( mEnvironmentOptions.GetPanGestureSmoothingMode() >= 0 )
-  {
-    Integration::SetPanGestureSmoothingMode(mEnvironmentOptions.GetPanGestureSmoothingMode());
-  }
-  if( mEnvironmentOptions.GetPanGestureSmoothingAmount() >= 0.0f )
-  {
-    Integration::SetPanGestureSmoothingAmount(mEnvironmentOptions.GetPanGestureSmoothingAmount());
-  }
+Adaptor::Adaptor(Dali::Adaptor& adaptor, RenderSurface* surface, const DeviceLayout& baseLayout)
+: mAdaptor(adaptor),
+  mState(READY),
+  mCore(NULL),
+  mUpdateRenderController(NULL),
+  mVSyncMonitor(NULL),
+  mGLES( NULL ),
+  mEglFactory( NULL ),
+  mSurface( surface ),
+  mPlatformAbstraction( NULL ),
+  mEventHandler( NULL ),
+  mCallbackManager( NULL ),
+  mNotificationOnIdleInstalled( false ),
+  mNotificationTrigger(NULL),
+  mGestureManager(NULL),
+  mHDpi( 0 ),
+  mVDpi( 0 ),
+  // mDaliFeedbackPlugin(NULL),
+  mFeedbackController(NULL),
+  mObservers(),
+  mDragAndDropDetector(),
+  mDeferredRotationObserver(NULL),
+  mPerformanceInterface(NULL)
+{
+  DALI_ASSERT_ALWAYS( gThreadLocalAdaptor.get() == NULL && "Cannot create more than one Adaptor per thread" );
+  gThreadLocalAdaptor.reset(this);
 }
 
 Adaptor::~Adaptor()
@@ -267,40 +158,97 @@ Adaptor::~Adaptor()
     (*iter)->OnDestroy();
   }
 
-  delete mUpdateRenderController; // this will shutdown render thread, which will call Core::ContextDestroyed before exit
-  delete mVSyncMonitor;
-  delete mEventHandler;
-  delete mObjectProfiler;
+  if (mUpdateRenderController)
+  {
+    delete mUpdateRenderController;
+    mUpdateRenderController = NULL;
+  }
 
-  delete mCore;
-  delete mEglFactory;
+  if( mVSyncMonitor )
+  {
+    delete mVSyncMonitor;
+    mVSyncMonitor = NULL;
+  }
+  // Shut down VirtualKeyboard so observers are told to disconnect callbacks
+  //VirtualKeyboard::Shutdown();
+
+  if (mEventHandler)
+  {
+    delete mEventHandler;
+    mEventHandler = NULL;
+  }
+
+  if (mCore)
+  {
+    delete mCore;
+    mCore = NULL;
+  }
+
+  // Delete EGL factory after Core, otherwise we may have a crash from GL resource destructors
+  if ( mEglFactory )
+  {
+    delete mEglFactory;
+    mEglFactory = NULL;
+  }
+
+  // TODO: minru - moved here from Stop()
+  delete mNotificationTrigger;
+  mNotificationTrigger = NULL;
+  
   // Delete feedback controller before feedback plugin & style monitor dependencies
   delete mFeedbackController;
-  delete mDaliFeedbackPlugin;
-  delete mGLES;
-  delete mGestureManager;
-  delete mPlatformAbstraction;
-  delete mCallbackManager;
-  delete mPerformanceInterface;
 
-  // uninstall it on this thread (main actor thread)
-  Dali::Integration::Log::UninstallLogFunction();
+  // Disconnect before feedback plugin is destroyed
+  // Dali::GetImplementation(mHapticPlayer).SetFeedbackPlugin( NULL );
+  // Dali::GetImplementation(mSoundPlayer).SetFeedbackPlugin( NULL );
+
+  // if (mDaliFeedbackPlugin)
+  // {
+  //  delete mDaliFeedbackPlugin;
+  //  mDaliFeedbackPlugin = NULL;
+  // }
+
+  if (mGLES)
+  {
+    delete mGLES;
+    mGLES = NULL;
+  }
+
+  if (mGestureManager)
+  {
+    delete mGestureManager;
+    mGestureManager = NULL;
+  }
+
+  if (mPlatformAbstraction)
+  {
+    delete mPlatformAbstraction;
+    mPlatformAbstraction = NULL;
+  }
+
+  if (mCallbackManager)
+  {
+    delete mCallbackManager;
+    mCallbackManager = NULL;
+  }
 }
 
 void Adaptor::Start()
 {
   // it doesn't support restart after stop at this moment
   // to support restarting, need more testing
-  if( READY != mState )
+  if(READY != mState)
   {
     return;
   }
+
+  DALI_LOG_WARNING("Adaptor starting.");
 
   // Start the callback manager
   mCallbackManager->Start();
 
   // create event handler
-  mEventHandler = new EventHandler( mSurface, *this, *mGestureManager, *this, mDragAndDropDetector );
+  mEventHandler = new EventHandler( mSurface, *this, *mGestureManager, mDragAndDropDetector );
 
   if( mDeferredRotationObserver != NULL )
   {
@@ -312,8 +260,6 @@ void Adaptor::Start()
   mSurface->Map();
 
   // NOTE: dpi must be set before starting the render thread
-  // use default or command line settings if not run on device
-#ifdef __arm__
   // set the DPI value for font rendering
   unsigned int dpiHor, dpiVer;
   dpiHor = dpiVer = 0;
@@ -321,9 +267,6 @@ void Adaptor::Start()
 
   // tell core about the value
   mCore->SetDpi(dpiHor, dpiVer);
-#else
-  mCore->SetDpi(mHDpi, mVDpi);
-#endif
 
   // Tell the core the size of the surface just before we start the render-thread
   PositionSize size = mSurface->GetPositionSize();
@@ -331,6 +274,7 @@ void Adaptor::Start()
 
   // Start the update & render threads
   mUpdateRenderController->Start();
+  mGestureManager->Start();
 
   mState = RUNNING;
 
@@ -339,7 +283,7 @@ void Adaptor::Start()
   if ( !mFeedbackController )
   {
     // Start sound & haptic feedback
-    mFeedbackController = new FeedbackController( *mDaliFeedbackPlugin );
+    // mFeedbackController = new FeedbackController( *mDaliFeedbackPlugin, *mStyleMonitor );
   }
 
   for ( ObserverContainer::iterator iter = mObservers.begin(), endIter = mObservers.end(); iter != endIter; ++iter )
@@ -348,12 +292,26 @@ void Adaptor::Start()
   }
 }
 
+void Adaptor::SurfaceLost()
+{
+  // Pause the adaptor if its running
+  mUpdateRenderController->TerminateRenderThread();
+}
+
+void Adaptor::SurfaceCreated()
+{
+  // Start the render thread
+  mUpdateRenderController->StartRenderThread();
+}
+
 // Dali::Internal::Adaptor::Adaptor::Pause
 void Adaptor::Pause()
 {
   // Only pause the adaptor if we're actually running.
   if( RUNNING == mState )
   {
+    DALI_LOG_WARNING("Adaptor pausing");
+
     // Inform observers that we are about to be paused.
     for( ObserverContainer::iterator iter = mObservers.begin(), endIter = mObservers.end(); iter != endIter; ++iter )
     {
@@ -378,18 +336,10 @@ void Adaptor::Resume()
   // Only resume the adaptor if we are in the suspended state.
   if( PAUSED == mState )
   {
-    // We put ResumeFrameTime first, as this was originally called at the start of mCore->Resume()
-    // If there were events pending, mCore->Resume() will call
-    //   RenderController->RequestUpdate()
-    //     UpdateRenderController->RequestUpdate()
-    //       UpdateRenderSynchronization->RequestUpdate()
-    // and we should have reset the frame timers before allowing Core->Update() to be called.
-    //@todo Should we call UpdateRenderController->Resume before mCore->Resume()?
+    DALI_LOG_WARNING("Adaptor resuming");
 
-    mUpdateRenderController->ResumeFrameTime();
     mCore->Resume();
     mUpdateRenderController->Resume();
-
     mState = RUNNING;
 
     // Reset the event handler when adaptor resumed
@@ -414,6 +364,8 @@ void Adaptor::Stop()
       PAUSED  == mState ||
       PAUSED_WHILE_HIDDEN == mState )
   {
+    DALI_LOG_WARNING("Adaptor stopping");
+
     for( ObserverContainer::iterator iter = mObservers.begin(), endIter = mObservers.end(); iter != endIter; ++iter )
     {
       (*iter)->OnStop();
@@ -421,6 +373,9 @@ void Adaptor::Stop()
 
     mUpdateRenderController->Stop();
     mCore->Suspend();
+
+    // mGestureManager->Stop();
+    // mCallbackManager->Stop();
 
     // Delete the TTS player
     for(int i =0; i < Dali::TtsPlayer::MODE_NUM; i++)
@@ -445,17 +400,18 @@ void Adaptor::Stop()
 
 void Adaptor::FeedTouchPoint( TouchPoint& point, int timeStamp )
 {
+  DALI_LOG_WARNING("TPOINT");
   mEventHandler->FeedTouchPoint( point, timeStamp );
 }
 
 void Adaptor::FeedWheelEvent( MouseWheelEvent& wheelEvent )
 {
-  mEventHandler->FeedWheelEvent( wheelEvent );
+  // mEventHandler->FeedWheelEvent( wheelEvent );
 }
 
 void Adaptor::FeedKeyEvent( KeyEvent& keyEvent )
 {
-  mEventHandler->FeedKeyEvent( keyEvent );
+  // mEventHandler->FeedKeyEvent( keyEvent );
 }
 
 bool Adaptor::MoveResize( const PositionSize& positionSize )
@@ -614,10 +570,7 @@ TriggerEventInterface& Adaptor::GetTriggerEventInterface()
 {
   return *mNotificationTrigger;
 }
-TriggerEventFactoryInterface& Adaptor::GetTriggerEventFactoryInterface()
-{
-  return mTriggerEventFactory;
-}
+
 RenderSurface* Adaptor::GetRenderSurfaceInterface()
 {
   return mSurface;
@@ -649,7 +602,7 @@ void Adaptor::SetDragAndDropDetector( DragAndDropDetectorPtr detector )
 
   if ( mEventHandler )
   {
-    mEventHandler->SetDragAndDropDetector( detector );
+    // mEventHandler->SetDragAndDropDetector( detector );
   }
 }
 
@@ -671,14 +624,6 @@ void Adaptor::DestroyTtsPlayer(Dali::TtsPlayer::Mode mode)
   if(mTtsPlayers[mode])
   {
     mTtsPlayers[mode].Reset();
-  }
-}
-
-void Adaptor::SetMinimumPinchDistance(float distance)
-{
-  if( mGestureManager )
-  {
-    mGestureManager->SetMinimumPinchDistance(distance);
   }
 }
 
@@ -725,6 +670,7 @@ void Adaptor::ProcessCoreEvents()
     {
       mPerformanceInterface->AddMarker( PerformanceMarker::PROCESS_EVENTS_END );
     }
+
   }
 }
 
@@ -762,10 +708,10 @@ void Adaptor::OnWindowShown()
     // Adaptor can now be resumed
     mState = PAUSED;
 
-    Resume();
+    // Resume();
 
     // Force a render task
-    RequestUpdateOnce();
+    // RequestUpdateOnce();
   }
 }
 
@@ -773,7 +719,7 @@ void Adaptor::OnWindowHidden()
 {
   if ( STOPPED != mState )
   {
-    Pause();
+    // Pause();
 
     // Adaptor cannot be resumed until the window is shown
     mState = PAUSED_WHILE_HIDDEN;
@@ -838,60 +784,6 @@ BaseHandle Adaptor::GetSingleton(const std::type_info& info) const
   }
 
   return object;
-}
-
-Adaptor::Adaptor(Dali::Adaptor& adaptor, RenderSurface* surface, const DeviceLayout& baseLayout)
-: mAdaptor(adaptor),
-  mState(READY),
-  mCore(NULL),
-  mUpdateRenderController(NULL),
-  mVSyncMonitor(NULL),
-  mGLES( NULL ),
-  mEglFactory( NULL ),
-  mSurface( surface ),
-  mPlatformAbstraction( NULL ),
-  mEventHandler( NULL ),
-  mCallbackManager( NULL ),
-  mNotificationOnIdleInstalled( false ),
-  mNotificationTrigger(NULL),
-  mGestureManager(NULL),
-  mHDpi( 0 ),
-  mVDpi( 0 ),
-  mDaliFeedbackPlugin(NULL),
-  mFeedbackController(NULL),
-  mObservers(),
-  mDragAndDropDetector(),
-  mDeferredRotationObserver(NULL),
-  mBaseLayout(baseLayout),
-  mEnvironmentOptions(),
-  mPerformanceInterface(NULL),
-  mObjectProfiler(NULL)
-{
-  DALI_ASSERT_ALWAYS( gThreadLocalAdaptor.get() == NULL && "Cannot create more than one Adaptor per thread" );
-  gThreadLocalAdaptor.reset(this);
-}
-
-// Stereoscopy
-
-void Adaptor::SetViewMode( ViewMode viewMode )
-{
-  mSurface->SetViewMode( viewMode );
-  mCore->SetViewMode( viewMode );
-}
-
-ViewMode Adaptor::GetViewMode() const
-{
-  return mCore->GetViewMode();
-}
-
-void Adaptor::SetStereoBase( float stereoBase )
-{
-  mCore->SetStereoBase( stereoBase );
-}
-
-float Adaptor::GetStereoBase() const
-{
-  return mCore->GetStereoBase();
 }
 
 } // namespace Adaptor

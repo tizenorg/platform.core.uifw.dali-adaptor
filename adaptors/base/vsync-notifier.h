@@ -18,6 +18,12 @@
  *
  */
 
+// EXTERNAL INCLUDES
+#include <dali/integration-api/debug.h>
+
+// INTERNAL INCLUDES
+#include <base/interfaces/adaptor-internal-services.h>
+ 
 namespace boost
 {
 
@@ -44,7 +50,7 @@ namespace Adaptor
 
 class VSyncMonitorInterface;
 class UpdateRenderSynchronization;
-class EnvironmentOptions;
+class LogOptions;
 class AdaptorInternalServices;
 
 /**

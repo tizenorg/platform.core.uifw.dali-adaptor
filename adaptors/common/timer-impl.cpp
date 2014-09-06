@@ -19,7 +19,7 @@
 #include "timer-impl.h"
 
 // EXTERNAL INCLUDES
-#include <Ecore.h>
+#include "android-interface.h"
 
 namespace Dali
 {
@@ -33,13 +33,10 @@ namespace Adaptor
 // LOCAL STUFF
 namespace
 {
-Eina_Bool TimerSourceFunc (void *data)
+bool TimerSourceFunc (void *data)
 {
   Timer* timer = static_cast<Timer*>(data);
-
-  bool keepRunning = timer->Tick();
-
-  return keepRunning ? EINA_TRUE : EINA_FALSE;
+  return timer->Tick();
 }
 } // unnamed namespace
 
@@ -54,8 +51,8 @@ struct Timer::Impl
   {
   }
 
-  Ecore_Timer * mId;
-  unsigned int mInterval;
+  AndroidTimer* mId;
+  unsigned int  mInterval;
 };
 
 TimerPtr Timer::New( unsigned int milliSec )
@@ -83,14 +80,14 @@ void Timer::Start()
   {
     Stop();
   }
-  mImpl->mId = ecore_timer_add( (double)mImpl->mInterval/1000.0f, (Ecore_Task_Cb)TimerSourceFunc, this );
+  mImpl->mId = androidcore_add_timer( (float)mImpl->mInterval/1000.0f, TimerSourceFunc, this );
 }
 
 void Timer::Stop()
 {
   if (mImpl->mId != NULL)
   {
-    ecore_timer_del(mImpl->mId);
+    androidcore_remove_timer(mImpl->mId);
     mImpl->mId = NULL;
   }
 }

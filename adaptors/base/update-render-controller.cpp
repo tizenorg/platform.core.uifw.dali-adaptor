@@ -85,7 +85,9 @@ void UpdateRenderController::ResumeFrameTime()
 
 void UpdateRenderController::Resume()
 {
+  mUpdateRenderSync->AltSetRunning(true);
   mUpdateRenderSync->Resume();
+  mUpdateRenderSync->UpdateRequested();
 }
 
 void UpdateRenderController::Stop()
@@ -123,6 +125,19 @@ void UpdateRenderController::ReplaceSurface( RenderSurface* surface )
 
   // block here until replace complete
   mRenderThread->WaitForSurfaceReplaceComplete();
+}
+
+void UpdateRenderController::TerminateRenderThread()
+{
+  // Tell render thread to quit at the end of the rendering loop
+  mUpdateRenderSync->SetRenderRunning(false);
+  mRenderThread->Stop();
+}
+
+void UpdateRenderController::StartRenderThread()
+{
+  mUpdateRenderSync->SetRenderRunning(true);
+  mRenderThread->Start();
 }
 
 void UpdateRenderController::RenderSync()

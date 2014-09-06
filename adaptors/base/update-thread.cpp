@@ -23,12 +23,21 @@
 #include <fstream>
 #include <sstream>
 #include <boost/thread.hpp>
+#include <sys/prctl.h>
 
-// INTERNAL INCLUDES
 #include <dali/integration-api/debug.h>
 #include <base/interfaces/adaptor-internal-services.h>
 #include <base/update-render-synchronization.h>
 #include <base/environment-options.h>
+
+#ifdef ACORE_DEBUG_ENABLED
+#include "nativeLogging.h"
+#endif
+
+// INTERNAL INCLUDES
+#include "internal/common/trigger-event.h"
+
+#include <base/update-render-synchronization.h>
 
 namespace Dali
 {
@@ -98,6 +107,12 @@ void UpdateThread::Stop()
 
 bool UpdateThread::Run()
 {
+  prctl(PR_SET_NAME, "update_thread");
+  nice(-18);
+#ifdef ACORE_DEBUG_ENABLED
+  LOGI("UpdateThread starting up\n");
+#endif
+
   Integration::UpdateStatus status;
 
   // install a function for logging

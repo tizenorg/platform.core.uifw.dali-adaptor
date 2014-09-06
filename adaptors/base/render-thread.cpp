@@ -18,12 +18,26 @@
 // CLASS HEADER
 #include "render-thread.h"
 
+// EXTERNAL INCLUDES
+#include <cstdlib>
+#include <vector>
+#include <sys/time.h>
+#include <unistd.h>
+#include <sys/prctl.h>
 
-// INTERNAL INCLUDES
 #include <dali/integration-api/debug.h>
 #include <base/interfaces/adaptor-internal-services.h>
 #include <base/update-render-synchronization.h>
-#include <base/environment-options.h>
+#include <base/log-options.h>
+#include <dali/integration-api/gl-abstraction.h>
+
+// INTERNAL INCLUDES
+#include <internal/common/render-surface-impl.h>
+
+#include <base/interfaces/egl-factory-interface.h>
+#include <base/update-render-synchronization.h>
+#include "android-jobs.h"
+#include <nativeLogging.h>
 
 
 namespace Dali
@@ -40,24 +54,51 @@ namespace
 
 const unsigned int TIME_PER_FRAME_IN_MICROSECONDS = 16667;
 
+
+class RequestReloadJob : public Jobs::Job
+{
+public:
+  RequestReloadJob(Dali::Integration::Core& core) : mCore(core)
+  {
+  }
+
+  void Execute(void* context)
+  {
+    mCore.RequestReloadResources();
+  }
+
+protected:
+  Dali::Integration::Core& mCore;
+};
+
 } // unnamed namespace
 
 RenderThread::RenderThread( UpdateRenderSynchronization& sync,
                             AdaptorInternalServices& adaptorInterfaces,
-                            const EnvironmentOptions& environmentOptions )
+                            const LogOptions& logOptions )
 : mUpdateRenderSync( sync ),
   mCore( adaptorInterfaces.GetCore() ),
   mGLES( adaptorInterfaces.GetGlesInterface() ),
-  mEglFactory( &adaptorInterfaces.GetEGLFactoryInterface()),
+  mEglFactory( &adaptorInterfaces.GetEGLFactoryInterface() ),
   mEGL( NULL ),
   mThread( NULL ),
-  mSurfaceReplacing( false ),
+  mUsingPixmap( false ),
+  mLogOptions (logOptions),
   mNewDataAvailable( false ),
-  mSurfaceReplaceCompleted( false ),
-  mEnvironmentOptions( environmentOptions )
+  mPixmapSyncReceived( false ),
+  mPixmapSyncRunning( false ),
+  mCurrentMicroSec(0),
+  mSurfaceReplaceCompleted( false )
 {
   // set the initial values before render thread starts
   mCurrent.surface = adaptorInterfaces.GetRenderSurfaceInterface();
+
+  // set the pixmap flag, if we're using one
+  if( (mCurrent.surface->GetType() == Dali::RenderSurface::PIXMAP ) ||
+      (mCurrent.surface->GetType() == Dali::RenderSurface::NATIVE_BUFFER ) )
+  {
+    mUsingPixmap = true;
+  }
 }
 
 RenderThread::~RenderThread()
@@ -71,26 +112,54 @@ void RenderThread::Start()
   // initialise GL and kick off render thread
   DALI_ASSERT_ALWAYS( !mEGL && "Egl already initialized" );
 
-  // Tell frame timer what the minimum frame interval is
-  mUpdateRenderSync.SetMinimumFrameTimeInterval( mCurrent.syncMode * TIME_PER_FRAME_IN_MICROSECONDS );
+  // Tell core what the minimum frame interval is
+  mCore.SetMinimumFrameTimeInterval( mCurrent.syncMode * TIME_PER_FRAME_IN_MICROSECONDS );
 
   // create the render thread, initially we are rendering
   mThread = new boost::thread(boost::bind(&RenderThread::Run, this));
 
-  // Inform surface to block waiting for RenderSync
-  mCurrent.surface->SetSyncMode( RenderSurface::SYNC_MODE_WAIT );
-}
+  // Inform render thread to block waiting for PixmapSync
+  if( mUsingPixmap )
+  {
+    boost::unique_lock< boost::mutex > lock( mPixmapSyncMutex );
+    mPixmapSyncRunning = true;
+  }
+ }
 
 void RenderThread::Stop()
 {
+  ACORE_PROLOG;
   // shutdown the render thread and destroy the opengl context
   if( mThread )
   {
-    // Tell surface we have stopped rendering
+    // Inform render thread not to block waiting for PixmapSync
+    if( mUsingPixmap )
+    {
+      boost::unique_lock< boost::mutex > lock( mPixmapSyncMutex );
+      mPixmapSyncRunning = false;
+    }
+
     mCurrent.surface->StopRender();
+
+    // need to simulate a RenderSync to get render-thread to finish
+    RenderSync();
+
+     // Request one update
+    mUpdateRenderSync.UpdateRequested();
+
+    //mUpdateRenderSync.SetRunning(false);
+    mUpdateRenderSync.SetRenderRunning(false);
+
+#ifdef ACORE_DEBUG_ENABLED
+    LOGD("Stopping renderthread\n");
+#endif
 
     // wait for the thread to finish
     mThread->join();
+
+#ifdef ACORE_DEBUG_ENABLED
+    LOGD("Renderthread terminated.\n");
+#endif
 
     delete mThread;
     mThread = NULL;
@@ -144,7 +213,17 @@ void RenderThread::SetVSyncMode( EglInterface::SyncMode syncMode )
 
 void RenderThread::RenderSync()
 {
-  mCurrent.surface->RenderSync();
+  if( !mUsingPixmap )
+  {
+    return;
+  }
+  {
+    boost::unique_lock< boost::mutex > lock( mPixmapSyncMutex );
+    mPixmapSyncReceived = true;
+  }
+
+  // awake render thread if it was waiting for the notify
+  mPixmapSyncNotify.notify_all();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -155,8 +234,10 @@ void RenderThread::RenderSync()
 
 bool RenderThread::Run()
 {
+  prctl(PR_SET_NAME, "render_thread");
+  nice(-18);
   // install a function for logging
-  mEnvironmentOptions.InstallLogFunction();
+  mLogOptions.InstallLogFunction();
 
   InitializeEgl();
 
@@ -181,37 +262,35 @@ bool RenderThread::Run()
     // perform any pre-render operations
     if(PreRender() == true)
     {
-       // Render
-      mCore.Render( renderStatus );
-
-      // Notify the update-thread that a render has completed
-      mUpdateRenderSync.RenderFinished( renderStatus.NeedsUpdate() );
-
-      uint64_t newTime( mUpdateRenderSync.GetTimeMicroseconds() );
-
-      // perform any post-render operations
-      if ( renderStatus.HasRendered() )
+      uint32_t xy = static_cast<uint32_t>(currentTime);
+      // Render
+      // Trying to prevent the renderer from rendering when running is set to false - PG
+      if ( mUpdateRenderSync.GetRenderRunning() )
       {
-        PostRender( static_cast< unsigned int >(newTime - currentTime) );
-      }
+        mCore.Render( renderStatus );
 
-      if(mSurfaceReplacing)
-      {
-        // Notify main thread that surface was changed so it can release the old one
-        NotifySurfaceChangeCompleted();
-        mSurfaceReplacing = false;
-      }
+        // Notify the update-thread that a render has completed
+        mUpdateRenderSync.RenderFinished( renderStatus.NeedsUpdate() );
 
-      currentTime = newTime;
+        uint64_t newTime( mUpdateRenderSync.GetTimeMicroseconds() );
+
+        // perform any post-render operations
+        if ( renderStatus.HasRendered() )
+        {
+          PostRender( static_cast< unsigned int >(newTime - currentTime) );
+        }
+
+        currentTime = newTime;
+      }
     }
 
     // Wait until another frame has been updated
     running = mUpdateRenderSync.RenderSyncWithUpdate();
   }
-
+  mUpdateRenderSync.SetRenderRunning(false);
   // shut down egl
   ShutdownEgl();
-
+  DALI_LOG_INFO(Debug::Filter::gShader, Debug::General, "Renderthread terminated\n");
   // install a function for logging
   mEnvironmentOptions.UnInstallLogFunction();
 
@@ -236,14 +315,23 @@ void RenderThread::InitializeEgl()
   // Make it current
   mEGL->MakeContextCurrent();
 
-  // set the initial sync mode
-
-  //@todo This needs to call the render surface instead
-  mEGL->SetRefreshSync( mCurrent.syncMode );
+  if( !mUsingPixmap )
+  {
+    // set the initial sync mode
+    mEGL->SetRefreshSync( mCurrent.syncMode );
+  }
 
   // tell core it has a context
   mCore.ContextCreated();
 
+  Jobs::JobHandle requestJob = new RequestReloadJob(mCore);
+  Jobs::add_job(Jobs::get_main_queue(), requestJob);
+
+  DALI_LOG_INFO(Debug::Filter::gShader, Debug::General, "*** GL_VENDOR : %s ***\n", mGLES.GetString(GL_VENDOR));
+  DALI_LOG_INFO(Debug::Filter::gShader, Debug::General, "*** GL_RENDERER : %s ***\n", mGLES.GetString(GL_RENDERER));
+  DALI_LOG_INFO(Debug::Filter::gShader, Debug::General, "*** GL_VERSION : %s ***\n", mGLES.GetString(GL_VERSION));
+  DALI_LOG_INFO(Debug::Filter::gShader, Debug::General, "*** GL_SHADING_LANGUAGE_VERSION : %s***\n", mGLES.GetString(GL_SHADING_LANGUAGE_VERSION));
+  DALI_LOG_INFO(Debug::Filter::gShader, Debug::General, "*** Supported Extensions ***\n%s\n\n", mGLES.GetString(GL_EXTENSIONS));
 }
 
 void RenderThread::ConsumeEvents()
@@ -267,8 +355,6 @@ void RenderThread::CheckForUpdates()
       if( mCurrent.syncMode != mNewValues.syncMode )
       {
         mCurrent.syncMode = mNewValues.syncMode;
-
-        //@todo This needs to call the render surface instead
         mEGL->SetRefreshSync( mCurrent.syncMode );
       }
 
@@ -293,7 +379,7 @@ void RenderThread::ChangeSurface( RenderSurface* newSurface )
   DALI_ASSERT_ALWAYS( newSurface && "NULL surface" )
   bool contextLost = newSurface->ReplaceEGLSurface( *mEGL );
 
-  if( contextLost )
+  // if( contextLost )
   {
     DALI_LOG_WARNING("Context lost\n");
     mCore.ContextToBeDestroyed();
@@ -308,8 +394,8 @@ void RenderThread::ChangeSurface( RenderSurface* newSurface )
   // use the new surface from now on
   mCurrent.surface = newSurface;
 
-  // after rendering, NotifySurfaceChangeCompleted will be called
-  mSurfaceReplacing = true;
+  // Notify main thread that surface was changed so it can release the old one
+  NotifySurfaceChangeCompleted();
 }
 
 void RenderThread::NotifySurfaceChangeCompleted()
@@ -327,31 +413,32 @@ void RenderThread::ShutdownEgl()
   // inform core the context is about to be destroyed,
   mCore.ContextToBeDestroyed();
 
-  // give a chance to destroy the OpenGL surface that created externally
-  mCurrent.surface->DestroyEglSurface( *mEGL );
-
-  // delete the GL context / egl surface
+  //  delete the GL context / egl surface
   mEGL->TerminateGles();
+  mEGL = NULL; // needed for restart
 }
 
 bool RenderThread::PreRender()
 {
-  bool success = mCurrent.surface->PreRender( *mEGL, mGLES );
-  if( success )
-  {
-    mGLES.PreRender();
-  }
-  return success;
+  return mCurrent.surface->PreRender( *mEGL, mGLES );
 }
 
 void RenderThread::PostRender( unsigned int timeDelta )
 {
-  // Inform the gl implementation that rendering has finished before informing the surface
-  mGLES.PostRender(timeDelta);
+  const bool waitForSync = mCurrent.surface->PostRender( *mEGL, mGLES, timeDelta );
 
-  // Inform the surface that rendering this frame has finished.
-  mCurrent.surface->PostRender( *mEGL, mGLES, timeDelta,
-                                mSurfaceReplacing ? RenderSurface::SYNC_MODE_NONE : RenderSurface::SYNC_MODE_WAIT );
+  if( waitForSync )
+  {
+    boost::unique_lock< boost::mutex > lock( mPixmapSyncMutex );
+
+    // wait until synced,
+    // this blocks the thread here and releases the mPixmapSyncMutex (so the main thread can use it)
+    if( mPixmapSyncRunning && !mPixmapSyncReceived )
+    {
+      mPixmapSyncNotify.wait( lock );
+    }
+    mPixmapSyncReceived = false;
+  }
 }
 
 } // namespace Adaptor
