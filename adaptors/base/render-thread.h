@@ -46,12 +46,68 @@ class UpdateRenderSynchronization;
 class EglFactoryInterface;
 class EnvironmentOptions;
 
+
+class RenderRequest
+{
+public:
+  enum Request
+  {
+    CHANGE_SURFACE, // Request to change surface
+  };
+
+  /**
+   * Constructor.
+   * @param[in] type The type of the request
+   */
+  RenderRequest( Request type );
+
+  /**
+   * @return the type of the request
+   */
+  Request GetType();
+
+private:
+  Request mRequestType;
+};
+
+class ChangeSurfaceRequest : public RenderRequest
+{
+public:
+
+  /**
+   * Constructor
+   * @param[in] newSurface The new surface to use
+   */
+  ChangeSurfaceRequest(RenderSurface* newSurface);
+
+  /**
+   * @return the new surface
+   */
+  RenderSurface* GetSurface();
+
+  /**
+   * Called when the request has been completed to set the result.
+   */
+  void ReplaceCompleted();
+
+  /**
+   * @return true if the replace has completed.
+   */
+  bool GetReplaceCompleted();
+
+private:
+  RenderSurface* mNewSurface; ///< The new surface to use.
+  bool mReplaceCompleted;      ///< Set to true when the replace has completed.
+};
+
+
 /**
  * The render-thread is responsible for calling Core::Render() after each update.
  */
 class RenderThread
 {
 public:
+
   /**
    * Create the render-thread; this will not do anything until Start() is called.
    * @param[in] sync update-render synchronization object
@@ -81,19 +137,6 @@ public:
   void Stop();
 
   /**
-   * Replaces the rendering surface. This method returns immediately
-   * You can call WaitForSurfaceReplaceComplete to block until the
-   * replace is completed in render thread. Note, you need to make sure
-   * that render thread is actually running!!!
-   */
-  void ReplaceSurface( RenderSurface* surface );
-
-  /**
-   * Blocks until surface replace has been completed
-   */
-  void WaitForSurfaceReplaceComplete();
-
-  /**
    * Offscreen was posted to onscreen
    */
   void RenderSync();
@@ -120,10 +163,11 @@ private: // Render thread side helpers
   void ConsumeEvents();
 
   /**
-   * Check if main thread posted updates
+   * Check if main thread made any requests, e.g. ReplaceSurface
    * Called from render thread
+   * @return True if there was a request and it was actioned, false otherwise.
    */
-  void CheckForUpdates();
+  void ProcessRequest(RenderRequest* request);
 
   /**
    * Changes the rendering surface
@@ -132,11 +176,6 @@ private: // Render thread side helpers
    * @param newSurface to use
    */
   void ChangeSurface( RenderSurface* newSurface );
-
-  /**
-   * Notify the main thread that surface has really been changed
-   */
-  void NotifySurfaceChangeCompleted();
 
   /**
    * Shuts down EGL.
@@ -160,73 +199,16 @@ private: // Render thread side helpers
 
 private: // Data
 
-  UpdateRenderSynchronization&        mUpdateRenderSync; ///< Used to synchronize the update & render threads
-  Dali::Integration::Core&            mCore;             ///< Dali core reference
-  Integration::GlAbstraction&         mGLES;             ///< GL abstraction reference
-  EglFactoryInterface*                mEglFactory;       ///< Factory class to create EGL implementation
-  EglInterface*                       mEGL;              ///< Interface to EGL implementation
-
-  boost::thread*                      mThread;           ///< render thread
-  bool                                mUsingPixmap;      ///< whether we're using a pixmap or a window
-  bool                                mSurfaceReplacing; ///< whether the surface is replacing. If true, need to notify surface changing after rendering
-
-  /**
-   * Structure to hold values that are set by main thread and read in render thread
-   * There are two copies of this data to avoid locking and prevent concurrent access
-   */
-  struct RenderData
-  {
-    /**
-     * Default constructor to reset values
-     */
-    RenderData()
-    : replaceSurface( false ),
-      surface( NULL )
-    {
-    }
-
-    volatile int                replaceSurface; ///< whether the surface needs replacing
-    RenderSurface*              surface;        ///< Current surface
-  };
-
-  RenderData                mCurrent;             ///< Current values, must not be used from main thread
-  RenderData                mNewValues;           ///< New values, sent from main thread to render thread
-  boost::mutex              mThreadDataLock;      ///< mutex to lock values while reading them into render thread
-  volatile int              mNewDataAvailable;    ///< atomic flag to notify the render thread that there's new data
-
-  /**
-   * Helper class for sending message to render thread
-   */
-  class SendMessageGuard
-  {
-  public: // API
-    /**
-     * Constructor, sets the lock
-     */
-    SendMessageGuard( RenderThread& parent )
-    : mLock( parent.mThreadDataLock ), mFlag( &parent.mNewDataAvailable )
-    { // Nothing to do, unique lock will lock automatically and unlock when destructed
-    }
-    /**
-     * Destructor, releases lock and sets flag
-     */
-    ~SendMessageGuard()
-    {
-      // set the flag to tell render thread there are new values, ignoring the return value here
-      (void)__sync_or_and_fetch( mFlag, 1 );
-    }
-
-  private: // Data
-    boost::unique_lock< boost::mutex > mLock;
-    volatile int* mFlag;
-  };
-
-  // sync for waiting for surface change
-  boost::mutex              mSurfaceChangedMutex;  ///< mutex to lock during surface replacing
-  boost::condition_variable mSurfaceChangedNotify; ///< condition to notify main thread that surface has been changed
-  bool                      mSurfaceReplaceCompleted;///< true, while render thread is running and needs to wait for pixmap syncs
-  const EnvironmentOptions& mEnvironmentOptions;     ///< Environment options
-
+  UpdateRenderSynchronization&  mUpdateRenderSync;       ///< Used to synchronize the update & render threads
+  Dali::Integration::Core&      mCore;                   ///< Dali core reference
+  Integration::GlAbstraction&   mGLES;                   ///< GL abstraction reference
+  EglFactoryInterface*          mEglFactory;             ///< Factory class to create EGL implementation
+  EglInterface*                 mEGL;                    ///< Interface to EGL implementation
+  boost::thread*                mThread;                 ///< render thread
+  bool                          mUsingPixmap;            ///< whether we're using a pixmap or a window
+  RenderSurface*                mSurface;                ///< Current surface
+  const EnvironmentOptions&     mEnvironmentOptions;     ///< Environment options
+  bool                          mSurfaceReplaced;        ///< True when new surface has been initialzed.
 };
 
 } // namespace Adaptor

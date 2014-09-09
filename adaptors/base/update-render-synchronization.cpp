@@ -54,7 +54,8 @@ UpdateRenderSynchronization::UpdateRenderSynchronization( AdaptorInternalService
   mSyncSeconds( 0u ),
   mSyncMicroseconds( 0u ),
   mFrameTime( adaptorInterfaces.GetPlatformAbstractionInterface() ),
-  mPerformanceInterface( adaptorInterfaces.GetPerformanceInterface() )
+  mPerformanceInterface( adaptorInterfaces.GetPerformanceInterface() ),
+  mRenderRequest(NULL)
 {
 }
 
@@ -134,6 +135,27 @@ void UpdateRenderSynchronization::UpdateWhilePaused()
   mUpdateSleepCondition.notify_one();
   // stay paused but notify the pause condition
   mPausedCondition.notify_one();
+}
+
+bool UpdateRenderSynchronization::ReplaceSurface( RenderSurface* newSurface )
+{
+  bool result=false;
+
+  UpdateRequested();
+  UpdateWhilePaused();
+  {
+    ChangeSurfaceRequest request(newSurface);
+
+    boost::unique_lock< boost::mutex > lock( mMutex );
+    mRenderRequest = &request;
+
+    mRequestFinishedCondition.wait(lock); // wait unlocks the mutex on entry, and locks again on exit.
+
+    mRenderRequest = NULL;
+    result = request.GetReplaceCompleted();
+  }
+
+  return result;
 }
 
 void UpdateRenderSynchronization::UpdateReadyToRun()
@@ -248,6 +270,30 @@ bool UpdateRenderSynchronization::UpdateTryToSleep()
   return mRunning;
 }
 
+bool UpdateRenderSynchronization::RenderSyncWithUpdate(RenderRequest*& requestPtr)
+{
+  boost::unique_lock< boost::mutex > lock( mMutex );
+
+  // Wait for update to produce a buffer, or for the mRunning state to change
+  while ( mRunning && ( 0u == mUpdateReadyCount ) )
+  {
+    // Wait will atomically add the thread to the set of threads waiting on
+    // the condition variable mUpdateFinishedCondition and unlock the mutex.
+    mUpdateFinishedCondition.wait( lock );
+  }
+
+  if( mRunning )
+  {
+    AddPerformanceMarker( PerformanceMarker::RENDER_START );
+  }
+
+  // write any new requests
+  requestPtr = mRenderRequest;
+
+  // Flag is used to during UpdateThread::Stop() to exit the update/render loops
+  return mRunning;
+}
+
 void UpdateRenderSynchronization::RenderFinished( bool updateRequired )
 {
   {
@@ -264,27 +310,10 @@ void UpdateRenderSynchronization::RenderFinished( bool updateRequired )
   // Notify the update-thread that a render has completed
   mRenderFinishedCondition.notify_one();
 
+  // Notify the event thread that a request has completed
+  mRequestFinishedCondition.notify_one();
+
   AddPerformanceMarker( PerformanceMarker::RENDER_END );
-}
-
-bool UpdateRenderSynchronization::RenderSyncWithUpdate()
-{
-  boost::unique_lock< boost::mutex > lock( mMutex );
-
-  // Wait for update to produce a buffer, or for the mRunning state to change
-  while ( mRunning && ( 0u == mUpdateReadyCount ) )
-  {
-    // Wait will atomically add the thread to the set of threads waiting on
-    // the condition variable mUpdateFinishedCondition and unlock the mutex.
-    mUpdateFinishedCondition.wait( lock );
-  }
-
-  if( mRunning )
-  {
-    AddPerformanceMarker( PerformanceMarker::RENDER_START );
-  }
-  // Flag is used to during UpdateThread::Stop() to exit the update/render loops
-  return mRunning;
 }
 
 void UpdateRenderSynchronization::WaitSync()
