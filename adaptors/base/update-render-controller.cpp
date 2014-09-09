@@ -114,16 +114,9 @@ void UpdateRenderController::RequestUpdateOnce()
 
 void UpdateRenderController::ReplaceSurface( RenderSurface* surface )
 {
-  // tell render thread to start the replace
-  mRenderThread->ReplaceSurface(surface);
-
-  // Ensure that a frame gets processed and render thread runs at least once
-  // Note: ReplaceSurface may be called while threads are paused so call
-  //       RequestUpdateOnce to ensure we do an update/render pass even if paused
-  RequestUpdateOnce();
-
-  // block here until replace complete
-  mRenderThread->WaitForSurfaceReplaceComplete();
+  // tell render thread to start the replace. This call will block until the replace
+  // has completed.
+  mUpdateRenderSync->ReplaceSurface(surface);
 }
 
 void UpdateRenderController::SetRenderRefreshRate(unsigned int numberOfVSyncsPerRender )

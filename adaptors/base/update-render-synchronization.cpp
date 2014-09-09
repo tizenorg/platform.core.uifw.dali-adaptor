@@ -54,7 +54,9 @@ UpdateRenderSynchronization::UpdateRenderSynchronization( AdaptorInternalService
   mSyncSeconds( 0u ),
   mSyncMicroseconds( 0u ),
   mFrameTime( adaptorInterfaces.GetPlatformAbstractionInterface() ),
-  mPerformanceInterface( adaptorInterfaces.GetPerformanceInterface() )
+  mPerformanceInterface( adaptorInterfaces.GetPerformanceInterface() ),
+  mRenderRequest(NULL),
+  mRequestResponse(false)
 {
 }
 
@@ -134,6 +136,28 @@ void UpdateRenderSynchronization::UpdateWhilePaused()
   mUpdateSleepCondition.notify_one();
   // stay paused but notify the pause condition
   mPausedCondition.notify_one();
+}
+
+bool UpdateRenderSynchronization::ReplaceSurface( RenderSurface* newSurface )
+{
+  bool result=false;
+
+  UpdateRequested();
+  UpdateWhilePaused();
+  {
+    ChangeSurfaceRequest request(newSurface);
+
+    boost::unique_lock< boost::mutex > lock( mMutex );
+    mRenderRequest = &request;
+
+    mRequestFinishedCondition.wait(lock);
+
+    mRenderRequest = NULL;
+    result = mRequestResponse;
+    mRequestResponse = false;
+  }
+
+  return result;
 }
 
 void UpdateRenderSynchronization::UpdateReadyToRun()
@@ -248,26 +272,7 @@ bool UpdateRenderSynchronization::UpdateTryToSleep()
   return mRunning;
 }
 
-void UpdateRenderSynchronization::RenderFinished( bool updateRequired )
-{
-  {
-    boost::unique_lock< boost::mutex > lock( mMutex );
-
-    // Set the flag to say if update needs to run again.
-    mUpdateRequired = updateRequired;
-
-    // A frame has been rendered; decrement counter
-    --mUpdateReadyCount;
-    DALI_ASSERT_DEBUG( mUpdateReadyCount < mMaximumUpdateCount );
-  }
-
-  // Notify the update-thread that a render has completed
-  mRenderFinishedCondition.notify_one();
-
-  AddPerformanceMarker( PerformanceMarker::RENDER_END );
-}
-
-bool UpdateRenderSynchronization::RenderSyncWithUpdate()
+bool UpdateRenderSynchronization::RenderSyncWithUpdate(RenderRequest*& requestPtr)
 {
   boost::unique_lock< boost::mutex > lock( mMutex );
 
@@ -283,9 +288,37 @@ bool UpdateRenderSynchronization::RenderSyncWithUpdate()
   {
     AddPerformanceMarker( PerformanceMarker::RENDER_START );
   }
+
+  // write any new requests
+  requestPtr = mRenderRequest;
+
   // Flag is used to during UpdateThread::Stop() to exit the update/render loops
   return mRunning;
 }
+
+void UpdateRenderSynchronization::RenderFinished( bool updateRequired, bool response )
+{
+  {
+    boost::unique_lock< boost::mutex > lock( mMutex );
+
+    // Set the flag to say if update needs to run again.
+    mUpdateRequired = updateRequired;
+
+    // A frame has been rendered; decrement counter
+    --mUpdateReadyCount;
+    DALI_ASSERT_DEBUG( mUpdateReadyCount < mMaximumUpdateCount );
+  }
+
+  // Notify the update-thread that a render has completed
+  mRenderFinishedCondition.notify_one();
+
+  // Notify the event thread that a request has completed
+  mRequestResponse = response;
+  mRequestFinishedCondition.notify_one();
+
+  AddPerformanceMarker( PerformanceMarker::RENDER_END );
+}
+
 
 void UpdateRenderSynchronization::WaitSync()
 {
