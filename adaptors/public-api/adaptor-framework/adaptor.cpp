@@ -35,13 +35,13 @@ namespace Dali
 
 Adaptor& Adaptor::New( Window window )
 {
-  return New( window, DeviceLayout::DEFAULT_BASE_LAYOUT );
+  return New( window, DeviceLayout::DEFAULT_BASE_LAYOUT, Application::APPLICATION_DOES_NOT_HANDLE_CONTEXT_LOSS );
 }
 
-Adaptor& Adaptor::New( Window window, const DeviceLayout& baseLayout )
+Adaptor& Adaptor::New( Window window, const DeviceLayout& baseLayout, Application::Configuration configuration )
 {
   Internal::Adaptor::Window& windowImpl = GetImplementation(window);
-  Adaptor* adaptor = Internal::Adaptor::Adaptor::New( windowImpl.GetSurface(), baseLayout );
+  Adaptor* adaptor = Internal::Adaptor::Adaptor::New( windowImpl.GetSurface(), baseLayout, configuration );
   windowImpl.SetAdaptor(*adaptor);
   return *adaptor;
 }
@@ -84,6 +84,16 @@ Adaptor::AdaptorSignalV2& Adaptor::ResizedSignal()
 Adaptor::AdaptorSignalV2& Adaptor::LanguageChangedSignal()
 {
   return mImpl->LanguageChangedSignal();
+}
+
+Adaptor::AdaptorSignalV2& Adaptor::ContextLostSignal()
+{
+  return mImpl->ContextLostSignal();
+}
+
+Adaptor::AdaptorSignalV2& Adaptor::ContextRegainedSignal()
+{
+  return mImpl->ContextRegainedSignal();
 }
 
 RenderSurface& Adaptor::GetSurface()

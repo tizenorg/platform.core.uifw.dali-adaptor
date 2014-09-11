@@ -33,6 +33,7 @@ Window Window::New(PositionSize posSize, const std::string name, bool isTranspar
 
 Window::Window()
 {
+  // Do stuff
 }
 
 Window::~Window()
