@@ -67,7 +67,8 @@ const float FONT_SIZE_TABLE[5] =
 SlpPlatformAbstraction::SlpPlatformAbstraction()
 : mResourceLoader(new ResourceLoader),
   mDefaultFontSize(FONT_SIZE_TABLE[1]),
-  mDynamicsFactory(NULL)
+  mDynamicsFactory(NULL),
+  mDataRetentionPolicy(Integration::DALI_DISCARDS_DATA)
 {
   int error = FT_Init_FreeType(&mFreeTypeHandle);
   DALI_ASSERT_ALWAYS( error == 0 && "Freetype initialization failed" );
@@ -426,6 +427,17 @@ Integration::BitmapPtr SlpPlatformAbstraction::GetGlyphImage( const std::string&
 
   return glyphImage;
 }
+
+void SlpPlatformAbstraction::SetResourceDataRetentionPolicy( Integration::DataRetentionPolicy policy )
+{
+  mDataRetentionPolicy = policy;
+}
+
+Integration::DataRetentionPolicy SlpPlatformAbstraction::GetResourceDataRetentionPolicy( ) const
+{
+  return mDataRetentionPolicy;
+}
+
 
 }  // namespace SlpPlatform
 
