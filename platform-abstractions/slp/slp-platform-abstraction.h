@@ -248,6 +248,16 @@ public: // PlatformAbstraction overrides
    */
   virtual Integration::BitmapPtr GetGlyphImage( const std::string& fontFamily, const std::string& fontStyle, float fontSize, uint32_t character ) const;
 
+  /**
+   * Sets the data retention policy.
+   */
+  void SetResourceDataRetentionPolicy( Integration::DataRetentionPolicy policy );
+
+  /**
+   * @copydoc PlatformAbstraction::GetResourceDataRetentionPolicy()
+   */
+  virtual Integration::DataRetentionPolicy GetResourceDataRetentionPolicy() const;
+
 private:
   ResourceLoader* mResourceLoader;
   FT_Library mFreeTypeHandle;       ///< Freetype library
@@ -256,6 +266,7 @@ private:
   float mDefaultFontSize;
   std::string mDefaultThemeFile;
   DynamicsFactory* mDynamicsFactory;
+  Integration::DataRetentionPolicy mDataRetentionPolicy;
 };
 
 }  // namespace SlpPlatform
