@@ -85,7 +85,7 @@ public:
   /**
    * @copydoc Dali::Application::MainLoop()
    */
-  void MainLoop();
+  void MainLoop(Dali::Application::Configuration configuration);
 
   /**
    * @copydoc Dali::Application::Lower()
@@ -121,6 +121,11 @@ public:
    * @copydoc Dali::Application::SetTheme();
    */
   void SetTheme(const std::string& themeFilePath);
+
+  /**
+   * @copydoc Dali::Application::ReplaceWindow();
+   */
+  void ReplaceWindow(PositionSize windowPosition, const std::string& name);
 
 public: // Stereoscopy
 
@@ -184,6 +189,18 @@ public:
    */
   void OnResize(Dali::Adaptor& adaptor);
 
+  /**
+   * Signal handler when the context has been lost
+   * @param[in]  adaptor  The adaptor
+   */
+  void OnContextLost(Dali::Adaptor& adaptor);
+
+  /**
+   * Signal handler when the context has been regained
+   * @param[in]  adaptor  The adaptor
+   */
+  void OnContextRegained(Dali::Adaptor& adaptor);
+
 public:  // Signals
 
   /**
@@ -221,6 +238,16 @@ public:  // Signals
    */
   Dali::Application::AppSignalV2& LanguageChangedSignal() { return mLanguageChangedSignalV2; }
 
+  /**
+   * @copydoc Dali::Application::ContextRegainedSignal()
+   */
+  Dali::Application::AppSignalV2& ContextLostSignal() { return mContextLostSignal; }
+
+  /**
+   * @copydoc Dali::Application::ContextRegainedSignal()
+   */
+  Dali::Application::AppSignalV2& ContextRegainedSignal() { return mContextRegainedSignal; }
+
 private:
 
   // Undefined
@@ -252,10 +279,13 @@ private:
   AppSignalV2                           mResetSignalV2;
   AppSignalV2                           mResizeSignalV2;
   AppSignalV2                           mLanguageChangedSignalV2;
+  AppSignalV2                           mContextLostSignal;
+  AppSignalV2                           mContextRegainedSignal;
 
   EventLoop*                            mEventLoop;
   Framework*                            mFramework;
 
+  Dali::Application::Configuration      mConfiguration;
   CommandLineOptions*                   mCommandLineOptions;
 
   Dali::SingletonService                mSingletonService;

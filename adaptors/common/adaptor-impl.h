@@ -96,13 +96,16 @@ public:
    *                         - Pixmap, adaptor will use existing Pixmap to draw on to
    *                         - Window, adaptor will use existing Window to draw on to
    * @param[in]  baseLayout  The base layout that the application has been written for
+   * @param[in]  configuration The application configuration ( resource discard policy )
    */
-  static Dali::Adaptor* New( RenderSurface* surface, const DeviceLayout& baseLayout );
+  static Dali::Adaptor* New( RenderSurface* surface,
+                             const DeviceLayout& baseLayout,
+                             Dali::Application::Configuration configuration );
 
   /**
    * 2-step initialisation, this should be called after creating an adaptor instance.
    */
-  void Initialize();
+  void Initialize(Dali::Application::Configuration configuration);
 
   /**
    * Virtual destructor.
@@ -297,6 +300,16 @@ public:
    */
   void NotifyLanguageChanged();
 
+  /**
+   * Emit the context lost signal
+   */
+  void NotifyContextLost();
+
+  /**
+   * Emit the context regained signal
+   */
+  void NotifyContextRegained();
+
 public:  //AdaptorInternalServices
 
   /**
@@ -382,6 +395,22 @@ public: // Signals
   AdaptorSignalV2& LanguageChangedSignal()
   {
     return mLanguageChangedSignalV2;
+  }
+
+  /**
+   * @copydoc Dali::Adaptor::ContextLostSignal
+   */
+  AdaptorSignalV2& ContextLostSignal()
+  {
+    return mContextLostSignal;
+  }
+
+  /**
+   * @copydoc Dali::Adaptor::ContextRegainedSignal
+   */
+  AdaptorSignalV2& ContextRegainedSignal()
+  {
+    return mContextRegainedSignal;
   }
 
 private: // From Dali::Internal::Adaptor::CoreEventInterface
@@ -485,6 +514,8 @@ private: // Data
 
   AdaptorSignalV2                       mResizedSignalV2;             ///< Resized signal.
   AdaptorSignalV2                       mLanguageChangedSignalV2;     ///< Language changed signal.
+  AdaptorSignalV2                       mContextLostSignal;           ///< Context lost signal
+  AdaptorSignalV2                       mContextRegainedSignal;       ///< Context regained signal
 
   Dali::Adaptor&                        mAdaptor;                     ///< Reference to public adaptor instance.
   State                                 mState;                       ///< Current state of the adaptor

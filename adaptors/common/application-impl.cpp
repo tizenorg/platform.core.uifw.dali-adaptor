@@ -74,6 +74,8 @@ Application::Application( int* argc, char** argv[], const std::string& name, con
   mResetSignalV2(),
   mResizeSignalV2(),
   mLanguageChangedSignalV2(),
+  mContextLostSignal(),
+  mContextRegainedSignal(),
   mEventLoop( NULL ),
   mFramework( NULL ),
   mCommandLineOptions( NULL ),
@@ -119,7 +121,7 @@ void Application::CreateAdaptor()
 {
   DALI_ASSERT_ALWAYS( mWindow && "Window required to create adaptor" );
 
-  mAdaptor = &Dali::Adaptor::New( mWindow, mBaseLayout);
+  mAdaptor = &Dali::Adaptor::New( mWindow, mBaseLayout, mConfiguration );
 
   // Allow DPI to be overridden from command line.
   unsigned int hDPI=DEFAULT_HORIZONTAL_DPI;
@@ -133,10 +135,18 @@ void Application::CreateAdaptor()
   Internal::Adaptor::Adaptor::GetImplementation( *mAdaptor ).SetDpi(hDPI, vDPI);
 
   mAdaptor->ResizedSignal().Connect( mSlotDelegate, &Application::OnResize );
+
+   if( mConfiguration == Dali::Application::APPLICATION_HANDLES_CONTEXT_LOSS )
+  {
+    mAdaptor->ContextLostSignal().Connect( mSlotDelegate, &Application::OnContextLost );
+    mAdaptor->ContextRegainedSignal().Connect( mSlotDelegate, &Application::OnContextRegained );
+  }
 }
 
-void Application::MainLoop()
+void Application::MainLoop(Dali::Application::Configuration configuration)
 {
+  mConfiguration = configuration;
+
   // Run the application
   mFramework->Run();
 }
@@ -247,6 +257,18 @@ void Application::OnResize(Dali::Adaptor& adaptor)
   mResizeSignalV2.Emit( application );
 }
 
+void Application::OnContextLost(Dali::Adaptor& adaptor)
+{
+  Dali::Application application(this);
+  mContextLostSignal.Emit( application );
+}
+
+void Application::OnContextRegained(Dali::Adaptor& adaptor)
+{
+  Dali::Application application(this);
+  mContextRegainedSignal.Emit( application );
+}
+
 bool Application::AddIdle(boost::function<void(void)> callBack)
 {
   return mAdaptor->AddIdle(callBack);
@@ -292,6 +314,17 @@ void Application::SetStereoBase( float stereoBase )
 float Application::GetStereoBase() const
 {
   return Internal::Adaptor::Adaptor::GetImplementation( *mAdaptor ).GetStereoBase();
+}
+
+
+void Application::ReplaceWindow(PositionSize windowPosition, const std::string& name)
+{
+  Dali::Window newWindow = Dali::Window::New( windowPosition, name, mWindowMode == Dali::Application::TRANSPARENT );
+  Window& windowImpl = GetImplementation(newWindow);
+  windowImpl.SetAdaptor(*mAdaptor);
+  Dali::RenderSurface* renderSurface = windowImpl.GetSurface();
+  Internal::Adaptor::Adaptor::GetImplementation( *mAdaptor ).ReplaceSurface(*renderSurface);
+  mWindow = newWindow;
 }
 
 } // namespace Adaptor
