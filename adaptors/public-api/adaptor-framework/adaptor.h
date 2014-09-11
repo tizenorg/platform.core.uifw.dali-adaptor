@@ -21,6 +21,7 @@
 // EXTERNAL INCLUDES
 #include <boost/function.hpp>
 #include "window.h"
+#include "application-configuration.h"
 #include "tts-player.h"
 #include <dali/public-api/signals/dali-signal-v2.h>
 #include <dali/public-api/math/rect.h>
@@ -119,9 +120,10 @@ public:
    *
    * @param[in] window The window to draw onto
    * @param[in] baseLayout  The base layout that the application has been written for
+   * @param[in] configuration The context loss configuration.
    * @return a reference to the adaptor handle
    */
-  static Adaptor& New( Window window, const DeviceLayout& baseLayout );
+  static Adaptor& New( Window window, const DeviceLayout& baseLayout, Configuration::ContextLoss configuration );
 
   /**
    * @brief Virtual Destructor.
@@ -252,6 +254,18 @@ public:  // Signals
    * @return The signal to connect to
    */
   AdaptorSignalV2& LanguageChangedSignal();
+
+  /**
+   * @brief This signal is emitted when the context is lost,
+   * e.g. from ReplaceSurface() or context loss on Pause().
+   */
+  AdaptorSignalV2& ContextLostSignal();
+
+  /**
+   * @brief This signal is emitted when the context is regained after a loss,
+   * e.g. after ReplaceSurface() or Resume().
+   */
+  AdaptorSignalV2& ContextRegainedSignal();
 
 private:
 
