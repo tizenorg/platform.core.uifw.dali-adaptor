@@ -88,7 +88,12 @@ Application& Application::operator=(const Application& application)
 
 void Application::MainLoop()
 {
-  Internal::Adaptor::GetImplementation(*this).MainLoop();
+  Internal::Adaptor::GetImplementation(*this).MainLoop(APPLICATION_HANDLES_CONTEXT_LOSS);
+}
+
+void Application::MainLoop(Application::Configuration configuration)
+{
+  Internal::Adaptor::GetImplementation(*this).MainLoop(configuration);
 }
 
 void Application::Lower()
@@ -119,6 +124,11 @@ bool Application::AddIdle(boost::function<void(void)> callBack)
 Window Application::GetWindow()
 {
   return Internal::Adaptor::GetImplementation(*this).GetWindow();
+}
+
+void Application::ReplaceWindow(PositionSize windowPosition, const std::string& name)
+{
+  Internal::Adaptor::GetImplementation(*this).ReplaceWindow(windowPosition, name);
 }
 
 void Application::SetViewMode( ViewMode viewMode )
@@ -174,6 +184,16 @@ Application::AppSignalV2& Application::ResizeSignal()
 Application::AppSignalV2& Application::LanguageChangedSignal()
 {
   return Internal::Adaptor::GetImplementation(*this).LanguageChangedSignal();
+}
+
+Application::AppSignalV2& Application::ContextLostSignal()
+{
+  return Internal::Adaptor::GetImplementation(*this).ContextLostSignal();
+}
+
+Application::AppSignalV2& Application::ContextRegainedSignal()
+{
+  return Internal::Adaptor::GetImplementation(*this).ContextRegainedSignal();
 }
 
 Application::Application(Internal::Adaptor::Application* application)
