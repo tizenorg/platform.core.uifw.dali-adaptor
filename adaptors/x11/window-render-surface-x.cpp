@@ -137,6 +137,8 @@ bool WindowRenderSurface::ReplaceEGLSurface( EglInterface& eglIf )
 {
   DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
+  //@todo Try removing these 2 lines- ReplaceSurfaceWindow will call InitializeGles
+  // with the new display connection.
   EglImplementation& egl = static_cast<EglImplementation&>( eglIf );
   egl.InitializeGles( reinterpret_cast< EGLNativeDisplayType >( mMainDisplay ) );
 

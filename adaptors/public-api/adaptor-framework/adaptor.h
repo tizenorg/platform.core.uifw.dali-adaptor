@@ -21,6 +21,7 @@
 // EXTERNAL INCLUDES
 #include <boost/function.hpp>
 #include "window.h"
+#include "application.h"
 #include "tts-player.h"
 #include <dali/public-api/signals/dali-signal-v2.h>
 #include <dali/public-api/math/rect.h>
@@ -236,6 +237,13 @@ public:
    */
   void SetMinimumPinchDistance(float distance);
 
+  /**
+   * Set the application configuration ( for handling context loss / regain )
+   * @param[in] configuration The application configuration.
+   */
+  void SetConfiguration( Dali::Application::Configuration configuration );
+
+
 public:  // Signals
 
   /**
@@ -252,6 +260,18 @@ public:  // Signals
    * @return The signal to connect to
    */
   AdaptorSignalV2& LanguageChangedSignal();
+
+  /**
+   * @brief This signal is emitted when the context is lost,
+   * e.g. from ReplaceSurface() or context loss on Pause().
+   */
+  AdaptorSignalV2& ContextLostSignal();
+
+  /**
+   * @brief This signal is emitted when the context is regained after a loss,
+   * e.g. after ReplaceSurface() or Resume().
+   */
+  AdaptorSignalV2& ContextRegainedSignal();
 
 private:
 

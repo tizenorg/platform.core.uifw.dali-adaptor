@@ -35,6 +35,7 @@
 
 #include <callback-manager.h>
 #include <trigger-event.h>
+#include <window-render-surface.h>
 #include <render-surface-impl.h>
 #include <tts-player-impl.h>
 #include <accessibility-manager-impl.h>
@@ -497,6 +498,12 @@ void Adaptor::ReplaceSurface( Dali::RenderSurface& surface )
   RenderSurface* internalSurface = dynamic_cast<Internal::Adaptor::RenderSurface*>( &surface );
   DALI_ASSERT_ALWAYS( internalSurface && "Incorrect surface" );
 
+  ECore::WindowRenderSurface* windowSurface = dynamic_cast<Internal::Adaptor::ECore::WindowRenderSurface*>( &surface);
+  if( windowSurface != NULL )
+  {
+    windowSurface->Map();
+  }
+
   mSurface = internalSurface;
 
   SurfaceSizeChanged( internalSurface->GetPositionSize() );
@@ -505,8 +512,14 @@ void Adaptor::ReplaceSurface( Dali::RenderSurface& surface )
   // to start processing messages for new camera setup etc as soon as possible
   ProcessCoreEvents();
 
-  // this method is synchronous
+  // this method blocks until the render thread has completed the replace.
   mUpdateRenderController->ReplaceSurface(internalSurface);
+
+  // Inform core, so that texture resources can be reloaded
+  mCore->ContextRecreated();
+
+  // Also inform application, so that discarded resources can be reloaded
+  NotifyContextRegained();
 }
 
 Dali::RenderSurface& Adaptor::GetSurface() const
@@ -687,6 +700,16 @@ void Adaptor::SetMinimumPinchDistance(float distance)
   }
 }
 
+void Adaptor::SetConfiguration( Dali::Application::Configuration configuration )
+{
+  Integration::DataRetentionPolicy policy = Integration::DALI_DISCARDS_DATA;
+  if( configuration == Dali::Application::APPLICATION_DOES_NOT_HANDLE_CONTEXT_LOSS )
+  {
+    policy = Integration::DALI_RETAINS_DATA;
+  }
+  mPlatformAbstraction->SetResourceDataRetentionPolicy( policy );
+}
+
 void Adaptor::AddObserver( LifeCycleObserver& observer )
 {
   ObserverContainer::iterator match ( find(mObservers.begin(), mObservers.end(), &observer) );
@@ -805,6 +828,16 @@ void Adaptor::NotifyLanguageChanged()
   mLanguageChangedSignalV2.Emit( mAdaptor );
 }
 
+void Adaptor::NotifyContextLost()
+{
+  mContextLostSignal.Emit( mAdaptor );
+}
+
+void Adaptor::NotifyContextRegained()
+{
+  mContextRegainedSignal.Emit( mAdaptor );
+}
+
 void Adaptor::RequestUpdateOnce()
 {
   if( PAUSED_WHILE_HIDDEN != mState )
@@ -825,7 +858,11 @@ void Adaptor::ProcessCoreEventsFromIdle()
 }
 
 Adaptor::Adaptor(Dali::Adaptor& adaptor, RenderSurface* surface, const DeviceLayout& baseLayout)
-: mAdaptor(adaptor),
+: mResizedSignalV2(),
+  mLanguageChangedSignalV2(),
+  mContextLostSignal(),
+  mContextRegainedSignal(),
+  mAdaptor(adaptor),
   mState(READY),
   mCore(NULL),
   mUpdateRenderController(NULL),

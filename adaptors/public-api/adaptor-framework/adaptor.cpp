@@ -86,6 +86,16 @@ Adaptor::AdaptorSignalV2& Adaptor::LanguageChangedSignal()
   return mImpl->LanguageChangedSignal();
 }
 
+Adaptor::AdaptorSignalV2& Adaptor::ContextLostSignal()
+{
+  return mImpl->ContextLostSignal();
+}
+
+Adaptor::AdaptorSignalV2& Adaptor::ContextRegainedSignal()
+{
+  return mImpl->ContextRegainedSignal();
+}
+
 RenderSurface& Adaptor::GetSurface()
 {
   return mImpl->GetSurface();
@@ -124,6 +134,11 @@ void Adaptor::NotifyLanguageChanged()
 void Adaptor::SetMinimumPinchDistance(float distance)
 {
   mImpl->SetMinimumPinchDistance(distance);
+}
+
+void Adaptor::SetConfiguration( Dali::Application::Configuration configuration )
+{
+  mImpl->SetConfiguration( configuration );
 }
 
 Adaptor::Adaptor()

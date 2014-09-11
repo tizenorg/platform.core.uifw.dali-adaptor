@@ -427,6 +427,17 @@ Integration::BitmapPtr SlpPlatformAbstraction::GetGlyphImage( const std::string&
   return glyphImage;
 }
 
+void SlpPlatformAbstraction::SetResourceDataRetentionPolicy( Integration::DataRetentionPolicy policy )
+{
+  mDataRetentionPolicy = policy;
+}
+
+Integration::DataRetentionPolicy SlpPlatformAbstraction::GetResourceDataRetentionPolicy( ) const
+{
+  return mDataRetentionPolicy;
+}
+
+
 }  // namespace SlpPlatform
 
 }  // namespace Dali

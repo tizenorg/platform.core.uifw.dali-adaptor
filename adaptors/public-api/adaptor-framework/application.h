@@ -89,7 +89,14 @@ class Application : public BaseHandle
 {
 public:
 
+  enum Configuration
+  {
+    APPLICATION_HANDLES_CONTEXT_LOSS,  ///< Application will tear down and recreate UI on context loss and context regained signals. Dali doesn't need to retain data.
+    APPLICATION_DOES_NOT_HANDLE_CONTEXT_LOSS, ///< Application expects Dali to retain data ( increased memory footprint )
+  };
+
   typedef SignalV2< void (Application&) > AppSignalV2;
+  typedef SignalV2< Configuration (Application&) > AppInitSignal;
 
   /**
    * Decides whether a Dali application window is opaque or transparent.
@@ -193,9 +200,18 @@ public:
 
 public:
   /**
-   * This starts the application.
+   * This starts the application. Choosing this form of main loop indicates that the default
+   * application configuration of APPLICATION_HANDLES_CONTEXT_LOSS is used. On platforms where
+   * context loss can occur, the application is responsible for tearing down and re-loading UI.
    */
   void MainLoop();
+
+  /**
+   * This starts the application, and allows the app to choose a different configuration.
+   * If the application plans on using the ReplaceSurface or ReplaceWindow API, then this will
+   * trigger context loss & regain.
+   */
+  void MainLoop(Application::Configuration configuration);
 
   /**
    * This lowers the application to bottom without actually quitting it
@@ -236,6 +252,16 @@ public:
    */
   Window GetWindow();
 
+  /**
+   * Replace the current window.
+   * This will force context loss.
+   * If you plan on using this API in your application, then you should configure
+   * it to prevent discard behaviour when handling the Init signal.
+   * @param[in] windowPosition The position and size parameters of the new window
+   * @param[in] name The name of the new window
+   */
+  void ReplaceWindow(PositionSize windowPosition, const std::string& name);
+
 public: // Stereoscopy
 
   /**
@@ -266,9 +292,9 @@ public:  // Signals
 
   /**
    * The user should connect to this signal to determine when they should initialise
-   * their application
+   * their application.
    */
-  AppSignalV2& InitSignal();
+  AppSignalV2& InitSignal(); // @todo Change to AppInitSignal to force app to make a configuration choice.
 
   /**
    * The user should connect to this signal to determine when they should terminate
@@ -302,6 +328,20 @@ public:  // Signals
    * This signal is emitted when the language is changed on the device.
    */
   AppSignalV2& LanguageChangedSignal();
+
+  /**
+   * This signal is emitted when the GL context has been lost, and the application needs
+   * to tear down UI data.
+   * @todo - merge with PauseSignal?
+   */
+  AppSignalV2& ContextLostSignal();
+
+  /**
+   * This signal is emitted when the GL context has been regained and the application
+   * needs to re-upload resource data.
+   * @todo - merge with Resume/Reset signals?
+   */
+  AppSignalV2& ContextRegainedSignal();
 
 public: // Not intended for application developers
   /**
