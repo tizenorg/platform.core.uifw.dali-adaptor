@@ -83,9 +83,17 @@ void NativeBitmapBuffer::GlExtensionDestroy()
 {
 }
 
+void NativeBitmapBuffer::GlContextDestroyed()
+{
+}
+
 unsigned int NativeBitmapBuffer::TargetTexture()
 {
   return 0;
+}
+
+void NativeBitmapBuffer::TextureCreated(unsigned int)
+{
 }
 
 unsigned int NativeBitmapBuffer::GetWidth() const

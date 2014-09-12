@@ -81,6 +81,11 @@ public:
   virtual void GlExtensionDestroy();
 
   /**
+   * @copydoc Dali::NativeImage::GlContextDestroyed()
+   */
+  virtual void GlContextDestroyed();
+
+  /**
    * @copydoc Dali::NativeImage::TargetTexture()
    */
   virtual unsigned int TargetTexture();
@@ -89,6 +94,11 @@ public:
    * @copydoc Dali::NativeImage::PrepareTexture()
    */
   virtual void PrepareTexture();
+
+  /**
+   * @copydoc Dali::NativeImage::TextureCreated()
+   */
+  virtual void TextureCreated(unsigned int textureID);
 
   /**
    * @copydoc Dali::NativeImage::GetWidth()
