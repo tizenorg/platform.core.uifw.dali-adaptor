@@ -25,7 +25,7 @@
 #include <dali/public-api/math/vector2.h>
 
 #include <dali/integration-api/events/pinch-gesture-event.h>
-#include <dali/integration-api/events/touch-event-integ.h>
+#include <dali/integration-api/events/multi-point-event-integ.h>
 
 // INTERNAL INCLUDES
 #include <base/core-event-interface.h>

@@ -24,7 +24,7 @@
 #include <dali/public-api/events/touch-point.h>
 
 #include <dali/integration-api/events/gesture-requests.h>
-#include <dali/integration-api/events/touch-event-integ.h>
+#include <dali/integration-api/events/multi-point-event-integ.h>
 
 // INTERNAL INCLUDES
 #include <base/environment-options.h>

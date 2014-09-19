@@ -25,7 +25,7 @@
 #include <dali/integration-api/core.h>
 #include <dali/integration-api/profiling.h>
 #include <dali/integration-api/input-options.h>
-#include <dali/integration-api/events/touch-event-integ.h>
+#include <dali/integration-api/events/multi-point-event-integ.h>
 
 // INTERNAL INCLUDES
 #include <base/update-render-controller.h>
