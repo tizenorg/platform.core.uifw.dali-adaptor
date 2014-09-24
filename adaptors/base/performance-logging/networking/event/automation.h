@@ -62,6 +62,24 @@ void SetProperty( std::string message );
 void DumpScene( unsigned int clientId, ClientSendDataInterface* sendData );
 
 
+void ClearDifferences();
+
+/**
+ * @brief Dumps the current frame. only dumps properties changed between runs
+ * @param clientId unique network client id
+ * @param sendData interface to transmit data to the client
+ */
+void DumpFrame( unsigned int clientId, ClientSendDataInterface* sendData );
+
+
+/**
+ * @brief Dumps the actor tree to the client
+ * @param clientId unique network client id
+ * @param sendData interface to transmit data to the client
+ */
+void GetResource( unsigned int clientId, ClientSendDataInterface* sendData, unsigned int id);
+
+
 } // namespace Automation
 
 } // namespace Internal

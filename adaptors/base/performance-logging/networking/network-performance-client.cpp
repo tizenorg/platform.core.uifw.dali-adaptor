@@ -27,6 +27,8 @@
 #include <stdio.h>
 #include <string>
 
+
+
 namespace Dali
 {
 
@@ -35,6 +37,18 @@ namespace Internal
 
 namespace Adaptor
 {
+
+TriggerEventInterface *updateDumpInterface = NULL;
+
+void TriggerUpdateDump()
+{
+  if (updateDumpInterface != NULL)
+  {
+    updateDumpInterface->Trigger();
+  }
+
+}
+
 
 namespace
 {
@@ -157,6 +171,37 @@ void NetworkPerformanceClient::ProcessCommand( char* buffer, unsigned int buffer
     {
       // this needs to be run on the main thread, use the trigger event....
       boost::function<void()> functor = boost::bind( &Automation::DumpScene, mClientId, &mSendDataInterface );
+
+      // create a trigger event that automatically deletes itself after the callback has run in the main thread
+      TriggerEventInterface *interface = mTriggerEventFactory.CreateTriggerEvent( functor, TriggerEventInterface::DELETE_AFTER_TRIGGER );
+
+      // asynchronous call, the call back will be run sometime later on the main thread
+      interface->Trigger();
+      break;
+    } 
+    case PerformanceProtocol::START_RECORD:
+    {
+      // this needs to be run on the main thread, use the trigger event....
+      boost::function<void()> functor = boost::bind( &Automation::DumpFrame, mClientId, &mSendDataInterface );
+
+      updateDumpInterface = mTriggerEventFactory.CreateTriggerEvent( functor, TriggerEventInterface::NONE );
+      // force the initial frame to be dumped, since update might be sleeping
+      Automation::ClearDifferences();
+      updateDumpInterface->Trigger();
+      break;
+    }
+  case PerformanceProtocol::STOP_RECORD:
+  {
+    TriggerEventInterface* t = updateDumpInterface;
+    // maybe needs a mutex?
+    updateDumpInterface = NULL;
+    mTriggerEventFactory.DestroyTriggerEvent(t);
+    break;
+  }
+    case PerformanceProtocol::GET_RESOURCE:
+    {
+      // this needs to be run on the main thread, use the trigger event....
+      boost::function<void()> functor = boost::bind( &Automation::GetResource, mClientId, &mSendDataInterface, param );
 
       // create a trigger event that automatically deletes itself after the callback has run in the main thread
       TriggerEventInterface *interface = mTriggerEventFactory.CreateTriggerEvent( functor, TriggerEventInterface::DELETE_AFTER_TRIGGER );

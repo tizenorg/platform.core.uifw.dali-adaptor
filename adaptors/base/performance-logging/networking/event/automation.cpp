@@ -19,13 +19,34 @@
 #include "automation.h"
 
 #include <dali/public-api/dali-core.h>
+#include <dali/public-api/common/intrusive-ptr.h>
+#include <dali/integration-api/resource-dump.h>
 #include <sstream>
 #include <iomanip>
+#include <map>
+#include <boost/thread/condition_variable.hpp>
 
 using namespace Dali;
 
+boost::condition_variable dumpWaitUpdate;
+boost::mutex dumpMutex;
+
 namespace  // un-named namespace
 {
+std::map<unsigned int, unsigned long> propertyMap;
+std::map<unsigned int, std::pair<std::string, std::string> > diffMap;
+
+unsigned long hashFunction(unsigned char * buffer, int len)
+{
+  unsigned long hash = 5381;
+  int c;
+
+  while (len--) {
+    c = *buffer++;
+    hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+  }
+  return hash;
+}
 
 class PropValue
 {
@@ -342,6 +363,119 @@ std::string getPropertyValue( Actor a, int propIndex )
   return retvalue;
 }
 
+unsigned long propHashValue(Actor a, int propIndex)
+{
+  Property::Type t = a.GetPropertyType( propIndex );
+  Property::Value val = a.GetProperty( propIndex );
+  Vector2 v2;
+  Vector3 v3;
+  Vector4 v4;
+  Quaternion q;
+  Matrix m;
+  Rect<int> rect;
+
+  unsigned long newHashValue = 0;
+
+  switch( t )
+  {
+  case Property::STRING:
+  {
+    std::string str = val.Get<std::string>();
+    newHashValue = hashFunction((unsigned char*)str.c_str(), str.length());
+    break;
+  }
+  case Property::VECTOR2:
+    val.Get( v2 );
+    newHashValue = hashFunction((unsigned char*)&v2[0], sizeof(v2));
+    break;
+  case Property::VECTOR3:
+    val.Get( v3 );
+    newHashValue = hashFunction((unsigned char*)&v3[0], sizeof(v3));
+    break;
+  case Property::VECTOR4:
+    val.Get( v4 );
+    newHashValue = hashFunction((unsigned char*)&v4[0], sizeof(v4));
+    break;
+  case Property::MATRIX:
+    val.Get( m );
+    newHashValue = hashFunction((unsigned char*)m.getMatrix(), sizeof(float)*16);
+    break;
+  case Property::BOOLEAN:
+    newHashValue = (unsigned int)val.Get<bool>();
+    break;
+  case Property::FLOAT:
+    newHashValue = (unsigned int)val.Get<float>();
+    break;
+  case Property::INTEGER:
+    newHashValue = (unsigned int)val.Get<int>();
+    break;
+  case Property::RECTANGLE:
+    val.Get( rect );
+    newHashValue = hashFunction((unsigned char*)&rect, sizeof(rect));
+    break;
+  case Property::UNSIGNED_INTEGER:
+    newHashValue = val.Get<unsigned int>();
+    break;
+  case Property::MATRIX3:
+    newHashValue = 0;
+    break;
+  case Property::ROTATION:
+    val.Get( q );
+    v4 = q.EulerAngles();
+    newHashValue = hashFunction((unsigned char*)&v4[0], sizeof(v4));
+    break;
+  case Property::ARRAY:
+    newHashValue = 0;
+    break;
+  case Property::MAP:
+    newHashValue = 0;
+    break;
+  case Property::TYPE_COUNT:
+    newHashValue = 0;;
+    break;
+  default:
+    newHashValue = 0;
+    break;
+  }
+  return newHashValue;
+}
+
+void updatePropertyHash( Actor a, int propIndex )
+{
+  unsigned int id = a.GetId() << 16;
+  id += propIndex;
+  std::map<unsigned int, unsigned long>::iterator iter = propertyMap.find(id);
+  unsigned long currentHashValue = 0;
+  if (iter != propertyMap.end()) {
+    currentHashValue = (*iter).second;
+  }
+  unsigned long newHashValue = propHashValue(a, propIndex);
+
+  if (currentHashValue != newHashValue)
+  {
+    propertyMap[id] = newHashValue;
+  }
+}
+
+
+void updatePropertyDiffMap( Actor a, int propIndex )
+{
+  unsigned int id = a.GetId() << 16;
+  id += propIndex;
+  std::map<unsigned int, unsigned long>::iterator iter = propertyMap.find(id);
+  unsigned long currentHashValue = 0;
+  if (iter != propertyMap.end()) {
+    currentHashValue = (*iter).second;
+  }
+  unsigned long newHashValue = propHashValue(a, propIndex);
+
+  if (currentHashValue != newHashValue)
+  {
+    propertyMap[id] = newHashValue;
+    diffMap[id] = std::pair<std::string, std::string>(a.GetPropertyName(propIndex), getPropertyValue(a, propIndex));
+  }
+}
+
 bool excludeProperty( int propIndex )
 {
   return (propIndex == Dali::Actor::NAME    ||
@@ -355,12 +489,11 @@ bool excludeProperty( int propIndex )
       || propIndex == Dali::Actor::SCALE_Z || propIndex == Dali::Actor::SIZE_DEPTH);
 }
 
-std::string dumpJson( Actor a, int level )
+std::string dumpJson( Actor a, int level)
 {
   // All the information about this actor
   std::ostringstream msg;
-  msg << "{ " << quote( "Name" ) << " : " << quote( a.GetName().c_str() ) << ", " << quote( "level" ) << " : " << level << ", " << quote( "id" ) << " : " << a.GetId() << ", " << quote( "IsVisible" )
-      << " : " << a.IsVisible() << ", " << quote( "IsSensitive" ) << " : " << a.IsSensitive();
+  msg << "{ " << quote( "Name" ) << " : " << quote( a.GetName().c_str() ) << ", "  << quote( "id" ) << " : " << a.GetId();
 
   msg << ", " << quote( "properties" ) << ": [ ";
 
@@ -368,16 +501,19 @@ std::string dumpJson( Actor a, int level )
   a.GetPropertyIndices( indices );
 
   Property::IndexContainer::iterator iter = indices.begin();
-  int numCustom = 0;
+  int numProperties = 0;
   for( ; iter != indices.end() ; iter++ )
   {
     int i = *iter;
     if( !excludeProperty( i ) )
     {
-      if( numCustom++ != 0 )
+      if( numProperties++ != 0 )
       {
         msg << ", ";
       }
+
+      updatePropertyHash(a, i);
+
       msg << "[";
 
       std::string str = a.GetPropertyName( i );
@@ -388,6 +524,15 @@ std::string dumpJson( Actor a, int level )
     }
   }
   msg << "]";
+  msg << ", " << quote( "resources" ) << " : [ ";
+  ImageActor ia = ImageActor::DownCast(a);
+  if (ia) {
+      Dali::Image i = ia.GetImage();
+      Dali::Integration::ResourceId rid = i.GetResourceId();
+      msg << "[" << quote("resourceId") << "," << rid << "]";
+  }
+  msg << "]";
+
   msg << ", " << quote( "children" ) << " : [ ";
 
   // Recursively dump all the children as well
@@ -397,20 +542,60 @@ std::string dumpJson( Actor a, int level )
     {
       msg << " , ";
     }
-    msg << dumpJson( a.GetChildAt( i ), level + 1 );
+    msg << dumpJson( a.GetChildAt( i ), level + 1);
   }
   msg << "] }";
 
   return msg.str();
 }
 
-std::string getActorTree()
+void calcDiff( Actor a )
+{
+  Property::IndexContainer indices;
+  a.GetPropertyIndices( indices );
+
+  Property::IndexContainer::iterator iter = indices.begin();
+  for( ; iter != indices.end() ; iter++ )
+  {
+    int i = *iter;
+    if( !excludeProperty( i ) )
+    {
+      updatePropertyDiffMap(a, i);
+    }
+  }
+  for( unsigned int i = 0 ; i < a.GetChildCount() ; ++i )
+  {
+    calcDiff( a.GetChildAt( i ));
+  }
+}
+
+
+std::string getActorTree(bool delta)
 {
   Actor a = Dali::Stage::GetCurrent().GetRootLayer();
-  std::string str = dumpJson( a, 0 );
+  std::string str = dumpJson( a, 0);
   str += "\n";
   return str;
 }
+
+std::string getDiffTree()
+{
+  Actor a = Dali::Stage::GetCurrent().GetRootLayer();
+  diffMap.clear();
+  calcDiff( a);
+  std::ostringstream msg;
+  std::map<unsigned int, std::pair<std::string, std::string> >::iterator iter;
+  for (iter=diffMap.begin();iter!=diffMap.end();iter++)
+  {
+    std::pair<unsigned int, std::pair<std::string, std::string> > val = *iter;
+    unsigned int id = val.first;
+    unsigned int propId = id & 0xffff;
+    id = id >> 16;
+    msg << id << " | " << propId << " | " << val.second.first << " | " << val.second.second << std::endl;
+  }
+  return msg.str();
+}
+
 namespace Dali
 {
 
@@ -431,12 +616,45 @@ void SetProperty( std::string message )
 void DumpScene( unsigned int clientId, ClientSendDataInterface* sendData )
 {
   char buf[32];
-  std::string json = getActorTree();
+  std::string json = getActorTree(true);
   int length = json.length();
   sprintf( buf, "%d\n", length );
   std::string header( buf );
   json = buf + json;
   sendData->SendData( json.c_str(), json.length(), clientId );
+}
+
+void DumpFrame( unsigned int clientId, ClientSendDataInterface* sendData )
+{
+  char buf[128];
+  std::string diffs = getDiffTree();
+  int length = diffs.length();
+  sprintf( buf, "%d\n", length );
+  std::string header( buf );
+  diffs = buf + diffs;
+  sendData->SendData( diffs.c_str(), diffs.length(), clientId );
+}
+
+void GetResource(unsigned int clientId, ClientSendDataInterface* sendData, unsigned int id )
+{
+  Integration::Bitmap* bmp = Dali::Integration::GetBitmapResource(id);
+  std::string str("doesn't exist");
+  if (bmp != NULL) {
+    char buf[256];
+    unsigned int sz = bmp->GetBufferSize();
+    Pixel::Format fmt = bmp->GetPixelFormat();
+    sprintf(buf, "%d %d %d\n%d\n", bmp->GetImageWidth(), bmp->GetImageHeight(), fmt, sz);
+    str = std::string(buf);
+    PixelBuffer* buffer = bmp->GetBuffer();
+    std::string output((const char*)buffer, sz);
+    str += output;
+  }
+  sendData->SendData( str.c_str(), str.length(), clientId );
+}
+
+void ClearDifferences()
+{
+  propertyMap.clear();
 }
 
 } // namespace Automation
