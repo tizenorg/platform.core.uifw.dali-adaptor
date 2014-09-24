@@ -30,6 +30,7 @@ namespace Internal
 
 namespace Adaptor
 {
+extern void TriggerUpdateDump();
 
 namespace
 {
@@ -166,7 +167,7 @@ void UpdateRenderSynchronization::UpdateReadyToRun()
 
 bool UpdateRenderSynchronization::UpdateSyncWithRender( bool& renderNeedsUpdate )
 {
-
+  TriggerUpdateDump();
   AddPerformanceMarker( PerformanceMarker::UPDATE_END );
 
   boost::unique_lock< boost::mutex > lock( mMutex );

@@ -62,9 +62,12 @@ CommandInfo CommandLookup[]=
   {  ENABLE_METRIC              , "enable_metric"      ,UNSIGNED_INT  },
   {  DISABLE_METRIC             , "disable_metric"     ,UNSIGNED_INT  },
   {  LIST_METRICS_AVAILABLE     , "list_metrics"       ,NO_PARAMS     },
-  {  ENABLE_TIME_MARKER_BIT_MASK, "set_marker",         UNSIGNED_INT  },
+  {  ENABLE_TIME_MARKER_BIT_MASK, "set_marker"         ,UNSIGNED_INT  },
+  {  GET_RESOURCE               , "get_resource"       ,UNSIGNED_INT  },
   {  DUMP_SCENE_GRAPH           , "dump_scene"         ,NO_PARAMS     },
   {  SET_PROPERTIES             , "set_properties"     ,STRING        },
+  {  START_RECORD               , "start_record"       ,NO_PARAMS     },
+  {  STOP_RECORD                , "stop_record"       ,NO_PARAMS     },
   {  UNKNOWN_COMMAND            , "unknown"            ,NO_PARAMS     }
 };
 const unsigned int CommandLookupLength = sizeof( CommandLookup ) /sizeof( CommandInfo );

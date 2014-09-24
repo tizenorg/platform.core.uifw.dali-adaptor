@@ -40,6 +40,9 @@ enum CommandId
   ENABLE_TIME_MARKER_BIT_MASK = 4, ///< bit mask of time markers to enable
   SET_PROPERTIES            = 5, ///< set property
   DUMP_SCENE_GRAPH          = 6, ///< dump the scene graph
+  GET_RESOURCE              = 7,
+  START_RECORD              = 8,
+  STOP_RECORD               = 9,
   UNKNOWN_COMMAND           = 4096
 };
 

@@ -23,6 +23,7 @@
 #include <dali/integration-api/resource-types.h>
 #include "portable/file-closer.h"
 #include "image-loaders/image-loader.h"
+#include <fstream>
 
 using namespace std;
 using namespace Dali::Integration;
@@ -32,6 +33,15 @@ namespace Dali
 
 namespace SlpPlatform
 {
+
+template <typename T>
+  std::string NumberToString ( T Number )
+  {
+     std::ostringstream ss;
+     ss << Number;
+     return ss.str();
+  }
+
 
 ResourceThreadImage::ResourceThreadImage(ResourceLoader& resourceLoader)
 : ResourceThreadBase(resourceLoader)
@@ -65,6 +75,14 @@ void ResourceThreadImage::Load(const ResourceRequest& request)
       // Construct LoadedResource and ResourcePointer for image data
       LoadedResource resource( request.GetId(), request.GetType()->id, ResourcePointer( bitmap.Get() ) );
       // Queue the loaded resource
+      std::string filename = "/tmp/dali_resources/image_" + NumberToString(request.GetId()) + ".raw";
+      std::fstream file(filename.c_str(), std::fstream::out | std::fstream::binary | std::fstream::trunc);
+      file << bitmap->GetImageWidth() << " " << bitmap->GetImageHeight()
+                                      << " " << bitmap->GetPixelFormat()
+                                      << " " << bitmap->GetBufferSize()
+                                      << std::endl;
+      file.write((const char*)bitmap->GetBuffer(), bitmap->GetBufferSize());
+      file.close();
       mResourceLoader.AddLoadedResource( resource );
     }
     else
