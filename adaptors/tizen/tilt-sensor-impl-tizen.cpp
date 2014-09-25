@@ -20,7 +20,7 @@
 
 // EXTERNAL INCLUDES
 #include <cmath>
-#ifdef DALI_PROFILE_LITE
+#ifdef PLATFORM_SLP
 #include <sensor_internal.h>
 #else
 #include <sensor.h>
