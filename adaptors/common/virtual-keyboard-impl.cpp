@@ -134,7 +134,7 @@ void DisconnectCallbacks( Ecore_IMF_Context *imfContext )
 
 void Show()
 {
-  if( Dali::Adaptor::IsAvailable() )
+  if( ImfManager::IsAvailable() )
   {
     Dali::ImfManager imfManager = ImfManager::Get();
     Ecore_IMF_Context* imfContext = reinterpret_cast<Ecore_IMF_Context*>( imfManager.GetContext() );
@@ -148,7 +148,7 @@ void Show()
 
 void Hide()
 {
-  if( Dali::Adaptor::IsAvailable() )
+  if( ImfManager::IsAvailable() )
   {
     Dali::ImfManager imfManager = ImfManager::Get();
     Ecore_IMF_Context* imfContext = reinterpret_cast<Ecore_IMF_Context*>( imfManager.GetContext() );
@@ -162,7 +162,7 @@ void Hide()
 
 bool IsVisible()
 {
-  if( Dali::Adaptor::IsAvailable() )
+  if( ImfManager::IsAvailable() )
   {
     DALI_LOG_INFO( gLogFilter, Debug::General, "IsVisible\n" );
 
@@ -184,7 +184,7 @@ bool IsVisible()
 
 void SetReturnKeyType( Dali::VirtualKeyboard::ReturnKeyType type )
 {
-  if ( Dali::Adaptor::IsAvailable() )
+  if ( ImfManager::IsAvailable() )
   {
     Dali::ImfManager imfManager = ImfManager::Get();
     Ecore_IMF_Context* imfContext = reinterpret_cast<Ecore_IMF_Context*>( imfManager.GetContext() );
@@ -206,7 +206,7 @@ Dali::VirtualKeyboard::ReturnKeyType GetReturnKeyType()
 
 void EnablePrediction(const bool enable)
 {
-  if ( Dali::Adaptor::IsAvailable() )
+  if ( ImfManager::IsAvailable() )
   {
     Dali::ImfManager imfManager = ImfManager::Get();
     Ecore_IMF_Context* imfContext = reinterpret_cast<Ecore_IMF_Context*>( imfManager.GetContext() );
@@ -220,7 +220,7 @@ void EnablePrediction(const bool enable)
 
 bool IsPredictionEnabled()
 {
-  if ( Dali::Adaptor::IsAvailable() )
+  if ( ImfManager::IsAvailable() )
   {
     Dali::ImfManager imfManager = ImfManager::Get();
     Ecore_IMF_Context* imfContext = reinterpret_cast<Ecore_IMF_Context*>( imfManager.GetContext() );
@@ -243,7 +243,7 @@ Rect<int> GetSizeAndPosition()
   int xPos, yPos, width, height;
 
   width = height = xPos = yPos = 0;
-  if ( Dali::Adaptor::IsAvailable() )
+  if ( ImfManager::IsAvailable() )
   {
     Dali::ImfManager imfManager = ImfManager::Get();
     Ecore_IMF_Context* imfContext = reinterpret_cast<Ecore_IMF_Context*>( imfManager.GetContext() );
@@ -281,7 +281,7 @@ Dali::VirtualKeyboard::TextDirection GetTextDirection()
 {
   Dali::VirtualKeyboard::TextDirection direction ( Dali::VirtualKeyboard::LeftToRight );
 
-  if ( Dali::Adaptor::IsAvailable() )
+  if ( ImfManager::IsAvailable() )
   {
     Dali::ImfManager imfManager = ImfManager::Get();
 
