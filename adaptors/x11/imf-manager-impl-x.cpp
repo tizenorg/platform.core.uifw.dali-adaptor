@@ -119,35 +119,10 @@ void ImfDeleteSurrounding( void *data, Ecore_IMF_Context *imfContext, void *even
 
 BaseHandle Create()
 {
-  BaseHandle handle( ImfManager::Get() );
-
-  Dali::SingletonService service( SingletonService::Get() );
-  if ( !handle && Adaptor::IsAvailable() && service )
-  {
-    Adaptor& adaptorImpl( Adaptor::GetImplementation( Adaptor::Get() ) );
-
-    // The Ecore_X_Window needs to use the ImfManager.
-    // Only when the render surface is window, we can get the Ecore_X_Window.
-    Ecore_X_Window ecoreXwin( 0 );
-    Dali::RenderSurface& surface( adaptorImpl.GetSurface() );
-    if( surface.GetType() == Dali::RenderSurface::WINDOW )
-    {
-      ecoreXwin = AnyCast< Ecore_X_Window >( adaptorImpl.GetSurface().GetSurface() );
-    }
-
-    // If we fail to get Ecore_X_Window, we can't use the ImfManager correctly.
-    // Thus you have to call "ecore_imf_context_client_window_set" somewhere.
-    // In EvasPlugIn, this function is called in EvasPlugin::ConnectEcoreEvent().
-
-    Dali::ImfManager manager = Dali::ImfManager( new ImfManager( ecoreXwin ) );
-    service.Register( typeid( manager ), manager );
-    handle = manager;
-  }
-
-  return handle;
+  return ImfManager::Get();
 }
 
-TypeRegistration IMF_MANAGER_TYPE( typeid(Dali::ImfManager), typeid(Dali::BaseHandle), Create, true /* Create Instance At Startup */ );
+TypeRegistration IMF_MANAGER_TYPE( typeid(Dali::ImfManager), typeid(Dali::BaseHandle), Create );
 
 } // unnamed namespace
 
@@ -160,10 +135,35 @@ Dali::ImfManager ImfManager::Get()
   {
     // Check whether the singleton is already created
     Dali::BaseHandle handle = service.GetSingleton( typeid( Dali::ImfManager ) );
-    if(handle)
+    if( handle )
     {
       // If so, downcast the handle
       manager = Dali::ImfManager( dynamic_cast< ImfManager* >( handle.GetObjectPtr() ) );
+    }
+    else
+    {
+      // Create instance and register singleton
+
+      if ( Adaptor::IsAvailable() )
+      {
+        Adaptor& adaptorImpl( Adaptor::GetImplementation( Adaptor::Get() ) );
+
+        // The Ecore_X_Window needs to use the ImfManager.
+        // Only when the render surface is window, we can get the Ecore_X_Window.
+        Ecore_X_Window ecoreXwin( 0 );
+        Dali::RenderSurface& surface( adaptorImpl.GetSurface() );
+        if( surface.GetType() == Dali::RenderSurface::WINDOW )
+        {
+          ecoreXwin = AnyCast< Ecore_X_Window >( adaptorImpl.GetSurface().GetSurface() );
+        }
+
+        // If we fail to get Ecore_X_Window, we can't use the ImfManager correctly.
+        // Thus you have to call "ecore_imf_context_client_window_set" somewhere.
+        // In EvasPlugIn, this function is called in EvasPlugin::ConnectEcoreEvent().
+
+        manager = Dali::ImfManager( new ImfManager( ecoreXwin ) );
+        service.Register( typeid( manager ), manager );
+      }
     }
   }
 

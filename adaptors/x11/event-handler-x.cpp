@@ -365,9 +365,10 @@ struct EventHandler::Impl
     bool eventHandled( false );
 
     Ecore_IMF_Context* imfContext = NULL;
-    if ( Dali::Adaptor::IsAvailable() && handler->mImfManager )
+    Dali::ImfManager imfManager( ImfManager::Get() );
+    if ( imfManager )
     {
-      imfContext = reinterpret_cast<Ecore_IMF_Context*>( handler->mImfManager.GetContext() );
+      imfContext = reinterpret_cast<Ecore_IMF_Context*>( imfManager.GetContext() );
     }
 
     // If a device key then skip ecore_imf_context_filter_event.
@@ -436,9 +437,10 @@ struct EventHandler::Impl
     bool eventHandled( false );
 
     Ecore_IMF_Context* imfContext = NULL;
-    if ( Dali::Adaptor::IsAvailable() && handler->mImfManager )
+    Dali::ImfManager imfManager( ImfManager::Get() );
+    if ( imfManager )
     {
-      imfContext = reinterpret_cast<Ecore_IMF_Context*>( handler->mImfManager.GetContext() );
+      imfContext = reinterpret_cast<Ecore_IMF_Context*>( imfManager.GetContext() );
     }
 
     // XF86Stop and XF86Send must skip ecore_imf_context_filter_event.
@@ -505,12 +507,13 @@ struct EventHandler::Impl
     {
       DALI_LOG_INFO( gImfLogging, Debug::General, "EVENT EcoreEventWindowFocusIn - >>WindowFocusGained \n" );
 
-      if ( handler->mImfManager )
+      Dali::ImfManager imfManager( ImfManager::Get() );
+      if ( imfManager )
       {
-        ImfManager& imfManager( ImfManager::GetImplementation( handler->mImfManager ) );
-        if( imfManager.RestoreAfterFocusLost() )
+        ImfManager& imfManagerImpl( ImfManager::GetImplementation( imfManager ) );
+        if( imfManagerImpl.RestoreAfterFocusLost() )
         {
-          imfManager.Activate();
+          imfManagerImpl.Activate();
         }
       }
       // No need to connect callbacks as KeyboardStatusChanged will be called.
@@ -532,12 +535,13 @@ struct EventHandler::Impl
     // If the window loses focus then hide the keyboard.
     if ( focusOutEvent->win == handler->mImpl->mWindow )
     {
-      if ( handler->mImfManager )
+      Dali::ImfManager imfManager( ImfManager::Get() );
+      if ( imfManager )
       {
-        ImfManager& imfManager( ImfManager::GetImplementation( handler->mImfManager ) );
-        if( imfManager.RestoreAfterFocusLost() )
+        ImfManager& imfManagerImpl( ImfManager::GetImplementation( imfManager ) );
+        if( imfManagerImpl.RestoreAfterFocusLost() )
         {
-          imfManager.Deactivate();
+          imfManagerImpl.Deactivate();
         }
       }
 
@@ -1101,7 +1105,6 @@ EventHandler::EventHandler( RenderSurface* surface, CoreEventInterface& coreEven
   mAccessibilityManager( AccessibilityManager::Get() ),
   mClipboardEventNotifier( ClipboardEventNotifier::Get() ),
   mClipboard(Clipboard::Get()),
-  mImfManager( ImfManager::Get() ),
   mImpl( NULL )
 {
   Ecore_X_Window window = 0;
