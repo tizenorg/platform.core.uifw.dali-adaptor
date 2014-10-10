@@ -1,3 +1,7 @@
+#ifdef ENABLE_ASSIMP
+#error "Only include this file is ENABLE_ASSIMP is not defined"
+#endif
+
 #ifndef __DALI_SLP_PLATFORM_ASSIMP_STUBS_H__
 #define __DALI_SLP_PLATFORM_ASSIMP_STUBS_H__
 

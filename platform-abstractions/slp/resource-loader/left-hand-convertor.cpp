@@ -1,3 +1,4 @@
+#ifdef ENABLE_ASSIMP
 /*
  * Copyright (c) 2014 Samsung Electronics Co., Ltd.
  *
@@ -135,3 +136,4 @@ void LeftHandConvertor::ConvertAnimation( aiNodeAnim* animation )
 
 } // SlpPlatform
 } // Dali
+#endif // ENABLE_ASSIMP

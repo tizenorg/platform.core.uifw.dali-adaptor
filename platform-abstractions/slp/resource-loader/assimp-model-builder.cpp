@@ -1,3 +1,4 @@
+#ifdef ENABLE_ASSIMP
 /*
  * Copyright (c) 2014 Samsung Electronics Co., Ltd.
  *
@@ -605,3 +606,4 @@ Light AssimpModelBuilder::BuildLight(const aiScene* ai_scene, const unsigned int
 }//SlpPlatform
 
 }//Dali
+#endif // ENABLE_ASSIMP

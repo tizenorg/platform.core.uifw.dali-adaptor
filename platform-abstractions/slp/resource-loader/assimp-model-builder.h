@@ -1,3 +1,4 @@
+#ifdef ENABLE_ASSIMP
 #ifndef __DALI_SLP_PLATFORM_ASSIMP_MODEL_BUILDER_H__
 #define __DALI_SLP_PLATFORM_ASSIMP_MODEL_BUILDER_H__
 
@@ -139,3 +140,4 @@ private: // Attributes
 }//Dali
 
 #endif // __DALI_SLP_PLATFORM_ASSIMP_MODEL_BUILDER_H__
+#endif // ENABLE_ASSIMP

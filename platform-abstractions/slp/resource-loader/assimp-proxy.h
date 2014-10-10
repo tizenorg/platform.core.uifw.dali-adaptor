@@ -1,3 +1,4 @@
+#ifdef ENABLE_ASSIMP
 #ifndef __DALI_SLP_PLATFORM_ASSIMP_PROXY_H__
 #define __DALI_SLP_PLATFORM_ASSIMP_PROXY_H__
 
@@ -168,3 +169,4 @@ private:
 }
 
 #endif // __DALI_SLP_PLATFORM_ASSIMP_PROXY_H__
+#endif // ENABLE_ASSIMP

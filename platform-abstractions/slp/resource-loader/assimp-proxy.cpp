@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  */
+#ifdef ENABLE_ASSIMP
 #include "assimp-proxy.h"
 
 #include <stdio.h>
@@ -269,4 +270,4 @@ const aiScene* AssimpScene::GetScene()
 
 }
 }
-
+#endif // ENABLE_ASSIMP

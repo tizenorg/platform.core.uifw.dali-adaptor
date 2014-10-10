@@ -28,7 +28,8 @@
 
 #include "binary-model-builder.h"
 
-#if defined(DALI_PROFILE_MOBILE) || defined(DALI_PROFILE_TV)
+#if defined(DALI_PROFILE_MOBILE)
+#define ENABLE_ASSIMP
 #include "assimp-model-builder.h"
 #include "assimp-proxy.h"
 #else
