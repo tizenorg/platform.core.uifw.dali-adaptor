@@ -136,7 +136,7 @@ endif
 
 # TV
 if TV_PROFILE
-slp_platform_abstraction_src_files += $(slp_assimp_src_files)
+slp_platform_abstraction_src_files += $(slp_assimp_stubs_src_files)
 
 adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_tv_profile_src_files) \

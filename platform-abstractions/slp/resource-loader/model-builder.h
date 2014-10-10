@@ -32,6 +32,11 @@ namespace SlpPlatform
 class ModelBuilder
 {
 public:
+
+  /**
+   * Virtual destructor
+   */
+  virtual ~ModelBuilder() {}
   /**
    * Build the given model
    * @param[in] model - the model to build
