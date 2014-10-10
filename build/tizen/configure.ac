@@ -147,7 +147,6 @@ fi
 
 if test "x$enable_profile" = "xTV"; then
 PKG_CHECK_MODULES(OPENGLES20, gles20)
-PKG_CHECK_MODULES(ASSIMP, assimp)
 PKG_CHECK_MODULES(HAPTIC, haptic)
 fi
 
