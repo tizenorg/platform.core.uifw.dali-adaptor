@@ -20,9 +20,8 @@
 
 // External headers
 #include <libgen.h>
-#include <assimp/assimp.hpp>
-#include <assimp/aiScene.h>
-#include <assimp/aiPostProcess.h> // Post processing flags
+#include <assimp/scene.h>
+#include <assimp/postprocess.h> // Post processing flags
 
 // Core headers
 #include <dali/public-api/common/light.h>
