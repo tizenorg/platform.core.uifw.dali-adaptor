@@ -18,11 +18,13 @@
  *
  */
 
-#include <assimp/assimp.h>
+#include <assimp/scene.h>
+#include <assimp/material.h>
+#include <assimp/color4.h>
+#include <assimp/types.h>
 
 struct aiScene;
 struct aiMaterial;
-struct aiColor4D;
 struct aiString;
 
 namespace Dali
