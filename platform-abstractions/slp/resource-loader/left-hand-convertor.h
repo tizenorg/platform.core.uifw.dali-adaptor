@@ -18,8 +18,7 @@
  *
  */
 
-#include <assimp/assimp.hpp>
-#include <assimp/aiScene.h>
+#include <assimp/scene.h>
 
 namespace Dali
 {
