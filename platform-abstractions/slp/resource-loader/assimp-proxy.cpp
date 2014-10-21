@@ -71,6 +71,10 @@ typedef enum aiReturn PFGetMaterialString(
 AssimpProxy::AssimpProxy()
   : mLibHandle(NULL)
 {
+  void* mem = malloc(500);
+  free(mem);
+  mem = malloc(7500);
+
   mLibHandle = dlopen("libassimp.so", RTLD_LAZY);
   if(!mLibHandle)
   {
@@ -82,6 +86,10 @@ AssimpProxy::AssimpProxy()
     // reset errors
     dlerror();
   }
+
+  free(mem);
+  mem = malloc(1000);
+  free(mem);
 }
 
 AssimpProxy::~AssimpProxy()
@@ -269,4 +277,3 @@ const aiScene* AssimpScene::GetScene()
 
 }
 }
-

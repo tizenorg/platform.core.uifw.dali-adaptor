@@ -128,6 +128,7 @@ AM_CONDITIONAL([WAYLAND], [test x$enable_wayland = xyes])
 
 if test "x$enable_profile" = "xCOMMON"; then
 PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
+PKG_CHECK_MODULES(ASSIMP, assimp)
 PKG_CHECK_MODULES(HAPTIC, haptic)
 fi
 
@@ -153,6 +154,7 @@ fi
 
 if test "x$enable_profile" = "xUBUNTU"; then
 PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
+PKG_CHECK_MODULES(ASSIMP, assimp)
 else
 PKG_CHECK_MODULES(CAPI_APPFW_APPLICATION, capi-appfw-application)
 PKG_CHECK_MODULES(DLOG, dlog)
@@ -216,6 +218,10 @@ if test x$FONT_CONFIGURATION_FILE != x; then
   fontConfigurationFilePath=$FONT_CONFIGURATION_FILE
 fi
 
+if test x$ASSIMP_CFLAGS != x; then
+  ASSIMP_CFLAGS+=-DASSIMP_ENABLED
+fi
+
 AC_SUBST(dataReadWriteDir)
 AC_SUBST(dataReadOnlyDir)
 AC_SUBST(fontPreloadedPath)
@@ -251,6 +257,8 @@ Configuration
   Prefix:                           $prefix
   Debug Build:                      $enable_debug
   Compile flags                     $DALI_ADAPTOR_CFLAGS
+  Using Assimp Library:             $ASSIMP_CFLAGS
+  Vconf:                            $VCONF_LIBS $VCONF_CFLAGS
   Using JPEG Turbo Library:         $with_jpeg_turbo
   Profile:                          $enable_profile
   Data Dir (Read/Write):            $dataReadWriteDir
