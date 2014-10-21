@@ -28,12 +28,12 @@
 
 #include "binary-model-builder.h"
 
-#if defined(DALI_PROFILE_MOBILE) || defined(DALI_PROFILE_TV)
+/*#if defined(DALI_PROFILE_MOBILE) || defined(DALI_PROFILE_TV)
 #include "assimp-model-builder.h"
 #include "assimp-proxy.h"
-#else
+#else*/
 #include "assimp-stubs.h"
-#endif
+//#endif
 
 using namespace std;
 using namespace Dali::Integration;
@@ -154,7 +154,7 @@ ModelBuilder* ResourceThreadModel::CreateModelBuilder(const std::string& modelFi
   {
     modelBuilder = new BinaryModelBuilder(modelFileName);
   }
-#if defined(DALI_PROFILE_MOBILE) || defined(DALI_PROFILE_TV)
+/*#if defined(DALI_PROFILE_MOBILE) || defined(DALI_PROFILE_TV)
   else
   {
     if(!mModelImporter)
@@ -164,7 +164,7 @@ ModelBuilder* ResourceThreadModel::CreateModelBuilder(const std::string& modelFi
     }
     modelBuilder = new AssimpModelBuilder(mModelImporter, modelFileName);
   }
-#endif
+#endif*/
   return modelBuilder;
 }
 

@@ -10,8 +10,8 @@ Source0:    %{name}-%{version}.tar.gz
 %define dali_profile MOBILE
 %define dali_mobile_profile 1
 %define dali_feedback_plugin 1
-%define dali_bullet_plugin 1
-%define dali_assimp_plugin 1
+#%define dali_bullet_plugin 1
+#%define dali_assimp_plugin 1
 
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
@@ -44,7 +44,7 @@ BuildRequires:  pkgconfig(capi-system-system-settings)
 BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(opengl-es-20)
 BuildRequires:  pkgconfig(efl-assist)
-BuildRequires:  pkgconfig(assimp)
+#BuildRequires:  pkgconfig(assimp)
 
 %description
 The DALi Tizen Adaptor provides a Tizen specific implementation of the dali-core
@@ -81,7 +81,7 @@ Feedback plugin to play haptic and audio feedback for Dali
 %package dali-bullet-plugin
 Summary:    Plugin to provide physics
 Group:      System/Libraries
-BuildRequires:  libbullet-devel
+#BuildRequires:  libbullet-devel
 
 %description dali-bullet-plugin
 Dynamics plugin to wrap the libBulletDynamics libraries
@@ -121,6 +121,12 @@ export FFLAGS="$FFLAGS -DTIZEN_DEBUG_ENABLE"
 %ifarch %{arm}
 CXXFLAGS+=" -D_ARCH_ARM_ -lgcc"
 %endif
+
+%if 0%{?under_tizen_2_3_capi_enable}
+CFLAGS+=" -DUNDER_TIZEN_2_3_CAPI"
+CXXFLAGS+=" -DUNDER_TIZEN_2_3_CAPI"
+%endif
+
 
 libtoolize --force
 cd %{_builddir}/%{name}-%{version}/build/tizen
@@ -179,7 +185,7 @@ exit 0
 %endif
 
 %if 0%{?dali_bullet_plugin}
-%post dali-bullet-plugin
+#%post dali-bullet-plugin
 /sbin/ldconfig
 exit 0
 %endif
@@ -206,7 +212,7 @@ exit 0
 %endif
 
 %if 0%{?dali_bullet_plugin}
-%postun dali-bullet-plugin
+#%postun dali-bullet-plugin
 /sbin/ldconfig
 exit 0
 %endif
@@ -229,17 +235,3 @@ exit 0
 %defattr(-,root,root,-)
 %{dev_include_path}/dali/*
 %{_libdir}/pkgconfig/dali*.pc
-
-%if 0%{?dali_feedback_plugin}
-%files dali-feedback-plugin
-%defattr(-,root,root,-)
-%{_libdir}/libdali-feedback-plugin.so*
-%{dali_plugin_sound_files}/*
-%{dali_plugin_theme_files}/*
-%endif
-
-%if 0%{?dali_bullet_plugin}
-%files dali-bullet-plugin
-%defattr(-,root,root,-)
-%{_libdir}/libdali-bullet-plugin.so*
-%endif
