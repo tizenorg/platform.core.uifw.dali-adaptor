@@ -29,8 +29,8 @@ namespace SlpPlatform
 
 // Private typedefs for function pointers returned from dlsym().
 
-typedef const struct aiScene* PFImportFile(const char*, size_t);
-typedef void                  PFReleaseImport(const aiScene*);
+typedef const struct aiScene* PFImportFile(const char*, unsigned int);
+typedef void                  PFReleaseImport(const struct aiScene*);
 typedef const char*           PFGetErrorString();
 
 typedef enum aiReturn PFGetMaterialColor(

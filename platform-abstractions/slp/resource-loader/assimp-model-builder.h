@@ -21,8 +21,7 @@
 #include "model-builder.h"
 
 #include <string>
-#include <assimp/assimp.hpp>
-#include <assimp/aiScene.h>
+#include <assimp/scene.h>
 
 #include <dali/public-api/modeling/model-data.h>
 
