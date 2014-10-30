@@ -23,7 +23,7 @@
 #include <dali/public-api/images/native-image.h>
 #include <dali/public-api/object/any.h>
 
-namespace Dali DALI_IMPORT_API
+namespace Dali
 {
 class Adaptor;
 
@@ -48,7 +48,7 @@ typedef IntrusivePtr<PixmapImage> PixmapImagePtr;
  * externally by X11 or ECORE-X11.
  *
  */
-class PixmapImage : public NativeImage
+class DALI_IMPORT_API PixmapImage : public NativeImage
 {
 public:
 
@@ -140,37 +140,37 @@ private:   // native image
   /**
    * @copydoc Dali::NativeImage::GlExtensionCreate()
    */
-  virtual bool GlExtensionCreate();
+  DALI_INTERNAL virtual bool GlExtensionCreate();
 
   /**
    * @copydoc Dali::NativeImage::GlExtensionDestroy()
    */
-  virtual void GlExtensionDestroy();
+  DALI_INTERNAL virtual void GlExtensionDestroy();
 
   /**
    * @copydoc Dali::NativeImage::TargetTexture()
    */
-  virtual unsigned int TargetTexture();
+  DALI_INTERNAL virtual unsigned int TargetTexture();
 
   /**
    * @copydoc Dali::NativeImage::PrepareTexture()
    */
-  virtual void PrepareTexture();
+  DALI_INTERNAL virtual void PrepareTexture();
 
   /**
    * @copydoc Dali::NativeImage::GetWidth()
    */
-  virtual unsigned int GetWidth() const;
+  DALI_INTERNAL virtual unsigned int GetWidth() const;
 
   /**
    * @copydoc Dali::NativeImage::GetHeight()
    */
-  virtual unsigned int GetHeight() const;
+  DALI_INTERNAL virtual unsigned int GetHeight() const;
 
   /**
    * @copydoc Dali::NativeImage::GetPixelFormat()
    */
-  virtual Pixel::Format GetPixelFormat() const;
+  DALI_INTERNAL virtual Pixel::Format GetPixelFormat() const;
 
 private:
 
@@ -182,14 +182,14 @@ private:
    * @param[in] adaptor a reference to Dali adaptor
    * @param[in] pixmap contains either: pixmap of type X11 Pixmap , a Ecore_X_Pixmap or is empty
    */
-  PixmapImage(unsigned int width, unsigned int height, ColorDepth depth, Adaptor& adaptor, Any pixmap);
+  DALI_INTERNAL PixmapImage(unsigned int width, unsigned int height, ColorDepth depth, Adaptor& adaptor, Any pixmap);
 
   /**
    * @brief A reference counted object may only be deleted by calling Unreference().
    *
    * The implementation should destroy the NativeImage resources.
    */
-  virtual ~PixmapImage();
+  DALI_INTERNAL virtual ~PixmapImage();
 
   /**
    * @brief Undefined assignment operator.
@@ -197,7 +197,7 @@ private:
    * This avoids accidental calls to a default assignment operator.
    * @param[in] rhs A reference to the object to copy.
    */
-  PixmapImage& operator=(const PixmapImage& rhs);
+  DALI_INTERNAL PixmapImage& operator=(const PixmapImage& rhs);
 
 private:
 
