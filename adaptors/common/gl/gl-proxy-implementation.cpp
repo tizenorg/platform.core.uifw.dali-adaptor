@@ -18,7 +18,7 @@
 #include "gl-proxy-implementation.h"
 
 // EXTERNAL INCLUDES
-#include <math.h>
+#include <cmath>
 
 // INTERNAL INCLUDES
 #include <base/environment-options.h>
