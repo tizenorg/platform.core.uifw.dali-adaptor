@@ -741,8 +741,6 @@ void Adaptor::RequestProcessEventsOnIdle()
   // Only request a notification if the Adaptor is actually running
   if ( RUNNING == mState )
   {
-    boost::unique_lock<boost::mutex> lock( mIdleInstaller );
-
     // check if the idle handle is already installed
     if( mNotificationOnIdleInstalled )
     {
