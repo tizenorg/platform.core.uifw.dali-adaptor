@@ -32,6 +32,7 @@ namespace Dali DALI_INTERNAL
 
 struct DeviceLayout;
 class RenderSurface;
+class PerformanceLogger;
 
 namespace Internal DALI_INTERNAL
 {
