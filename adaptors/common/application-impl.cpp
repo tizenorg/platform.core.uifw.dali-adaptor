@@ -93,10 +93,12 @@ Application::Application( int* argc, char** argv[], const std::string& name, con
 
 Application::~Application()
 {
+  LogMessage( Dali::Integration::Log::DebugInfo, ">~Application()\n");
   delete mFramework;
   delete mCommandLineOptions;
   delete mAdaptor;
   mWindow.Reset();
+  LogMessage( Dali::Integration::Log::DebugInfo, "<~Application()\n");
 }
 
 void Application::CreateWindow()

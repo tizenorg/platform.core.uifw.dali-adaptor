@@ -286,6 +286,8 @@ Adaptor::~Adaptor()
   delete mCallbackManager;
   delete mPerformanceInterface;
 
+  LogMessage( Dali::Integration::Log::DebugInfo, "<~Adaptor()\n");
+
   // uninstall it on this thread (main actor thread)
   Dali::Integration::Log::UninstallLogFunction();
 }
