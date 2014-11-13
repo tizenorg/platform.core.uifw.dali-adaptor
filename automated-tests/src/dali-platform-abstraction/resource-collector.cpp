@@ -26,8 +26,9 @@ namespace Platform
 {
 using namespace Dali::Integration;
 
-ResourceCollector::ResourceCollector() :
-  mGrandTotalCompletions(0)
+ResourceCollector::ResourceCollector( LoadCompletionMonitor * const completionMonitor ) :
+  mLoadCompletionMonitor( completionMonitor ),
+  mGrandTotalCompletions( 0 )
 {
 }
 
@@ -35,14 +36,19 @@ ResourceCollector::~ResourceCollector() {}
 
 void ResourceCollector::LoadResponse( Dali::Integration::ResourceId id, Dali::Integration::ResourceTypeId type, Dali::Integration::ResourcePointer resource, Dali::Integration::LoadStatus status )
 {
+  mCompletionStatuses[id] = true;
   if( status == RESOURCE_COMPLETELY_LOADED )
   {
     DALI_ASSERT_DEBUG( mCompletionCounts.find(id) == mCompletionCounts.end() && "A resource can only complete once." );
-    mCompletionStatuses[id] = true;
     ++mCompletionCounts[id];
     ++mSuccessCounts[id];
     mCompletionSequence.push_back( id );
     ++mGrandTotalCompletions;
+
+    if( mLoadCompletionMonitor )
+    {
+       mLoadCompletionMonitor->LoadSucceeded( *this, id, type, resource );
+    }
   }
 }
 
@@ -52,6 +58,11 @@ void ResourceCollector::LoadFailed( Dali::Integration::ResourceId id, Dali::Inte
   ++mFailureCounts[id];
   mCompletionSequence.push_back( id );
   ++mGrandTotalCompletions;
+
+  if( mLoadCompletionMonitor )
+  {
+     mLoadCompletionMonitor->LoadFailed( *this, id, failure );
+  }
 }
 
 

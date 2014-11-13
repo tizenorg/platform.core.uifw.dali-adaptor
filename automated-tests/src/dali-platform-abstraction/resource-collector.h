@@ -44,7 +44,15 @@ class ResourceCollector : public Integration::ResourceCache
 {
 public:
 
-  ResourceCollector();
+  /** \brief Subclass this to track load completions. */
+  class LoadCompletionMonitor
+  {
+  public:
+    virtual void LoadSucceeded( ResourceCollector & collector, Dali::Integration::ResourceId id, Dali::Integration::ResourceTypeId type, Dali::Integration::ResourcePointer resource ) = 0;
+    virtual void LoadFailed( ResourceCollector & collector, Dali::Integration::ResourceId id, Dali::Integration::ResourceFailure failure ) = 0;
+  };
+
+  ResourceCollector( LoadCompletionMonitor * const completionMonitor = 0 );
   virtual ~ResourceCollector();
 
   virtual void LoadResponse(Dali::Integration::ResourceId id, Dali::Integration::ResourceTypeId type, Dali::Integration::ResourcePointer resource, Dali::Integration::LoadStatus status);
@@ -71,6 +79,8 @@ public:
   ResourceCounterMap mFailureCounts;
   /** Remember the order of request completions so request priority can be tested. */
   ResourceSequence mCompletionSequence;
+  /** Optional component to do additional tracking and testing on load success and failures. */
+  LoadCompletionMonitor * const mLoadCompletionMonitor;
   /** Count of all successes and failures.*/
   unsigned mGrandTotalCompletions;
 

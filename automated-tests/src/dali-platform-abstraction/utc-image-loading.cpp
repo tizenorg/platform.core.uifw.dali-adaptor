@@ -45,6 +45,14 @@ const unsigned NUM_CANCELLED_LOAD_GROUPS_TO_ISSUE = NUM_LOAD_GROUPS_TO_ISSUE * 1
 /** The number of times to ask for resource load status. */
 const unsigned MAX_NUM_RESOURCE_TRIES = 5;
 
+// Target dimensions for scaling tests:
+const unsigned TALL_TEST_WIDTH = 64;
+const unsigned TALL_TEST_HEIGHT = 192;
+const unsigned SQUARE_TEST_WIDTH = 192;
+const unsigned SQUARE_TEST_HEIGHT = 192;
+const unsigned WIDE_TEST_WIDTH = 192;
+const unsigned WIDE_TEST_HEIGHT = 64;
+
 /** Images that should load without issue. */
 const char* const VALID_IMAGES[] = {
   TEST_IMAGE_DIR "/frac.jpg",
@@ -57,11 +65,178 @@ const unsigned NUM_VALID_IMAGES = sizeof(VALID_IMAGES) / sizeof(VALID_IMAGES[0])
 
 ///@ToDo: Add valid ktx, ico, and wbmp image examples.
 
+/** Tall images that should load without issue. */
+const char* const TALL_IMAGES[] = {
+  TEST_IMAGE_DIR "/tall.png",
+  TEST_IMAGE_DIR "/tall.jpg",
+  TEST_IMAGE_DIR "/tall.gif",
+  TEST_IMAGE_DIR "/tall.bmp",
+};
+const unsigned NUM_TALL_IMAGES = sizeof(TALL_IMAGES) / sizeof(TALL_IMAGES[0]);
+
+/** Square images that should load without issue. */
+const char* const SQUARE_IMAGES[] = {
+  TEST_IMAGE_DIR "/square.png",
+  TEST_IMAGE_DIR "/square.jpg",
+  TEST_IMAGE_DIR "/square.gif",
+  TEST_IMAGE_DIR "/square.bmp",
+};
+const unsigned NUM_SQUARE_IMAGES = sizeof(SQUARE_IMAGES) / sizeof(SQUARE_IMAGES[0]);
+
+/** Wide images that should load without issue. */
+const char* const WIDE_IMAGES[] = {
+  TEST_IMAGE_DIR "/wide.png",
+  TEST_IMAGE_DIR "/wide.jpg",
+  TEST_IMAGE_DIR "/wide.gif",
+  TEST_IMAGE_DIR "/wide.bmp",
+};
+const unsigned NUM_WIDE_IMAGES = sizeof(WIDE_IMAGES) / sizeof(WIDE_IMAGES[0]);
+
 /** Live platform abstraction recreated for each test case. */
 Integration::PlatformAbstraction * gAbstraction = 0;
 
 /** A variety of ImageAttributes to reach different code paths that have embedded code paths. */
 std::vector<ImageAttributes> gCancelAttributes;
+
+/** \brief Launch loads for all resources in an array of file paths. */
+void LaunchLoads( Integration::PlatformAbstraction& abstraction, const char* const paths[], const unsigned numResources, const Dali::Integration::ResourceType* resourceType, Dali::Integration::LoadResourcePriority priority, unsigned& outLoadsLaunched )
+{
+  // Launch loads of all resources named in the array of paths:
+  for( unsigned resource = 0; resource < numResources; ++resource )
+  {
+    // Launch a new load:
+    abstraction.LoadResource( ResourceRequest( outLoadsLaunched + 1, *resourceType, paths[resource], priority ) );
+    outLoadsLaunched += 1;
+  }
+}
+
+/** ResourceCollector component which looks at returned image sizes. */
+class LoadedAspectRatioChecker : public ResourceCollector::LoadCompletionMonitor
+{
+public:
+
+  /** Call to generate an approximate ratio from width and height. */
+  ///@ToDo: Improve the ratio test. The smaller the images, the larger the potential error. Very large images could use a more precise test. The thumb-sized windows bmp images force this extreme roughness.
+  static int calcRoughRatio( unsigned width, unsigned height )
+  {
+    return int( ((width * 1.0f) / height) * 100.0f + 0.5f);
+  }
+
+  LoadedAspectRatioChecker( unsigned desiredWidth, unsigned desiredHeight ) :
+    mDesiredRoughRatio( calcRoughRatio( desiredWidth, desiredHeight ) )
+  {}
+  virtual void LoadSucceeded( ResourceCollector & collector, Dali::Integration::ResourceId id, Dali::Integration::ResourceTypeId type, Dali::Integration::ResourcePointer resource )
+  {
+    // Extract the loaded bitmap from the resource:
+    DALI_TEST_CHECK( type == Dali::Integration::ResourceBitmap );
+    Bitmap* const bitmap = dynamic_cast<Bitmap*>( resource.Get() );
+    DALI_TEST_CHECK( bitmap != 0 );
+    if( bitmap )
+    {
+      // Check the loaded image is the same aspect ratio as desired:
+
+      const int loadedRatio = calcRoughRatio( bitmap->GetImageWidth(), bitmap->GetImageHeight() );
+      tet_printf( "Desired ratio: %d. Loaded ratio: %d.\n", mDesiredRoughRatio, loadedRatio );
+      DALI_TEST_CHECK( mDesiredRoughRatio == loadedRatio );
+
+      if( Bitmap::PackedPixelsProfile * packedBitmap = bitmap->GetPackedPixelsProfile() )
+      {
+        const int loadedBufferRatio = calcRoughRatio( packedBitmap->GetBufferWidth(), packedBitmap->GetBufferHeight() );
+        tet_printf( "Desired ratio: %d. Loaded ratio: %d.\n", mDesiredRoughRatio, loadedBufferRatio );
+        DALI_TEST_CHECK( mDesiredRoughRatio == loadedBufferRatio );
+      }
+    }
+  }
+
+  virtual void LoadFailed( ResourceCollector & collector, Dali::Integration::ResourceId id, Dali::Integration::ResourceFailure failure ) {}
+
+  const int mDesiredRoughRatio;
+};
+
+/** ResourceCollector component which looks at returned image sizes. */
+class LoadedSizeChecker : public ResourceCollector::LoadCompletionMonitor
+{
+public:
+  LoadedSizeChecker( unsigned desiredWidth, unsigned desiredHeight ) :
+    mDesiredWidth( desiredWidth ), mDesiredHeight( desiredHeight )
+  {}
+  virtual void LoadSucceeded( ResourceCollector & collector, Dali::Integration::ResourceId id, Dali::Integration::ResourceTypeId type, Dali::Integration::ResourcePointer resource )
+  {
+    // Extract the loaded bitmap from the resource:
+    DALI_TEST_CHECK( type == Dali::Integration::ResourceBitmap );
+    Bitmap* const bitmap = dynamic_cast<Bitmap*>( resource.Get() );
+    DALI_TEST_CHECK( bitmap != 0 );
+    if( bitmap )
+    {
+      // Check the loaded image is the same size as desired:
+
+      DALI_TEST_CHECK( mDesiredWidth  == bitmap->GetImageWidth() );
+      DALI_TEST_CHECK( mDesiredHeight == bitmap->GetImageHeight() );
+
+      if( Bitmap::PackedPixelsProfile * packedBitmap = bitmap->GetPackedPixelsProfile() )
+      {
+        DALI_TEST_CHECK( mDesiredWidth  == packedBitmap->GetBufferWidth() );
+        DALI_TEST_CHECK( mDesiredHeight == packedBitmap->GetBufferHeight() );
+      }
+    }
+  }
+
+  virtual void LoadFailed( ResourceCollector & collector, Dali::Integration::ResourceId id, Dali::Integration::ResourceFailure failure ) {}
+
+  unsigned mDesiredWidth;
+  unsigned mDesiredHeight;
+};
+
+void RunTestsForDimensions( Dali::Internal::Platform::ResourceCollector& resourceSink, unsigned width, unsigned height, ImageAttributes::ScalingMode scalingMode, Dali::Integration::LoadResourcePriority priority )
+{
+  Dali::ImageAttributes attributes;
+  attributes.SetSize( width, height );
+  attributes.SetScalingMode( scalingMode );
+  const Dali::Integration::BitmapResourceType resourceType( attributes );
+
+  unsigned loadsLaunched = 0;
+
+  // Launch loads of the images of various formats and shapes:
+  LaunchLoads(*gAbstraction, TALL_IMAGES, NUM_TALL_IMAGES, &resourceType, priority, loadsLaunched );
+  gAbstraction->GetResources( resourceSink );
+
+  LaunchLoads(*gAbstraction, SQUARE_IMAGES, NUM_SQUARE_IMAGES, &resourceType, priority, loadsLaunched );
+  gAbstraction->GetResources( resourceSink );
+
+  LaunchLoads(*gAbstraction, WIDE_IMAGES, NUM_WIDE_IMAGES, &resourceType, priority, loadsLaunched );
+  gAbstraction->GetResources( resourceSink );
+
+  // Drain the remaining loads:
+  for( unsigned i = 0; i < MAX_NUM_RESOURCE_TRIES && resourceSink.mGrandTotalCompletions < loadsLaunched; ++i )
+  {
+    tet_printf( "Sleeping before resource get %u.\n", i );
+    sleep( 1 );
+    gAbstraction->GetResources( resourceSink );
+  }
+
+  // Do the basic checks that the loads all succedded and were reported just once:
+  DALI_TEST_CHECK( loadsLaunched == resourceSink.mGrandTotalCompletions );
+  DALI_TEST_CHECK( loadsLaunched == resourceSink.mSuccessCounts.size() );
+  DALI_TEST_CHECK( 0 == resourceSink.mFailureCounts.size() );
+}
+
+void RunRatioTestsForDimensions( unsigned width, unsigned height, ImageAttributes::ScalingMode scalingMode, Dali::Integration::LoadResourcePriority priority )
+{
+  // Build and configure a resource collector to check for the aspect ratio we asked for:
+  LoadedAspectRatioChecker ratioChecker( width, height );
+  Dali::Internal::Platform::ResourceCollector resourceSink( &ratioChecker );
+
+  RunTestsForDimensions( resourceSink, width, height, scalingMode, priority );
+}
+
+void RunSizeTestsForDimensions( unsigned width, unsigned height, ImageAttributes::ScalingMode scalingMode, Dali::Integration::LoadResourcePriority priority )
+{
+  // Build and configure a resource collector to check for the aspect ratio we asked for:
+  LoadedSizeChecker checker( width, height );
+  Dali::Internal::Platform::ResourceCollector resourceSink( &checker );
+
+  RunTestsForDimensions( resourceSink, width, height, scalingMode, priority );
+}
 
 } // anon namespace
 
@@ -340,6 +515,120 @@ int UtcDaliCancelSomeLoads(void)
   {
     DALI_TEST_CHECK( it->second == 1u );
   }
+
+  END_TEST;
+}
+
+// Test that ShrinkToFit mode generates a bitmap image with the correct
+// aspect ratio for all supported image formats.
+int UtcDaliLoadShrinkToFitAspectRatio(void)
+{
+  tet_printf("Running ShrinkToFit scaling mode aspect ratio test.\n");
+
+  DALI_TEST_CHECK( 0 == 1 && "Remove me when the test is implemented." );
+
+  RunRatioTestsForDimensions( WIDE_TEST_WIDTH , WIDE_TEST_HEIGHT,    ImageAttributes::ShrinkToFit, Dali::Integration::LoadPriorityNormal );
+  RunRatioTestsForDimensions( SQUARE_TEST_WIDTH, SQUARE_TEST_HEIGHT, ImageAttributes::ShrinkToFit, Dali::Integration::LoadPriorityNormal );
+  RunRatioTestsForDimensions( TALL_TEST_WIDTH, TALL_TEST_HEIGHT,     ImageAttributes::ShrinkToFit, Dali::Integration::LoadPriorityNormal );
+
+  END_TEST;
+}
+
+// Test that ScaleToFill mode generates a bitmap image with the correct
+// aspect ratio for all supported image formats.
+int UtcDaliLoadScaleToFillAspectRatio(void)
+{
+  tet_printf("Running load ScaleToFill scaling mode aspect ratio test.\n");
+
+  Dali::Integration::LoadResourcePriority priority = Dali::Integration::LoadPriorityNormal;
+
+  // Test widening scalings:
+  // For widening tests, use attributes with wider aspect ratio than any tested image.
+  RunRatioTestsForDimensions( WIDE_TEST_WIDTH , WIDE_TEST_HEIGHT, ImageAttributes::ScaleToFill, priority );
+
+  // Test square scalings:
+  RunRatioTestsForDimensions( SQUARE_TEST_WIDTH, SQUARE_TEST_HEIGHT, ImageAttributes::ScaleToFill, priority );
+
+  // Test tall scalings:
+  RunRatioTestsForDimensions( TALL_TEST_WIDTH, TALL_TEST_HEIGHT, ImageAttributes::ScaleToFill, priority );
+
+  END_TEST;
+}
+
+// Test that FitWidth mode generates a bitmap image with the correct
+// aspect ratio for all supported image formats.
+int UtcDaliLoadFitWidthAspectRatio(void)
+{
+  tet_printf("Running load FitWidth scaling mode aspect ratio test.\n");
+
+  RunRatioTestsForDimensions( WIDE_TEST_WIDTH , WIDE_TEST_HEIGHT,    ImageAttributes::FitWidth, Dali::Integration::LoadPriorityNormal );
+  RunRatioTestsForDimensions( SQUARE_TEST_WIDTH, SQUARE_TEST_HEIGHT, ImageAttributes::FitWidth, Dali::Integration::LoadPriorityNormal );
+  RunRatioTestsForDimensions( TALL_TEST_WIDTH, TALL_TEST_HEIGHT,     ImageAttributes::FitWidth, Dali::Integration::LoadPriorityNormal );
+
+  END_TEST;
+}
+
+// Test that FitHeight mode generates a bitmap image with the correct
+// aspect ratio for all supported image formats.
+int UtcDaliLoadFitHeightAspectRatio(void)
+{
+  tet_printf("Running load FitHeight scaling mode aspect ratio test.\n");
+
+  RunRatioTestsForDimensions( WIDE_TEST_WIDTH , WIDE_TEST_HEIGHT,    ImageAttributes::FitHeight, Dali::Integration::LoadPriorityNormal );
+  RunRatioTestsForDimensions( SQUARE_TEST_WIDTH, SQUARE_TEST_HEIGHT, ImageAttributes::FitHeight, Dali::Integration::LoadPriorityNormal );
+  RunRatioTestsForDimensions( TALL_TEST_WIDTH, TALL_TEST_HEIGHT,     ImageAttributes::FitHeight, Dali::Integration::LoadPriorityNormal );
+
+  END_TEST;
+}
+
+// Test that ShrinkToFit mode generates a bitmap image with the correct
+// dimensions for all supported image formats.
+int UtcDaliLoadShrinkToFitDimensions(void)
+{
+  tet_printf("Running ShrinkToFit scaling mode dimensions test.\n");
+
+  RunSizeTestsForDimensions( WIDE_TEST_WIDTH , WIDE_TEST_HEIGHT,    ImageAttributes::ShrinkToFit, Dali::Integration::LoadPriorityNormal );
+  RunSizeTestsForDimensions( SQUARE_TEST_WIDTH, SQUARE_TEST_HEIGHT, ImageAttributes::ShrinkToFit, Dali::Integration::LoadPriorityNormal );
+  RunSizeTestsForDimensions( TALL_TEST_WIDTH, TALL_TEST_HEIGHT,     ImageAttributes::ShrinkToFit, Dali::Integration::LoadPriorityNormal );
+
+  END_TEST;
+}
+
+// Test that ScaleToFill mode generates a bitmap image with the correct
+// dimensions for all supported image formats.
+int UtcDaliLoadScaleToFillDimensions(void)
+{
+  tet_printf("Running load ScaleToFill scaling mode dimensions test.\n");
+
+  RunSizeTestsForDimensions( WIDE_TEST_WIDTH , WIDE_TEST_HEIGHT,    ImageAttributes::ScaleToFill, Dali::Integration::LoadPriorityNormal );
+  RunSizeTestsForDimensions( SQUARE_TEST_WIDTH, SQUARE_TEST_HEIGHT, ImageAttributes::ScaleToFill, Dali::Integration::LoadPriorityNormal );
+  RunSizeTestsForDimensions( TALL_TEST_WIDTH, TALL_TEST_HEIGHT,     ImageAttributes::ScaleToFill, Dali::Integration::LoadPriorityNormal );
+
+  END_TEST;
+}
+
+// Test that FitWidth mode generates a bitmap image with the correct
+// dimensions for all supported image formats.
+int UtcDaliLoadFitWidthDimensions(void)
+{
+  tet_printf("Running load FitWidth scaling mode dimensions test.\n");
+
+  RunSizeTestsForDimensions( WIDE_TEST_WIDTH , WIDE_TEST_HEIGHT,    ImageAttributes::FitWidth, Dali::Integration::LoadPriorityNormal );
+  RunSizeTestsForDimensions( SQUARE_TEST_WIDTH, SQUARE_TEST_HEIGHT, ImageAttributes::FitWidth, Dali::Integration::LoadPriorityNormal );
+  RunSizeTestsForDimensions( TALL_TEST_WIDTH, TALL_TEST_HEIGHT,     ImageAttributes::FitWidth, Dali::Integration::LoadPriorityNormal );
+
+  END_TEST;
+}
+
+// Test that FitHeight mode generates a bitmap image with the correct
+// dimensions for all supported image formats.
+int UtcDaliLoadFitHeightDimensions(void)
+{
+  tet_printf("Running load FitHeight scaling mode dimensions test.\n");
+
+  RunSizeTestsForDimensions( WIDE_TEST_WIDTH , WIDE_TEST_HEIGHT,    ImageAttributes::FitHeight, Dali::Integration::LoadPriorityNormal );
+  RunSizeTestsForDimensions( SQUARE_TEST_WIDTH, SQUARE_TEST_HEIGHT, ImageAttributes::FitHeight, Dali::Integration::LoadPriorityNormal );
+  RunSizeTestsForDimensions( TALL_TEST_WIDTH, TALL_TEST_HEIGHT,     ImageAttributes::FitHeight, Dali::Integration::LoadPriorityNormal );
 
   END_TEST;
 }
