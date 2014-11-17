@@ -40,6 +40,40 @@ namespace SlpPlatform
 namespace
 {
 
+// Simple helper class to store the data and the state for the png reader,
+// also responsible for owning the data.
+struct PngMemoryReaderState
+{
+  unsigned char* buffer;
+  png_uint_32    buffer_size;
+  png_uint_32    current_pos;
+
+  PngMemoryReaderState(png_uint_32 file_size)  : buffer_size(file_size), current_pos(0)
+  {
+    buffer = (unsigned char*)malloc(buffer_size);
+  }
+
+  ~PngMemoryReaderState()
+  {
+    free(buffer);
+  }
+};
+
+// Callback for LibPNG when it is requresting more data.
+static void read_data_memory(png_structp png_ptr, png_bytep data, png_uint_32 length)
+{
+  PngMemoryReaderState *f = (PngMemoryReaderState *)png_get_io_ptr(png_ptr);
+  if (length > (f->buffer_size - f->current_pos)) png_error(png_ptr, "read error in read_data_memory (loadpng)");
+  memcpy(data, f->buffer + f->current_pos, length);
+  f->current_pos += length;
+}
+
+// Callback for LibPNG for error messages.
+void user_error_fn(png_structp png_ptr, png_const_charp warning_msg)
+{
+  DALI_LOG_ERROR("Png error : %s\n", warning_msg);
+}
+
 // simple class to enforce clean-up of PNG structures
 struct auto_png
 {
@@ -113,6 +147,61 @@ bool LoadPngHeader(FILE *fp, unsigned int &width, unsigned int &height, png_stru
   return true;
 }
 
+// Modified PNG header reader, this is uses LibPNG's memory reader API.
+bool LoadPngHeader(PngMemoryReaderState& reader, unsigned int &width, unsigned int &height, png_structp &png, png_infop &info)
+{
+  // Check header to see if it is a PNG file
+  if (reader.buffer_size < 8)
+  {
+    return false;
+  }
+
+  png_byte header[8] = { 0 };
+  memcpy(header, reader.buffer, 8);
+  reader.current_pos = 8;
+
+  if(png_sig_cmp(header, 0, 8))
+  {
+    return false;
+  }
+
+  png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+  if(!png)
+  {
+    DALI_LOG_WARNING("Can't create PNG read structure\n");
+    return false;
+  }
+
+  info = png_create_info_struct(png);
+  if(!info)
+  {
+    DALI_LOG_WARNING("png_create_info_struct failed\n");
+    return false;
+  }
+
+  png_set_expand(png);
+
+  if(setjmp(png_jmpbuf(png)))
+  {
+    DALI_LOG_WARNING("error during png_init_io\n");
+    return false;
+  }
+
+  png_set_sig_bytes(png, 8);
+  png_set_error_fn(png, (png_voidp) NULL, (png_error_ptr) NULL, user_error_fn);
+  png_set_read_fn(png, &reader, (png_rw_ptr)read_data_memory);
+
+  // read image info
+  png_read_info(png, info);
+
+  // dimensions
+  width = png_get_image_width(png, info);
+  height = png_get_image_height(png, info);
+
+  return true;
+}
+
 } // namespace - anonymous
 
 bool LoadPngHeader(FILE *fp, const ImageAttributes& attributes, unsigned int &width, unsigned int &height )
@@ -147,6 +236,17 @@ bool LoadBitmapFromPng( FILE *fp, Bitmap& bitmap, ImageAttributes& attributes, c
   png_infop info = NULL;
   auto_png autoPng(png, info);
 
+  fseek(fp, 0, SEEK_END);
+  size_t file_size = ftell(fp);
+  fseek(fp, 0, SEEK_SET);
+  PngMemoryReaderState pngReader(file_size);
+  size_t bytesRead = fread(pngReader.buffer, 1, file_size, fp);
+  if (bytesRead != file_size)
+  {
+    return false;
+  }
+  pngReader.current_pos = 0;
+
   /// @todo: consider parameters
   unsigned int y;
   unsigned int width, height;
@@ -156,7 +256,8 @@ bool LoadBitmapFromPng( FILE *fp, Bitmap& bitmap, ImageAttributes& attributes, c
   bool valid = false;
 
   // Load info from the header
-  if( !LoadPngHeader(fp, width, height, png, info) )
+  // This function also initializes libpng.
+  if( !LoadPngHeader(pngReader, width, height, png, info) )
   {
     return false;
   }
