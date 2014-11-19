@@ -405,6 +405,16 @@ void Window::DoShowIndicator( Dali::Window::WindowOrientation lastOrientation )
   }
 
   bool show = (mIndicatorVisible != Dali::Window::INVISIBLE );
+  // set indicator actor visibility so we're not unnecessarily rendering it
+  Dali::Actor actor = mIndicator->GetActor();
+  if( show )
+  {
+    actor.SetVisible( true );
+  }
+  else
+  {
+    actor.SetVisible( false );
+  }
   SetIndicatorProperties( show, lastOrientation );
   mIndicatorIsShown = show;
 }
