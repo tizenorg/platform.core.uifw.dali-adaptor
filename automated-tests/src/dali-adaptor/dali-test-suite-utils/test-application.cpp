@@ -20,7 +20,7 @@
 namespace Dali
 {
 
-
+  
 TestApplication::TestApplication( size_t surfaceWidth,
                                   size_t surfaceHeight,
                                   float  horizontalDpi,
@@ -52,6 +52,7 @@ TestApplication::TestApplication( bool   initialize,
 {
   if ( initialize )
   {
+    
     Initialize();
   }
 }

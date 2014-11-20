@@ -27,6 +27,7 @@
 #include "dali/public-api/math/math-utils.h"
 #include "dali/public-api/math/vector2.h"
 #include "platform-capabilities.h"
+#include <dali/integration-api/file-abstraction.h>
 
 namespace Dali
 {
@@ -41,51 +42,60 @@ namespace
 {
 
 // Simple helper class to store the data and the state for the png reader,
-// also responsible for owning the data.
-struct PngMemoryReaderState
+struct PngFileReaderState
 {
-  Dali::Vector<unsigned char> mBuffer;
-  png_uint_32                 mCurrentPos;
+  Dali::Integration::File*   mFile;
 
   size_t Size() const
   {
-    return mBuffer.Size();
+    return mFile->Size();
+  }
+
+  bool IsOpen() const
+  {
+    return mFile->IsOpen();
   }
 
   bool HasValidSignature() const
   {
-    if (mBuffer.Size() < 8)
+    mFile->Seek(0, SEEK_SET);
+    if (mFile->Available() >= 8)
     {
-      return false;
+      unsigned char header[8];
+      if (mFile->Read(header, 1, 8) == 8)
+      {
+        if(png_sig_cmp(header, 0, 8) == 0)
+        {
+          return true;
+        }
+      }
     }
 
-    if(png_sig_cmp(mBuffer.Begin(), 0, 8))
-    {
-      return false;
-    }
-
-    return true;
+    return false;
   }
 
   // Callback for LibPNG when it is requresting more data.
   void Read(png_bytep data, png_uint_32 length)
   {
-    if (length > (mBuffer.Size() - mCurrentPos))
+    if (static_cast<int64_t>(length) > mFile->Available())
     {
       DALI_ASSERT_DEBUG("Read error in read_data_memory.");
-      length = mBuffer.Size() - mCurrentPos;
+      length = mFile->Available();
     }
 
-    memcpy(data, mBuffer.Begin() + mCurrentPos, length);
-    mCurrentPos += length;
+    mFile->Read(data, 1, length);
   }
 
-  PngMemoryReaderState(size_t file_size)  : mCurrentPos(0)
+  void SeekTo(int64_t offset)
   {
-    mBuffer.Resize(file_size);
+    mFile->Seek(offset, SEEK_CUR);
   }
 
-  ~PngMemoryReaderState()
+  PngFileReaderState(Dali::Integration::File* file)  : mFile(file)
+  {
+  }
+
+  ~PngFileReaderState()
   {
   }
 };
@@ -93,7 +103,7 @@ struct PngMemoryReaderState
 // Callback for LibPNG when it is requresting more data.
 static void read_data_memory(png_structp png_ptr, png_bytep data, png_uint_32 length)
 {
-  PngMemoryReaderState *f = (PngMemoryReaderState *)png_get_io_ptr(png_ptr);
+  PngFileReaderState *f = (PngFileReaderState *)png_get_io_ptr(png_ptr);
   f->Read(data, length);
 }
 
@@ -118,18 +128,15 @@ struct auto_png
   png_infop& info;
 }; // struct auto_png;
 
-bool LoadPngHeader(FILE *fp, unsigned int &width, unsigned int &height, png_structp &png, png_infop &info)
+bool LoadPngHeader(Dali::Integration::File* file_data, unsigned int &width, unsigned int &height, png_structp &png, png_infop &info)
 {
-  png_byte header[8] = { 0 };
-
-  // Check header to see if it is a PNG file
-  size_t size = fread(header, 1, 8, fp);
-  if(size != 8)
+  PngFileReaderState pngReader(file_data);
+  if (!pngReader.IsOpen())
   {
     return false;
   }
 
-  if(png_sig_cmp(header, 0, 8))
+  if (!pngReader.HasValidSignature())
   {
     return false;
   }
@@ -157,8 +164,8 @@ bool LoadPngHeader(FILE *fp, unsigned int &width, unsigned int &height, png_stru
     return false;
   }
 
-  png_init_io(png, fp);
   png_set_sig_bytes(png, 8);
+  png_set_read_fn(png, &pngReader, (png_rw_ptr)read_data_memory);
 
   // read image info
   png_read_info(png, info);
@@ -171,7 +178,7 @@ bool LoadPngHeader(FILE *fp, unsigned int &width, unsigned int &height, png_stru
 }
 
 // Modified PNG header reader, this is uses LibPNG's memory reader API.
-bool LoadPngHeader(PngMemoryReaderState& reader, unsigned int &width, unsigned int &height, png_structp &png, png_infop &info)
+bool LoadPngHeader(PngFileReaderState& reader, unsigned int &width, unsigned int &height, png_structp &png, png_infop &info)
 {
   // Check header to see if it is a PNG file
   if (!reader.HasValidSignature())
@@ -203,7 +210,7 @@ bool LoadPngHeader(PngMemoryReaderState& reader, unsigned int &width, unsigned i
   }
 
   // We already have read the header.
-  reader.mCurrentPos = 8;
+  // reader.SeekTo(8);
   png_set_sig_bytes(png, 8);
   png_set_read_fn(png, &reader, (png_rw_ptr)read_data_memory);
 
@@ -219,13 +226,13 @@ bool LoadPngHeader(PngMemoryReaderState& reader, unsigned int &width, unsigned i
 
 } // namespace - anonymous
 
-bool LoadPngHeader(FILE *fp, const ImageAttributes& attributes, unsigned int &width, unsigned int &height )
+bool LoadPngHeader(Dali::Integration::File* file_data, const ImageAttributes& attributes, unsigned int &width, unsigned int &height )
 {
   png_structp png = NULL;
   png_infop info = NULL;
   auto_png autoPng(png, info);
 
-  bool success = LoadPngHeader(fp, width, height, png, info);
+  bool success = LoadPngHeader(file_data, width, height, png, info);
 
   if( success )
   {
@@ -242,21 +249,18 @@ bool LoadPngHeader(FILE *fp, const ImageAttributes& attributes, unsigned int &wi
       height = (int) req.height;
     }
   }
+
   return success;
 }
 
-bool LoadBitmapFromPng( FILE *fp, Bitmap& bitmap, ImageAttributes& attributes, const ResourceLoadingClient& client )
+bool LoadBitmapFromPng( Dali::Integration::File* file_data, Bitmap& bitmap, ImageAttributes& attributes, const ResourceLoadingClient& client )
 {
   png_structp png = NULL;
   png_infop info = NULL;
   auto_png autoPng(png, info);
 
-  fseek(fp, 0, SEEK_END);
-  size_t file_size = ftell(fp);
-  fseek(fp, 0, SEEK_SET);
-  PngMemoryReaderState pngReader(file_size);
-  size_t bytesRead = fread(pngReader.mBuffer.Begin(), 1, file_size, fp);
-  if (bytesRead != file_size)
+  PngFileReaderState pngReader(file_data);
+  if (!pngReader.IsOpen())
   {
     return false;
   }

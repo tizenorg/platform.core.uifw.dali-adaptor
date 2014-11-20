@@ -42,6 +42,7 @@ class Filter;
 namespace Platform
 {
 class FontController;
+class File;
 }
 
 namespace SlpPlatform
@@ -364,6 +365,17 @@ public:
    * @return The bitmap image.
    */
   Integration::BitmapPtr GetGlyphImage( FT_Library freeType, const std::string& fontFamily, const std::string& fontStyle, float fontSize, uint32_t character );
+
+  /**
+   * Retrieves the contents of a file through the file abstraction
+   *
+   * @param[in]   filename : name of the resource to be passed to the filesystem
+   * @param[out]  buffer   : contents of the file if successful.
+   *
+   * @return  0 on success.
+   */
+  Integration::File* ReadFile(const std::string& filename);
+  Integration::File* MapToMemory(const uint8_t* bytes, const size_t length);
 
 private:
 

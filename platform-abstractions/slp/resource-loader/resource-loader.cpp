@@ -40,6 +40,7 @@
 #include "loader-font.h"
 #include "../interfaces/font-controller.h"
 #include "../interfaces/data-cache.h"
+#include "slp-file-system.h"
 
 
 /**
@@ -109,6 +110,8 @@ struct ResourceLoader::ResourceLoaderImpl
   FailedQueue  mFailedLoads;            ///< Failed load request notifications are stored here until fetched by core
   FailedQueue  mFailedSaves;            ///< Failed save request notifications are stored here until fetched by core
 
+  Integration::FileSystemBase* mFilesystem;          ///< Abstracts away IO operations.
+
   Dali::Platform::FontController* mFontController;       ///< Interface for accessing font information
 
   RequestHandlers mRequestHandlers;
@@ -117,6 +120,7 @@ struct ResourceLoader::ResourceLoaderImpl
   ResourceLoaderImpl( ResourceLoader* loader )
   {
     mFontController = Dali::Platform::FontController::New();
+    mFilesystem = new Dali::SlpPlatform::FileSystem();
 
     mRequestHandlers.insert(std::make_pair(ResourceBitmap, new ResourceBitmapRequester(*loader)));
     mRequestHandlers.insert(std::make_pair(ResourceShader, new ResourceShaderRequester(*loader)));
@@ -134,6 +138,7 @@ struct ResourceLoader::ResourceLoaderImpl
     }
 
     delete mFontController;
+    delete mFilesystem;
   }
 
   void Pause()
@@ -863,6 +868,16 @@ Integration::BitmapPtr ResourceLoader::GetGlyphImage( FT_Library freeType, const
   }
 
   return image;
+}
+
+Integration::File* ResourceLoader::ReadFile(const std::string& filename)
+{
+  return mImpl->mFilesystem->OpenFile(filename);
+}
+
+Integration::File* ResourceLoader::MapToMemory(const uint8_t* bytes, const size_t length)
+{
+  return mImpl->mFilesystem->MapToMemory(bytes, length);
 }
 
 void ResourceLoader::SetDefaultFontFamily( const std::string& fontFamily, const std::string& fontStyle )
