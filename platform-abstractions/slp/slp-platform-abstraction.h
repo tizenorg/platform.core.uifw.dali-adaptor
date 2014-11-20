@@ -34,6 +34,11 @@ namespace Dali
  */
 Integration::PlatformAbstraction* CreatePlatformAbstraction();
 
+namespace Integration
+{
+  class File;
+}
+
 namespace SlpPlatform
 {
 
@@ -98,6 +103,8 @@ public: // PlatformAbstraction overrides
    * @copydoc PlatformAbstraction::LoadResourceSynchronously()
    */
   virtual Integration::ResourcePointer LoadResourceSynchronously(const Integration::ResourceType& resourceType, const std::string& resourcePath);
+
+
 
   /**
    * @copydoc PlatformAbstraction::SaveResource()
@@ -188,6 +195,11 @@ public: // PlatformAbstraction overrides
    * @copydoc PlatformAbstraction::LoadFile()
    */
   virtual bool LoadFile( const std::string& filename, std::vector< unsigned char >& buffer ) const;
+
+  /**
+   * @copydoc PlatformAbstraction::OpenFile()
+   */
+  virtual Integration::File* OpenFile(const std::string& name) const;
 
   /**
    * @copydoc PlatformAbstraction::LoadFile()

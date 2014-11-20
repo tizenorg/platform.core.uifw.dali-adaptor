@@ -20,7 +20,6 @@
 
 #include "resource-requester-base.h"
 #include "resource-thread-image.h"
-#include "resource-thread-distance-field.h"
 
 namespace Dali
 {
@@ -76,7 +75,6 @@ public:
 
 protected:
   ResourceThreadImage*          mThreadImage;           ///< Image loader thread object
-  ResourceThreadDistanceField*  mThreadDistanceField;   ///< Distance field generator thread.
 };
 
 } // SlpPlatform

@@ -32,6 +32,11 @@ namespace Integration
 }
 struct ImageAttributes;
 
+namespace Integration
+{
+  class File;
+}
+
 namespace SlpPlatform
 {
 
@@ -51,7 +56,7 @@ const unsigned char MAGIC_BYTE_2 = 0x50;
  * @param[in]  attributes  Describes the dimensions, pixel format and other details for loading the image data
  * @return  true if file decoded successfully, false otherwise
  */
-bool LoadBitmapFromPng( FILE *fp, Integration::Bitmap& bitmap, ImageAttributes& attributes, const ResourceLoadingClient& client );
+bool LoadBitmapFromPng( Dali::Integration::File* file_data, Integration::Bitmap& bitmap, ImageAttributes& attributes, const ResourceLoadingClient& client );
 
 /**
  * Loads the header of a PNG file and fills in the width and height appropriately.
@@ -61,7 +66,7 @@ bool LoadBitmapFromPng( FILE *fp, Integration::Bitmap& bitmap, ImageAttributes& 
  * @param[out]  height  Is set with the height of the image
  * @return true if the file's header was read successully, false otherwise
  */
-bool LoadPngHeader(FILE *fp, const ImageAttributes& attributes, unsigned int &width, unsigned int &height );
+bool LoadPngHeader(Dali::Integration::File* file_data, const ImageAttributes& attributes, unsigned int &width, unsigned int &height );
 
 /**
  * A bucket of bytes representing a PNG image.

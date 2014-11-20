@@ -20,6 +20,7 @@
 #include "image-loaders/image-loader.h"
 
 #include <string>
+#include <assert.h>
 
 namespace Dali
 {
@@ -44,9 +45,10 @@ BitmapLoader::~BitmapLoader()
 
 void BitmapLoader::Initialize(const std::string& filename)
 {
+  assert(0 && "forgot to implement or remove...");
   ImageAttributes attributes;
   Integration::BitmapResourceType bitmapResourceType( attributes );
-  Integration::ResourcePointer resource = SlpPlatform::ImageLoader::LoadResourceSynchronously( bitmapResourceType, filename );
+  Integration::ResourcePointer resource = SlpPlatform::ImageLoader::LoadResourceSynchronously( bitmapResourceType, NULL );
 
   mBitmap = static_cast<Integration::Bitmap*>(resource.Get());
 }
