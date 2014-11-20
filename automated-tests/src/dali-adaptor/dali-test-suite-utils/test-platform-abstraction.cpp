@@ -369,6 +369,14 @@ bool TestPlatformAbstraction::LoadFile( const std::string& filename, std::vector
   return mLoadFileResult.loadResult;
 }
 
+bool TestPlatformAbstraction::OpenFile( const std::string& filename) const
+{
+  mTrace.PushCall("OpenFile", "");
+  return NULL;
+}
+
+lopikula
+
 /**
  * @copydoc PlatformAbstraction::SaveFile()
  */

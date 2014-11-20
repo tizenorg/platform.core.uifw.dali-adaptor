@@ -32,7 +32,6 @@
 
 namespace Dali
 {
-
 /**
  * Concrete implementation of the platform abstraction class.
  */
@@ -206,6 +205,11 @@ public:
    * @copydoc PlatformAbstraction::LoadFile()
    */
   virtual bool LoadFile( const std::string& filename, std::vector< unsigned char >& buffer ) const;
+
+  /**
+   * @copydoc PlatformAbstraction::OpenFile()
+   */
+  virtual bool OpenFile( const std::string& filename) const;
 
   /**
    * @copydoc PlatformAbstraction::SaveFile()

@@ -32,6 +32,7 @@
 #include "slp-font-configuration-parser.h"
 #include "data-cache/metrics-cache.h"
 #include "image-loaders/image-loader.h"
+#include <dali/integration-api/file-abstraction.h>
 
 namespace Dali
 {
@@ -174,7 +175,8 @@ void SlpPlatformAbstraction::GetClosestImageSize( const std::string& filename,
                                                   Vector2& closestSize )
 {
   closestSize = Vector2::ZERO;
-  ImageLoader::GetClosestImageSize(filename, attributes, closestSize );
+  Dali::Integration::FileDataHelper file_data = OpenFile(filename);
+  ImageLoader::GetClosestImageSize(file_data, attributes, closestSize );
 }
 
 void SlpPlatformAbstraction::GetClosestImageSize( Integration::ResourcePointer resourceBuffer,
@@ -194,9 +196,16 @@ void SlpPlatformAbstraction::LoadResource(const Integration::ResourceRequest& re
   }
 }
 
+Integration::File* SlpPlatformAbstraction::OpenFile(const std::string& resourcePath) const
+{
+  Integration::File* file = mResourceLoader->ReadFile(resourcePath);
+  return file;
+}
+
 Integration::ResourcePointer SlpPlatformAbstraction::LoadResourceSynchronously(const Integration::ResourceType& resourceType, const std::string& resourcePath)
 {
-  return ImageLoader::LoadResourceSynchronously( resourceType, resourcePath );
+  Dali::Integration::FileDataHelper file_data = OpenFile(resourcePath.c_str());
+  return ImageLoader::LoadResourceSynchronously( resourceType, file_data.Get() );
 }
 
 
