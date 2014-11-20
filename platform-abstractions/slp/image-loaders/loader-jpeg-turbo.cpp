@@ -22,6 +22,7 @@
 #include <dali/public-api/images/image-attributes.h>
 #include <resource-loader/debug/resource-loader-debug.h>
 #include "platform-capabilities.h"
+#include "../interfaces/file-system.h"
 
 // EXTERNAL HEADERS
 #include <libexif/exif-data.h>
@@ -92,6 +93,70 @@ namespace
   struct JpegErrorState {
     struct jpeg_error_mgr errorManager;
     jmp_buf jumpBuffer;
+  };
+
+  const int kJpegBufferSize = 8192;
+
+  struct JpegReader
+  {
+    jpeg_source_mgr sourceManager;
+    Platform::File* fileHandle;
+    char buffer[kJpegBufferSize];
+
+    void init( j_decompress_ptr cinfo )
+    {
+    }
+
+    boolean fill_buffer(j_decompress_ptr cinfo)
+    {
+      sourceManager.bytes_in_buffer = fileHandle->Read(buffer, 1, kJpegBufferSize);
+      return TRUE;
+    }
+
+    void skip(j_decompress_ptr cinfo, long num_bytes)
+    {  
+      fileHandle->Seek(num_bytes, SEEK_CUR);    
+    }
+
+    void terminate(j_decompress_ptr cinfo)
+    {      
+    }
+
+    static void jpeg_init_source( j_decompress_ptr cinfo )
+    {
+      JpegReader* instance = (JpegReader*)cinfo->src;
+      instance->init(cinfo);
+    }
+
+    static boolean jpeg_fill_input_buffer( j_decompress_ptr cinfo )
+    {
+      JpegReader* instance = (JpegReader*)cinfo->src;
+      return instance->fill_buffer(cinfo);
+    }    
+    
+    static void jpeg_skip_input_data( j_decompress_ptr cinfo, long num_bytes )
+    {
+      JpegReader* instance = (JpegReader*)cinfo->src;
+      instance->skip(cinfo, num_bytes);
+    }
+
+    static void jpeg_term_source( j_decompress_ptr cinfo )
+    {      
+      JpegReader* instance = (JpegReader*)cinfo->src;
+      instance->terminate(cinfo);
+    } 
+
+    void Setup(j_decompress_ptr cinfo)
+    {      
+      sourceManager.init_source = jpeg_init_source;
+      sourceManager.fill_input_buffer = jpeg_fill_input_buffer;
+      sourceManager.skip_input_data = jpeg_skip_input_data;
+      sourceManager.resync_to_restart = jpeg_resync_to_restart;
+      sourceManager.term_source = jpeg_term_source;
+      sourceManager.bytes_in_buffer = 0;
+      sourceManager.next_input_byte = (JOCTET*)buffer;      
+      cinfo->src = (jpeg_source_mgr*)this;
+    }   
   };
 
   /**
@@ -192,8 +257,9 @@ bool TransformSize( int requiredWidth, int requiredHeight, JPGFORM_CODE transfor
                     int& preXformImageWidth, int& preXformImageHeight,
                     int& postXformImageWidth, int& postXformImageHeight );
 
-bool LoadJpegHeader( FILE *fp, unsigned int &width, unsigned int &height )
+bool LoadJpegHeader( Platform::File *fp, unsigned int &width, unsigned int &height )
 {
+
   // using libjpeg API to avoid having to read the whole file in a buffer
   struct jpeg_decompress_struct cinfo;
   struct JpegErrorState jerr;
@@ -212,7 +278,9 @@ bool LoadJpegHeader( FILE *fp, unsigned int &width, unsigned int &height )
 
   jpeg_create_decompress( &cinfo );
 
-  jpeg_stdio_src( &cinfo, fp );
+  JpegReader reader;
+  reader.fileHandle = fp;
+  reader.Setup(&cinfo);
 
   // Check header to see if it is  JPEG file
   if( jpeg_read_header( &cinfo, TRUE ) != JPEG_HEADER_OK )
@@ -229,29 +297,16 @@ bool LoadJpegHeader( FILE *fp, unsigned int &width, unsigned int &height )
   return true;
 }
 
-bool LoadBitmapFromJpeg( FILE *fp, Bitmap& bitmap, ImageAttributes& attributes, const ResourceLoadingClient& client )
+bool LoadBitmapFromJpeg( Platform::File *fp, Bitmap& bitmap, ImageAttributes& attributes, const ResourceLoadingClient& client )
 {
   const int flags= 0;
-
-  if( fseek(fp,0,SEEK_END) )
-  {
-    DALI_LOG_ERROR("Error seeking to end of file\n");
-    return false;
-  }
-
-  long positionIndicator = ftell(fp);
-  unsigned int jpegBufferSize = 0u;
-  if( positionIndicator > -1L )
-  {
-    jpegBufferSize = static_cast<unsigned int>(positionIndicator);
-  }
-
+  int64_t jpegBufferSize = fp->Size();
   if( 0u == jpegBufferSize )
   {
     return false;
   }
 
-  if( fseek(fp, 0, SEEK_SET) )
+  if( fp->Seek(0, SEEK_SET) )
   {
     DALI_LOG_ERROR("Error seeking to start of file\n");
     return false;
@@ -270,13 +325,13 @@ bool LoadBitmapFromJpeg( FILE *fp, Bitmap& bitmap, ImageAttributes& attributes, 
   unsigned char * const jpegBufferPtr = &jpegBuffer[0];
 
   // Pull the compressed JPEG image bytes out of a file and into memory:
-  if( fread( jpegBufferPtr, 1, jpegBufferSize, fp ) != jpegBufferSize )
+  if( fp->Read(jpegBufferPtr, 1, jpegBufferSize) != jpegBufferSize )
   {
     DALI_LOG_WARNING("Error on image file read.");
     return false;
   }
 
-  if( fseek(fp, 0, SEEK_SET) )
+  if( fp->Seek(0, SEEK_SET) )
   {
     DALI_LOG_ERROR("Error seeking to start of file\n");
   }
@@ -739,13 +794,13 @@ bool TransformSize( int requiredWidth, int requiredHeight, JPGFORM_CODE transfor
   return success;
 }
 
-ExifData* LoadExifData( FILE* fp )
+ExifData* LoadExifData( Platform::File* fp )
 {
   ExifData*     exifData=NULL;
   ExifLoader*   exifLoader;
   unsigned char dataBuffer[1024];
 
-  if( fseek( fp, 0, SEEK_SET ) )
+  if( fp->Seek(0, SEEK_SET) )
   {
     DALI_LOG_ERROR("Error seeking to start of file\n");
   }
@@ -753,9 +808,9 @@ ExifData* LoadExifData( FILE* fp )
   {
     exifLoader = exif_loader_new ();
 
-    while( !feof(fp) )
+    while( fp->Available() > 0 )
     {
-      int size = fread( dataBuffer, 1, sizeof( dataBuffer ), fp );
+      int size = fp->Read( dataBuffer, 1, sizeof( dataBuffer ));
       if( size <= 0 )
       {
         break;
@@ -773,7 +828,7 @@ ExifData* LoadExifData( FILE* fp )
   return exifData;
 }
 
-bool LoadJpegHeader(FILE *fp, const ImageAttributes& attributes, unsigned int &width, unsigned int &height)
+bool LoadJpegHeader(Platform::File *fp, const ImageAttributes& attributes, unsigned int &width, unsigned int &height)
 {
   unsigned int requiredWidth  = attributes.GetWidth();
   unsigned int requiredHeight = attributes.GetHeight();

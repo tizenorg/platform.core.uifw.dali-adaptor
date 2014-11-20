@@ -29,25 +29,21 @@ ResourceBitmapRequester::ResourceBitmapRequester( ResourceLoader& resourceLoader
 : ResourceRequesterBase( resourceLoader )
 {
   mThreadImage  = new ResourceThreadImage( resourceLoader );
-  mThreadDistanceField = new ResourceThreadDistanceField( resourceLoader );
 }
 
 ResourceBitmapRequester::~ResourceBitmapRequester()
 {
   delete mThreadImage;
-  delete mThreadDistanceField;
 }
 
 void ResourceBitmapRequester::Pause()
 {
   mThreadImage->Pause();
-  mThreadDistanceField->Pause();
 }
 
 void ResourceBitmapRequester::Resume()
 {
   mThreadImage->Resume();
-  mThreadDistanceField->Resume();
 }
 
 void ResourceBitmapRequester::LoadResource( Integration::ResourceRequest& request )
@@ -59,13 +55,8 @@ void ResourceBitmapRequester::LoadResource( Integration::ResourceRequest& reques
     // Work out if the resource is in memory or a file:
     const ResourceThreadBase::RequestType requestType = request.GetResource().Get() ? ResourceThreadBase::RequestDecode : ResourceThreadBase::RequestLoad;
 
-    // Work out what thread to decode / load the image on:
-    ResourceThreadBase* const imageThread = mThreadImage;
-    ResourceThreadBase* const distanceFieldThread = mThreadDistanceField ;
-    ResourceThreadBase* const workerThread = ( !resType->imageAttributes.IsDistanceField() ) ? imageThread : distanceFieldThread;
-
     // Dispatch the job to the right thread:
-    workerThread->AddRequest( request, requestType );
+    mThreadImage->AddRequest( request, requestType );
   }
 }
 
@@ -83,7 +74,6 @@ void ResourceBitmapRequester::SaveResource(const Integration::ResourceRequest& r
 void ResourceBitmapRequester::CancelLoad(Integration::ResourceId id, Integration::ResourceTypeId typeId)
 {
   mThreadImage->CancelRequest(id);
-  mThreadDistanceField->CancelRequest(id);
 }
 
 } // SlpPlatform

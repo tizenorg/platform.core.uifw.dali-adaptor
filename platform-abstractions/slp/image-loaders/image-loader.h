@@ -21,9 +21,15 @@
 #include <dali/integration-api/resource-types.h>
 #include <dali/integration-api/bitmap.h>
 #include "resource-loading-client.h"
+#include "../interfaces/file-system.h"
 
 namespace Dali
 {
+namespace Platform
+{
+  class File;
+}
+
 namespace SlpPlatform
 {
 namespace ImageLoader
@@ -31,13 +37,12 @@ namespace ImageLoader
 /**
  * Convert a file stream into a bitmap.
  * @param[in] resourceType The type of resource to convert.
- * @param[in] path The path to the resource.
  * @param[in] fp File Pointer. Closed on exit.
  * @param[in] client The component that is initiating the conversion.
  * @param[out] bitmap Pointer to write bitmap to
  * @return true on success, false on failure
  */
-bool ConvertStreamToBitmap( const Integration::ResourceType& resourceType, std::string path, FILE * const fp, const ResourceLoadingClient& client, Integration::BitmapPtr& ptr);
+bool ConvertStreamToBitmap( const Integration::ResourceType& resourceType, Platform::File* fp, const ResourceLoadingClient& client, Integration::BitmapPtr& ptr);
 
 /**
  * Convert a bitmap and write to a file stream.
@@ -46,12 +51,12 @@ bool ConvertStreamToBitmap( const Integration::ResourceType& resourceType, std::
  * @param[out] bitmap Pointer from which to read bitmap
  * @return true on success, false on failure
  */
-bool ConvertBitmapToStream( std::string path, FILE * const fp, Integration::BitmapPtr& ptr );
+bool ConvertBitmapToStream( std::string path, Platform::File* fp, Integration::BitmapPtr& ptr );
 
 
-Integration::ResourcePointer LoadResourceSynchronously( const Integration::ResourceType& resourceType, const std::string& resourcePath );
+Integration::ResourcePointer LoadResourceSynchronously( const Integration::ResourceType& resourceType, Platform::File* file_data );
 
-void GetClosestImageSize( const std::string& filename,
+void GetClosestImageSize( Platform::File* file_data,
                           const ImageAttributes& attributes,
                           Vector2 &closestSize );
 

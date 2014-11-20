@@ -23,6 +23,7 @@
 #include <dali/integration-api/resource-types.h>
 #include "portable/file-closer.h"
 #include "image-loaders/image-loader.h"
+#include "../interfaces/file-system.h"
 
 using namespace Dali::Integration;
 
@@ -50,12 +51,11 @@ void ResourceThreadImage::Load(const ResourceRequest& request)
   BitmapPtr bitmap = 0;
   bool result = false;
 
-  Dali::Internal::Platform::FileCloser fileCloser( request.GetPath().c_str(), "rb" );
-  FILE * const fp = fileCloser.GetFile();
+  Platform::FileDataHelper file_data = mResourceLoader.ReadFile(request.GetPath().c_str());
 
-  if( fp != NULL )
+  if(file_data->IsOpen())
   {
-    result = ImageLoader::ConvertStreamToBitmap( *request.GetType(), request.GetPath(), fp, *this, bitmap );
+    result = ImageLoader::ConvertStreamToBitmap( *request.GetType(), file_data.Get(), *this, bitmap );
     // Last chance to interrupt a cancelled load before it is reported back to clients
     // which have already stopped tracking it:
     InterruptionPoint(); // Note: This can throw an exception.
@@ -114,12 +114,11 @@ void ResourceThreadImage::Decode(const ResourceRequest& request)
 
     if( blobBytes != 0 && blobSize > 0U )
     {
-      // Open a file handle on the memory buffer:
-      Dali::Internal::Platform::FileCloser fileCloser( blobBytes, blobSize, "rb" );
-      FILE * const fp = fileCloser.GetFile();
-      if ( fp != NULL )
+      // Todo: maybe pass the vector as ref, not the pointer.
+      Platform::FileDataHelper file_data = mResourceLoader.MapToMemory(blobBytes, blobSize);
+      if (file_data->IsOpen())
       {
-        bool result = ImageLoader::ConvertStreamToBitmap( *request.GetType(), request.GetPath(), fp, StubbedResourceLoadingClient(), bitmap );
+        bool result = ImageLoader::ConvertStreamToBitmap( *request.GetType(), file_data.Get(), StubbedResourceLoadingClient(), bitmap );
 
         if ( result && bitmap )
         {

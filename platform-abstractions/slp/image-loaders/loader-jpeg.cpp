@@ -31,6 +31,7 @@
 #include <cstring>
 #include <libexif/exif-data.h>
 #include <libexif/exif-tag.h>
+#include "../interfaces/file-system.h"
 
 namespace Dali
 {
@@ -128,7 +129,7 @@ static void JpegOutputMessageHandler (j_common_ptr cinfo)
   /* Stop libjpeg from printing to stderr - Do Nothing */
 }
 
-bool LoadJpegHeader(FILE *fp, unsigned int &width, unsigned int &height, jpeg_decompress_struct &cinfo, jpeg_error_mgr &jerr)
+bool LoadJpegHeader(Platform::File *fp, unsigned int &width, unsigned int &height, jpeg_decompress_struct &cinfo, jpeg_error_mgr &jerr)
 {
     cinfo.err = jpeg_std_error(&jerr);
 
@@ -180,11 +181,12 @@ bool LoadJpegHeader(FILE *fp, unsigned int &width, unsigned int &height)
   return LoadJpegHeader(fp, width, height, cinfo, jerr);
 }
 
-bool LoadBitmapFromJpeg(FILE *fp, Bitmap& bitmap, ImageAttributes& attributes)
+bool LoadBitmapFromJpeg(Platform::File *fp, Bitmap& bitmap, ImageAttributes& attributes)
 {
   JPGFORM_CODE transform = JPGFORM_NONE;
   struct jpeg_decompress_struct cinfo;
   struct jpeg_error_mgr jerr;
+
   auto_jpg autoJpg(cinfo);
 
   if( fseek(fp,0,SEEK_END) )

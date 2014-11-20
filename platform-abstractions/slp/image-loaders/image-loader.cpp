@@ -28,7 +28,7 @@
 #include "loader-ico.h"
 #include "loader-ktx.h"
 #include "loader-wbmp.h"
-
+#include "../interfaces/file-system.h"
 #include <cstring>
 
 using namespace Dali::Integration;
@@ -40,8 +40,8 @@ namespace SlpPlatform
 
 namespace
 {
-typedef bool (*LoadBitmapFunction)( FILE*, Bitmap&, ImageAttributes&, const ResourceLoadingClient& );
-typedef bool (*LoadBitmapHeaderFunction)(FILE*, const ImageAttributes& attrs, unsigned int& width, unsigned int& height );
+typedef bool (*LoadBitmapFunction)( Platform::File*, Bitmap&, ImageAttributes&, const ResourceLoadingClient& );
+typedef bool (*LoadBitmapHeaderFunction)(Platform::File*, const ImageAttributes& attrs, unsigned int& width, unsigned int& height );
 
 #if defined(DEBUG_ENABLED)
 Integration::Log::Filter* gLogFilter = Debug::Filter::New(Debug::Concise, false, "LOG_IMAGE_LOADING");
@@ -90,11 +90,11 @@ const BitmapLoader BITMAP_LOADER_LOOKUP_TABLE[FORMAT_TOTAL_COUNT] =
 {
   { Png::MAGIC_BYTE_1,  Png::MAGIC_BYTE_2,  LoadBitmapFromPng,  LoadPngHeader,  Bitmap::BITMAP_2D_PACKED_PIXELS },
   { Jpeg::MAGIC_BYTE_1, Jpeg::MAGIC_BYTE_2, LoadBitmapFromJpeg, LoadJpegHeader, Bitmap::BITMAP_2D_PACKED_PIXELS },
-  { Bmp::MAGIC_BYTE_1,  Bmp::MAGIC_BYTE_2,  LoadBitmapFromBmp,  LoadBmpHeader,  Bitmap::BITMAP_2D_PACKED_PIXELS },
-  { Gif::MAGIC_BYTE_1,  Gif::MAGIC_BYTE_2,  LoadBitmapFromGif,  LoadGifHeader,  Bitmap::BITMAP_2D_PACKED_PIXELS },
-  { Ktx::MAGIC_BYTE_1,  Ktx::MAGIC_BYTE_2,  LoadBitmapFromKtx,  LoadKtxHeader,  Bitmap::BITMAP_COMPRESSED       },
-  { Ico::MAGIC_BYTE_1,  Ico::MAGIC_BYTE_2,  LoadBitmapFromIco,  LoadIcoHeader,  Bitmap::BITMAP_2D_PACKED_PIXELS },
-  { 0x0,                0x0,                LoadBitmapFromWbmp, LoadWbmpHeader, Bitmap::BITMAP_2D_PACKED_PIXELS },
+  // { Bmp::MAGIC_BYTE_1,  Bmp::MAGIC_BYTE_2,  LoadBitmapFromBmp,  LoadBmpHeader,  Bitmap::BITMAP_2D_PACKED_PIXELS },
+  // { Gif::MAGIC_BYTE_1,  Gif::MAGIC_BYTE_2,  LoadBitmapFromGif,  LoadGifHeader,  Bitmap::BITMAP_2D_PACKED_PIXELS },
+  // { Ktx::MAGIC_BYTE_1,  Ktx::MAGIC_BYTE_2,  LoadBitmapFromKtx,  LoadKtxHeader,  Bitmap::BITMAP_COMPRESSED       },
+  // { Ico::MAGIC_BYTE_1,  Ico::MAGIC_BYTE_2,  LoadBitmapFromIco,  LoadIcoHeader,  Bitmap::BITMAP_2D_PACKED_PIXELS },
+  // { 0x0,                0x0,                LoadBitmapFromWbmp, LoadWbmpHeader, Bitmap::BITMAP_2D_PACKED_PIXELS },
 };
 
 const unsigned int MAGIC_LENGTH = 2;
@@ -149,17 +149,17 @@ FileFormats GetFormatHint( const std::string& filename )
  * @param[out]  profile The kind of bitmap to hold the bits loaded for the bitmap.
  * @return true, if we can decode the image, false otherwise
  */
-bool GetBitmapLoaderFunctions( FILE *fp,
+bool GetBitmapLoaderFunctions( Platform::File *fp,
                                FileFormats format,
                                LoadBitmapFunction& loader,
                                LoadBitmapHeaderFunction& header,
                                Bitmap::Profile& profile )
 {
   unsigned char magic[MAGIC_LENGTH];
-  size_t read = fread(magic, sizeof(unsigned char), MAGIC_LENGTH, fp);
+  size_t read = fp->Read(magic, sizeof(unsigned char), MAGIC_LENGTH);
 
   // Reset to the start of the file.
-  if( fseek(fp, 0, SEEK_SET) )
+  if( fp->Seek(0, SEEK_SET) )
   {
     DALI_LOG_ERROR("Error seeking to start of file\n");
   }
@@ -234,7 +234,7 @@ bool GetBitmapLoaderFunctions( FILE *fp,
   }
 
   // Reset to the start of the file.
-  if( fseek(fp, 0, SEEK_SET) )
+  if( fp->Seek(0, SEEK_SET) )
   {
     DALI_LOG_ERROR("Error seeking to start of file\n");
   }
@@ -248,7 +248,7 @@ bool GetBitmapLoaderFunctions( FILE *fp,
 namespace ImageLoader
 {
 
-bool ConvertStreamToBitmap(const ResourceType& resourceType, std::string path, FILE * const fp, const ResourceLoadingClient& client, BitmapPtr& ptr)
+bool ConvertStreamToBitmap(const ResourceType& resourceType, Platform::File* fp, const ResourceLoadingClient& client, BitmapPtr& ptr)
 {
   DALI_LOG_TRACE_METHOD(gLogFilter);
   DALI_ASSERT_DEBUG( ResourceBitmap == resourceType.id );
@@ -263,14 +263,14 @@ bool ConvertStreamToBitmap(const ResourceType& resourceType, std::string path, F
     Bitmap::Profile profile;
 
     if ( GetBitmapLoaderFunctions( fp,
-                                   GetFormatHint( path ),
+                                   GetFormatHint( fp->GetName() ),
                                    function,
                                    header,
                                    profile ) )
     {
       bitmap = Bitmap::New(profile, ResourcePolicy::DISCARD );
 
-      DALI_LOG_SET_OBJECT_STRING(bitmap, path);
+      DALI_LOG_SET_OBJECT_STRING(bitmap, fp->GetName());
       const BitmapResourceType& resType = static_cast<const BitmapResourceType&>(resourceType);
       ImageAttributes attributes  = resType.imageAttributes;
 
@@ -282,7 +282,7 @@ bool ConvertStreamToBitmap(const ResourceType& resourceType, std::string path, F
 
       if (!result)
       {
-        DALI_LOG_WARNING("Unable to convert %s\n", path.c_str());
+        DALI_LOG_WARNING("Unable to convert %s\n", fp->GetName().c_str());
         bitmap = 0;
       }
 
@@ -299,7 +299,7 @@ bool ConvertStreamToBitmap(const ResourceType& resourceType, std::string path, F
 
         if( desiredWidth < 1U || desiredHeight < 1U )
         {
-          DALI_LOG_WARNING( "Image scaling aborted for image %s as desired dimensions too small (%u, %u)\n.", path.c_str(), desiredWidth, desiredHeight );
+          DALI_LOG_WARNING( "Image scaling aborted for image %s as desired dimensions too small (%u, %u)\n.", fp->GetName().c_str(), desiredWidth, desiredHeight );
         }
         else if( loadedWidth != desiredWidth || loadedHeight != desiredHeight )
         {
@@ -363,7 +363,7 @@ bool ConvertStreamToBitmap(const ResourceType& resourceType, std::string path, F
     }
     else
     {
-      DALI_LOG_WARNING("Image Decoder for %s unavailable\n", path.c_str());
+      DALI_LOG_WARNING("Image Decoder for %s unavailable\n", fp->GetName().c_str());
     }
   }
 
@@ -372,38 +372,36 @@ bool ConvertStreamToBitmap(const ResourceType& resourceType, std::string path, F
 }
 
 
-ResourcePointer LoadResourceSynchronously( const Integration::ResourceType& resourceType, const std::string& resourcePath )
+ResourcePointer LoadResourceSynchronously( const Integration::ResourceType& resourceType, Platform::File* file_data)
 {
   ResourcePointer resource;
   BitmapPtr bitmap = 0;
 
-  FILE * const fp = fopen( resourcePath.c_str(), "rb" );
-  if( fp != NULL )
+  if(file_data)
   {
-    bool result = ConvertStreamToBitmap( resourceType, resourcePath, fp, StubbedResourceLoadingClient(), bitmap );
+    bool result = ConvertStreamToBitmap( resourceType, file_data, StubbedResourceLoadingClient(), bitmap );
     if( result && bitmap )
     {
       resource.Reset(bitmap.Get());
     }
-    fclose(fp);
   }
+
   return resource;
 }
 
 
-void GetClosestImageSize( const std::string& filename,
+void GetClosestImageSize( Platform::File* file_data,
                           const ImageAttributes& attributes,
                           Vector2 &closestSize )
 {
-  FILE *fp = fopen(filename.c_str(), "rb");
-  if (fp != NULL)
+  if (file_data)
   {
     LoadBitmapFunction loaderFunction;
     LoadBitmapHeaderFunction headerFunction;
     Bitmap::Profile profile;
 
-    if ( GetBitmapLoaderFunctions( fp,
-                                   GetFormatHint(filename),
+    if ( GetBitmapLoaderFunctions( file_data,
+                                   GetFormatHint(file_data->GetName()),
                                    loaderFunction,
                                    headerFunction,
                                    profile ) )
@@ -411,10 +409,10 @@ void GetClosestImageSize( const std::string& filename,
       unsigned int width;
       unsigned int height;
 
-      const bool read_res = headerFunction(fp, attributes, width, height);
+      const bool read_res = headerFunction(file_data, attributes, width, height);
       if(!read_res)
       {
-        DALI_LOG_WARNING("Image Decoder failed to read header for %s\n", filename.c_str());
+        DALI_LOG_WARNING("Image Decoder failed to read header for %s\n", file_data->GetName().c_str());
       }
 
       closestSize.width = (float)width;
@@ -422,9 +420,8 @@ void GetClosestImageSize( const std::string& filename,
     }
     else
     {
-      DALI_LOG_WARNING("Image Decoder for %s unavailable\n", filename.c_str());
+      DALI_LOG_WARNING("Image Decoder for %s unavailable\n", file_data->GetName().c_str());
     }
-    fclose(fp);
   }
 }
 
@@ -433,6 +430,7 @@ void GetClosestImageSize( ResourcePointer resourceBuffer,
                           const ImageAttributes& attributes,
                           Vector2 &closestSize )
 {
+#if 0
   BitmapPtr bitmap = 0;
 
   // Get the blob of binary data that we need to decode:
@@ -477,6 +475,7 @@ void GetClosestImageSize( ResourcePointer resourceBuffer,
       }
     }
   }
+  #endif
 }
 
 } // ImageLoader
