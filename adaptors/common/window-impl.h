@@ -161,6 +161,11 @@ public:
   Dali::DragAndDropDetector GetDragAndDropDetector() const;
 
   /**
+   * @copydoc Dali::Window::GetHandle() const
+   */
+  Dali::Any GetHandle() const;
+
+  /**
    * Called from Orientation after the Change signal has been sent
    */
   void RotationDone( int orientation, int width, int height );
