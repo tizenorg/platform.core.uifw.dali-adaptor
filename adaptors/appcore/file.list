@@ -1,0 +1,9 @@
+# Common
+
+adaptor_appcore_internal_src_files = \
+  $(adaptor_appcore_dir)/appcore/appcore-interface.cpp \
+  $(adaptor_appcore_dir)/appcore/appcore-i18n.cpp \
+  $(adaptor_appcore_dir)/appcore/appcore-rotation.cpp \
+  $(adaptor_appcore_dir)/appcore/appcore-win.c \
+  $(adaptor_appcore_dir)/appcore/appcore.cpp \
+  $(adaptor_appcore_dir)/appcore/vconf-events.cpp

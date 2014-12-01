@@ -21,7 +21,7 @@
 // EXTERNAL INCLUDES
 #include <vconf.h>
 #include <Ecore_X.h>
-#include <Elementary.h>
+//#include <Elementary.h>
 
 #include <dali/public-api/dali-core.h>
 #include <dali/integration-api/debug.h>
@@ -29,6 +29,70 @@
 #include "system-settings.h"
 
 #define MSG_DOMAIN_CONTROL_ACCESS (int)ECORE_X_ATOM_E_ILLUME_ACCESS_CONTROL
+typedef int Evas_Coord;
+
+enum _Elm_Access_Info_Type
+{
+   ELM_ACCESS_INFO_FIRST = -1,
+   ELM_ACCESS_INFO,         /* Next read is info - this is
+                             * normally the label */
+   ELM_ACCESS_TYPE,         /* When reading out the widget or item
+                             * this is read first */
+   ELM_ACCESS_STATE,        /* If there is a state (eg checkbox)
+                             * then read the state out */
+   ELM_ACCESS_CONTEXT_INFO, /* To give contextual information */
+   ELM_ACCESS_INFO_LAST
+};
+typedef enum _Elm_Access_Info_Type Elm_Access_Info_Type;
+
+enum _Elm_Access_Action_Type
+{
+   ELM_ACCESS_ACTION_FIRST = -1,
+
+   ELM_ACCESS_ACTION_HIGHLIGHT, /**< Highlight an object */
+   ELM_ACCESS_ACTION_UNHIGHLIGHT, /**< Unhighlight an object */
+   ELM_ACCESS_ACTION_HIGHLIGHT_NEXT, /**< Set highlight to the next object */
+   ELM_ACCESS_ACTION_HIGHLIGHT_PREV, /**< Set highlight to the previous object */
+   ELM_ACCESS_ACTION_ACTIVATE, /**< Activate a highlight object */
+   ELM_ACCESS_ACTION_VALUE_CHANGE, /**< TODO: deprecate this */
+   ELM_ACCESS_ACTION_SCROLL, /**< Scroll if one of the highlight object parents
+                              * is scrollable */
+   ELM_ACCESS_ACTION_ZOOM, /**< Send the signal of the zoom gesture
+                            * by a callback function */
+   ELM_ACCESS_ACTION_MOUSE, /**< Give the mouse event to the highlight object */
+   ELM_ACCESS_ACTION_UP, /**< Change the value up of the highlight object */
+   ELM_ACCESS_ACTION_DOWN, /**< Change the value down of the highlight object */
+   ELM_ACCESS_ACTION_BACK, /**< Go back to a previous view
+                              ex: pop naviframe item */
+   ELM_ACCESS_ACTION_OVER, /**< Mouse over an object */
+   ELM_ACCESS_ACTION_READ, /**< Highlight an object */
+   ELM_ACCESS_ACTION_ENABLE, /**< Enable highlight and read ability */
+   ELM_ACCESS_ACTION_DISABLE, /**< Disable highlight and read ability */
+
+   ELM_ACCESS_ACTION_LAST
+};
+typedef enum _Elm_Access_Action_Type Elm_Access_Action_Type;
+
+struct _Elm_Access_Action_Info
+{
+   double       zoom;
+   double       angle;
+   Evas_Coord   x;
+   Evas_Coord   y;
+   unsigned int mouse_type; /**< 0: mouse down
+                               1: mouse move
+                               2: mouse up   */
+
+   Elm_Access_Action_Type action_type;
+   Elm_Access_Action_Type action_by;
+   Eina_Bool              highlight_cycle : 1;
+   Eina_Bool              highlight_end : 1;
+};
+
+typedef struct _Elm_Access_Action_Info Elm_Access_Action_Info;
+
+
+
 
 namespace Dali
 {

@@ -20,6 +20,8 @@ BuildRequires:  giflib-devel
 BuildRequires:  pkgconfig(fontconfig)
 BuildRequires:  pkgconfig(elementary)
 BuildRequires:  pkgconfig(capi-appfw-application)
+BuildRequires:  pkgconfig(appcore-efl)
+BuildRequires:  pkgconfig(aul)
 BuildRequires:  libjpeg-turbo-devel
 BuildRequires:  pkgconfig(evas)
 BuildRequires:  dali-devel

@@ -31,6 +31,10 @@ include ../../../platform-abstractions/slp/file.list
 adaptor_common_dir = ../../../adaptors/common
 include ../../../adaptors/common/file.list
 
+# Appcore replacement
+adaptor_appcore_dir = ../../../adaptors/appcore
+include ../../../adaptors/appcore/file.list
+
 # Wayland
 if WAYLAND
 adaptor_wayland_dir = ../../../adaptors/wayland
@@ -245,8 +249,12 @@ libdali_adaptor_la_LIBADD = \
                       $(FREETYPE_LIBS) \
                       $(FONTCONFIG_LIBS) \
                       $(PNG_LIBS) \
-                      $(ELEMENTARY_LIBS) \
+                      $(AUL_LIBS) \
+                      $(ECORE_LIBS) \
                       $(ECORE_IPC_LIBS) \
+                      $(ECORE_IMF_LIBS) \
+                      $(ECORE_X_LIBS) \
+                      $(BUNDLE_LIBS) \
                       $(DLOG_LIBS) \
                       $(XML_LIBS) \
                       $(VCONF_LIBS) \

@@ -57,7 +57,16 @@
 
 #include <slp-logging.h>
 
+#include <dali/integration-api/debug.h>
 
+
+namespace
+{
+#if defined(DEBUG_ENABLED)
+Debug::Filter* gLogFilter = Debug::Filter::New(Debug::General, true, "LOG_ADAPTOR_STATE");
+#define STATE_STR (mState==READY?"READY":mState==RUNNING?"RUNNING":mState==PAUSED?"PAUSED":mState==PAUSED_WHILE_HIDDEN?"PAUSED_WHILE_HIDDEN":mState==STOPPED?"STOPPED":"UNKNOWN")
+#endif
+}
 
 namespace Dali
 {
@@ -292,6 +301,8 @@ Adaptor::~Adaptor()
 
 void Adaptor::Start()
 {
+  DALI_LOG_TRACE_METHOD_FMT(gLogFilter, "State: %s\n", STATE_STR);
+
   // it doesn't support restart after stop at this moment
   // to support restarting, need more testing
   if( READY != mState )
@@ -336,6 +347,7 @@ void Adaptor::Start()
   mUpdateRenderController->Start();
 
   mState = RUNNING;
+  DALI_LOG_INFO(gLogFilter, Debug::General, "State changed: %s\n", STATE_STR);
 
   ProcessCoreEvents(); // Ensure any startup messages are processed.
 
@@ -354,6 +366,8 @@ void Adaptor::Start()
 // Dali::Internal::Adaptor::Adaptor::Pause
 void Adaptor::Pause()
 {
+  DALI_LOG_TRACE_METHOD_FMT(gLogFilter, "State: %s\n", STATE_STR);
+
   // Only pause the adaptor if we're actually running.
   if( RUNNING == mState )
   {
@@ -372,12 +386,15 @@ void Adaptor::Pause()
     mUpdateRenderController->Pause();
     mCore->Suspend();
     mState = PAUSED;
+    DALI_LOG_INFO(gLogFilter, Debug::General, "State changed: %s\n", STATE_STR);
   }
 }
 
 // Dali::Internal::Adaptor::Adaptor::Resume
 void Adaptor::Resume()
 {
+  DALI_LOG_TRACE_METHOD_FMT(gLogFilter, "State: %s\n", STATE_STR);
+
   // Only resume the adaptor if we are in the suspended state.
   if( PAUSED == mState )
   {
@@ -394,6 +411,7 @@ void Adaptor::Resume()
     mUpdateRenderController->Resume();
 
     mState = RUNNING;
+    DALI_LOG_INFO(gLogFilter, Debug::General, "State changed: %s\n", STATE_STR);
 
     // Reset the event handler when adaptor resumed
     if( mEventHandler )
@@ -413,6 +431,8 @@ void Adaptor::Resume()
 
 void Adaptor::Stop()
 {
+  DALI_LOG_TRACE_METHOD_FMT(gLogFilter, "State: %s\n", STATE_STR);
+
   if( RUNNING == mState ||
       PAUSED  == mState ||
       PAUSED_WHILE_HIDDEN == mState )
@@ -443,6 +463,7 @@ void Adaptor::Stop()
     mCallbackManager->Stop();
 
     mState = STOPPED;
+    DALI_LOG_INFO(gLogFilter, Debug::General, "State changed: %s\n", STATE_STR);
   }
 }
 
@@ -774,10 +795,13 @@ void Adaptor::RequestProcessEventsOnIdle()
 
 void Adaptor::OnWindowShown()
 {
+  DALI_LOG_TRACE_METHOD_FMT(gLogFilter, "State: %s\n", STATE_STR);
+
   if ( PAUSED_WHILE_HIDDEN == mState )
   {
     // Adaptor can now be resumed
     mState = PAUSED;
+    DALI_LOG_INFO(gLogFilter, Debug::General, "State changed: %s\n", STATE_STR);
 
     Resume();
 
@@ -788,12 +812,16 @@ void Adaptor::OnWindowShown()
 
 void Adaptor::OnWindowHidden()
 {
+  DALI_LOG_TRACE_METHOD_FMT(gLogFilter, "State: %s\n", STATE_STR);
+
   if ( STOPPED != mState )
   {
     Pause();
 
     // Adaptor cannot be resumed until the window is shown
     mState = PAUSED_WHILE_HIDDEN;
+    DALI_LOG_INFO(gLogFilter, Debug::General, "State changed: %s\n", STATE_STR);
+
   }
 }
 
