@@ -56,6 +56,16 @@ void Adaptor::Start()
   mImpl->Start();
 }
 
+void Adaptor::SurfaceLost()
+{
+  mImpl->SurfaceLost();
+}
+
+void Adaptor::SurfaceCreated()
+{
+  mImpl->SurfaceCreated();
+}
+
 void Adaptor::Pause()
 {
   mImpl->Pause();

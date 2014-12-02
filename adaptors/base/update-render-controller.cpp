@@ -113,6 +113,11 @@ void UpdateRenderController::RequestUpdateOnce()
   mUpdateRenderSync->UpdateWhilePaused();
 }
 
+void UpdateRenderController::SurfaceLost()
+{
+  mUpdateRenderSync->SurfaceLost();
+}
+
 void UpdateRenderController::ReplaceSurface( RenderSurface* newSurface )
 {
   // tell render thread to start the replace. This call will block until the replace

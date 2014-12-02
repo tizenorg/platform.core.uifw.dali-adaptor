@@ -155,7 +155,19 @@ public:
   void Stop();
 
   /**
-   * @brief Ensures that the function passed in is called from the main loop when it is idle.
+   * Notifies the Adaptor that the rendering surface is lost.
+   * This will stop the renderthread.
+   */
+  void SurfaceLost();
+
+  /**
+   * Notifies the Adaptor that the rendering surface is created.
+   * This will start the renderthread.
+   */
+  void SurfaceCreated();
+
+  /**
+   * Ensures that the function passed in is called from the main loop when it is idle.
    *
    * A callback of the following type may be used:
    * @code

@@ -200,6 +200,9 @@ public: // AdaptorInternalServices implementation
    */
   virtual bool CallFromMainLoop(boost::function<void(void)> callBack);
 
+  void SurfaceLost();
+  void SurfaceCreated();
+
 public:
 
   /**

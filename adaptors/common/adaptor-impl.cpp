@@ -351,6 +351,18 @@ void Adaptor::Start()
   }
 }
 
+void Adaptor::SurfaceLost()
+{
+  // Pause the adaptor if its running
+mUpdateRenderController->SurfaceLost();
+}
+
+void Adaptor::SurfaceCreated()
+{
+  // Start the render thread
+  mUpdateRenderController->Resume();
+}
+
 // Dali::Internal::Adaptor::Adaptor::Pause
 void Adaptor::Pause()
 {

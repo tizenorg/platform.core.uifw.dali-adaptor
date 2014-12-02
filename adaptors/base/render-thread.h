@@ -20,6 +20,8 @@
 
 // EXTERNAL INCLUDES
 #include <boost/thread.hpp>
+#include <dali/integration-api/core.h>
+#include <dali/integration-api/debug.h>
 
 // INTERNAL INCLUDES
 #include <base/interfaces/egl-interface.h>
@@ -53,6 +55,7 @@ public:
   enum Request
   {
     REPLACE_SURFACE, // Request to replace surface
+    SURFACE_LOST
   };
 
   /**
@@ -102,6 +105,30 @@ public:
 
 private:
   RenderSurface* mNewSurface;     ///< The new surface to use.
+  unsigned int mReplaceCompleted; ///< Set to true when the replace has completed.
+};
+
+class SurfaceLostRequest : public RenderRequest
+{
+public:
+
+  /**
+   * Constructor
+   */
+  SurfaceLostRequest();
+
+  /**
+   * Called when the request has been completed to set the result.
+   */
+  void ReplaceCompleted();
+
+  /**
+   * @return true if the replace has completed.
+   */
+  bool GetReplaceCompleted();
+
+
+private:
   unsigned int mReplaceCompleted; ///< Set to true when the replace has completed.
 };
 
@@ -213,6 +240,7 @@ private: // Data
   RenderSurface*                mSurface;                ///< Current surface
   const EnvironmentOptions&     mEnvironmentOptions;     ///< Environment options
   bool                          mSurfaceReplaced;        ///< True when new surface has been initialzed.
+  bool                          mSurfaceLost;
 };
 
 } // namespace Adaptor
