@@ -23,6 +23,7 @@
 #include <dali/integration-api/resource-types.h>
 #include "portable/file-closer.h"
 #include "image-loaders/image-loader.h"
+//--------------------------------------------------------------------------------------------------------------------------------- @ToDo #include "image-operations.h"
 
 using namespace Dali::Integration;
 
