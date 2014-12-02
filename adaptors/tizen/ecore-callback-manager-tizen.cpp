@@ -15,7 +15,7 @@
  *
  */
 
-// CLASS HEADER
+// CLASS HEADER2
 #include "ecore-callback-manager.h"
 
 // EXTERNAL INCLUDES

@@ -10,10 +10,7 @@ adaptor_common_internal_src_files = \
   $(adaptor_common_dir)/clipboard-event-notifier-impl.cpp \
   $(adaptor_common_dir)/command-line-options.cpp \
   $(adaptor_common_dir)/drag-and-drop-detector-impl.cpp \
-  $(adaptor_common_dir)/ecore-callback-manager.cpp \
-  $(adaptor_common_dir)/file-descriptor-monitor.cpp \
   $(adaptor_common_dir)/haptic-player-impl.cpp \
-  $(adaptor_common_dir)/indicator-impl.cpp  \
   $(adaptor_common_dir)/indicator-buffer.cpp  \
   $(adaptor_common_dir)/kernel-trace.cpp  \
   $(adaptor_common_dir)/locale-utils.cpp  \
@@ -27,7 +24,6 @@ adaptor_common_internal_src_files = \
   $(adaptor_common_dir)/singleton-service-impl.cpp \
   $(adaptor_common_dir)/sound-player-impl.cpp \
   $(adaptor_common_dir)/style-monitor-impl.cpp \
-  $(adaptor_common_dir)/timer-impl.cpp \
   $(adaptor_common_dir)/trigger-event.cpp \
   $(adaptor_common_dir)/trigger-event-factory.cpp \
   $(adaptor_common_dir)/virtual-keyboard-impl.cpp \
