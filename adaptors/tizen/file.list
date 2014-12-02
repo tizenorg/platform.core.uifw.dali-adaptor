@@ -5,5 +5,9 @@ adaptor_tizen_internal_src_files = \
   $(adaptor_tizen_dir)/framework-tizen.cpp \
   $(adaptor_tizen_dir)/vsync-monitor-tizen.cpp \
   $(adaptor_tizen_dir)/tilt-sensor-impl-tizen.cpp \
-  $(adaptor_tizen_dir)/tts-player-impl-tizen.cpp
+  $(adaptor_tizen_dir)/tts-player-impl-tizen.cpp \
+  $(adaptor_tizen_dir)/ecore-callback-manager.cpp \
+  $(adaptor_tizen_dir)/file-descriptor-monitor.cpp \
+  $(adaptor_tizen_dir)/indicator-impl-tizen.cpp \
+  $(adaptor_tizen_dir)/timer-impl-tizen.cpp 
 

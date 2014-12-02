@@ -172,6 +172,16 @@ public: // From Framework::Observer
   virtual void OnResume();
 
   /**
+   * Called when surface created.
+   */
+  virtual void OnSurfaceCreated();
+
+  /**
+   * Called when surface destroyed.
+   */
+  virtual void OnSurfaceDestroyed();
+
+  /**
    * Called when the framework informs the application that it should reset itself.
    */
   virtual void OnReset();
@@ -226,6 +236,10 @@ public:  // Signals
    */
   Dali::Application::AppSignalV2& LanguageChangedSignal() { return mLanguageChangedSignalV2; }
 
+  Dali::Application::AppSignalV2& SurfaceCreatedSignal() { return mSurfaceCreatedSignalV2; }
+
+  Dali::Application::AppSignalV2& SurfaceDestroyedSignal() { return mSurfaceDestroyedSignalV2; }
+
 private:
 
   // Undefined
@@ -257,6 +271,8 @@ private:
   AppSignalV2                           mResetSignalV2;
   AppSignalV2                           mResizeSignalV2;
   AppSignalV2                           mLanguageChangedSignalV2;
+  AppSignalV2							              mSurfaceCreatedSignalV2;
+  AppSignalV2							              mSurfaceDestroyedSignalV2;
 
   EventLoop*                            mEventLoop;
   Framework*                            mFramework;
@@ -272,6 +288,7 @@ private:
 
   bool                                  mInitialized;
   DeviceLayout                          mBaseLayout;
+  bool                                  mAdaptorStarted;
 
   SlotDelegate< Application >           mSlotDelegate;
 };

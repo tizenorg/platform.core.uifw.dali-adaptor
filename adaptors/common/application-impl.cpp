@@ -223,6 +223,37 @@ void Application::OnResume()
   mResumeSignalV2.Emit( application );
 }
 
+void Application::OnSurfaceCreated()
+{
+  if (!mAdaptorStarted)
+  {
+    mAdaptor->Start();
+    mAdaptorStarted = true;
+    mAdaptor->SurfaceCreated();
+  }
+  else
+  {
+    PositionSize sz(0,0,0,0);
+    mAdaptor->SurfaceCreated();
+    ReplaceWindow(sz, mName);
+  }
+
+  Dali::Application application(this);
+  mSurfaceCreatedSignalV2.Emit(application);
+}
+
+void Application::OnSurfaceDestroyed()
+{
+  mAdaptor->Pause();
+  Window& windowImpl = GetImplementation(mWindow);
+  RenderSurface* surface = windowImpl.GetSurface();
+  surface->SurfaceLost();
+  mAdaptor->SurfaceLost();
+
+  Dali::Application application(this);
+  mSurfaceDestroyedSignalV2.Emit(application);
+}
+
 void Application::OnReset()
 {
   /*

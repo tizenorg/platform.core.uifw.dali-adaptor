@@ -109,6 +109,8 @@ public:
    */
   void UpdateWhilePaused();
 
+  void SurfaceLost();
+  void SurfaceLostCancel();
   /**
    * Inform the render thread that there is a new surface.
    * @param[in] newSurface The new surface for rendering.
@@ -260,7 +262,9 @@ private:
   PerformanceInterface* mPerformanceInterface;        ///< The performance logging interface
 
   ReplaceSurfaceRequest mReplaceSurfaceRequest; ///< Holder for a replace surface request
+  SurfaceLostRequest mSurfaceLostRequest;
   bool mReplaceSurfaceRequested; ///< True if there is a new replace surface request
+  bool mSurfaceLostRequested; ///< True if there is a new surface lost request
 
 }; // class UpdateRenderSynchronization
 

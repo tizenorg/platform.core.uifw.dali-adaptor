@@ -38,6 +38,10 @@ RenderSurface::~RenderSurface()
 {
 }
 
+void RenderSurface::SurfaceLost()
+{
+}
+
 } // namespace Adaptor
 
 } // namespace Internal

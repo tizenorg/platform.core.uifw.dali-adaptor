@@ -151,6 +151,7 @@ public: // API
   /**
    * Invoked by Event Thread when the compositor lock should be released and rendering should resume.
    */
+  virtual void SurfaceLost();
   virtual void ReleaseLock() = 0;
 };
 
