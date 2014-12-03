@@ -19,11 +19,9 @@
  */
 
 // EXTERNAL INCLUDES
-#include <Ecore.h>
-#include <Ecore_Wayland.h>
-#include <pixmap-image.h>
 
 // INTERNAL INCLUDES
+#include <pixmap-image.h>
 
 namespace Dali
 {
@@ -33,7 +31,6 @@ namespace Internal
 
 namespace Adaptor
 {
-class Adaptor;
 class EglImageExtensions;
 
 /**
@@ -49,25 +46,18 @@ public:
    * @param[in] width The width of the image.
    * @param[in] height The height of the image.
    * @param[in] depth color depth of the pixmap
-   * @param[in] adaptor reference to dali adaptor
    * @param[in] pixmap contains either: pixmap of type X11 Pixmap , a Ecore_X_Pixmap or is empty
    * @return A smart-pointer to a newly allocated image.
    */
   static PixmapImage* New(unsigned int width,
                           unsigned int height,
                           Dali::PixmapImage::ColorDepth depth,
-                          Dali::Adaptor& adaptor,
                           Any pixmap);
 
    /**
     * @copydoc Dali::PixmapImage::GetPixmap()
     */
   Any GetPixmap(Dali::PixmapImage::PixmapAPI api) const;
-
-  /**
-   * @copydoc Dali::PixmapImage::GetDisplay()
-   */
-  Any GetDisplay() const;
 
   /**
    * @copydoc Dali::PixmapImage::GetPixels()
@@ -130,13 +120,11 @@ private:
    * @param[in] width The width of the image.
    * @param[in] height The height of the image.
    * @param[in] colour depth of the pixmap
-   * @param[in] adaptor a reference to Dali adaptor
    * @param[in] pixmap contains either: pixmap of type X11 Pixmap , a Ecore_X_Pixmap or is empty
    */
   PixmapImage(unsigned int width,
               unsigned  int height,
               Dali::PixmapImage::ColorDepth depth,
-              Dali::Adaptor &adaptor,
               Any pixmap);
 
   /**
@@ -176,7 +164,6 @@ private:
   bool mOwnPixmap;                            ///< Whether we created pixmap or not
   Pixel::Format mPixelFormat;                 ///< pixmap pixel format
   Dali::PixmapImage::ColorDepth mColorDepth;  ///< color depth of pixmap
-  Adaptor& mAdaptor;                          ///< adaptor
   void* mEglImageKHR;                         ///< From EGL extension
 };
 
