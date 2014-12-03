@@ -21,14 +21,15 @@
 // EXTERNAL INCLUDES
 #include <Ecore_X.h>
 #include <X11/Xutil.h>
+#include <X11/Xlib.h>
 #include <dali/integration-api/debug.h>
-#include <render-surface.h>
 
 // INTERNAL INCLUDES
 #include <gl/egl-image-extensions.h>
 #include <gl/egl-factory.h>
 #include <adaptor-impl.h>
 #include <bitmap-saver.h>
+#include <render-surface.h>
 
 namespace Dali
 {
@@ -71,9 +72,9 @@ namespace
   };
 }
 
-PixmapImage* PixmapImage::New(unsigned int width, unsigned int height, Dali::PixmapImage::ColorDepth depth, Dali::Adaptor& adaptor,  Any pixmap )
+PixmapImage* PixmapImage::New(unsigned int width, unsigned int height, Dali::PixmapImage::ColorDepth depth, Any pixmap )
 {
-  PixmapImage* image = new PixmapImage( width, height, depth, adaptor, pixmap );
+  PixmapImage* image = new PixmapImage( width, height, depth, pixmap );
   DALI_ASSERT_DEBUG( image && "PixmapImage allocation failed." );
 
   // 2nd phase construction
@@ -85,15 +86,13 @@ PixmapImage* PixmapImage::New(unsigned int width, unsigned int height, Dali::Pix
   return image;
 }
 
-PixmapImage::PixmapImage(unsigned int width, unsigned int height, Dali::PixmapImage::ColorDepth depth, Dali::Adaptor& adaptor, Any pixmap)
+PixmapImage::PixmapImage(unsigned int width, unsigned int height, Dali::PixmapImage::ColorDepth depth, Any pixmap)
 : mWidth(width),
   mHeight(height),
   mOwnPixmap(true),
   mPixmap(0),
-  mDisplay(NULL),
   mPixelFormat(Pixel::RGB888),
   mColorDepth(depth),
-  mAdaptor(Internal::Adaptor::Adaptor::GetImplementation(adaptor)),
   mEglImageKHR(NULL)
 {
   // assign the pixmap
@@ -102,17 +101,6 @@ PixmapImage::PixmapImage(unsigned int width, unsigned int height, Dali::PixmapIm
 
 void PixmapImage::Initialize()
 {
-  // Get render-surface being used by Dali
-  Dali::RenderSurface& surface = mAdaptor.GetSurface();
-
-  // get the X11 display pointer and store it
-  // it is used by eglCreateImageKHR, and XFreePixmap
-  // Any other display (x-connection) will fail in eglCreateImageKHR
-  Any display = surface.GetDisplay();
-
-  // the dali display pointer is needed
-  mDisplay = AnyCast<Ecore_X_Display*>(display);
-
   // if pixmap has been created outside of X11 Image we can return
   if (mPixmap)
   {
@@ -130,28 +118,12 @@ void PixmapImage::Initialize()
   // set the pixel format
   SetPixelFormat(depth);
 
-  // Get the X-Renderable for which the pixmap is created on
-  Any renderableSurface =  surface.GetSurface();
-
-  // if Dali is using a Pixmap or Window to render to it doesn't matter because they have the same
-  // underlying type of unsigned long
-  Ecore_X_Window daliWindow = AnyCast< Ecore_X_Window >(renderableSurface);
-
-  mPixmap = ecore_x_pixmap_new(daliWindow, mWidth, mHeight, depth);
+  mPixmap = ecore_x_pixmap_new( 0, mWidth, mHeight, depth );
   ecore_x_sync();
 }
 
 PixmapImage::~PixmapImage()
 {
-  // Lost the opportunity to call GlExtensionDestroy() if Adaptor is destroyed first
-  if( Adaptor::IsAvailable() )
-  {
-    // GlExtensionDestroy() called from GLCleanup on the render thread. Checking this is done here.
-    // (mEglImageKHR is now read/written from different threads although ref counted destruction
-    //  should mean this isnt concurrent)
-    DALI_ASSERT_ALWAYS( NULL == mEglImageKHR && "NativeImage GL resources have not been properly cleaned up" );
-  }
-
   if (mOwnPixmap && mPixmap)
   {
     ecore_x_pixmap_free(mPixmap);
@@ -173,12 +145,6 @@ Any PixmapImage::GetPixmap(Dali::PixmapImage::PixmapAPI api) const
   }
 }
 
-Any PixmapImage::GetDisplay() const
-{
-  // return ecore x11 type
-  return Any(mDisplay);
-}
-
 bool PixmapImage::GetPixels(std::vector<unsigned char>& pixbuf, unsigned& width, unsigned& height, Pixel::Format& pixelFormat) const
 {
   DALI_ASSERT_DEBUG(sizeof(unsigned) == 4);
@@ -186,12 +152,15 @@ bool PixmapImage::GetPixels(std::vector<unsigned char>& pixbuf, unsigned& width,
   width  = mWidth;
   height = mHeight;
 
-  XImageJanitor xImageJanitor( XGetImage(static_cast<Display*>(mDisplay),
-                               mPixmap,
-                               0, 0, // x,y of subregion to extract.
-                               width, height, // of suregion to extract.
-                               0xFFFFFFFF,
-                               ZPixmap));
+  // Open a display connection
+  Display* displayConnection = XOpenDisplay( 0 );
+
+  XImageJanitor xImageJanitor( XGetImage( displayConnection,
+                                          mPixmap,
+                                          0, 0, // x,y of subregion to extract.
+                                          width, height, // of suregion to extract.
+                                          0xFFFFFFFF,
+                                          ZPixmap ) );
   XImage* const  pXImage = xImageJanitor.mXImage;
   DALI_ASSERT_DEBUG(pXImage && "XImage (from pixmap) could not be retrieved from the server");
   if(!pXImage)
@@ -283,6 +252,10 @@ bool PixmapImage::GetPixels(std::vector<unsigned char>& pixbuf, unsigned& width,
     width = 0;
     height = 0;
   }
+
+  // Close the display connection
+  XCloseDisplay( displayConnection );
+
   return success;
 }
 
@@ -433,9 +406,16 @@ void PixmapImage::GetPixmapDetails()
 
 EglImageExtensions* PixmapImage::GetEglImageExtensions() const
 {
-  EglFactory& factory = mAdaptor.GetEGLFactory();
-  EglImageExtensions* egl = factory.GetImageExtensions();
+  EglImageExtensions* egl = NULL;
+
+  if ( Adaptor::IsAvailable() )
+  {
+    EglFactory& factory = Adaptor::GetImplementation( Adaptor::Get() ) .GetEGLFactory();
+    egl = factory.GetImageExtensions();
+  }
+
   DALI_ASSERT_DEBUG( egl && "EGL Image Extensions not initialized" );
+
   return egl;
 }
 
