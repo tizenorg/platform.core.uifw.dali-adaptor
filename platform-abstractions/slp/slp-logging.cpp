@@ -33,6 +33,15 @@ void LogMessage(Dali::Integration::Log::DebugPriority level, std::string& messag
 {
   const char* DALI_TAG = "DALI";
 
+  // End the message with one newline (not zero, not many):
+  if( message.length() > 0 )
+  {
+    DALI_ASSERT_DEBUG( std::string::npos + 1ULL == 0ULL && "We assume lastNonWhite + 1 is always a reasonable value even if the find fails." );
+    const size_t lastNonWhite = message.find_last_not_of( "\n\r\f\t " );
+    message.resize( lastNonWhite + 1 );
+    message.append("\n");
+  }
+
 #ifndef DALI_PROFILE_UBUNTU
   switch(level)
   {
