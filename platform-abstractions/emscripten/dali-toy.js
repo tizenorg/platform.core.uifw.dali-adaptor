@@ -1,0 +1,7282 @@
+/*
+ * Copyright (c) 2015 Samsung Electronics Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+/*global  */
+/* eslint-env browser */
+/* eslint "brace-style": [2, "1tbs"] */
+/* eslint "no-console": 0 */
+/* eslint "no-underscore-dangle": 0 */
+
+//
+// Dali browser application for testing the javascript API.
+//
+//
+
+var $;
+var ace;
+var dali;
+//var canvas;
+var app;
+var eventHandler;
+var assert;
+
+
+var btnTextActorAdd = document.getElementById("btnTextActorAdd");
+var textInput = document.getElementById("textInput");
+var textShaderErrors = document.getElementById("textShaderErrors");
+
+var btnRewriteDatabase = document.getElementById("btnRewriteDatabase");
+
+//
+// Global state
+//
+var database;
+
+var uiApp;
+var uiJavascriptTab;
+var uiImageTab;
+var uiShaderTab;
+
+
+var actorIdToShaderSet = {};    // actor id to shader
+var compiledShaders = {};       // compiled shaders by name
+
+var animationList = [];         // list of animations that have been added [ { animation: new dali.Animation(), properties: [] } ]
+var animationSelectionIndex;    // selected animation
+
+var lastActorSelectedId = -1;
+var userEditingShader = true;
+var modalSaveOldShader;
+
+//
+//
+// Shaders
+//
+//
+// precision mediump float;
+// uniform float uTimeDelta;
+// float rand(vec2 co){
+//     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+// }
+
+// void main()
+// {
+// 	precision mediump float;
+// 	vec2 uv = vTexCoord.xy ; // / vec2(sTextureRect.z, sTextureRect.w);
+// 	float r = rand(uv*(uTimeDelta));
+// 	vec4 VI = texture2D(sTexture,uv);
+// 	VI*=r;
+// 	gl_FragColor = vec4(VI);
+// }
+
+//////////// high frequency noise
+// float snoise(in vec2 co){
+//     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+// }
+
+// void mainImage( out vec4 fragColor, in vec2 fragCoord )
+// {
+//     float n = snoise(vec2(fragCoord.x*cos(fragCoord.x),fragCoord.y*sin(fragCoord.y)));
+// 	fragColor = vec4(n, n, n, 1.0 );
+// }
+
+//////////
+// blur but needs mipmapping
+// precision mediump float;
+
+// uniform float factor;
+
+// float perspective = 0.3;
+
+// void main()
+// {
+// 	vec2 p = vTexCoord.xy; // / iResolution.xy;
+// 	float focus = 0.5; // sin(factor*2.)*.35+.5;
+// 	float blur = 7.*sqrt(abs(p.y - focus));
+
+// 	/* perpective version */
+// 	//vec2 p2 = vec2(p.x-(1.-p.y)*perspective*(p.x*2. - 1.), -p.y);
+
+// 	/* simple vesion */
+// 	vec2 p2 = -p;
+
+// 	gl_FragColor = vec4(blur,blur,blur,1.0); //texture2D(sTexture, p2, blur);
+// }
+
+
+var shaderSourceSelection = 0;
+var shaderSources = [
+  {
+    name: "pass through",
+    shaderHints: "",
+    vertex: "void main(void)\n" +
+      "{\n" +
+      "  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n" +
+      "  vTexCoord = aTexCoord;\n" +
+      "}\n",
+    fragment: "precision mediump float;\n" +
+      "void main()\n" +
+      "{\n" +
+      "  gl_FragColor = texture2D( sTexture, vTexCoord ) * uColor;\n" +
+      "}\n"
+  },
+  {
+    name: "sRGB Correction",
+    shaderHints: "",
+    vertex: "void main(void)\n" +
+      "{\n" +
+      "  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n" +
+      "  vTexCoord = aTexCoord;\n" +
+      "}\n",
+    fragment: "precision mediump float;\n" +
+      "void main()\n" +
+      "{\n" +
+      "vec4 col = texture2D( sTexture, vTexCoord ) * uColor;\n" +
+      "vec3 mask = vec3(greaterThan(col.rgb, vec3(0.0031308)));\n" +
+      "vec3 o = mix(col.rgb * 12.92, \n" +
+      "             pow(col.rgb, vec3(1.0/2.4)) * 1.055 - 0.055, \n" +
+      "             mask);\n" +
+      "gl_FragColor = vec4(o.r, o.g, o.b, col.a);\n" +
+      "}\n"
+  },
+  {
+    name: "adjust brightness",
+    shaderHints: "",
+    animateTo: [ ["uGain", 1.0, "Linear", 0, 3],
+                        ["uOffset", 0.2, "Linear", 0, 3] ],
+    vertex: "void main(void)\n" +
+      "{\n" +
+      "  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n" +
+      "  vTexCoord = aTexCoord;\n" +
+      "}\n",
+    fragment: "precision mediump float;\n" +
+      "uniform float uGain; // {default:1.0} \n" +
+      "uniform float uOffset; // {default:0.0} \n" +
+      "void main()\n" +
+      "{\n" +
+      "    vec4 t = texture2D( sTexture, vTexCoord );\n" +
+      "    \n" +
+      "    float y = 0.0 + (0.299 *t.r) + 0.587*t.g + 0.114*t.b;\n" +
+      "    float cb= 128.0-(0.168736*t.r)-0.331264*t.g+0.5*t.b;\n" +
+      "    float cr= 128.0+(0.5*t.r)-(0.418688*t.g)-0.081312*t.b;\n" +
+      "    \n" +
+      "    y = (y*uGain) + uOffset;\n" +
+      "    \n" +
+      "    vec4 col = vec4(t.a);\n" +
+      "    \n" +
+      "    col.r = y + 1.402*(cr-128.0);\n" +
+      "    col.g = y - 0.34414*(cb-128.0)-0.71414*(cr-128.0);\n" +
+      "    col.b = y + 1.722*(cb-128.0);\n" +
+      "    \n" +
+      "    \n" +
+      "    gl_FragColor = col * uColor;\n" +
+      "}\n"
+  },
+  {
+    name: "wavey",
+    shaderHints: "",
+    animateTo: [ ["uAmplitude", 0.2, "Linear", 0, 3],
+                        ["uFrequency", 4, "Linear", 0, 3] ],
+    vertex: "void main(void)\n" +
+      "{\n" +
+      "  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n" +
+      "  vTexCoord = aTexCoord;\n" +
+      "}\n",
+    fragment: "precision mediump float;\n" +
+      "uniform float uAmplitude;  //  amplitude in x ;0.4\n" +
+      "uniform float uFrequency;  // frequence in y; 4\n" +
+      "void main()\n" +
+      "{\n" +
+      "  vec2 uv = vTexCoord.xy;\n" +
+      "\n" +
+      "  uv.x += sin(uv.y * 3.14 * uFrequency) * uAmplitude;\n" +
+      "  \n" +
+      "  vec4 color = texture2D(sTexture, uv);\n" +
+      "  \n" +
+      "  gl_FragColor = color;\n" +
+      "}\n"
+  },
+  {
+    name: "melt",
+    shaderHints: "",
+    animateTo: [ ["uFactor", -4.0, "Linear", 0, 3] ],
+    vertex: "void main(void)\n" +
+      "{\n" +
+      "  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n" +
+      "  vTexCoord = aTexCoord;\n" +
+      "}\n",
+    fragment:
+    "precision mediump float;\n" +
+      "uniform float uFactor; // drip factor\n" +
+      "\n" +
+      "    \n" +
+      "float random( vec2 p )\n" +
+      "{\n" +
+      "    float q = p.x * 269.5 + p.y * 183.3;\n" +
+      "  return fract( sin( q ) * 43758.5453 );\n" +
+      "}\n" +
+      "\n" +
+      "void main()\n" +
+      "{\n" +
+      "  vec2 uv = vTexCoord.xy;\n" +
+      "  \n" +
+      "  float kindaRandom = (texture2D(sTexture, vec2(uv.x,0.5)).r + texture2D(sTexture, vec2(0.5,uv.x)).r) / 2.0;\n" +
+      "  \n" +
+      "  //kindaRandom = random( vec2(texture2D(sTexture, vec2(uv.x,0.5)).r, texture2D(sTexture, vec2(0.5,uv.y)).g) );\n" +
+      "  \n" +
+      "  uv.y +=  uFactor * kindaRandom;\n" +
+      "  \n" +
+      "\n" +
+      "  gl_FragColor = texture2D( sTexture, uv ) * uColor;\n" +
+      "}\n" +
+      "\n"
+  },
+  {
+    name: "round window",
+    shaderHints: "",
+    animateTo: [ ["uRadius", 0.8, "Linear", 0, 3] ],
+    vertex: "void main(void)\n" +
+      "{\n" +
+      "  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n" +
+      "  vTexCoord = aTexCoord;\n" +
+      "}\n",
+    fragment: "precision lowp float;\n" +
+      "uniform lowp float uRadius;\n" +
+      "void main()\n" +
+      "{\n" +
+      "  precision lowp float;\n" +
+      "  lowp vec2 pos= vec2(vTexCoord.x-0.5,vTexCoord.y-0.5);\n" +
+      "  lowp float radius = dot(pos, pos ) ;\n" +
+      "  if( radius > (uRadius*uRadius) )\n" +
+      "    discard;\n" +
+      "  gl_FragColor = texture2D( sTexture, vTexCoord ) * uColor ;\n" +
+      "}\n"
+  },
+  {
+    name: "mosaic",
+    shaderHints: "",
+    animateTo: [ ["uPixelFactor", 0.3, "Linear", 0, 3] ],
+    vertex: "void main(void)\n" +
+      "{\n" +
+      "  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n" +
+      "  vTexCoord = aTexCoord;\n" +
+      "}\n",
+    fragment: "precision mediump float;\n" +
+      "  \n" +
+      "uniform float uPixelFactor; //  0.0< uPixelFactor < ~0.3 \n" +
+      "\n" +
+      "\n" +
+      "float smooth(float f) {\n" +
+      "  return 32.0*f*f*(0.25*f*f-0.5*f+0.25)+0.5;\n" +
+      "}\n" +
+      "\n" +
+      "void main()\n" +
+      "{\n" +
+      "  vec2 resolution = vec2(1,1); // uniform vec2 resolution;\n" +
+      "  //uPixelFactor = 8.0 + 8.0 * (0.5 + 0.5 * sin(globaltime * 0.25));\n" +
+      "  vec2 chunkCoord = floor(vTexCoord.xy / uPixelFactor) * uPixelFactor;\n" +
+      "  vec2 locCoord = (vTexCoord.xy - chunkCoord) / uPixelFactor;\n" +
+      "  vec4 color = vec4(floor(5.0 * texture2D(sTexture, chunkCoord / resolution.xy).xyz) / 5.0, 1.0);\n" +
+      "  float grey = (color.x + color.y + color.z) / 3.0;\n" +
+      "  gl_FragColor = color * smooth(locCoord.x) * smooth(locCoord.y);\n" +
+      "}\n"
+  },
+  {name: "burn",
+   shaderHints: "",
+   animateTo: [ ["uThresh", 0.8, "Linear", 0, 3] ],
+   vertex:
+   "void main(void)\n" +
+   "{\n" +
+   "  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n" +
+   "  vTexCoord = aTexCoord;\n" +
+   "}\n" +
+   "\n" +
+   "\n" +
+   "",
+   fragment:
+   "precision mediump float;\n" +
+   "\n" +
+   "float uScale = 2.0;  // noise texture scaling; 10.0\n" +
+   "uniform float uThresh;  // threshold of noise for burn; 1.1\n" +
+   "\n" +
+   "float random( vec2 p )\n" +
+   "{\n" +
+   "    float q = p.x * 269.5 + p.y * 183.3;\n" +
+   "  return fract( sin( q ) * 43758.5453 );\n" +
+   "}\n" +
+   "\n" +
+   "float noise( vec2 point )\n" +
+   "{\n" +
+   "  vec2 p = floor( point );\n" +
+   "  vec2 f = fract( point );\n" +
+   "  return mix(\n" +
+   "    mix( random( p + vec2( 0.0, 0.0 ) ), random( p + vec2( 1.0, 0.0 ) ), f.x ),\n" +
+   "    mix( random( p + vec2( 0.0, 1.0 ) ), random( p + vec2( 1.0, 1.0 ) ), f.x ),\n" +
+   "    f.y\n" +
+   "  );\n" +
+   "}\n" +
+   "\n" +
+   "float fractal( vec2 point )\n" +
+   "{\n" +
+   "    float sum = 0.0;\n" +
+   "    float scale = 0.5;\n" +
+   "    for ( int i = 0; i < 5; i++ )\n" +
+   "  {\n" +
+   "    sum += noise( point ) * scale;\n" +
+   "    point *= 2.0;\n" +
+   "        scale /= 2.0;\n" +
+   "  }\n" +
+   "    \n" +
+   "  return sum;\n" +
+   "}\n" +
+   "\n" +
+   "\n" +
+   "void main( )\n" +
+   "{\n" +
+   "  vec2 point = vTexCoord.xy / uScale;\n" +
+   "    //point.x += iGlobalTime * 0.1;\n" +
+   "    float noise    = fractal( point * 20.0 );\n" +
+   "    \n" +
+   "    vec2 uv = vTexCoord.xy; // iResolution.xy;\n" +
+   "    //uv.y = 1.0-uv.y;\n" +
+   "    gl_FragColor = texture2D(sTexture, uv);\n" +
+   "    \n" +
+   "    if(noise < uThresh)\n" +
+   "    {\n" +
+   "        gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0);\n" +
+   "    }\n" +
+   "    if(noise < uThresh - 0.05)\n" +
+   "    {\n" +
+   "        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n" +
+   "    }\n" +
+   "    if(noise < uThresh - 0.1)\n" +
+   "    {\n" +
+   "    \n" +
+   "        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0); // use discard?\n" +
+   "    }\n" +
+   "}\n" +
+   "\n"
+  },
+  {
+    name: "ripple 2D",
+    shaderHints: "",
+    animateTo: [ ["uAmplitude", 0.1, "Linear", 0, 3],
+                        ["uTime", 6, "Linear", 0, 3] ],
+    vertex:
+    "void main(void)\n" +
+      "{\n" +
+      "  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n" +
+      "  vTexCoord = aTexCoord;\n" +
+      "}\n" +
+      "\n" +
+      "",
+    fragment:
+    "precision mediump float;\n" +
+      "uniform float uAmplitude; // 0.02; (< 1)\n" +
+      "uniform float uTime;\n" +
+      "void main()\n" +
+      "{\n" +
+      "  highp vec2 textureSize = sTextureRect.zw - sTextureRect.xy;\n" +
+      "  highp vec2 pos = -1.0 + 2.0 * vTexCoord.st/textureSize;\n" +
+      "  highp float len = length(pos);\n" +
+      "  highp vec2 texCoord = vTexCoord.st/textureSize + pos/len * sin( len * 12.0 - uTime * 4.0 ) * uAmplitude; \n" +
+      "  gl_FragColor = texture2D(sTexture, texCoord) * uColor;\n" +
+      "}\n" +
+      "\n" +
+      "\n" +
+      ""
+  },
+  {
+    name: "emboss combine",
+    shaderHints: "",
+    animateTo: [ ["uWeight", [10.0, 10.0, 10.0, 10.0], "Linear", 0, 3] ],
+    vertex: "void main(void)\n" +
+      "{\n" +
+      "gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n" +
+      "vTexCoord = aTexCoord;\n" +
+      "}\n",
+    fragment: "precision mediump float;\n" +
+      "const int KERNEL_SIZE = 9;\n" +
+      "\n" +
+      "uniform vec4 uWeight;\n" +
+      "\n" +
+      "// Gaussian kernel\n" +
+      "float kernel[KERNEL_SIZE];\n" +
+      "\n" +
+      "float width  = 512.0;\n" +
+      "float height = 512.0;\n" +
+      "\n" +
+      "float step_w = 1.0/width;\n" +
+      "float step_h = 1.0/height;\n" +
+      "\n" +
+      "vec2 offset[KERNEL_SIZE];\n" +
+      "\n" +
+      "void main(void)\n" +
+      "{\n" +
+      "  precision mediump float;\n" +
+      "\n" +
+      "  vec4 sum = vec4(0.0);\n" +
+      "\n" +
+      "  offset[0] = vec2(-step_w, -step_h);\n" +
+      "  offset[1] = vec2(0.0, -step_h);\n" +
+      "  offset[2] = vec2(step_w, -step_h);\n" +
+      "\n" +
+      "  offset[3] = vec2(-step_w, 0.0);\n" +
+      "  offset[4] = vec2(0.0, 0.0);\n" +
+      "  offset[5] = vec2(step_w, 0.0);\n" +
+      "\n" +
+      "  offset[6] = vec2(-step_w, step_h);\n" +
+      "  offset[7] = vec2(0.0, step_h);\n" +
+      "  offset[8] = vec2(step_w, step_h);\n" +
+      "\n" +
+      "  // guassian blur\n" +
+      "  // kernel[0] = 1.0/16.0;  kernel[1] = 2.0/16.0;  kernel[2] = 1.0/16.0;\n" +
+      "  // kernel[3] = 2.0/16.0;  kernel[4] = 4.0/16.0;  kernel[5] = 2.0/16.0;\n" +
+      "  // kernel[6] = 1.0/16.0;  kernel[7] = 2.0/16.0;  kernel[8] = 1.0/16.0;\n" +
+      "\n" +
+      "  // laplace\n" +
+      "  // kernel[0] = 0.0;  kernel[1] = 1.0;  kernel[2] = 0.0;\n" +
+      "  // kernel[3] = 1.0;  kernel[4] = -4.0; kernel[5] = 1.0;\n" +
+      "  // kernel[6] = 0.0;  kernel[7] = 1.0;  kernel[8] = 0.0;\n" +
+      "\n" +
+      "  // edge\n" +
+      "  // kernel[0] = -1.0;  kernel[1] = -1.0; kernel[2] = -1.0;\n" +
+      "  // kernel[3] = -1.0;  kernel[4] = +9.0; kernel[5] = -1.0;\n" +
+      "  // kernel[6] = -1.0;  kernel[7] = -1.0; kernel[8] = -1.0;\n" +
+      "\n" +
+      "  // Embossing\n" +
+      "  // 2  0  0\n" +
+      "  // 0 -1  0\n" +
+      "  // 0  0 -1\n" +
+      "  kernel[0] = 2.0;  kernel[1] = 0.0;  kernel[2] = 0.0;\n" +
+      "  kernel[3] = 0.0;  kernel[4] = -1.0; kernel[5] = 0.0;\n" +
+      "  kernel[6] = 0.0;  kernel[7] = 0.0;  kernel[8] =-1.0;\n" +
+      "\n" +
+      "    vec4 tmp = texture2D(sTexture, vTexCoord.st + offset[0]);\n" +
+      "    sum += tmp * kernel[0];\n" +
+      "\n" +
+      "    tmp = texture2D(sTexture, vTexCoord.st + offset[1]);\n" +
+      "    sum += tmp * kernel[1];\n" +
+      "\n" +
+      "    tmp = texture2D(sTexture, vTexCoord.st + offset[2]);\n" +
+      "    sum += tmp * kernel[2];\n" +
+      "\n" +
+      "    tmp = texture2D(sTexture, vTexCoord.st + offset[3]);\n" +
+      "    sum += tmp * kernel[3];\n" +
+      "\n" +
+      "    tmp = texture2D(sTexture, vTexCoord.st + offset[4]);\n" +
+      "    sum += tmp * kernel[4];\n" +
+      "\n" +
+      "    tmp = texture2D(sTexture, vTexCoord.st + offset[5]);\n" +
+      "    sum += tmp * kernel[5];\n" +
+      "\n" +
+      "    tmp = texture2D(sTexture, vTexCoord.st + offset[6]);\n" +
+      "    sum += tmp * kernel[6];\n" +
+      "\n" +
+      "    tmp = texture2D(sTexture, vTexCoord.st + offset[7]);\n" +
+      "    sum += tmp * kernel[7];\n" +
+      "\n" +
+      "    tmp = texture2D(sTexture, vTexCoord.st + offset[8]);\n" +
+      "    sum += tmp * kernel[8];\n" +
+      "\n" +
+      "    sum = texture2D(sTexture, vTexCoord.xy) + (sum * uWeight);\n" +
+      "\n" +
+      "  gl_FragColor = sum;\n" +
+      "}\n"
+  },
+  {
+    name: "blur",
+    shaderHints: "",
+    vertex: "void main(void)\n" +
+      "{\n" +
+      "  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n" +
+      "  vTexCoord = aTexCoord;\n" +
+      "}\n" +
+      "\n" +
+      "",
+    fragment:
+    "\n" +
+      "precision mediump float;\n" +
+      "\n" +
+      "#define PI2 6.283184\n" +
+      "\n" +
+      "#define CV 0.1\n" +
+      "#define ST 0.05\n" +
+      "\n" +
+      "uniform float uFactor; // 0.0 - 1.0\n" +
+      "\n" +
+      "vec4 colorat(vec2 uv) {\n" +
+      "  return texture2D(sTexture, uv);\n" +
+      "}\n" +
+      "vec4 blur(vec2 uv) { // convolve\n" +
+      "  vec4 col = vec4(0.0);\n" +
+      "  for(float r0 = 0.0; r0 < 1.0; r0 += ST) {\n" +
+      "    float r = r0 * CV;\n" +
+      "    for(float a0 = 0.0; a0 < 1.0; a0 += ST) {\n" +
+      "      float a = a0 * PI2;\n" +
+      "      col += colorat(uv + vec2(cos(a), sin(a)) * r);\n" +
+      "    }\n" +
+      "  }\n" +
+      "  col *= ST * ST;\n" +
+      "  return col;\n" +
+      "}\n" +
+      "\n" +
+      "\n" +
+      "\n" +
+      "void main() {\n" +
+      "  vec2 uv = vTexCoord.xy;\n" +
+      "  gl_FragColor = blur(uv) * uFactor + ((1.0-uFactor) * texture2D(sTexture, uv));\n" +
+      "}\n" +
+      "\n"
+  },
+  {name: "image-click",
+   shaderHints: "",
+   animateTo: [ ["uRadius", 0.3, "Linear", 0, 0.3] ],
+   vertex:
+   "void main(void)\n" +
+   "{\n" +
+   "  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n" +
+   "  vTexCoord = aTexCoord;\n" +
+   "}\n" +
+   "\n" +
+   "",
+   fragment:
+   "precision lowp float;\n" +
+   "uniform lowp float uRadius; // 0 -> 0.3 touch radius and brightness mix\n" +
+   "vec2 offset = vec2(0.3,-0.2); // offset from center; for touch point (make uniform)\n" +
+   "\n" +
+   "void main()\n" +
+   "{\n" +
+   "  precision lowp float;\n" +
+   "  lowp vec2 pos= vec2(vTexCoord.x-0.5-offset.x,vTexCoord.y-0.5-offset.y);\n" +
+   "  lowp float radius = dot(pos, pos ) ;\n" +
+   "\n" +
+   " //  use sRGB correction to brighten image\n" +
+   "    vec4 col = texture2D( sTexture, vTexCoord ) * uColor;\n" +
+   "    vec3 mask = vec3(greaterThan(col.rgb, vec3(0.0031308)));\n" +
+   "    vec3 o = mix(col.rgb * 12.92, \n" +
+   "             pow(col.rgb, vec3(1.0/2.4)) * 1.055 - 0.055, \n" +
+   "             mask);\n" +
+   "    \n" +
+   "    vec3 diff = o - col.rgb;\n" +
+   "    diff *= uRadius * 3.0;\n" +
+   "    o = col.rgb + diff;\n" +
+   "    \n" +
+   "    gl_FragColor = vec4(o.r, o.g, o.b, col.a);\n" +
+   "\n" +
+   "  if( radius <= (uRadius*uRadius) )\n" +
+   "  {\n" +
+   "    gl_FragColor += vec4(0.1);\n" +
+   "  }\n" +
+   "  \n" +
+   "}\n" +
+   "\n" +
+   ""
+  },
+  {name: "iris effect",
+   shaderHints: "",
+   animateTo: [ ["uRadius", 1.0, "Linear", 0, 0.3],
+                ["uCenter", [0.2, 0.2], "Linear", 0, 0.0],
+                ["uBlendFactor", 1.0, "Linear", 0, 0.0]
+              ],
+   vertex:
+   "uniform mediump vec2 uCenter;\n" +
+   "varying mediump vec2 vRelativePosition;\n" +
+   "\n" +
+   "void main()\n" +
+   "{\n" +
+   "    mediump vec4 world = uModelView * vec4(aPosition,1.0);\n" +
+   "    gl_Position = uProjection * world;\n" +
+   "\n" +
+   "    vTexCoord = aTexCoord;\n" +
+   "    vRelativePosition = aTexCoord - uCenter;\n" +
+   "}\n" +
+   "\n" +
+   "",
+   fragment:
+   "\n" +
+   "\n" +
+   "uniform mediump float uRadius;\n" +
+   "uniform mediump float uBlendFactor;\n" +
+   "varying mediump vec2 vRelativePosition;\n" +
+   "void main()\n" +
+   "{\n" +
+   "   mediump float delta = (length(vRelativePosition) - uRadius);\n" +
+   "   delta = clamp(0.0 - delta * uBlendFactor, 0.0, 1.0);\n" +
+   "   gl_FragColor = texture2D(sTexture, vTexCoord) * uColor;\n" +
+   "   gl_FragColor.a *= delta;\n" +
+   "}\n" +
+   ""
+  },
+  {name: "mirror effect",
+   shaderHints: "",
+   animateTo: [ ["uDepth", 0.5, "Linear", 0, 0.0],
+                ["uAlpha", 1.0, "Linear", 0, 0.0]
+              ],
+   vertex:
+   "void main()\n" +
+   "{\n" +
+   "  mediump vec3 pos = aPosition;\n" +
+   "  pos.y = pos.y * 3.0;\n" +
+   "  mediump vec4 world = uModelView * vec4(pos,1.0);\n" +
+   "  gl_Position = uProjection * world;\n" +
+   "  vTexCoord = aTexCoord;\n" +
+   "}\n" +
+   "",
+   fragment:
+   "uniform  mediump float  uDepth; // {default: 2.0 }\n" +
+   "uniform  mediump float  uAlpha; // {default: 10.0 }\n" +
+   "void main()\n" +
+   "{\n" +
+   " if(vTexCoord.y < 1.0 / 3.0)\n" +
+   " {\n" +
+   "   gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);\n" +
+   " }\n" +
+   " else if(vTexCoord.y < 2.0 / 3.0)\n" +
+   " {\n" +
+   "   gl_FragColor = texture2D(sTexture, vec2(vTexCoord.x, vTexCoord.y * 3.0 - 1.0)) * uColor;\n" +
+   "   gl_FragColor.a *= uAlpha;\n" +
+   " }\n" +
+   " else\n" +
+   " {\n" +
+   "   highp float darkness = 3.0 - vTexCoord.y * 3.0;\n" +
+   "   darkness = (1.0 - 1.0 / uDepth + darkness * 1.0/ uDepth) * 0.65;\n" +
+   "   highp vec4 color = texture2D(sTexture, vec2(vTexCoord.x, -vTexCoord.y *3.0 + 3.0)) * uColor;\n" +
+   "   color.a *= uAlpha;\n" +
+   "   gl_FragColor = color * vec4(darkness, darkness, darkness, darkness);\n" +
+   " }\n" +
+   "}\n" +
+   ""
+  },
+  {name: "sheer",
+   shaderHints: "grid depthbuffer",
+   animateTo: [ ["uAngleXAxis", 15.0, "Linear", 0, 3.0],
+                ["uAngleYAxis", 25.0, "Linear", 0, 3.0]
+              ],
+   vertex:
+   "uniform mediump  vec2  uCenter;\n" +
+   "uniform mediump  float uAngleXAxis;\n" +
+   "uniform mediump  float uAngleYAxis;\n" +
+   "void main()\n" +
+   "{\n" +
+   "  mediump vec4 world = uModelView * vec4(aPosition,1.0);\n" +
+   "\n" +
+   "  world.x = world.x + tan(radians(uAngleXAxis)) * (world.y - uCenter.y * world.w);\n" +
+   "  world.y = world.y + tan(radians(uAngleYAxis)) * (world.x - uCenter.x * world.w);\n" +
+   "\n" +
+   "  gl_Position = uProjection * world;\n" +
+   "\n" +
+   "  vTexCoord = aTexCoord;\n" +
+   "}\n" +
+   "",
+   fragment:
+   ""
+  },
+  {name: "square dissolve",
+   animateTo: [ ["uRows", 0.4, "Linear", 0, 0.0],
+                ["uColumns", 0.4, "Linear", 0, 0.0],
+                ["texSize", [100, 100], "Linear", 0, 0.0],
+                ["uStep", 1, "Linear", 0, 3.0]
+              ],
+   shaderHints: " grid blending",
+   vertex:
+   "void main(void)\n" +
+   "{\n" +
+   "  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n" +
+   "  vTexCoord = aTexCoord;\n" +
+   "}\n" +
+   "\n" +
+   "",
+   fragment:
+   "uniform  mediump vec2   texSize;\n" +
+   "uniform  mediump float  uStep;\n" +
+   "uniform  mediump float  uRows;\n" +
+   "uniform  mediump float  uColumns;\n" +
+   "void main()\n" +
+   "{\n" +
+   "  mediump vec2 mosaicSize = vec2(1.0 / uRows, 1.0 / uColumns);\n" +
+   "  mediump vec2 intXY = vec2(vTexCoord.x * texSize.x, vTexCoord.y * texSize.y);\n" +
+   "  mediump vec2 XYMosaic = vec2(floor(intXY.x / mosaicSize.x) * mosaicSize.x, floor(intXY.y / mosaicSize.y) * mosaicSize.y);\n" +
+   "  mediump vec2 UVMosaic = vec2(XYMosaic.x /texSize.x, XYMosaic.y / texSize.y);\n" +
+   "  mediump vec4 noiseVec = texture2D(sEffect, UVMosaic);\n" +
+   "  mediump float intensity = (noiseVec[0] + noiseVec[1] + noiseVec[2] + noiseVec[3]) / 4.0;\n" +
+   "  if(intensity < uStep)\n" +
+   "    gl_FragColor = vec4(0.1, 0.1, 0.1, 1.0);\n" +
+   "  else\n" +
+   "    gl_FragColor = texture2D(sTexture, vTexCoord);\n" +
+   "  gl_FragColor *= uColor;\n" +
+   "}\n" +
+   "\n" +
+   ""
+  },
+  {name: "swirl",
+   shaderHints: " grid blending",
+   animateTo: [ ["uCenter", [0.5, 0.5], "Linear", 0, 0.0],
+                ["uTextureSize", [100, 100], "Linear", 0, 0.0],
+                ["uRadius", 1.0, "Linear", 0, 3.0],
+                ["uAngle", 3.0, "Linear", 0, 3.0]
+              ],
+   vertex:
+   "void main(void)\n" +
+   "{\n" +
+   "  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n" +
+   "  vTexCoord = aTexCoord;\n" +
+   "}\n" +
+   "\n" +
+   "",
+   fragment:
+   "uniform mediump vec2  uTextureSize;\n" +
+   "uniform highp float uRadius;\n" +
+   "uniform highp float uAngle;\n" +
+   "uniform mediump vec2  uCenter;\n" +
+   "void main()\n" +
+   "{\n" +
+   "  highp vec2 textureCenter = (sTextureRect.xy + sTextureRect.zw) * 0.5;\n" +
+   "  textureCenter = vTexCoord.st - textureCenter;\n" +
+   "  highp float distance = length(textureCenter);\n" +
+   "  if (distance >= uRadius)\n" +
+   "    discard;\n" +
+   "  highp float percent = (uRadius - distance) / uRadius;\n" +
+   "  highp float theta = percent * percent * uAngle * 4.0;\n" +
+   "  highp float sinTheta = sin(theta);\n" +
+   "  highp float cosTheta = cos(theta);\n" +
+   "// if warp, loose the sign from sin\n" +
+   "  bool warp = true;\n" +
+   "  if( warp )\n" +
+   "  {\n" +
+   "    textureCenter = vec2( dot( textureCenter, vec2(cosTheta, sinTheta) ),\n" +
+   "                          dot( textureCenter, vec2(sinTheta, cosTheta) ) );\n" +
+   "  }\n" +
+   "  else\n" +
+   "  {\n" +
+   "    textureCenter = vec2( dot( textureCenter, vec2(cosTheta, -sinTheta) ),\n" +
+   "                        dot( textureCenter, vec2(sinTheta, cosTheta) ) );\n" +
+   "  }\n" +
+   "  textureCenter += uCenter;\n" +
+   "  gl_FragColor = texture2D( sTexture, textureCenter ) * uColor;\n" +
+   "}\n" +
+   "\n" +
+   "\n" +
+   ""
+  },
+  {name: "drop shadow (todo; uniform control)",
+   vertex:
+   "void main()\n" +
+   "{\n" +
+   "  mediump vec3 pos = aPosition;\n" +
+   "  pos.y = pos.y * 1.1;  \n" +
+   "  pos.x = pos.x * 1.1;\n" +
+   "  \n" +
+   "  mediump vec4 world = uModelView * vec4(pos,1.0);\n" +
+   "  gl_Position = uProjection * world;\n" +
+   "  vTexCoord = aTexCoord;\n" +
+   "}\n" +
+   "\n" +
+   "",
+   fragment:
+   "void main()\n" +
+   "{\n" +
+   " if(vTexCoord.y <  0.05)\n" +
+   " {\n" +
+   "   discard;\n" +
+   "   gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n" +
+   " }\n" +
+   " else if(vTexCoord.x <  0.05)\n" +
+   " {\n" +
+   "   discard;\n" +
+   "    gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n" +
+   " }\n" +
+   " else if(vTexCoord.y <  0.95 && vTexCoord.x <  0.95)\n" +
+   " {\n" +
+   "   gl_FragColor = texture2D(sTexture, vec2(vTexCoord.x/ (1.0/1.1) - 0.05, vTexCoord.y / (1.0/1.0) - 0.05 )) * uColor;\n" +
+   " }\n" +
+   " else\n" +
+   " {\n" +
+   "   if(vTexCoord.y <  0.1 || vTexCoord.x <  0.1)\n" +
+   "   {\n" +
+   "       discard;\n" +
+   "   }\n" +
+   "   else\n" +
+   "   {\n" +
+   "     gl_FragColor = vec4(0.2, 0.2, 0.2, 1.0);\n" +
+   "   }\n" +
+   " }\n" +
+   "}\n" +
+   "\n" +
+   "",
+   shaderHints: ""
+  },
+  {name: "water drops (broken) ",
+   shaderHints: " grid",
+   animateTo: [ ["uDrops[0].center", [0.5, 0.5], "Linear", 0, 3.0],
+                ["uDrops[0].radius", 40, "Linear", 0, 3.0],
+                ["uDrops[0].amplitude", 20.0, "Linear", 0, 3.0],
+                ["uDrops[1].center", [0.5, 0.5], "Linear", 0, 3.0],
+                ["uDrops[1].radius", 40, "Linear", 0, 3.0],
+                ["uDrops[1].amplitude", 20.0, "Linear", 0, 3.0],
+                ["uDrops[2].center", [0.5, 0.5], "Linear", 0, 3.0],
+                ["uDrops[2].radius", 40, "Linear", 0, 3.0],
+                ["uDrops[2].amplitude", 20.0, "Linear", 0, 3.0],
+                ["uDrops[3].center", [0.5, 0.5], "Linear", 0, 3.0],
+                ["uDrops[3].radius", 40, "Linear", 0, 3.0],
+                ["uDrops[3].amplitude", 20.0, "Linear", 0, 3.0],
+                ["uDrops[4].center", [0.5, 0.5], "Linear", 0, 3.0],
+                ["uDrops[4].radius", 40, "Linear", 0, 3.0],
+                ["uDrops[4].amplitude", 20.0, "Linear", 0, 3.0]
+              ],
+   vertex:
+   "#define NUMBER_OF_DROPS 5\n" +
+   "#define MAX_WAVE_RADIUS 80.0\n" +
+   "\n" +
+   "mediump vec4 position = vec4( aPosition, 1.0 );\n" +
+   "\n" +
+   "struct Drops\n" +
+   "{\n" +
+   "  mediump vec2 center;\n" +
+   "  mediump float radius;\n" +
+   "  mediump float amplitude;\n" +
+   "};\n" +
+   "\n" +
+   "uniform Drops uDrops[NUMBER_OF_DROPS];\n" +
+   "\n" +
+   "varying mediump vec4 vColor;\n" +
+   "\n" +
+   "void main()\n" +
+   "{\n" +
+   "  position = uModelView * position;\n" +
+   "  mediump float refraction = 0.0;\n" +
+   "  for (int i=0; i<NUMBER_OF_DROPS; ++i)\n" +
+   "  {\n" +
+   "    mediump float distance = distance( uDrops[i].center, position.xy );\n" +
+   "    mediump float attenuation = clamp(distance / uDrops[i].radius, 0.0, 1.0) * 1.57;\n" +
+   "    refraction += uDrops[i].amplitude * cos( (distance - uDrops[i].radius) *0.075 ) * cos(attenuation);\n" +
+   "  }\n" +
+   "  vColor = uColor + vec4(vec3(clamp(refraction, -0.1, 1.0)), 1.0);\n" +
+   "  vTexCoord = aTexCoord + vec2( sin(refraction)/MAX_WAVE_RADIUS );\n" +
+   "  gl_Position = uProjection * position;\n" +
+   "}\n" +
+   "\n" +
+   "",
+   fragment:
+   "\n" +
+   "varying mediump vec4 vColor;\n" +
+   "void main()\n" +
+   "{\n" +
+   "  gl_FragColor = texture2D( sTexture, vTexCoord)*vColor;\n" +
+   "}\n" +
+   "\n" +
+   ""
+  },
+  {name: "carousel (broken?)",
+   shaderHints: " grid depthbuffer",
+   vertex:
+   "\n" +
+   "uniform float uRadius;\n" +
+   "uniform mediump vec2 uCenter;\n" +
+   "uniform mediump vec2 uAnglePerUnit;\n" +
+   "\n" +
+   "void main()\n" +
+   "{\n" +
+   "    mediump vec4 world = uModelView * vec4(aPosition,1.0);\n" +
+   "    mediump vec2 d = (world.xy - uCenter) * uAnglePerUnit;\n" +
+   "    mediump float a = length(d);\n" +
+   "    mediump float cs = cos(radians(a));\n" +
+   "    world.z -= cs * uRadius;\n" +
+   "    gl_Position = uProjection * world;\n" +
+   "    \n" +
+   "    vTexCoord = aTexCoord; \n" +
+   "}\n" +
+   "\n" +
+   "\n" +
+   "",
+   fragment:
+   "precision mediump float;\n" +
+   "void main()\n" +
+   "{\n" +
+   "  gl_FragColor = texture2D( sTexture, vTexCoord ) * uColor;\n" +
+   "}\n" +
+   "\n" +
+   ""
+  },
+  {
+    name: "twist (broken)",
+    shaderHints: "",
+    vertex: "varying lowp vec4  vcolor;\n" +
+      "uniform lowp float uOffset;\n" +
+      "\n" +
+      "void main()\n" +
+      "{\n" +
+      "    vec4 pos = uProjection * uModelView * vec4(aPosition, 1.0);\n" +
+      "    pos.x= 3.0*pos.z*(sin(1.57+uOffset+pos.y/1000.0));\n" +
+      "    gl_Position =pos;\n" +
+      "    vcolor = pos/500.0;\n" +
+      "    vTexCoord = aTexCoord;\n" +
+      "}\n",
+    fragment: "varying lowp vec4 vcolor;\n" +
+      "void main()\n" +
+      "{\n" +
+      "    gl_FragColor = texture2D( sTexture, vTexCoord ) *uColor + vcolor*0.2;\n" +
+      "}\n"
+  },
+  {
+    name: "refraction example (broken - needs a mesh actor)",
+    shaderHints: "",
+    vertex: "varying mediump vec2 vTextureOffset;\n" +
+      "void main()\n" +
+      "{\n" +
+      "  gl_Position = uMvpMatrix * vec4( aPosition.xy, 0.0, 1.0 );\n" +
+      "  vTexCoord = aTexCoord.xy;\n" +
+      "\n" +
+      "  vNormal = aNormal;\n" +
+      "  vVertex = vec4( aPosition, 1.0 );\n" +
+      "  float length = max(0.01, length(aNormal.xy)) * 40.0;\n" +
+      "  vTextureOffset = vec2(aNormal.xy / length);\n" +
+      "}\n",
+    fragment: "precision mediump float;\n" +
+      "uniform mediump float uEffectStrength;\n" +
+      "uniform mediump vec3 uLightPosition;\n" +
+      "uniform mediump vec2 uLightXYOffset;\n" +
+      "uniform mediump vec2 uLightSpinOffset;\n" +
+      "uniform mediump float uLightIntensity;\n" +
+      "varying mediump vec2 vTextureOffset;\n" +
+      "\n" +
+      "vec3 rgb2hsl(vec3 rgb)\n" +
+      "{\n" +
+      "  float epsilon = 1.0e-10;\n" +
+      "  vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);\n" +
+      "  vec4 P = mix(vec4(rgb.bg, K.wz), vec4(rgb.gb, K.xy), step(rgb.b, rgb.g));\n" +
+      "  vec4 Q = mix(vec4(P.xyw, rgb.r), vec4(rgb.r, P.yzx), step(P.x, rgb.r));\n" +
+      "  // RGB -> HCV\n" +
+      "  float value = Q.x;\n" +
+      "  float chroma = Q.x - min(Q.w, Q.y);\n" +
+      "  float hue = abs(Q.z + (Q.w-Q.y) / (6.0*chroma+epsilon));\n" +
+      " // HCV -> HSL\n" +
+      "float lightness = value - chroma*0.5;\n" +
+      "  return vec3( hue, chroma/max( 1.0-abs(lightness*2.0-1.0), 1.0e-1 ), lightness );\n" +
+      "}\n" +
+
+      "vec3 hsl2rgb( vec3 hsl )\n" +
+      "{\n" +
+      "  // pure hue->RGB\n" +
+      "  vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);\n" +
+      "  vec3 p = abs(fract(hsl.xxx + K.xyz) * 6.0 - K.www);\n" +
+      "  vec3 RGB = clamp(p - K.xxx, 0.0, 1.0);\n" +
+      "  float chroma = ( 1.0 - abs( hsl.z*2.0-1.0 ) ) * hsl.y;\n" +
+      "  return ( RGB - 0.5 ) * chroma + hsl.z;\n" +
+      "}\n" +
+
+      "void main()\n" +
+      "{\n" +
+      "  vec3 normal = normalize( vNormal);\n" +
+      "\n" +
+      "  vec3 lightPosition = uLightPosition + vec3(uLightXYOffset+uLightSpinOffset, 0.0);\n" +
+      "  mediump vec3 vecToLight = normalize( (lightPosition - vVertex.xyz) * 0.01 );\n" +
+      "  mediump float spotEffect = pow( max(0.05, vecToLight.z ) - 0.05, 8.0);\n" +
+      "\n" +
+      "  spotEffect = spotEffect * uEffectStrength;\n" +
+      "  mediump float lightDiffuse = ( ( dot( vecToLight, normal )-0.75 ) *uLightIntensity  ) * spotEffect;\n" +
+      "\n" +
+      "  lowp vec4 color = texture2D( sTexture, vTexCoord + vTextureOffset * spotEffect );\n" +
+      "  vec3 lightedColor =  hsl2rgb( rgb2hsl(color.rgb) + vec3(0.0,0.0,lightDiffuse) );\n" +
+      "\n" +
+      "  gl_FragColor = vec4( lightedColor, color.a ) * uColor;\n" +
+      "  }"
+  },
+  {
+    name: "bouncing effect (broken ? )",
+    shaderHints: "",
+    vertex: "",
+    fragment: "precision mediump float;\n" +
+      "uniform float uProgressRate;\n" +
+      "uniform vec4 uAssignedColor;\n" +
+      "void main()\n" +
+      "{\n" +
+      "  float progressRate = abs(uProgressRate)*0.5;\n" +
+      "  float amplitude = 0.15 - progressRate*0.15 ;\n" +
+      "  float x1 = 7.5 * (vTexCoord.x - progressRate);\n" +
+      "  float x2 = 7.5 * (vTexCoord.x - 1.0 + progressRate);\n" +
+      "  float height1 = max(0.00001, 0.3 - amplitude * ( exp(x1) + exp(-x1) ) );\n" +
+      "  float height2 = max(0.00001, 0.3 - amplitude * ( exp(x2) + exp(-x2) ) );\n" +
+      "  float height3 = max(0.00001, 1.0 - 3.0 * amplitude * ( exp(x1*0.5) + exp(-x1*0.5) ) );\n" +
+      "  float height4 = max(0.00001, 1.0 - 3.0 * amplitude * ( exp(x2*0.5) + exp(-x2*0.5) ) );\n" +
+      "  vec4 fragColor = vec4(0.0);\n" +
+      "  float y = vTexCoord.y/(height1+height2);\n" +
+      "  float y2 = vTexCoord.y/max(height3,height4);\n" +
+      "  float coef = max(height1,height2)*5.0/( 1.0+exp(y*12.0-6.0) );\n" +
+      "  float alpha = pow( max(0.0,(1.0-y2))*(1.0-min(abs(x1),abs(x2))/5.0), 2.0);\n" +
+      "  if( vTexCoord.y < 0.075 )\n" +
+      "  {\n" +
+      "    fragColor= mix(uAssignedColor, vec4(1.0), coef);\n" +
+      "    fragColor += (vec4(1.0)-fragColor) * alpha;\n" +
+      "  }\n" +
+      "  else if (y2<1.0)\n" +
+      "  {\n" +
+      "    fragColor =vec4(1.0,1.0,1.0, alpha + (1.0-alpha)*coef);\n" +
+      "    fragColor.rgb -= ( vec3(1.0)-uAssignedColor.rgb )*min(clamp(y*1.2-0.3, 0.0, 0.3),clamp(0.9-y*1.2,0.0,0.3));\n" +
+      "  }\n" +
+      "  fragColor.a *= 10.0*min(min(vTexCoord.x, 1.0-vTexCoord.x),0.1)*min(1.0, progressRate/0.2);\n" +
+      "  gl_FragColor =  fragColor;\n" +
+      "}"
+  },
+  {
+    name: "ripple (broken)",
+    shaderHints: " grid",
+    vertex: "precision mediump float;\n" +
+      "uniform mediump   vec2  ucenter;\n" +
+      "uniform mediump   float uTime;\n" +
+      "uniform mediump   float uAmplitude;\n" +
+      "//uniform mediump   float uLighting;\n" +
+      "//uniform mediump   float uwaveLength;\n" +
+      "varying mediump   float vLight;\n" +
+      "varying mediump   float vShade;\n" +
+      "void main()\n" +
+      "{\n" +
+      "  float lighting = uAmplitude * 0.02;\n" +
+      "  float waveLength = uAmplitude * 0.0016;\n" +
+      "  vec4 world = uModelView * vec4(aPosition,1.0);\n" +
+      "  vec2 d = vec2(world.x - ucenter.x, world.y - ucenter.y);\n" +
+      "  float dist = length(d);\n" +
+      "  float amplitude = cos(uTime - dist*waveLength);\n" +
+      "  float slope     = sin(uTime - dist*waveLength);\n" +
+      "  world.z += amplitude * uAmplitude;\n" +
+      "  gl_Position = uProjection * world;\n" +
+      "  vec2 lightDirection = vec2(-0.707,0.707);\n" +
+      "  float dd = 0.0;\n" +
+      "  if(dist > 0.0)\n" +
+      "  {\n" +
+      "    dd = dot(normalize(d),lightDirection) * lighting;\n" +
+      "  }\n" +
+      "  vShade = 1.0 - (dd * slope);\n" +
+      "  vLight = max(0.0, dd * -slope);\n" +
+      "  vTexCoord = aTexCoord;\n" +
+      "}\n" +
+      "\n" +
+      "",
+    fragment:
+    "\n" +
+      "precision mediump float;\n" +
+      "varying mediump float  vLight;\n" +
+      "varying mediump float  vShade;\n" +
+      "void main()\n" +
+      "{\n" +
+      "  gl_FragColor = texture2D(sTexture, vTexCoord) * uColor * vec4(vShade,vShade,vShade,1.0) + vec4(vLight, vLight, vLight,0.0);\n" +
+      "}\n" +
+      "\n" +
+      "\n" +
+      ""
+  },
+  {
+    name: "noise (broken)",
+    shaderHints: "",
+    vertex: "void main(void)\n" +
+      "{\n" +
+      "  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n" +
+      "  vTexCoord = aTexCoord;\n" +
+      "}\n",
+    fragment: "precision mediump float;\n" +
+      "\n" +
+      "// noise\n" +
+      "float noise(vec2 pos)\n" +
+      "{\n" +
+      " return fract( sin( dot(pos*0.001 ,vec2(24.12357, 36.789) ) ) * 12345.123);\n" +
+      "}\n" +
+      "\n" +
+      "\n" +
+      "// blur noise\n" +
+      "float smooth_noise(vec2 pos)\n" +
+      "{\n" +
+      " return   ( noise(pos + vec2(1,1)) + noise(pos + vec2(1,1)) + noise(pos + vec2(1,1)) + noise(pos + vec2(1,1)) ) / 16.0\n" +
+      "     + ( noise(pos + vec2(1,0)) + noise(pos + vec2(-1,0)) + noise(pos + vec2(0,1)) + noise(pos + vec2(0,-1)) ) / 8.0\n" +
+      "       + noise(pos) / 4.0;\n" +
+      "}\n" +
+      "\n" +
+      "\n" +
+      "// linear interpolation\n" +
+      "float interpolate_noise(vec2 pos)\n" +
+      "{\n" +
+      "float a, b, c, d;\n" +
+      " \n" +
+      " a = smooth_noise(floor(pos));\n" +
+      " b = smooth_noise(vec2(floor(pos.x+1.0), floor(pos.y)));\n" +
+      " c = smooth_noise(vec2(floor(pos.x), floor(pos.y+1.0)));\n" +
+      " d = smooth_noise(vec2(floor(pos.x+1.0), floor(pos.y+1.0)));\n" +
+      "\n" +
+      " a = mix(a, b, fract(pos.x));\n" +
+      " b = mix(c, d, fract(pos.x));\n" +
+      " a = mix(a, b, fract(pos.y));\n" +
+      " \n" +
+      " return a;\n" +
+      "}\n" +
+      "\n" +
+      "\n" +
+      "float perlin_noise(vec2 pos)\n" +
+      "{\n" +
+      " float n;\n" +
+      " \n" +
+      " n = interpolate_noise(pos*0.0625)*0.5;\n" +
+      " n += interpolate_noise(pos*0.125)*0.25;\n" +
+      " n += interpolate_noise(pos*0.025)*0.225;\n" +
+      " n += interpolate_noise(pos*0.05)*0.0625;\n" +
+      " n += interpolate_noise(pos)*0.03125;\n" +
+      " return n;\n" +
+      "}\n" +
+      "\n" +
+      "\n" +
+      "\n" +
+      "void main()\n" +
+      "{\n" +
+      " vec2 pos = vTexCoord.xy;\n" +
+      " float c, n;\n" +
+      "\n" +
+      "\n" +
+      " n = perlin_noise(pos);\n" +
+      "\n" +
+      "\n" +
+      " vec2 p = vTexCoord.xy; // / iResolution.xy;\n" +
+      "\n" +
+      " if(p.y < 0.333) // last row\n" +
+      "{\n" +
+      "  \n" +
+      "  if(p.x < 0.333)\n" +
+      "    c = abs(cos(n*10.0));\n" +
+      "  else if(p.x < 0.666)\n" +
+      "    c = cos(pos.x*0.02 + n*10.0);//*0.5+0.5;\n" +
+      "  else\n" +
+      "  {\n" +
+      "    pos *= 0.05;\n" +
+      "    c = abs(sin(pos.x+n*5.0)*cos(pos.y+n*5.0));\n" +
+      "  }\n" +
+      " }\n" +
+      " else if(p.y < 0.666) // middle row\n" +
+      " {\n" +
+      "   \n" +
+      "   if(p.x < 0.333)\n" +
+      "   {\n" +
+      "     pos *= 0.05;\n" +
+      "     pos += vec2(10.0, 10.0);\n" +
+      "     c = sqrt(pos.x * pos.x + pos.y * pos.y);\n" +
+      "    c = fract(c+n);\n" +
+      " }\n" +
+      " else if(p.x < 0.666)\n" +
+      " {\n" +
+      "  c = max(1.0 - mod(pos.x*0.5, 80.3+n*4.0)*0.5, 1.0 -  mod(pos.y*0.5, 80.3+n*4.0)*0.5);\n" +
+      "  c = max(c, 0.5*max(1.0 - mod(pos.x*0.5+40.0, 80.3+n*4.0)*0.5, 1.0 -  mod(pos.y*0.5+40.0, 80.3+n*4.0)*0.5));\n" +
+      " }\n" +
+      " else\n" +
+      "  c = abs(cos(pos.x*0.1 + n*20.0));// mod(pos.x*0.1, cos(pos.x));\n" +
+      " }\n" +
+      " else // first row\n" +
+      " {\n" +
+      "   if(p.x < 0.333)\n" +
+      "     c = noise(pos);\n" +
+      "   else if(p.x < 0.666)\n" +
+      "     c = n;\n" +
+      "   else\n" +
+      "     c =max(fract(n*20.0), max(fract(n*5.0), fract(n*10.0)));\n" +
+      " }\n" +
+      "\n" +
+      " gl_FragColor = vec4(c, c, c, 1.0);\n" +
+      "}\n"
+  }
+];
+
+var javascriptSources =
+[
+  {
+    name: "some",
+    source: "\n" +
+      "stage(image({\n" +
+      "        name:\"img\",\n" +
+      "        image:\"stockimage1\",\n" +
+      "        size:[100,100,1]\n" +
+      "      }),\n" +
+      "      image({\n" +
+      "        name:\"img2\",\n" +
+      "        image:\"stockimage2\",\n" +
+      "        position:[100,0,0],\n" +
+      "        size:[100,100,1]\n" +
+      "      }),\n" +
+      "      image({\n" +
+      "        name:\"img3\",\n" +
+      "        image:\"stockimage3\",\n" +
+      "        position:[100,0,0],\n" +
+      "        size:[100,100,1]\n" +
+      "      }),\n" +
+      "      image({\n" +
+      "        name:\"img4\",\n" +
+      "        image:\"stockimage4\",\n" +
+      "        position:[100,0,0],\n" +
+      "        size:[100,100,1]\n" +
+      "      })\n" +
+      ");\n" +
+      "\n" +
+      "\n" +
+      "when(\"img\", \"touchedDown\",\n" +
+      "    set(\"size\", to([200,200,200])),\n" +
+      "    set(\"img2\", \"size\", to([200,200,200])),\n" +
+      "    endAction(\"Discard\")    );\n" +
+      "    \n" +
+      "\n" +
+      "\n"
+  },
+  {
+    name: "Coloured quad",
+    source: "var halfQuadSize = 0.5;\n" +
+      "\n" +
+      "// use helper function to create property buffer\n" +
+      "var verts = dali.createPropertyBuffer( {format: [ [\"aPos\", dali.PropertyType.VECTOR2.value],\n" +
+      "                                             [\"aCol\", dali.PropertyType.VECTOR4.value] ],\n" +
+      "                                   data: { \"aPos\": [ [-halfQuadSize, -halfQuadSize],\n" +
+      "                                                     [+halfQuadSize, -halfQuadSize],\n" +
+      "                                                     [-halfQuadSize, +halfQuadSize],\n" +
+      "                                                     [+halfQuadSize, +halfQuadSize]\n" +
+      "                                                   ],\n" +
+      "                                           \"aCol\": [ [0, 0, 0, 1],\n" +
+      "                                                     [1, 0, 1, 1],\n" +
+      "                                                     [0, 1, 0, 1],\n" +
+      "                                                     [1, 1, 1, 1]\n" +
+      "                                                   ]\n" +
+      "                                         }\n" +
+      "                                  }\n" +
+      "                                );\n" +
+      "\n" +
+      "var indices = dali.createPropertyBuffer( { format: [ [\"indices\", dali.PropertyType.INTEGER.value]],\n" +
+      "                                      data: { \"indices\": [0, 3, 1, 0, 2, 3] } } ) ;\n" +
+      "\n" +
+      "var geometry = new dali.Geometry();\n" +
+      "\n" +
+      "geometry.addVertexBuffer(verts);\n" +
+      "geometry.setIndexBuffer(indices);\n" +
+      "\n" +
+      "var vertex = \"\" +\n" +
+      "      \"attribute mediump vec2 aPos;\" +\n" +
+      "      \"attribute mediump vec4 aCol;\" +\n" +
+      "      \"uniform mediump mat4 uMvpMatrix;\" +\n" +
+      "      \"uniform mediump vec3 uSize;\" +\n" +
+      "      \"uniform lowp vec4 uColor;\" +\n" +
+      "      \"varying lowp vec4 vColor;\" +\n" +
+      "      \"\" +\n" +
+      "      \"void main()\" +\n" +
+      "      \"{\" +\n" +
+      "      \"  vColor = aCol * uColor;\" +\n" +
+      "      \"  mediump vec4 vertexPosition = vec4(aPos, 0.0, 1.0);\" +\n" +
+      "      \"  vertexPosition.xyz *= uSize;\" +\n" +
+      "      \"  gl_Position = uMvpMatrix * vertexPosition;\" +\n" +
+      "      \"}\";\n" +
+      "\n" +
+      "var fragment = \"\" +\n" +
+      "      \"varying lowp vec4 vColor;\" +\n" +
+      "      \"uniform lowp vec4 uColor;\" +\n" +
+      "      \"\" +\n" +
+      "      \"void main()\" +\n" +
+      "      \"{\" +\n" +
+      "      \"  gl_FragColor = vColor * uColor;\" +\n" +
+      "      \"}\";\n" +
+      "\n" +
+      "\n" +
+      "var shader = new dali.Shader(vertex, fragment, dali.ShaderHints.HINT_NONE.value);\n" +
+      "\n" +
+      "var material = new dali.Material(shader);\n" +
+      "\n" +
+      "var renderer = new dali.Renderer(geometry, material);\n" +
+      "\n" +
+      "var actor = new dali.Actor();\n" +
+      "\n" +
+      "actor.addRenderer(renderer);\n" +
+      "\n" +
+      "dali.stage.add(actor);\n" +
+      "\n" +
+      "actor.parentOrigin = [0.5, 0.5, 0.0];\n" +
+      "actor.size = [100,100,1];\n" +
+      "\n" +
+      "\n" +
+      "\n" +
+      "\n" +
+      ""
+  },
+  {
+    name: "mesh morph",
+    source: "\n" +
+      "var stockImage = getStockImageData(1);\n" +
+      "var uint8array = new Uint8Array(stockImage.data);\n" +
+      "img = new dali.BufferImage(uint8array, stockImage.width, stockImage.height, dali.PixelFormat.RGBA8888.value);\n" +
+      "\n" +
+      "var format = {  aPosition: dali.PropertyType.VECTOR2.value,\n" +
+      "                aTexCoord: dali.PropertyType.VECTOR2.value\n" +
+      "            };\n" +
+      "\n" +
+      "var halfQuadSize = 0.5;\n" +
+      "\n" +
+      "var data = [    [-halfQuadSize, -halfQuadSize, 0,0],\n" +
+      "                [+halfQuadSize, -halfQuadSize, 1,0],\n" +
+      "                [-halfQuadSize, +halfQuadSize, 0,1],\n" +
+      "                [+halfQuadSize, +halfQuadSize, 1,1],\n" +
+      "            ];\n" +
+      "\n" +
+      "\n" +
+      "var recordSize = data[0].length;\n" +
+      "\n" +
+      "var buffer = new ArrayBuffer(data.length * (2*4 + 2*4));\n" +
+      "\n" +
+      "var floatView = new Float32Array(buffer, 0, 4);\n" +
+      "\n" +
+      "for(var i = 0; i < data.length; i++)\n" +
+      "{\n" +
+      "    for(var j = 0; j < recordSize; j++)\n" +
+      "    {\n" +
+      "        floatView[(i*recordSize) + i] = data[i][j];\n" +
+      "    }\n" +
+      "}\n" +
+      "\n" +
+      "var verts = new dali.PropertyBuffer(format, data.length);\n" +
+      "\n" +
+      "verts.setData(buffer);\n" +
+      "\n" +
+      "\n" +
+      "// --\n" +
+      "var indexData = [0, 3, 1, 0, 2, 3];\n" +
+      "\n" +
+      "var indexFormat = { indices: dali.PropertyType.INTEGER.value\n" +
+      "                    };\n" +
+      "\n" +
+      "var indices = new dali.PropertyBuffer(indexFormat, indexData.length);\n" +
+      "\n" +
+      "var indexBuffer = new ArrayBuffer(indexData.length);\n" +
+      "\n" +
+      "var intView = new Int32Array(buffer, 0, 1);\n" +
+      "\n" +
+      "for(var i = 0; i < indexData.length; i++)\n" +
+      "{\n" +
+      "  intView[i] = indexData[i];\n" +
+      "}\n" +
+      "\n" +
+      "indices.setData(indexBuffer);\n" +
+      "\n" +
+      "var geometry = new dali.Geometry();\n" +
+      "\n" +
+      "geometry.addVertexBuffer(verts);\n" +
+      "geometry.setIndexBuffer(indices);\n" +
+      "\n" +
+      "\n" +
+      "var vertex = \"\" +\n" +
+      "    \"attribute meduimp vec2 \";\n" +
+      "\n" +
+      "\n" +
+      "var shader = new dali.Shader(vertex, fragment);\n" +
+      "\n" +
+      "var material = new dali.Material(shader);\n" +
+      "\n" +
+      "var renderer = new dali.Renderer(geometry, material);\n" +
+      "\n" +
+      "\n" +
+      "\n" +
+      "\n" +
+      "\n" +
+      "\n" +
+      ""
+  },
+  {
+    name: "image",
+    source: "\n" +
+      "var stockImage = getStockImageData(1);\n" +
+      "var uint8array = new Uint8Array(stockImage.data);\n" +
+      "img = new dali.BufferImage(uint8array, stockImage.width, stockImage.height, dali.PixelFormat.RGBA8888.value);\n" +
+      "\n" +
+      "var format = {  aPosition: dali.PropertyType.VECTOR2.value,\n" +
+      "                aTexCoord: dali.PropertyType.VECTOR2.value\n" +
+      "            };\n" +
+      "\n" +
+      "var halfQuadSize = 0.5;\n" +
+      "\n" +
+      "var data = [    [-halfQuadSize, -halfQuadSize, 0,0],\n" +
+      "                [+halfQuadSize, -halfQuadSize, 1,0],\n" +
+      "                [-halfQuadSize, +halfQuadSize, 0,1],\n" +
+      "                [+halfQuadSize, +halfQuadSize, 1,1],\n" +
+      "            ];\n" +
+      "\n" +
+      "\n" +
+      "var recordSize = data[0].length;\n" +
+      "\n" +
+      "var buffer = new ArrayBuffer(data.length * (2*4 + 2*4));\n" +
+      "\n" +
+      "var floatView = new Float32Array(buffer, 0, 4);\n" +
+      "\n" +
+      "for(var i = 0; i < data.length; i++)\n" +
+      "{\n" +
+      "    for(var j = 0; j < recordSize; j++)\n" +
+      "    {\n" +
+      "        floatView[(i*recordSize) + i] = data[i][j];\n" +
+      "    }\n" +
+      "}\n" +
+      "\n" +
+      "var verts = new dali.PropertyBuffer(format, data.length);\n" +
+      "\n" +
+      "verts.setData(buffer);\n" +
+      "\n" +
+      "\n" +
+      "// --\n" +
+      "var indexData = [0, 3, 1, 0, 2, 3];\n" +
+      "\n" +
+      "var indexFormat = { indices: dali.PropertyType.INTEGER.value\n" +
+      "                    };\n" +
+      "\n" +
+      "var indices = new dali.PropertyBuffer(indexFormat, indexData.length);\n" +
+      "\n" +
+      "var indexBuffer = new ArrayBuffer(indexData.length);\n" +
+      "\n" +
+      "var intView = new Int32Array(buffer, 0, 1);\n" +
+      "\n" +
+      "for(var i = 0; i < indexData.length; i++)\n" +
+      "{\n" +
+      "  intView[i] = indexData[i];\n" +
+      "}\n" +
+      "\n" +
+      "indices.setData(indexBuffer);\n" +
+      "\n" +
+      "var geometry = new dali.Geometry();\n" +
+      "\n" +
+      "geometry.addVertexBuffer(verts);\n" +
+      "geometry.setIndexBuffer(indices);\n" +
+      "\n" +
+      ""
+  },
+  {
+    name: "user 1",
+    source: ""
+  },
+  {
+    name: "user 2",
+    source: ""
+  },
+  {
+    name: "user 3",
+    source: ""
+  },
+  {
+    name: "user 4",
+    source: ""
+  }
+];
+
+
+function getStockImageData(index) {
+  "use strict";
+  var name = "testImage" + index;
+  // need to draw it off screen first? @todo
+  var c = document.createElement("canvas");
+  var img = document.getElementById(name);
+  c.width = img.naturalWidth;
+  c.height = img.naturalHeight;
+  var context = c.getContext("2d");
+  context.drawImage(img, 0, 0 );
+  var imageData = context.getImageData(0, 0, img.naturalWidth, img.naturalHeight); // <-ImageData
+  return imageData;
+}
+
+//
+//
+// Helper functions
+//
+//
+
+function addTestImage(index) {
+  "use strict";
+  var i = new dali.ImageActor();
+  //
+  // Setting image isn't property based as browser cannot load from a file
+  //
+  i.setImageData( getStockImageData(index) );
+  // i.image         = {"filename":"dali-logo.png"};
+
+  i.visible = true;
+  i.anchorPoint = [0.5, 0.5, 0.5];
+  i.parentOrigin = [0.5, 0.5, 0.5];
+  i.position = [0, 0, -10];
+  i.size = [100, 100, 1];
+  i.name = "Stock image:" + index; // name.replace(/-/g, "_").replace(/\./g, "_");
+
+  app.addActor(i);
+
+  return i;
+}
+
+function add1ColElement(elem, value)
+{
+  var e = document.createElement("div");
+  e.className = "col-md-3";
+  e.innerHTML = value;
+  elem.appendChild(e);
+
+  e = document.createElement("div");
+  e.className = "col-md-3";
+  e.innerHTML = "";
+  elem.appendChild(e);
+
+  e = document.createElement("div");
+  e.className = "col-md-3";
+  e.innerHTML = "";
+  elem.appendChild(e);
+
+  e = document.createElement("div");
+  e.className = "col-md-3";
+  e.innerHTML = "";
+  elem.appendChild(e);
+
+  return e;
+}
+
+function add2ColElement(elem, value)
+{
+  var e = document.createElement("div");
+  e.className = "col-md-3";
+  e.innerHTML = value[0];
+  elem.appendChild(e);
+
+  e = document.createElement("div");
+  e.className = "col-md-3";
+  e.innerHTML = value[1];
+  elem.appendChild(e);
+
+  e = document.createElement("div");
+  e.className = "col-md-3";
+  e.innerHTML = "";
+  elem.appendChild(e);
+
+  e = document.createElement("div");
+  e.className = "col-md-3";
+  e.innerHTML = "";
+  elem.appendChild(e);
+
+  return e;
+}
+
+function add3ColElement(elem, value)
+{
+  var e = document.createElement("div");
+  e.className = "col-md-3";
+  e.innerHTML = value[0];
+  elem.appendChild(e);
+
+  e = document.createElement("div");
+  e.className = "col-md-3";
+  e.innerHTML = value[1];
+  elem.appendChild(e);
+
+  e = document.createElement("div");
+  e.className = "col-md-3";
+  e.innerHTML = value[2];
+  elem.appendChild(e);
+
+  e = document.createElement("div");
+  e.className = "col-md-3";
+  e.innerHTML = "";
+  elem.appendChild(e);
+  return e;
+}
+
+function add4ColElement(elem, value)
+{
+  var e = document.createElement("div");
+  e.className = "col-md-3";
+  e.innerHTML = value[0];
+  elem.appendChild(e);
+
+  e = document.createElement("div");
+  e.className = "col-md-3";
+  e.innerHTML = value[1];
+  elem.appendChild(e);
+
+  e = document.createElement("div");
+  e.className = "col-md-3";
+  e.innerHTML = value[2];
+  elem.appendChild(e);
+
+  e = document.createElement("div");
+  e.className = "col-md-3";
+  e.innerHTML = value[3];
+  elem.appendChild(e);
+  return e;
+}
+
+function createElementForActorProperty(actor, name) {
+  "use strict";
+  var elem = document.createElement("div");
+
+  var value = actor[name];
+  var type = typeof value;
+
+  if(type === "string" || type === "number" || type === "boolean") {
+    elem.className = "row";
+    add1ColElement(elem, value);
+  } else if(value === undefined) {
+    elem.className = "row";
+    add1ColElement(elem, "???undefined???");
+  } else {
+    var length = value.length;
+    if(length === 2) {
+      elem.className = "row";
+      add2ColElement(elem, value);
+    } else if(length === 3) {
+      elem.className = "row";
+      add3ColElement(elem, value);
+    } else if(length === 4) {
+      elem.className = "row";
+      add4ColElement(elem, value);
+    } else if(length === 9) {
+      var r = document.createElement("div");
+      r.className = "row";
+      add3ColElement(r, value.slice(0, 3));
+      elem.appendChild(r);
+
+      r = document.createElement("div");
+      r.className = "row";
+      add3ColElement(r, value.slice(3, 6));
+      elem.appendChild(r);
+
+      r = document.createElement("div");
+      r.className = "row";
+      add3ColElement(r, value.slice(6, 9));
+      elem.appendChild(r);
+    } else if(length === 16) {
+      var r = document.createElement("div");
+      r.className = "row";
+      add4ColElement(r, value.slice(0, 4));
+      elem.appendChild(r);
+
+      r = document.createElement("div");
+      r.className = "row";
+      add4ColElement(r, value.slice(4, 8));
+      elem.appendChild(r);
+
+      r = document.createElement("div");
+      r.className = "row";
+      add4ColElement(r, value.slice(8, 12));
+      elem.appendChild(r);
+
+      r = document.createElement("div");
+      r.className = "row";
+      add4ColElement(r, value.slice(12, 16));
+      elem.appendChild(r);
+    }
+  }
+
+  return elem;
+}
+
+function onActorSelected(actor) {
+  "use strict";
+  var i;
+  var gridBlock;
+  var nameBlock;
+  var valueBlock;
+  var actorId;
+
+  //
+  // recreate property tab
+  //
+  var elem = document.getElementById("selected");
+
+  removeAllChildren(elem);
+
+  //
+  // setup property view
+  //
+  if (actor) {
+    actorId = actor.getId();
+
+    var p = document.createElement("div");
+    p.innerHTML = "<h3><b>" + actor.name + "</b> [<b>" + actorId + "</b>] (<b>" + actor.position + "</b>)</h3>";
+    elem.appendChild(p);
+
+    var parent = actor.getParent();
+    if(parent) {
+      p = document.createElement("div");
+      p.innerHTML =
+        "<p>" +
+        "(Parent: <b>" + parent.name + "</b> [<b>" + parent.getId() + "</b>] (<b>" + parent.position + "</b>)" +
+        " Anchored: <b>" + actor.anchorPoint + "</b>" +
+        " ParentOrigin: <b>" + actor.parentOrigin + "</b> )" +
+        "</p>";
+      elem.appendChild(p);
+    }
+
+    if( actorId in actorIdToShaderSet &&
+        "shaderEffect" in actorIdToShaderSet[actorId]) { // if has compiled
+      // if(actorId in actorIdToShaderSet) {
+      var shaderOptions = actorIdToShaderSet[actorId];
+      var uniforms = dali.sourceUniformMetaData(shaderOptions.vertex);
+      uniforms = uniforms.concat(dali.sourceUniformMetaData(shaderOptions.fragment));
+
+      var shader = getShader(actor);
+
+      if(uniforms.length) {
+        gridBlock = document.createElement("div");
+        gridBlock.className = "row";
+
+        nameBlock = document.createElement("div");
+        nameBlock.className = "col-md-5";
+        nameBlock.innerHTML = "<u>Shader Uniforms:</u>";
+        gridBlock.appendChild(nameBlock);
+
+        valueBlock = document.createElement("div");
+        valueBlock.className = "col-md-7";
+        valueBlock.innerHTML = "";
+        gridBlock.appendChild(valueBlock);
+
+        elem.appendChild(gridBlock);
+
+        for(i = 0; i < uniforms.length; i++) {
+          var type = uniforms[i].type;
+          var name = uniforms[i].name;
+          gridBlock = document.createElement("div");
+          gridBlock.className = "row";
+
+          nameBlock = document.createElement("div");
+          nameBlock.className = "col-md-5";
+          nameBlock.innerHTML = type + " " + name +
+            "<a class=\"btn btn-default btn-xs\" href=\"javascript:addPropertyToAnimation(" + actorId + ",'" + name + "')\"" + " role=\"button\">Animate</a>";
+
+          gridBlock.appendChild(nameBlock);
+
+          valueBlock = document.createElement("div");
+          valueBlock.className = "col-md-7";
+          valueBlock.innerHTML = shader[ name ];
+          gridBlock.appendChild(valueBlock);
+
+          elem.appendChild(gridBlock);
+
+        }
+      }
+
+    }
+
+    var props = actor.getProperties(); // std::vector<string>
+
+    gridBlock = document.createElement("div");
+    gridBlock.className = "row";
+
+    nameBlock = document.createElement("div");
+    nameBlock.className = "col-md-5";
+    nameBlock.innerHTML = "<u>Properties:</ul>";
+    gridBlock.appendChild(nameBlock);
+
+    valueBlock = document.createElement("div");
+    valueBlock.className = "col-md-7";
+    valueBlock.innerHTML = "";
+    gridBlock.appendChild(valueBlock);
+
+    elem.appendChild(gridBlock);
+
+
+    for (i = 0; i < props.size(); i++) {
+      var name = props.get(i);
+
+      gridBlock = document.createElement("div");
+      gridBlock.className = "row";
+
+      var animatable = actor.isPropertyAnimatable(actor.getPropertyIndex(name));
+
+      nameBlock = document.createElement("div");
+      nameBlock.className = "col-md-5";
+      if(animatable) {
+        nameBlock.innerHTML = name + "<a class=\"btn btn-default btn-xs\" href=\"javascript:addPropertyToAnimation(" + actorId + ",'" + name + "')\"" + " role=\"button\">Animate</a>";
+      } else {
+        nameBlock.innerHTML = name;
+      }
+      gridBlock.appendChild(nameBlock);
+
+      valueBlock = document.createElement("div");
+      valueBlock.className = "col-md-7";
+
+      valueBlock.appendChild( createElementForActorProperty(actor, name) );
+
+      gridBlock.appendChild(valueBlock);
+
+      elem.appendChild(gridBlock);
+    }
+
+    props.delete();
+
+
+    //
+    // load current actors shaders
+    //
+    userEditingShader = false; // ie dont do anything on ui onChange()
+
+    if(actorId !== lastActorSelectedId) {
+      if(actorId in actorIdToShaderSet) {
+        var options = actorIdToShaderSet[actorId];
+        setShaderUI(options);
+      } else {
+        setShaderUI({name: "",
+                     shaderHints: "",
+                     vertex: "",
+                     fragment: ""});
+      }
+    }
+
+    userEditingShader = true;
+
+    lastActorSelectedId = actorId;
+
+  }
+
+}
+
+
+function createElement(elementName, namesValues) {
+  "use strict";
+  var e = document.createElement(elementName);
+  for(var name in namesValues) {
+    e[name] = namesValues[name];
+  }
+  return e;
+}
+
+function createElementInnerHTML(elementName, innerHTML) {
+  "use strict";
+  return createElement(elementName, {"innerHTML": innerHTML});
+}
+
+function removeAllChildren(elem) {
+  "use strict";
+  var count = elem.children.length;
+  for (var i = 0; i < count; i++) {
+    elem.removeChild(elem.children[0]);
+  }
+}
+
+function onChangeSetDataChanged(e) {
+  e.currentTarget["data-changed"] = true;
+}
+
+function inputElem(type, propObject, property, val, arrayIndex) {
+  "use strict";
+  var e = document.createElement("input");
+  e.type = type;
+  // for number then step of any means it can be a real number not just integer
+  e.step = "any";
+  e.value = val;
+  e.className = "form-control";
+  e["data-value"] = val;
+  e["data-arrayIndex"] = arrayIndex;
+  e["data-changed"] = false;
+  e.addEventListener("changed", onChangeSetDataChanged);
+  return e;
+}
+
+function inputElem2(type, propObject, property, val, startIndex) {
+  "use strict";
+  var d = document.createElement("div");
+  var a = inputElem("number", propObject, property, val[startIndex], startIndex);
+  a.className = "col-md-3";
+  d.appendChild(a);
+  a = inputElem("number", propObject, property, val[startIndex + 1], startIndex + 1);
+  a.className = "col-md-3";
+  d.appendChild(a);
+  a.className = "col-md-3";
+  d.appendChild(a);
+  a = createElement("div");
+  a.className = "col-md-3";
+  d.appendChild(a);
+  return d;
+}
+
+function inputElem3(type, propObject, property, val, startIndex) {
+  "use strict";
+  var d = document.createElement("div");
+  var a = inputElem("number", propObject, property, val[startIndex], startIndex);
+  a.className = "col-md-3";
+  d.appendChild(a);
+  a = inputElem("number", propObject, property, val[startIndex + 1], startIndex + 1);
+  a.className = "col-md-3";
+  d.appendChild(a);
+  a = inputElem("number", propObject, property, val[startIndex + 2], startIndex + 2);
+  a.className = "col-md-3";
+  d.appendChild(a);
+  a = createElement("div");
+  a.className = "col-md-3";
+  d.appendChild(a);
+  return d;
+}
+
+function inputElem4(type, propObject, property, val, startIndex) {
+  "use strict";
+  var d = document.createElement("div");
+  var a = inputElem("number", propObject, property, val[startIndex], startIndex);
+  a.className = "col-md-3";
+  d.appendChild(a);
+  a = inputElem("number", propObject, property, val[startIndex + 1], startIndex + 1);
+  a.className = "col-md-3";
+  d.appendChild(a);
+  a = inputElem("number", propObject, property, val[startIndex + 2], startIndex + 2);
+  a.className = "col-md-3";
+  d.appendChild(a);
+  a = inputElem("number", propObject, property, val[startIndex + 3], startIndex + 3);
+  a.className = "col-md-3";
+  d.appendChild(a);
+  return d;
+}
+
+function createInputElement(actorShader, propertyName, value) {
+// always4 ja columns
+  "use strict";
+  var type = typeof value;
+
+  var e;
+  if(type === "string") {
+    e = inputElem("string", actorShader, propertyName, value);
+  } else if(type === "number") {
+    e = inputElem("number", actorShader, propertyName, value);
+  } else if(type === "boolean") {
+    e = inputElem("checkbox", actorShader, propertyName, value);
+  } else {
+    var length = value.length;
+    if(length === 2) {
+      e = inputElem2("number", actorShader, propertyName, value, 0);
+    } else if(length === 3) {
+      e = inputElem3("number", actorShader, propertyName, value, 0);
+    } else if(length === 4) {
+      e = inputElem4("number", actorShader, propertyName, value, 0);
+    } else if(length === 9) {
+      e = createElement("div");
+      e.appendChild( inputElem3("number", actorShader, propertyName, value, 0) );
+      e.appendChild( inputElem3("number", actorShader, propertyName, value, 3) );
+      e.appendChild( inputElem3("number", actorShader, propertyName, value, 6) );
+    } else if(length === 16) {
+      e = createElement("div");
+      e.appendChild( inputElem4("number", actorShader, propertyName, value, 0) );
+      e.appendChild( inputElem4("number", actorShader, propertyName, value, 4) );
+      e.appendChild( inputElem4("number", actorShader, propertyName, value, 8) );
+      e.appendChild( inputElem4("number", actorShader, propertyName, value, 12) );
+    } else {
+      throw "should not happen";
+    }
+  }
+
+  return e;
+}
+
+function rebuildAnimationList() {
+  "use strict";
+
+  var tbody = $("#animationTableBody")[0];
+
+  removeAllChildren(tbody);
+
+  var properties = animationList[animationSelectionIndex].properties;
+
+  for(var i = 0; i < properties.length; i++) {
+    var property = properties[i];
+    var tr = createElement("tr");
+    var td = createElement("td", {innerHTML: "" + property.actor + property.actor.name + "(" + property.actor.getId() + ")"});
+    tr.appendChild(td);
+    td = createElement("td", {innerHTML: "" + property.property});
+    tr.appendChild(td);
+    td = createElement("td", {innerHTML: "" + property.value});
+    tr.appendChild(td);
+    td = createElement("td", {innerHTML: "" + property.interpolation});
+    tr.appendChild(td);
+    td = createElement("td", {innerHTML: "" + property.delay});
+    tr.appendChild(td);
+    td = createElement("td", {innerHTML: "" + property.duration});
+    tr.appendChild(td);
+    td = createElement("td",
+                       {innerHTML: "<a class=\"btn btn-default btn-xs\" href=\"javascript:changeAnimationProperty(" + i + ")\"" + " role=\"button\">...</a>"});
+    tr.appendChild(td);
+
+    tbody.appendChild(tr);
+  }
+
+}
+
+function changeAnimationProperty(index) {
+  "use strict";
+
+  var e = $("#modalPropertyBody")[0];
+
+  rebuildAnimationList();
+
+  $("#animationTabHeader")[0].click();
+
+  var ps = animationList[animationSelectionIndex].properties[index];
+  var propertyName = ps.property;
+  var actor = ps.actor;
+  var actorId = actor.getId();
+  var value = ps.value;
+  var delay = ps.delay;
+  var duration = ps.duration;
+
+  // setup modal dialog to change added value
+  e["data-animationPropertyIndex"] = index;
+  e["data-propertyName"] = propertyName;
+  e["data-object"] = actor;
+
+  removeAllChildren(e);
+
+  e.appendChild( createElementInnerHTML("div", "Add to animation :" + animationSelectionIndex) );
+
+  e.appendChild( createElementInnerHTML("hr", "") );
+
+  e.appendChild(
+    createElement("div",
+                  {innerHTML: "Actor :(" + actorId + ") '" + actor.name + "'"
+                  }) );
+
+  e.appendChild( createElementInnerHTML("hr", "") );
+
+  e.appendChild( createElementInnerHTML("div", "Property:" + propertyName) );
+
+  e.appendChild( createElementInnerHTML("hr", "") );
+
+  // e.appendChild( createElementInputForValue(value) );
+
+  e.appendChild( createInputElement(actor, propertyName, value) );
+
+  e.appendChild( createElementInnerHTML("hr", "") );
+  e.appendChild( createElementInnerHTML("div", "Delay") );
+  e.appendChild( createElementInnerHTML("hr", "") );
+  e.appendChild( createElement("input", {step: "any", type: "number", id: "delay", value: delay} ) );
+
+  e.appendChild( createElementInnerHTML("hr", "") );
+  e.appendChild( createElementInnerHTML("div", "Duration") );
+  e.appendChild( createElementInnerHTML("hr", "") );
+  e.appendChild( createElement("input", {step: "any", type: "number", id: "duration", value: duration} ) );
+
+  $("#modalAddProperty").modal("show");
+
+}
+
+function addPropertyToAnimation(actorId, propertyName) {
+  "use strict";
+  // var e = document.getElementById("modalPropertyBody");
+
+  var root = dali.stage.getRootLayer();
+  var actor = root.findChildById(actorId);
+  var value;
+
+  if(propertyName in actor) {
+    value = actor[propertyName];
+  } else {
+    var shader = actor.getShader();
+    value = shader[propertyName];
+    shader.delete(); // wrapper
+  }
+
+  // add an item in and switch to the property view
+  animationList[animationSelectionIndex].properties.push( {actor: actor,
+                                                           property: propertyName,
+                                                           value: value,
+                                                           interpolation: "Linear",
+                                                           delay: 0,
+                                                           duration: 3} );
+
+  changeAnimationProperty( animationList[animationSelectionIndex].properties.length - 1 );
+
+  animationList[animationSelectionIndex].dirtyData = true;
+
+  root.delete();
+}
+
+function getAllElements(tagName, fromRoot, list) {
+  "use strict";
+
+  for(var i = 0; i < fromRoot.children.length; i++) {
+    var c = fromRoot.children[i];
+    if(c.tagName === tagName) {
+      list.push(c);
+    }
+    if(c.children.length) {
+      getAllElements(tagName, c, list);
+    }
+  }
+}
+
+
+$("#addPropertySave")[0].addEventListener("click", function(//e
+) {
+  "use strict";
+
+  var modal = $("#modalPropertyBody")[0];
+  var index = modal["data-animationPropertyIndex"];
+  var animationInfo = animationList[animationSelectionIndex];
+  var prop = animationInfo.properties[index];
+  var delay = document.getElementById("delay");
+  var duration = document.getElementById("duration");
+
+  var inputs = [];
+
+  getAllElements("INPUT", modal, inputs);
+
+  var value = [];
+  for(var i = 0; i < inputs.length; i++) {
+    var c = inputs[i];
+    if(c.id === "duration" || c.id === "delay") {
+      continue;
+    }
+    value.push(Number(c.value));
+  }
+
+  if(value.length === 1) {
+    value = value[0];
+  }
+
+  prop.value = value;
+  prop.delay = Number(delay.value);
+  prop.duration = Number(duration.value);
+  prop.interpolation = "Linear";
+
+  rebuildAnimationList();
+
+  animationInfo.dirtyData = true;
+
+  console.log("changed property");
+
+});
+
+
+function selectAnimation(index) {
+  "use strict";
+  var e = $("#animationSelection")[0];
+
+  if(index < animationList.length) {
+    animationSelectionIndex = index;
+    e.innerHtml = "Animation:" + animationSelectionIndex;
+  } else {
+    animationSelectionIndex = undefined;
+    e.innerHtml = "Animation: None selected";
+  }
+
+  $("#btnAnimationSelection")[0].innerHTML = "Selection:" +
+    animationSelectionIndex + " <span class=\"caret\"></span>";
+
+  rebuildAnimationList();
+
+}
+
+function rebuildAnimationMenu() {
+  "use strict";
+  var i;
+
+  var e = $("#animationDropDown")[0];
+  var count = e.children.length;
+  for (i = 0; i < count; i++) {
+    e.removeChild(e.children[0]);
+  }
+
+  // <li><a href="javascript:selectAnimation(1)">Anim 1</a></li>
+
+  for(i = 0; i < animationList.length; i++) {
+    var li = document.createElement("li");
+
+    var a = document.createElement("a");
+    a.href = "javascript:selectAnimation(" + i + ");";
+    a.text = "Select Animation(" + i + ") '"; // + child.name + "'";
+    li.appendChild(a);
+
+    e.appendChild(li);
+  }
+
+  selectAnimation(animationSelectionIndex);
+}
+
+function addNewAnimation() {
+  "use strict";
+  animationList.push( { animation: null,
+                        properties: [],
+                        dirtyData: false,
+                        looping: false,
+                        endAction: "Discard"
+                      } );
+
+  animationSelectionIndex = animationList.length - 1;
+
+  rebuildAnimationMenu();
+}
+
+function playAnimation() {
+  "use strict";
+  var animationInfo = animationList[animationSelectionIndex];
+
+  if(animationInfo.animation && animationInfo.dirtyData) {
+    animationInfo.animation.stop();
+    animationInfo.animation.clear();
+    animationInfo.animation.delete(); // wrapper
+    animationInfo.animation = null;
+    animationInfo.dirtyData = false;
+  }
+
+  if(animationInfo.animation) {
+    animationInfo.animation.play();
+  } else {
+    var props = animationInfo.properties;
+    animationInfo.animation = new dali.Animation();
+    var animation = animationInfo.animation;
+    for(var i = 0; i < props.length; i++) {
+      var p = props[i];
+      try {
+        if(p.property in p.actor) {
+          animation.animateTo(p.actor, p.property, p.value, p.interpolation, p.delay, p.duration );
+        } else {
+          var shader = p.actor.getShader();
+          animation.animateTo(shader, p.property, p.value, p.interpolation, p.delay, p.duration );
+          shader.delete(); // wrapper
+        }
+      } catch(e) {
+        console.log("Cannot set property" + "," + shader + "," + p.property + "," + p.value + "," + p.interpolation + "," + p.delay + "," + p.duration );
+      }
+    }
+
+    animation.setEndAction(animationInfo.endAction);
+
+    animation.setLooping(animationInfo.looping);
+
+    animation.play();
+  }
+}
+
+
+function clearAnimation() {
+  "use strict";
+  var animationInfo = animationList[animationSelectionIndex];
+
+  if(animationInfo.animation) {
+    animationInfo.animation.stop();
+    animationInfo.animation.clear();
+    animationInfo.animation.delete(); // wrapper
+    animationInfo.animation = null;
+  }
+
+  animationInfo.properties = [];
+
+  rebuildAnimationList();
+}
+
+function stopAnimation() {
+  "use strict";
+  var animationInfo = animationList[animationSelectionIndex];
+
+  if(animationInfo.animation) {
+    animationInfo.animation.stop();
+  }
+}
+
+function selectActor(id) { // from html tree
+  "use strict";
+  if(id === null) {
+    eventHandler.selectActor(null);
+  } else {
+    var root = dali.stage.getRootLayer();
+    var actor = root.findChildById(id);
+    if (actor) {
+      eventHandler.selectActor(actor);
+    }
+    root.delete(); // wrapper
+  }
+}
+
+function rebuildTree() {
+  "use strict";
+  // remove childred
+  var e = document.getElementById("tree");
+  var count = e.children.length;
+  for (var i = 0; i < count; i++) {
+    e.removeChild(e.children[0]);
+  }
+
+  // <ul class="nav nav-list">
+  //      <li><label class="tree-toggler nav-header">Header 1</label>
+
+  var root = dali.stage.getRootLayer() ; // dali.stage.rootRotationActor;
+
+  var recurse = function(parentElement, actor) {
+    var children = actor.getChildren();
+    if (children) {
+      var ul = null;
+
+      for (var i = 0; i < children.length; ++i) {
+        var child = children[i];
+
+        if (child.name[0] !== "*") {
+
+          var li = document.createElement("li");
+
+          var a = document.createElement("a");
+          a.href = "javascript:selectActor(" + child.getId() + ");";
+          a.text = "(" + child.getId() + ") '" + child.name + "'";
+          li.appendChild(a);
+
+          if (ul === null) {
+            ul = document.createElement("ul");
+            ul.className = "nav-tree";
+          }
+
+          ul.appendChild(li);
+
+          recurse(li, child);
+
+          // finish with the child wrapper
+          child.delete();
+        }
+      }
+
+      if (ul) {
+        parentElement.appendChild(ul);
+      }
+    }
+  };
+
+  recurse(e, root);
+
+  root.delete(); // wrapper
+}
+
+
+function EventHandler() {
+  "use strict";
+  // public
+  this.mouseX = 0;
+  this.mouseY = 0;
+  this.mouse_buttons = 0;
+  this.mouseDownPosition = [0, 0, 0];
+  this.dragDx = 0;
+  this.dragDy = 0;
+  this.touchedActor = null; // set if actor is touched (left click)
+  //private
+  // this.selectedActor = null;
+  this.mouseIsDown = 0;
+  this.metaKey = 0;
+  this.altKey = 0;
+  this.ctrlKey = 0;
+  this.shiftKey = 0;
+  // handlers; use register("MouseDragStart", func); where for func(eventHandler)
+  this.handlersMouseMove = []; // valid; touchedActor(can be null), mouseX, mouseY
+  this.handlersMouseDrag = []; // valid; touchedActor(can be null), dragDx, dragDy
+  this.handlersSelect = []; // valid; touchedActor(can be null), dragDx, dragDy
+  this.handlersDeselect = []; // valid; touchedActor(can be null), dragDx, dragDy
+}
+
+EventHandler.prototype.register = function(name, handler) {
+  "use strict";
+  var handlers = this["handlers" + name];
+  if (!(handler in handlers)) {
+    handlers.push(handler);
+  }
+};
+
+EventHandler.prototype.unRegister = function(name, handler) {
+  "use strict";
+  var handlers = this["handlers" + name];
+  var index = handlers.index(handler);
+  if (index >= 0) {
+    handlers.splice(index, 1);
+  }
+};
+
+EventHandler.prototype.updateMouseState = function(canvas, e) {
+  "use strict";
+  var rect = canvas.getBoundingClientRect(); // in window
+  this.mouseX = e.clientX - rect.left; // from window
+  this.mouseY = e.clientY - (rect.bottom - rect.height);
+  this.mouse_buttons = e.button; //  0|1|2 left|middle|rigtht
+};
+
+EventHandler.prototype.mouseDown = function(canvas, e) {
+  "use strict";
+  this.mouseIsDown = 1;
+  this.updateMouseState(canvas, e);
+  this.mouseDownPosition = [this.mouseX, this.mouseY, 0];
+  var hitActor = dali.hitTest(this.mouseX, this.mouseY);
+  var tid = -1;
+  var hid = -2;
+  if (this.touchedActor) {
+    tid = this.touchedActor.getId();
+  }
+  if (hitActor) {
+    hid = hitActor.getId();
+  }
+
+  if (hid !== tid) {
+    if (tid > 0) {
+      this.handleEvent(this.handlersDeselect);
+      this.touchedActor = null;
+    }
+  }
+
+  this.selectActor(hitActor);
+
+  // dali is 0==down,1==up,2==motion
+  dali.sendMouseEvent(this.mouseX, this.mouseY, 0);
+  // console.log("mouseDown", this.mouseX, this.mouseY, this.mouseIsDown, 0);
+};
+
+EventHandler.prototype.selectActor = function(hitActor) {
+  "use strict";
+  if (hitActor) {
+    this.handleEvent(this.handlersDeselect);
+
+    var layer = dali.stage.getRootLayer();
+    if (hitActor.getId() === dali.stage.rootRotationActor.getId()) {
+      // dont select our rotation actor
+      hitActor = null;
+    } else {
+      // dont select the root layer
+      if (hitActor.getId() === layer.getId()) {
+        hitActor = null;
+      }
+    }
+    layer.delete(); // wrapper
+
+    this.touchedActor = hitActor;
+  } else {
+    if(this.touchedActor) {
+      this.handleEvent(this.handlersDeselect);
+    }
+    this.touchedActor = null;
+  }
+
+  this.handleEvent(this.handlersSelect);
+};
+
+
+EventHandler.prototype.mouseMove = function(canvas, e) {
+  "use strict";
+  this.updateMouseState(canvas, e);
+
+  if(this.mouseIsDown) {
+    // if (this.touchedActor) {
+    this.dragDx = (this.mouseX - this.mouseDownPosition[0]);
+    this.dragDy = (this.mouseY - this.mouseDownPosition[1]);
+    // }
+
+    this.handleEvent(this.handlersMouseDrag);
+  }
+
+  this.handleEvent(this.handlersMouseMove);
+
+  // dali is 0==down,1==up,2==motion
+  dali.sendMouseEvent(this.mouseX, this.mouseY, 2);
+  // console.log("mouseMove", this.mouseX, this.mouseY, this.mouseIsDown, 2);
+};
+
+EventHandler.prototype.mouseUp = function(canvas, e) {
+  "use strict";
+  this.mouseIsDown = 0;
+  this.updateMouseState(canvas, e);
+  this.dragDx = (this.mouseX - this.mouseDownPosition[0]);
+  this.dragDy = (this.mouseY - this.mouseDownPosition[1]);
+
+  // dali is 0==down,1==up,2==motion
+  dali.sendMouseEvent(this.mouseX, this.mouseY, 1);
+  // console.log("mouseUp", this.mouseX, this.mouseY, this.mouseIsDown, 1);
+};
+
+EventHandler.prototype.mouseWheel = function(canvas, e) {
+  "use strict";
+  // multiples of +120 for up, -120 for down
+  var clicks = e.wheelDelta / 120;
+
+  var taskList = dali.stage.getRenderTaskList();
+  var task = taskList.getTask(0);
+  var cameraActor = task.getCameraActor();
+
+  var fov = cameraActor.fieldOfView;
+  cameraActor.fieldOfView = fov + (clicks / 180.0 * Math.PI);
+
+  taskList.delete();
+  task.delete();
+  cameraActor.delete();
+  // console.log(e.wheelDelta);
+};
+
+EventHandler.prototype.handleEvent = function(handlers) {
+  for (var i = 0, len = handlers.length; i < len; i++) {
+    var handler = handlers[i];
+    handler(this);
+  }
+};
+
+EventHandler.prototype.keyDown = function(canvas, e) {
+  this.metaKey = e.metaKey;
+  this.altKey = e.altKey;
+  this.ctrlKey = e.ctrlKey;
+  this.shiftKey = e.shiftKey;
+};
+
+EventHandler.prototype.keyUp = function(canvas, e) {
+  this.metaKey = e.metaKey;
+  this.altKey = e.altKey;
+  this.ctrlKey = e.ctrlKey;
+  this.shiftKey = e.shiftKey;
+};
+
+//
+// Actor list helpers
+//
+var ActorList = {
+  doAll: function(actors, func) {
+    for (var i = 0, len = actors.length; i < len; i++) {
+      func(actors[i]);
+    }
+  },
+  show: function(actors, visible) {
+    this.doAll(actors, function(actor) {
+      actor.visible = visible;
+    });
+  },
+  delete: function(actors, visible) {
+    this.doAll(actors, function(actor) {
+      actor.delete = visible;
+    });
+  },
+  add: function(actors, actor) {
+    this.doAll(actors, function(a) {
+      actor.add(a);
+    });
+  },
+  remove: function(actors, actor) {
+    this.doAll(actors, function(a) {
+      actor.remove(a);
+    });
+  },
+  contains: function(actors, actor) {
+    if (!actor) {
+      return false;
+    }
+    for (var i = 0, len = actors.length; i < len; i++) {
+      if (actors[i].getId() == actor.getId()) {
+        return true;
+      }
+    }
+    return false;
+  }
+};
+
+
+//
+// Depth visualization adornments
+//
+function DepthAdornment() {
+  "use strict";
+  this.attachedTo = null;
+  this.actors = []; // array of 5 square attaced around and to back of actor to show depth
+
+  for (var i = 0; i < 5; i++) { //
+    // ActorWrapper CreateSolidColorActor( const Vector4& color, bool border, const Vector4& borderColor, const unsigned int borderSize )
+    var a = dali.createSolidColorActor([0.5, 0.5, 0.5, 1],
+                                       false, [0, 0, 0, 1],
+                                       0);
+    a.relayoutEnabled = false;
+    a.name = "**_dali_adornment";
+    this.actors.push(a);
+  }
+
+  ActorList.show(this.actors, false);
+}
+
+DepthAdornment.prototype.delete = function() {
+  "use strict";
+  ActorList.delete(this.actors);
+  this.actors = [];
+};
+
+DepthAdornment.prototype.attach = function(actor) {
+  "use strict";
+  var newActor = true;
+  if (this.attachedTo) {
+    newActor = (actor.getId() !== this.attachedTo.getId());
+  }
+
+  if (actor && newActor) {
+    this.unattach(this.attachedTo);
+
+    if(!ActorList.contains(this.actors, actor)) {
+      this.__positionActors(actor);
+
+      ActorList.add(this.actors, actor);
+
+      ActorList.show(this.actors, true);
+
+      this.attachedTo = actor;
+    }
+  }
+};
+
+DepthAdornment.prototype.unattach = function() {
+  "use strict";
+  if (this.attachedTo) {
+    ActorList.show(this.actors, false);
+    ActorList.remove(this.actors, this.attachedTo);
+    this.attachedTo = null;
+  }
+};
+
+DepthAdornment.prototype.reposition = function() {
+  "use strict";
+  if (this.attachedTo) {
+    this.__positionActors(this.attachedTo);
+  }
+};
+
+DepthAdornment.prototype.__positionActors = function(actor) {
+  "use strict";
+  var s = actor.size;
+  s[2] = Math.max(s[2], 20); // pretend the actor is at least 20
+  var halfw = s[0] / 2;
+  var halfh = s[1] / 2;
+  var halfd = s[2] / 2;
+
+  this.actors[0].position = [-halfw, 0, -halfd];
+  this.actors[0].orientation = [0, -90, 0];
+  this.actors[0].size = [s[2], s[1], 1];
+
+  this.actors[1].position = [+halfw, 0, -halfd];
+  this.actors[1].orientation = [0, 90, 0];
+  this.actors[1].size = [s[2], s[1], 1];
+
+  this.actors[2].position = [0, -halfh, -halfd];
+  this.actors[2].orientation = [90, 0, 0];
+  this.actors[2].size = [s[0], s[2], 1];
+
+  this.actors[3].position = [0, halfh, -halfd];
+  this.actors[3].orientation = [-90, 0, 0];
+  this.actors[3].size = [s[0], s[2], 1];
+  // back
+  // this.actors[4].position = [0, 0, -s[2]];
+  // this.actors[4].orientation = [0, 0, 0];
+  // this.actors[4].size = s;
+
+};
+
+
+
+//
+// Cursor adornments
+//
+function Cursors() {
+  "use strict";
+  var i;
+  var a;
+  this.attachedTo = null;
+  this.resizers = []; // array of 8 small square resizers
+  this.lines = []; // array of 4 bounding box lines
+  this.lineColor = [0.5, 0.5, 0.5, 1];
+  this.resizerColor = [0, 0, 0, 1];
+  this.depthAdornments = new DepthAdornment();
+
+  // ActorWrapper CreateSolidColorActor( const Vector4& color, bool border, const Vector4& borderColor, const unsigned int borderSize )
+  for (i = 0; i < 4; i++) { // lines
+    a = dali.createSolidColorActor(this.lineColor, false, [0, 0, 0, 1], 0);
+    a.relayoutEnabled = false;
+    a.name = "**_dali_adornment";
+    this.lines.push(a);
+  }
+
+  for(i = 0; i < 8; i++) { // squares
+    a = dali.createSolidColorActor(this.resizerColor, true, [1, 1, 1, 1], 1);
+    a.relayoutEnabled = false;
+    a.name = "**_dali_adornment";
+    this.resizers.push(a);
+    this.resizers[i].size = [10, 10, 1];
+    //    this.resizers[i].__mouseDrag = this.__mouseDragPositionZ;
+    // this.resizers[i].connect("touched", this.onTouched);
+  }
+
+  ActorList.show(this.lines, false);
+  ActorList.show(this.resizers, false);
+
+}
+
+
+Cursors.prototype.attach = function(actor) {
+  "use strict";
+  if (actor) {
+
+    if (this.attachedTo) {
+      this.unattach(this.attachedTo);
+    }
+
+    this.__positionActors(actor);
+
+    ActorList.add(this.lines, actor);
+    ActorList.add(this.resizers, actor);
+
+    ActorList.show(this.lines, true);
+    ActorList.show(this.resizers, true);
+
+    this.depthAdornments.attach(actor);
+
+    this.attachedTo = actor;
+  }
+};
+
+Cursors.prototype.unattach = function(actor) {
+  "use strict";
+  if (actor && this.attachedTo) {
+    ActorList.show(this.lines, false);
+    ActorList.show(this.resizers, false);
+
+    ActorList.remove(this.lines, actor);
+    ActorList.remove(this.resizers, actor);
+
+    this.depthAdornments.unattach(actor);
+
+    this.attachedTo = null;
+  }
+};
+
+Cursors.prototype.reposition = function() {
+  "use strict";
+  if (this.attachedTo) {
+    this.__positionActors(this.attachedTo);
+    this.depthAdornments.reposition();
+  }
+};
+
+Cursors.prototype.__positionActors = function(actor) {
+  "use strict";
+  var s = actor.size;
+  var p = actor.position;
+  var halfw = s[0] / 2;
+  var halfh = s[1] / 2;
+
+  this.lines[0].position = [0 - halfw, 0, 0];
+  this.lines[0].size = [1, halfh * 2, 1];
+
+  this.lines[1].position = [0, 0 - halfh, 0];
+  this.lines[1].size = [halfw * 2, 1, 1];
+
+  this.lines[2].position = [0 + halfw, 0, 0];
+  this.lines[2].size = [1, halfh * 2, 1];
+
+  this.lines[3].position = [0, 0 + halfh, 0];
+  this.lines[3].size = [halfw * 2, 1, 1];
+
+  // drag functions presumes order here is clockwise from top left
+  var offsetZ = 5;
+  this.resizers[0].position = [-halfw, +halfh, offsetZ];
+  this.resizers[1].position = [0, +halfh, offsetZ];
+  this.resizers[2].position = [+halfw, +halfh, offsetZ];
+  this.resizers[3].position = [+halfw, 0, offsetZ];
+
+  this.resizers[4].position = [+halfw, -halfh, offsetZ];
+  this.resizers[5].position = [0, -halfh, offsetZ];
+  this.resizers[6].position = [-halfw, -halfh, offsetZ];
+  this.resizers[7].position = [-halfw, 0, offsetZ];
+};
+
+
+
+function App(theEventHandler) {
+  "use strict";
+  var self = this;
+  this.rootRotation = [0, 0, 0]; // in degrees
+  this.cursors = new Cursors();
+  // ActorWrapper CreateSolidColorActor(const Vector4 & color, bool border,
+  //   const Vector4 & borderColor,
+  //     const unsigned int borderSize)
+  this.rootLayerIndicator = dali.createSolidColorActor(
+    [0, 0, 0, 0.0],
+    true, [0, 0, 0, 1],
+    1);
+  this.rootLayerIndicator.relayoutEnabled = false;
+  this.rootLayerIndicator.name = "**_dali_adornment";
+
+  this.rootLayerIndicator.parentOrigin = [0.5, 0.5, 0.5];
+  this.rootLayerIndicator.anchorPoint = [0.5, 0.5, 0.5];
+  this.rootLayerIndicator.size = [250, 250, 1];
+  this.rootLayerIndicator.position = [0, 0, 0];
+
+  this.selectedActor = null;
+  this.selectedActorSize = [0, 0, 0];
+  this.selectedActorPosition = [0, 0, 0];
+
+  this.__handleMouseDrag = function(eventHandler) {
+    if (self.resizing) {
+      if (self.selectedActor) {
+        self.selectedActor.size = [
+          self.selectedActorSize[0] + eventHandler.dragDx,
+          self.selectedActorSize[1] + eventHandler.dragDy,
+          self.selectedActorSize[2]
+        ];
+        self.cursors.reposition();
+      }
+    } else {
+      // move the touched actor
+      if (self.selectedActor) {
+        if (eventHandler.mouse_buttons === 0) {
+          self.selectedActor.position = [
+            self.selectedActorPosition[0] + eventHandler.dragDx,
+            self.selectedActorPosition[1] + eventHandler.dragDy,
+            self.selectedActorPosition[2]
+          ];
+        } else if (eventHandler.mouse_buttons === 2) {
+          self.selectedActor.position = [
+            self.selectedActorPosition[0],
+            self.selectedActorPosition[1], -(self.selectedActorPosition[2] + eventHandler.dragDy)
+          ];
+        }
+      }
+    }
+
+    // rotate on middle button
+    if (eventHandler.mouse_buttons === 1) {
+      self.rootRotation = [eventHandler.mouseDownPosition[1] - eventHandler.mouseY, -(eventHandler.mouseDownPosition[0] - eventHandler.mouseX),
+                           self.rootRotation[2]
+                          ];
+      dali.stage.rootRotationActor.orientation = self.rootRotation;
+    }
+
+  };
+
+  this.addActor = function(actor) {
+    if (eventHandler.touchedActor) {
+      eventHandler.touchedActor.add(actor);
+      actor.position = [20,20,0]; // offset so new actor isnt right behind touched
+    } else {
+      dali.stage.add(actor);
+    }
+
+    rebuildTree();
+
+  };
+
+  this.__handleSelect = function(eventHandler) {
+    if (eventHandler.mouse_buttons === 0) { // left click only selects actor
+      var actor = eventHandler.touchedActor;
+      self.selectedActor = actor;
+      if(actor) {
+        self.selectedActorPosition = actor.position;
+        self.selectedActorSize = actor.size;
+      } else {
+        self.selectedActorPosition = [0, 0, 0];
+        self.selectedActorSize = [1, 1, 1];
+      }
+      self.cursors.attach(self.selectedActor);
+      dali.stage.add(self.rootLayerIndicator);
+      onActorSelected(actor);
+    }
+  };
+
+  this.__handleDeselect = function(eventHandler) {
+    self.cursors.unattach(self.selectedActor);
+    dali.stage.remove(self.rootLayerIndicator);
+  };
+
+  // initialize
+  eventHandler.register("MouseDrag", this.__handleMouseDrag);
+  eventHandler.register("Select", this.__handleSelect);
+  eventHandler.register("Deselect", this.__handleDeselect);
+
+  //
+  // Monkey patch the stage object (to add to root object not the root layer for rotations)
+  //
+  dali.stage.rootRotationActor = new dali.Actor();
+  dali.stage.rootRotationActor.parentOrigin = [0.5, 0.5, 0.5];
+  dali.stage.rootRotationActor.anchorPoint = [0.5, 0.5, 0.5];
+  dali.stage.rootRotationActor.name = "app rotation actor";
+  dali.stage.rootRotationActor.size = [100,100,1];
+  dali.stage.add(dali.stage.rootRotationActor);
+
+  dali.stage.add = function(actor) {
+    dali.stage.rootRotationActor.add(actor);
+  };
+
+  dali.stage.remove = function(actor) {
+    dali.stage.rootRotationActor.remove(actor);
+  };
+
+}
+
+function createTextImageFromCanvas(text) {
+  "use strict";
+  var testCanvas = document.getElementById("testCanvas");
+  var ctx = testCanvas.getContext("2d");
+  var pixelHeight = 30;
+
+  ctx.clearRect(0, 0, testCanvas.width, testCanvas.height);
+
+  ctx.font = pixelHeight + "px Verdana";
+  // Create gradient
+  var gradient = ctx.createLinearGradient(0, 0, testCanvas.width, 0);
+  gradient.addColorStop("0", "white");
+  gradient.addColorStop("1.0", "white");
+  // gradient.addColorStop("0", "magenta");
+  // gradient.addColorStop("0.5", "blue");
+  // gradient.addColorStop("1.0", "red");
+  // Fill with gradient
+  ctx.fillStyle = gradient;
+  ctx.fillText(text, 0, pixelHeight);
+
+  var m = ctx.measureText(text);
+
+  var a = new dali.ImageActor();
+
+  a.setImageData(ctx.getImageData(0, 0, m.width, pixelHeight));
+
+  a.name = text;
+
+  a.size = [m.width, pixelHeight, 0];
+
+  return a;
+}
+
+
+
+//
+// Global
+//
+
+var eventHandler = new EventHandler();
+var app = new App(eventHandler);
+// var canvas = document.getElementById("canvas");
+
+// dali.stage.setBackgroundColor([0.3, 0.3, 0.3, 1]);
+
+function mouseDown(e) {
+  "use strict";
+  eventHandler.mouseDown(canvas, e);
+}
+
+function mouseUp(e) {
+  "use strict";
+  eventHandler.mouseUp(canvas, e);
+}
+
+function mouseMove(e) {
+  "use strict";
+  eventHandler.mouseMove(canvas, e);
+}
+
+function mouseWheel(e) {
+  "use strict";
+  eventHandler.mouseWheel(canvas, e);
+}
+
+function keyDown(e) {
+  "use strict";
+  eventHandler.keyDown(canvas, e);
+}
+
+function keyUp(e) {
+  "use strict";
+  eventHandler.keyUp(canvas, e);
+}
+
+canvas.onmousemove = mouseMove;
+canvas.onmousedown = mouseDown;
+canvas.onmouseup = mouseUp;
+canvas.onwheel = mouseWheel;
+
+canvas.onkeydown = keyDown;
+canvas.onkeyup = keyUp;
+
+//
+//
+//
+
+function runRandomAnimation(actor) {
+  "use strict";
+  var a = new dali.Animation();
+  a.setDuration(6);
+  a.setLooping(true);
+  a.animateTo(actor, "position", [300 * Math.random() - 150, 300 * Math.random() - 150, 0],
+              "Linear", 0, 3);
+  a.animateTo(actor, "position", [0, 0, 0], "Linear", 3, 3);
+  a.animateTo(actor, "rotation", [0, 0, 1, 720 * Math.random() - 360], "Linear", 0, 3);
+  a.animateTo(actor, "rotation", [0, 0, 1, 0], "Linear", 3, 3);
+
+  a.play();
+  //    a.delete(); // delete the animtion object but a.Play() keeps it running in Dali
+  return anim;
+}
+
+function animate3DView() {
+  "use strict";
+  var root = dali.stage.rootRotationActor;
+  var rotator = dali.stage.create("Actor");
+  var actors = [];
+  var a;
+  // first child is the camera
+  for (var i = 1, len = root.getChildCount(); i < len; i++) {
+    a = root.getChildAt(i);
+    actors.push(a);
+    root.remove(a);
+    rotator.add(a);
+    a.delete();
+  }
+
+  dali.stage.add(rotator);
+
+  var anim = dali.Animation();
+  var toRotation = [60, 0, 0];
+  anim.setDuration(4);
+
+  anim.animateBy(rotator, "rotation", toRotation, "Linear", 0, 2);
+  anim.animateBy(rotator, "rotation", actors[i].orientation, "Linear", 2, 2);
+
+  anim.animateBy(rotator, "position", [0, 0, -800], "Linear", 0, 2);
+  anim.animateBy(rotator, "position", [0, 0, 0], "Linear", 2, 2);
+
+  anim.play();
+  anim.delete();
+
+}
+
+//------------------------------------------------------------------------------
+//
+// application building helpers (pseudo DSL)
+//
+//------------------------------------------------------------------------------
+var _whenBuilder = { // builder for when() function. mimicks dali builder
+  paths: {},
+  styles: {},
+  templates: {},
+  propertyBuffers: {},
+  geometries: {},
+  materials: {},
+  samplers: {},
+  shaders: {},
+  renderers: {},
+  tags: {}
+};
+
+function _actorId(a) { // return id from [object|string name|id]
+  "use strict";
+  if( typeof a === "object" ) {
+    return a.GetId();
+  } else if( typeof a === "string" ) {
+    var child = dali.stage.findChildByName(a);
+    return child.GetId();
+  } else {
+    return a;
+  }
+}
+
+// tag an actor (multiple by seperated by space)
+function tag(actor, tag) {
+  "use strict";
+  var names = tag.split()
+  var id = _actorId();
+  for(var i = 0; i < names.length; i++) {
+    var name = names[i];
+    if(!(name in _whenBuilder.tags)) {
+      _whenBuilder.tags[name] = [];
+    }
+    var nameIndex = _whenBuilder.tags[name].indexOf(id);
+    if(nameIndex < 0) {
+      _whenBuilder.tags[name].push( id );
+    }
+  }
+}
+
+// untag
+function unTag(actor, tag) {
+  "use strict";
+  var names = tag.split()
+  var id = _actorId(actor);
+  for(var i = 0; i < names.length; i++) {
+    var name = names[i];
+    if( name in _whenBuilder.tags ) {
+      var nameIndex = _whenBuilder.tags[name].indexOf(id);
+      if(nameIndex >= 0) {
+        _whenBuilder.tags[name].splice(nameIndex, 1);
+      }
+    }
+  }
+}
+
+// return all tagged
+function tagged(tag) {
+  return _whenBuilder.tags[tag];
+}
+
+// return all except one
+function excludeFrom(actorIdArray, actorOrArray)
+{
+  "use strict";
+  var item, id;
+  var excludes = {};
+  if("length" in actorOrArray) {
+    for(item in actorOrArray) {
+      id = _actorId(item);
+      excludes[id] = 1;
+    }
+  } else {
+    id = _actorId(actorOrArray);
+    excludes[id] = 1;
+  }
+
+  var ret = [];
+  for(item in actorIdArray) {
+    if( !(item in excludes) ) {
+      ret.push( item );
+    }
+  }
+}
+
+// merge two objects by key,value (simplistic)
+function _mergeObjects(obj1, obj2) {
+  "use strict";
+  for (var p in obj2) {
+    try {
+      // Property in destination object set; update its value.
+      if ( obj2[p].constructor === Object){
+        obj1[p] = _mergeObjects(obj1[p], obj2[p]);
+
+      } else {
+        obj1[p] = obj2[p];
+      }
+    } catch(e) {
+      // Property in destination object not set; create it and set its value.
+      obj1[p] = obj2[p];
+    }
+  }
+  return obj1;
+}
+
+// Stores paths in builder
+// paths({name: {points: [[1,2,3],[4,5,6]], forward:[1,0,0]},
+//        other:{points: [[1,2,3],[4,5,6]], forward:[1,0,0]}})
+//
+function paths(d) {
+  "use strict";
+  for(var name in d) {
+    var pathData = {point: [], forward: [1, 0, 0]};
+    pathData = _mergeObjects(pathData, d[name]);
+    var daliPath = new dali.Path();
+    daliPath.points = pathData.points;
+    dali.generateControlPoints(daliPath, pathData.curvature); // @todo remove magic number?
+    _whenBuilder.paths[name] = daliPath;
+  }
+}
+
+// Stores styles in builder
+// style({name: {property1:value, prop2,value},
+//        other:{property1:value, prop2,value}})
+//
+function styles(d) {
+  "use strict";
+  for(var name in d)
+  {
+    _whenBuilder.styles[name] = d[name];
+  }
+}
+
+//
+//  +------------------+          +---------------+
+//  | PropertyBuffer   | *      * | Geometry      |
+//  +------------------+ -------- +---------------+
+//  | format:          |          | vertex:PBuf   |1      * +-----------+         +------------+
+//  |   name:v2,name:v3|          | indices:PBuf  +---------| Renderer  |         | Actor      |
+//  | data             |          |               |         +-----------+ *     * +------------+
+//  +------------------+          +---------------+       * | geom      +---------| renderer(s)|
+//                                                     +----| material  |         |            |
+//  +-------------+ *      * +----------+ 1            |    |           |         |            |
+//  |Sampler      +----------|Material  +--------------+    +-----------+         +------------+
+//  +-------------+          +----------+
+//  |uniformName  |        * |sampler(s)|
+//  |Image        |       +--|shader    |
+//  |Filter/wrap  |       |  |facecull  |
+//  +-------------+       |  |blendfunc |
+//                        |  +----------+
+//  +-----------------+   |
+//  |Shader           |   |
+//  +-----------------+ 1 |
+//  |program:vert,frag|---+
+//  |hints            |
+//  +-----------------+
+//
+
+
+// Stores templates in builder
+// template({"name":{ "type": "ImageActor", property1:value, prop2,value},
+//           other: { "type": "TextView", property1:value, prop2,value},
+function templates(d) {
+  "use strict";
+  for(var name in d)
+  {
+    _whenBuilder.templates[name] = d[name];
+  }
+}
+
+// stores PropertyBuffers
+// propertyBuffers("buffer1":{ format: {aPosition:dali.PropertyType.VECTOR2,
+//                                    aTexCoord:dali.PropertyType.VECTOR2}.
+//                             data: [ [-0.5,-0.5,], [0.0, 0.0],
+//                                     [+0.5,-0.5,], [1.0, 0.0],
+//                                     [-0.5,+0.5,], [0.0, 1.0],
+//                                     [+0.5,+0.5,], [1.0, 1.0] ] })
+//
+function propertyBuffers(d) {
+  "use strict";
+  for(var name in d) {
+    var map = new dali.PropertyMap(d.format);
+    var buffer = new dali.PropertyBuffer(map, d.data.length);
+    buffer.SetData(d.data);
+    _whenBuilder.propertyBuffers[name] = buffer;
+    map.delete();
+  }
+}
+
+// stores geometry meshes
+// geometries("mesh1":{ vertex: "buffer1",
+//                      index: "index1",
+//                      type: "TRIANGLES",
+//                      requresDepthTest:false } )
+function geometries(d) {
+  "use strict";
+  for(var name in d) {
+    _whenBuilder.geometries[name] = d[name];
+  }
+}
+
+// stores samplers
+// samplers("sampler1":{ uniform: "uTexture",
+//                       image: animage },
+//                       "minification-filter":0,
+//                       "magnification-filter":0,
+//                       "u-wrap":0,
+//                       "v-wrap":0,
+//                       "affects-transparency":false)
+function samplers(d) {
+  "use strict";
+  for(var name in d) {
+    _whenBuilder.samplers[name] = d[name];
+  }
+}
+
+// stores shaders
+// shaders("shader1":{ program: { vertex:"", fragment:""},
+//                     hints:"NONE"} )
+function shaders(d) {
+  "use strict";
+  for(var name in d) {
+    _whenBuilder.shaders[name] = d[name];
+  }
+}
+
+// stores materials meshes
+// materials("mat1":{ sampler: [ "sampler1" ],
+//                    shader: "shader1",
+//                    faceCulling: "BACK",
+//                    blend: "AUTO",
+//                    blendFunc : {srcFactorRGBA, destFactorRGBA},
+//                    blendEquation : "",
+//                    blendColor : [1,0,0,1] } )
+//
+function materials(d) {
+  "use strict";
+  for(var name in d) {
+    _whenBuilder.materials[name] = d[name];
+  }
+}
+
+// store renderer
+// renderers("rend1": {"geometry": "geom1",
+//                     "material": "mat1",
+//                     "depth-index"}
+function renderers(d) {
+  "use strict";
+  for(var name in d) {
+    _whenBuilder.renderers[name] = d[name];
+  }
+}
+
+function createActorTree(dictionary) {
+  "use strict";
+  var ret = new dali[ dictionary.type ]();
+  var hasTag = null;
+
+  for(var prop in dictionary) {
+    if( prop === "actors" ) {
+      var actors = dictionary[prop];
+      for(var i = 0; i < actors; i++) {
+        ret.add( createActorTree( actors[i] ) );
+      }
+    } else if( prop === "tag" ) {
+      hasTag = dictionary[tag];
+    } else if( prop === "image") {
+      if( dictionary[prop].startsWith("stockimage") ) {
+        var index = dictionary[prop].substr(10);
+        ret.setImageData( getStockImageData(index) );
+      } else {
+        ret[prop] = dictionary[prop];
+      }
+    } else {
+      ret[prop] = dictionary[prop];
+    }
+  }
+
+  if(hasTag) {
+    tag(ret, hasTag);
+  }
+
+  return ret;
+}
+
+function stage() {
+  "use strict";
+  for(var i = 0; i < arguments.length; i++) {
+    dali.stage.add( createActorTree( arguments[i] ) );
+  }
+}
+
+function image(dictionary) {
+  "use strict";
+  dictionary.type = "ImageActor";
+  return dictionary;
+}
+
+function _addTypeToDictionaryClosure(actorType) {
+  "use strict";
+  return function(dictionary) {
+    dictionary.type = actorType;
+    return dictionary;
+  };
+}
+
+// @ todo; why is this global?
+var HTML5Image = Image; // html5 also has "Image" which were about to overwrite
+var _registry = new dali.TypeRegistry();
+for(var _i = 0; _i < _registry.getTypeNameCount(); _i++) {
+  var _typename = _registry.getTypeName(_i);
+  this[_typename] = _addTypeToDictionaryClosure(_typename);
+}
+
+
+function _actorArray(actorOrName) {
+  "use strict";
+  if(typeof actorOrName === "string") {
+    return [actorOrName];
+  } else {
+    return [actorOrName.name];
+  }
+}
+
+
+function _actorIdList(a) {
+  "use strict";
+  var ret = [];
+  if("length" in a) {
+    for(var item in a) {
+      ret.push( _actorId(item) );
+    }
+  } else {
+    ret.push( _actorId(a) );
+  }
+  return ret;
+}
+
+
+function _functionName(fun) {
+  "use strict";
+  var ret = fun.toString();
+  ret = ret.substr("function ".length);
+  ret = ret.substr(0, ret.indexOf("("));
+  return ret;
+}
+
+    // "signals": [{
+    //   "name": "touched",
+    //   "action": "play",
+    //   "animation": "path-animation"
+//
+    //   "name": "touched",
+    //   "action": "set",
+    //   "property": "position",
+    //   "value": [10,10,10,
+    // }]
+
+function _numberOrRaise(value, errorMessage) {
+  "use strict";
+  if(typeof value === "number") {
+    return value;
+  } else {
+    throw errorMessage;
+  }
+}
+
+function _stringOrRaise(value, errorMessage) {
+  "use strict";
+  if(typeof value === "string") {
+    return value;
+  } else {
+    throw errorMessage;
+  }
+}
+
+// Animate to
+//   to(value)
+//   to(value, delay, duration)
+//   to(value, delay, duration, interpolation)
+// ie
+//   to([10,10,10]
+//   to([10,10,10], 0,3, "ease_in")),
+function to() {
+  "use strict";
+  var ret = { animate: "animateTo",
+              value: null,
+              delay: 0,
+              duration: 0,
+              alpha: "linear"};
+
+  ret.value = arguments[0]; // property value
+  if( arguments.length > 1 ) {
+    ret.delay = _numberOrRaise(arguments[1], "Delay must be a number");
+  }
+  if( arguments.length > 2 ) {
+    ret.duration = _numberOrRaise(arguments[2], "Duration must be a number");
+  }
+  if( arguments.length > 3 ) { // optional
+    ret.alpha = arguments[3];
+  }
+  return ret;
+}
+
+// Animate by
+//   by(value)
+//   by(value, delay, duration)
+//   by(value, delay, duration, interpolation)
+// ie
+//   by([10,10,10]
+//   by([10,10,10], 0,3, "ease_in")),
+function by() {
+  "use strict";
+  var ret = { animate: "animateBy",
+              value: null,
+              delay: 0,
+              duration: 0,
+              alpha: "linear"};
+
+  ret.value = arguments[0]; // property value
+  if( arguments.length > 1 ) {
+    ret.delay = _numberOrRaise(arguments[1], "Delay must be a number");
+  }
+  if( arguments.length > 2 ) {
+    ret.duration = _numberOrRaise(arguments[2], "Duration must be a number");
+  }
+  if( arguments.length > 3 ) { // optional
+    ret.alpha = arguments[3];
+  }
+  return ret;
+}
+
+// Animate between
+//   between(fromValue, toValue)
+//   between(fromValue, toValue, delay, duration)
+//   between(fromValue, toValue, delay, duration, interpolation)
+// ie
+//   between([10,10,10], [100,10,10]
+//   between([10,10,10], [100,10,10], 0,3, "ease_in")),
+function between() {
+  "use strict";
+  var ret = { animate: "animateBy",
+              fromValue: null,
+              toValue: null,
+              delay: 0,
+              duration: 0,
+              alpha: "linear"};
+
+  ret.value = arguments[0]; // property value
+  ret.value = arguments[1]; // property value
+  if( arguments.length > 2 ) {
+    ret.delay = _numberOrRaise(arguments[2], "Delay must be a number");
+  }
+  if( arguments.length > 3 ) {
+    ret.duration = _numberOrRaise(arguments[3], "Duration must be a number");
+  }
+
+  if( arguments.length > 4 ) { // optional
+    ret.alpha = arguments[4];
+  }
+  return ret;
+}
+
+// Animate path
+//   path(pathName)
+//   path(pathName, delay, duration)
+//   path(pathName, delay, duration, interpolation)
+// ie
+//   path("path0", 0, 3, "linear")
+function path() {
+  "use strict";
+  var ret = { animate: "path",
+              path: null,
+              forward: [1,0,0],
+              delay: 0,
+              duration: 0,
+              alpha: "linear"};
+
+  ret.path = arguments[0]; // path
+  if( arguments.length > 1 ) {
+    ret.delay = _numberOrRaise(arguments[1], "Delay must be a number");
+  }
+  if( arguments.length > 2 ) {
+    ret.duration = _numberOrRaise(arguments[2], "Duration must be a number");
+  }
+
+  if( arguments.length > 3 ) { // optional
+    ret.alpha = arguments[3];
+  }
+  return ret;
+}
+
+// conditional animation
+// when("myimage", condition("touched", "inside", 0, 100),
+//
+function condition(propertyName, conditionType, arg0, arg1)
+{
+  "use strict";
+  var ret = { actors: [],
+              property: propertyName,
+              type: conditionType,
+              arg0: arg0,
+              arg1: arg1
+            };
+
+  if(arg1 === undefined) {
+    ret.arg1 = 0.0; // make a float for the c++ call (ignored if irrelevant)
+  }
+
+  return ret;
+}
+
+// set animation
+//   set(actorOrListOrNone, signalName, animationDefition)
+// ie
+//   set("myimage", "size", to([10,10,10], 0,3, "ease_in"),
+//                          path(0,3, "ease_in", "path0"))
+//   set("size", to([10,10,10], 0,3, "ease_in")),
+//               between([0,0,0], [10,10,10], 0,3, "ease_in")))
+//   set(tagged("scrollitem), "position", path(0,3, "ease_in", "path0")),
+//   set(excludeFrom(tagged("scrollitem"), "myimage"), "position", path(0,3, "ease_in", "path0")),
+function set() {
+  "use strict";
+  var ret = { action: "set",
+              actors: [],
+              property: null,
+              animation: []
+            };
+
+  var index;
+  if( arguments.length === 3 ) { // then actor is specified somehow
+    ret.actors = _actorArray( arguments[0] );
+    ret.property = _stringOrRaise(arguments[1], "Property must be a string");
+    index = 2;
+  } else if( arguments.length === 2 ) { // actor is self (indicated in 'when' call)
+    ret.property = _stringOrRaise(arguments[0], "Property must be a string");
+    index = 1;
+  } else {
+    throw "set needs 2 or 3 arguments";
+  }
+
+  for(var i = index; i < arguments.length; i++) {
+    ret.animation.push( arguments[i] );
+  }
+
+  return ret;
+}
+
+// set animation
+//   call(function, arg0, arg1)
+// ie
+//   call(func)
+//   call(func, 10.0, "enable")
+function call() {
+  "use strict";
+  var ret = { action: "call",
+              arguments: [],
+              func: null
+            };
+
+  ret.func = arguments[0];
+
+  for(var i = 1; i < arguments.length; i++) {
+    ret.arguments.push( arguments[i] );
+  }
+
+  return ret;
+}
+
+function then()
+{
+  "use strict";
+  return [{ action: arguments[0],
+            parameters: arguments[1]}];
+}
+
+function _actorNameList()
+{
+  "use strict";
+  var names;
+  if(typeof arguments[0] === "function") {
+    var lookup = arguments[0]();
+    names = lookup[0];
+  } else if(typeof arguments[0] === "object") {
+    // or it can be the actual dali actor object
+    names = _actorArray(arguments[0].name);
+  } else if(typeof arguments[0] === "string") {
+    // or arg0,arg1 are the actor property
+    names = _actorArray(arguments[0]);
+  } else {
+    return names; // presume already actor name list
+  }
+  return names;
+}
+
+var _buildDescription = {animations:{}, templates:{}};
+
+function _animation(a) {
+  if(a) {
+    return a;
+  } else {
+    return new dali.Animation();
+  }
+}
+
+// function _makeActionCallback(func, args) {
+//   "use strict";
+//   return function(){
+//     var a;
+//     for(var i = 0; i < args.length; i++) {
+//       var d = args[i];
+//       if( d.action === "set" ) {
+//         for(var ai = 0; ai < d.actors.length; ai++) {
+//           if( d.property ) {
+//             apply(_animation,
+//                   d.arguments[0].animate,
+
+
+//                   anim.push( [d.actors[ai]], d.property,
+//           }
+//         }
+//       }
+
+//   var ret = { action: "set",
+//               actors: [],
+//               property: null,
+//               condition: null,
+//               animation: []
+//             };
+
+
+//     func.apply(null, args);
+//   };
+// }
+
+function loop(on)
+{
+  "use strict";
+  return { action: "loop",
+            value: on};
+}
+
+function endAction(action)
+{
+  "use strict";
+  return { action: "endAction",
+            value: action};
+}
+
+function disconnectAction(action)
+{
+  "use strict";
+  return { action: "disconnectAction",
+            value: action};
+}
+
+function _makeCallback(args) {
+  "use strict";
+  return function(){
+    var a;
+    var actors = _actorNameList( args[0] );
+    // args[1] is signal name
+    for(var i = 2; i < args.length; i++) {
+      var d = args[i];
+      if(d.action === "call") {
+        d.func.apply(null, d.args);
+      } else if(d.action === "loop") {
+        a = _animation(a);
+        a.setLooping( d.value );
+      } else if(d.action === "endAction") {
+        a = _animation(a);
+        a.setEndAction( d.value );
+      } else if(d.action === "disconnectAction") {
+        a = _animation(a);
+        a.setDisconnectAction( d.value );
+      } else if(d.action === "set") {
+        if( d.actors.length ) {
+          actors = d.actors;
+        }
+        for(var actori = 0; actori < actors.length; actori++) {
+          var actorName = actors[actori];
+          var root = dali.stage.getRootLayer();
+          var actor = root.findChildByName( actorName );
+          a = _animation(a);
+          for(var animi = 0; animi < d.animation.length; animi++) {
+            var anim = d.animation[animi];
+            var value = anim.value;
+            if(typeof value === "function") { // can be a function
+              value = value();
+            }
+            if(anim.animate === "animateTo") {
+              a.animateTo(actor, d.property, value, anim.alpha, anim.delay, anim.duration);
+            } else if(anim.animate === "animateBy") {
+              a.animateBy(actor, d.property, value, anim.alpha, anim.delay, anim.duration);
+            } else if(anim.animate === "animatePath") {
+              var pathData = anim.path;
+              var daliPath;
+              if(typeof pathData === "function") {
+                pathData = pathData();
+              }
+              if(typeof pathData === "string") {
+                if(pathData in _whenBuilder.paths) {
+                  daliPath = _whenBuilder.paths[pathData];
+                } else {
+                  throw "Path not known";
+                }
+              } else {
+                daliPath = new dali.Path();
+                daliPath.points = pathData;
+                dali.generateControlPoints(daliPath, 0.35); // @todo remove magic number?
+              }
+              _animation(a).animatePath(actor, daliPath, anim.forward, anim.alpha, anim.delay, anim.duration);
+            } else {
+              throw "";
+            }
+          } // for anims
+        } // for actors
+      }
+    }// for args
+
+    // animation support?
+    // else if( d.action === "animate" ) {
+    // }
+
+    // actions support??
+    // else if( d.action === "then" ) {
+    //   if( d.actors.length ) {
+    //     actors = d.actors;
+    //   }
+
+    if(a) {
+      a.play();
+    }
+  }; // closure function
+} // _makeCallback
+
+function _makeSensibleTouched(func, state) { // dali giving all mouse events on touched signal --- is this correct?? @todo
+  "use strict";
+  return function(actor, touchEvent){
+    var doit = false;
+    for(var i = 0; i < touchEvent.points.length; i++) {
+      if(touchEvent.points[i].state === state) {
+        doit = true;
+        break;
+      }
+    }
+    if(doit) {
+      func.apply( null, arguments);
+    }
+  };
+}
+
+// function _connectToSignal(actors, signalName, func) {
+//   "use strict";
+//   var root = dali.stage.getRootLayer();
+//   var f = func;
+
+//   if( signalName === "touchedDown" ) { // fix as touched signal is really "mouseState"?
+//     f = _makeSensibleTouchedDown(func);
+//     signalName = "touched";
+//   }
+
+//   for(var ai = 0; ai < actors.length; ai++) {
+//     var actor = root.findChildByName( actors[ai] );
+//     actor.connect( signalName, f );
+//   }
+// }
+
+
+// when("myimage", condition("touched", "inside", 0, 100),
+// or
+// when("myimage", "touched",
+//      call(myfunction),
+//      call(myfunction, arg1),
+//      and("animation-ends"),
+//      set("myimage", "size", to([10,10,10]),
+//                             to([10,10,10], 0,3, "ease_in")),
+//                             path(0,3, "ease_in", "path0")),
+//                             between([0,0,0], [10,10,10], 0,3, "ease_in")),
+//                             to([0,0,0], 0, 3)
+//     set(tagged("scrollitem), path(0,3, "ease_in", "path0")),
+//     set(excludeFrom(tagged("scrollitem"), "myimage"), path(0,3, "ease_in", "path0")),
+//     endAction("bake"),
+//     discardAction("bake"),
+//     loop(true),
+//     then("myimage", "hide"),
+//     then("quit"),
+//     then("play", "myanim"),
+//     thenOnChild("myimage", "child", "hide"),
+//     animate("name"),
+//        )
+
+function when() {
+  "use strict";
+  var actors, property, index;
+  var signal = null;
+  var condition = null;
+
+  // arg0 can be an actor lookup function; returning an actor array
+  actors = _actorNameList(arguments[0]);
+
+  if(typeof arguments[1] === "string") {
+    // if string then its a signal
+    signal = arguments[1];
+  } else {
+    // if object then its a condition
+    condition = arguments[1];
+    // actors can be null which means use the actors in when() call
+    if(condition.actors === null) {
+      condition.actor = actors[0];
+    }
+  }
+
+  var root;
+  var f;
+  var ai;
+  var actor;
+
+  if(signal) {
+    // _connectToSignal( actors, signal, _makeCallback(arguments) );
+    root = dali.stage.getRootLayer();
+    f = _makeCallback(arguments);
+
+    if( signal === "touchedDown" ) { // fix as touched signal is really "mouseState"?
+      f = _makeSensibleTouched(f, "Down");
+      signal = "touched";
+    }
+    if( signal === "touchedUp" ) { // fix as touched signal is really "mouseState"?
+      f = _makeSensibleTouched(f, "Up");
+      signal = "touched";
+    }
+    if( signal === "touchedMotion" ) { // fix as touched signal is really "mouseState"?
+      f = _makeSensibleTouched(f, "Motion");
+      signal = "touched";
+    }
+    if( signal === "touchedLeave" ) { // fix as touched signal is really "mouseState"?
+      f = _makeSensibleTouched(f, "Leave");
+      signal = "touched";
+    }
+    if( signal === "touchedStationary" ) { // fix as touched signal is really "mouseState"?
+      f = _makeSensibleTouched(f, "Stationary");
+      signal = "touched";
+    }
+    if( signal === "touchedInterrupted" ) { // fix as touched signal is really "mouseState"?
+      f = _makeSensibleTouched(f, "Interrupted");
+      signal = "touched";
+    }
+    if( signal === "touchedLast" ) { // fix as touched signal is really "mouseState"?
+      f = _makeSensibleTouched(f, "Last");
+      signal = "touched";
+    }
+
+    for(ai = 0; ai < actors.length; ai++) {
+      actor = root.findChildByName( actors[ai] );
+      actor.connect( signal, f );
+    }
+  }
+
+  if(condition) {
+    // _connectToCondition( actors, condition, _makeCallback(arguments) );
+    root = dali.stage.getRootLayer();
+    f = _makeCallback(arguments);
+
+    for(ai = 0; ai < actors.length; ai++) {
+      actor = root.findChildByName( actors[ai] );
+      actor.notification(condition.property,
+                         condition.type, condition.arg0, condition.arg1,
+                         f);
+    }
+  }
+
+// when("myimage", condition("touched", "inside", 0, 100),
+// or
+// when("myimage", "touched",
+//       ***
+//       dali.ActorWrapper.prototype.connect = function(signalName, callback) {
+//     if(d.action === "set") {
+//       var animationActors = d.actors;
+//       if( animationActors.length === 0 ) {
+//         animationActors = actors;
+//       }
+//       var a = new dali.Animation();
+// // dali.AnimationWrapper.prototype.animateTo = function(object, propertyName, value, alphaFunction, delay, duration) {
+// //dali.AnimationWrapper.prototype.animateBy = function(object, propertyName, value, alphaFunction, delay, duration) {
+// //dali.AnimationWrapper.prototype.animatePath = function(object, pathObject, forward, alphaFunction, delay, duration) {
+//       for(var ai =0; ai < animationActors.length; ai++) {
+//         for(var animi =0; animi < d.animation; animi++) {
+//           var animEntry = d.animation[animi];
+//           if( d.animate == "animatePath") {
+//             a.animatePath(animationActors[ai], animEntry.path, animEntry.forward, animEntry.alpha,
+//                           animEntry.delay, animEntry.duration);
+
+//           } else if( d.animate == "animateBetween") {
+//             a.animateBetween(animationActors[ai], d.property,
+//                              animEntry.fromValue, animEntry.toValue,
+//                              animEntry.alpha, animEntry.delay, animEntry.duration);
+//           } else {
+//             // call animateTo,animateBy,
+//             a[animEntry.animate](animationActors[ai], d.property, animEntry.value, animEntry.alpha,
+//                                  animEntry.delay, animEntry.duration);
+//           }
+//         }
+//   }
+
+  // var animiations = [];
+
+  // for(var i = 2; i < arguments.length; i++) {
+  //   var d = arguments[i];
+  //   if( d.action === "set" ) {
+  //     // var ret = { action: "set",
+  //     //             actors: [],
+  //     //             property: null,
+  //     //             condition: null,
+  //     //             animation: []
+  //     //           };
+  //     for(var ai = 0; ai < d.actors.length; ai++) {
+  //       d.actors[ai]
+  //     }
+  //   }
+
+  //   for(var j = 0; j < d.length; j++) {
+  //     if(signal) { // then its signal actions
+  //       d.name = signal;
+  //       templates[actorName].signals.push(d[j]);
+  //     } else { // its property notifications
+  //       d.condition = condition;
+  //       d.property = property;
+  //       templates[actorName].notifications.push(d[j]);
+
+  // index = 2;
+
+  // // but we could also be specifying a property notification so...
+  // //
+  // var condition;
+  // var value;
+  // if(typeof arguments[index] === "string") {
+  //   var lowerCase = arguments[index].toLowerCase();
+  //   if("insideoutsidegreaterthanlessthan".indexOf(lowerCase)) {
+  //     property = signal;
+  //     signal = null;
+  //     condition = lowerCase;
+  //     index += 1;
+  //     value = arguments[index];
+  //     index += 1;
+  //     if( condition === "inside" || condition === "outside" ) {
+  //       assert( value.length === 2, "Inside/Outside condition must specify min,max");
+  //       assert(typeof value[0] === "number" && typeof value[1] === "number", "Conditions must be numbers");
+  //     }
+  //     if(condition === "lessthan" || condition === "greaterthan") {
+  //       assert(value.length === 1, "LessThan/GreaterThan condition must specify one value");
+  //       assert(typeof value === "number", "Conditions must be numbers");
+  //     }
+  //   }
+  // }
+
+  // // The reset are objects created by the set or call function
+  // var templates = _buildDescription.templates;
+
+  // for( var actorName in actors ) {
+  //   // the other args come from functions that generate json
+  //   for(var i = index; i < arguments.length; i++) {
+  //     var d = arguments[i];
+  //     for(var j = 0; j < d.length; j++) {
+  //       if(signal) { // then its signal actions
+  //         d.name = signal;
+  //         templates[actorName].signals.push(d[j]);
+  //       } else { // its property notifications
+  //         d.condition = condition;
+  //         d.property = property;
+  //         templates[actorName].notifications.push(d[j]);
+  //       }
+  //     }
+  //   }
+  // }
+
+} // when()
+
+
+// function animation() {
+//   "use strict";
+
+//   var name = arguments[0];
+//   var anim = {};
+//   for(var i = 1; i < arguments.length; i++) {
+//     var d = arguments[i];
+
+//     if(d.length === undefined) {  // then array from set
+
+//     } else {
+//       extend( anim, d );
+//     }
+//   }
+
+// }
+
+
+//
+// pseudo dali DSL
+//
+
+// stage(
+//  layer({
+//    width: 400,
+//    tag: "scroll"
+//    actors:[
+//            image({filename:"animage,
+//                   name: "myimage",
+//                   tag: "scrollitem",
+//                   width: 200,
+//                   height: 100}),
+//            text({text:"sometext,
+//                  tag: "scrollitem",
+//                  width:10})
+//           ]
+//  )
+// )
+
+// when("myimage", condition("touched", "inside", 0, 100),
+// or
+// when("myimage", "touched",
+//      call(myfunction),
+//      call(myfunction, arg1),
+//      and("animation-ends"),
+//      set("myimage", "size", to([10,10,10]),
+//                             to([10,10,10], 0,3, "ease_in")),
+//                             path(0,3, "ease_in", "path0")),
+//                             between([0,0,0], [10,10,10], 0,3, "ease_in")),
+//                             to([0,0,0], 0, 3)
+//     set(tagged("scrollitem), path(0,3, "ease_in", "path0")),
+//     set(excludeFrom(tagged("scrollitem"), "myimage"), path(0,3, "ease_in", "path0")),
+//     then("myimage", "hide"),
+//     then("quit"),
+//     then("play", "myanim"),
+//     thenOnChild("myimage", "child", "hide"),
+//     animate("name"),
+//        )
+
+// constraints?
+// on("myimage", "position", between(0, 100),
+
+
+
+//------------------------------------------------------------------------------
+// test helper functions
+//------------------------------------------------------------------------------
+
+function clear() {
+  var root = dali.stage.rootRotationActor;
+  var children = root.getChildren();
+
+  for (var i = 0, len = children.length; i < len; i++) {
+    root.remove(children[i]);
+    children[i].delete(); // delete the wrapper
+  }
+  //  root.delete(); // wrapper
+}
+
+function square(color, size) {
+  var a = dali.createSolidColorActor(color, 0, [0, 0, 0, 1], 0);
+  a.relayoutEnabled = false;
+  a.size = size;
+  return a;
+}
+
+function threeSquares() {
+  var root = dali.stage.rootRotationActor;
+
+  var a = square([1, 0, 0, 1], [200, 200, 0]);
+  a.name = "red";
+  a.position = [-100, 0, -20];
+  root.add(a);
+  a.delete();
+
+  a = square([0, 1, 0, 1], [200, 200, 0]);
+  a.name = "green";
+  a.position = [0, -100, -10];
+  root.add(a);
+  a.delete();
+
+  a = square([0, 0, 1, 1], [200, 200, 0]);
+  a.name = "blue";
+  a.position = [0, -100, 0];
+  root.add(a);
+  a.delete();
+
+  //  root.delete();
+}
+
+function threeSquares2() {
+  var root = dali.stage.rootRotationActor;
+
+  var red = square([1, 0, 0, 1], [200, 200, 0]);
+  red.name = "red";
+  red.position = [-100, 0, 20];
+  red.size = [10, 10, 0];
+  root.add(red);
+
+  var green = square([0, 1, 0, 1], [200, 200, 0]);
+  green.name = "green";
+  green.position = [0, -100, 0];
+  green.orientation = [0, 0, 20];
+  green.size = [200, 200, 0];
+
+  var blue = square([0, 0, 1, 1], [200, 200, 0]);
+  blue.name = "blue";
+  blue.position = [0, 0, 10];
+  blue.parentOrigin = [0, 0, 0];
+  blue.size = [100, 100, 0];
+  green.add(blue);
+  root.add(green);
+
+  red.delete(); // wrapper
+  green.delete(); // wrapper
+  blue.delete(); // wrapper
+
+  //  root.delete();
+}
+
+function collectByName(collection) {
+  var root = dali.stage.rootRotationActor;
+  if (collection === undefined) {
+    collection = {};
+  }
+  var op = function(actor) {
+    if (actor.name) {
+      collection[actor.name] = actor;
+    }
+    return true;
+  };
+
+  dali.debugDepthVisit(root, op, true);
+
+  return collection;
+}
+
+function first() {
+  return dali.stage.getRenderTaskList().getTask(0);
+}
+
+function second() {
+  return dali.stage.getRenderTaskList().getTask(1);
+}
+
+function third() {
+  return dali.stage.getRenderTaskList().getTask(2);
+}
+
+function firstCamera() {
+  return dali.stage.getRenderTaskList().getTask(0).getCameraActor();
+}
+
+function secondCamera() {
+  return dali.stage.getRenderTaskList().getTask(1).getCameraActor();
+}
+
+function thirdCamera() {
+  return dali.stage.getRenderTaskList().getTask(2).getCameraActor();
+}
+
+function resize(w, h) {
+  dali.setCanvasSize(w, h);
+}
+
+
+function listProperties(actor) {
+  var props = actor.getProperties();
+  for (var i = 0, len = props.size(); i < len; i++) {
+    console.log(props.get(i) + "\t\t" + actor[props.get(i)]);
+  }
+}
+
+function listChildren(actor) {
+  for (var i = 0, len = actor.getChildCount(); i < len; i++) {
+    var a = actor.getChildAt(i);
+    var ti = a.getTypeInfo();
+    console.log("Actor Type:" + ti.getName());
+    ti.delete(); // wrapper
+    a.delete(); // wrapper
+  }
+}
+
+function compareProperties(a1, a2) {
+  var props1 = a1.getProperties();
+  var props2 = a2.getProperties();
+  var props = new Set();
+  for (var i = 0, len = props1.size(); i < len; i++) {
+    props.add(props1.get(i));
+  }
+
+  for (i = 0, len = props2.size(); i < len; i++) {
+    var n = props2.get(i);
+    if (!props.has(n)) {
+      console.log("A1 missing :" + n);
+    }
+  }
+
+  var doit = function(item) {
+    var v1 = a1[item]; // a1.getProperty(item);
+    var v2 = a2[item]; // a2.getProperty(item);
+
+    var isSame;
+
+    if (Array.isArray(v1)) {
+      isSame = (v1.length === v2.length) && v1.every(function(element, index) {
+        return element === v2[index];
+      });
+    } else {
+      isSame = v1 === v2;
+    }
+
+    if (!isSame) {
+      console.log(item + ": A1= " + v1 + " A2= " + v2);
+    }
+  };
+
+  props.forEach(doit);
+}
+
+var EPSILON = 0.005;
+
+function compareArrays(a, b) {
+  "use strict";
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length === b.length) {
+      for (var i = 0, len = a.length; i < len; i++) {
+        if (Array.isArray(a[i])) {
+          if (Array.isArray(b[i])) {
+            if (!compareArrays(a[i], b[i])) {
+              return false;
+            }
+          } else {
+            return false;
+          }
+        } else {
+          if (typeof (a[i]) === "number") {
+            if (typeof (b[i]) !== "number") {
+              return false;
+            } else {
+              if (Math.abs(a[i]) > Math.abs(b[i]) + EPSILON ||
+                  Math.abs(a[i]) < Math.abs(b[i]) - EPSILON) {
+                return false;
+              }
+            }
+          } else {
+            if (a[i] !== b[i]) {
+              return false;
+            }
+          }
+        }
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
+function countAllProperties() {
+  var count = 0;
+  var tr = new dali.TypeRegistry();
+  var names = tr.getTypeNames();
+  for (var i = 0, len = names.size(); i < len; i++) {
+    var ti = tr.getTypeInfo(names.get(i));
+    var props = ti.getProperties();
+    count += props.size();
+  }
+  return count;
+}
+
+function native2ascii(str) {
+  "use strict";
+  var out = "";
+  for (var i = 0; i < str.length; i++) {
+    if (str.charCodeAt(i) < 0x80) {
+      out += str.charAt(i);
+    // } else {
+    //   // pass
+    //   //var u = "" + str.charCodeAt(i).toString(16);
+    //   //out += "\\u" + (u.length === 2 ? "00" + u : u.length === 3 ? "0" + u : u);
+    }
+  }
+  return out;
+}
+
+
+var getGL = function() {
+  return canvas.getContext("webgl");
+};
+
+var getAnimation = function() {
+  "use strict";
+  return animationList[animationSelectionIndex].animation;
+};
+
+var getActor = function() {
+  "use strict";
+  return eventHandler.touchedActor;
+};
+
+
+//------------------------------------------------------------------------------
+// test functions
+//------------------------------------------------------------------------------
+function Test() {
+  "use strict";
+}
+
+Test.prototype.hierarchy = function() {
+  "use strict";
+  console.log("test_hierarchy...");
+
+  // function onTouched(actor) {
+  //   // console.log("touched " + actor.$$.ptr + " " + actor.position);
+  //   eventHandler.onTouched(actor);
+  // }
+
+  var actor = new dali.ImageActor();
+  actor.parentOrigin = [0.5, 0.5, 0.5];
+  actor.anchorPoint = [0.5, 0.5, 0.5];
+  actor.text = "actor";
+  actor.name = actor.text;
+  actor.size = [100, 100, 1];
+  actor.position = [0, 0, 10];
+  dali.stage.add(actor);
+
+  var hello = new dali.ImageActor();
+  // hello.connect("touched", onTouched);
+  hello.text = "hello";
+  hello.name = hello.text;
+  actor.add(hello);
+
+  var hellochild = new dali.ImageActor();
+  // hellochild.connect("touched", onTouched);
+  hellochild.text = "hello-child";
+  hellochild.name = hellochild.text;
+  hello.add(hellochild);
+
+  var hellochild2 = new dali.ImageActor();
+  // hellochild2.connect("touched", onTouched);
+  hellochild2.text = "hello-child2";
+  hellochild2.name = hellochild2.text;
+  hello.add(hellochild2);
+
+  var hellochildchild = new dali.ImageActor();
+  // hellochildchild.connect("touched", onTouched);
+  hellochildchild.text = "hello-child-child1";
+  hellochildchild.name = "hello-child-child1";
+  hellochildchild.name = hellochildchild.text;
+  hellochild.add(hellochildchild);
+
+
+  var depthfirst = actor.findAllChildren();
+
+  assert(actor.getChildCount() === 1);
+  // assert(actor.getChildAt(0).text === "hello");
+  // assert(actor.findChildByName("hello-child-child1").text = "hello-child-child1");
+  // assert(hello.getParent().text === "actor");
+  // assert(depthfirst[depthfirst.length - 1].text === "hello-child2");
+
+  var directChildren = actor.directChildren();
+
+  assert(directChildren.length === 1);
+  assert(directChildren[0].getId() === hello.getId());
+
+  actor.position = [100, 100, 0];
+
+  var root = dali.stage.rootRotationActor;
+
+  actor.remove(hello);
+  assert(actor.getChildCount() === 0);
+
+  actor.add(hello);
+  assert(actor.getChildCount() === 1);
+
+  var rootLayerCount = root.getChildCount();
+  dali.stage.remove(actor); // check these don't assert
+  assert(root.getChildCount() === rootLayerCount - 1);
+
+  dali.stage.add(actor);
+  assert(root.getChildCount() === rootLayerCount);
+
+  assert(root.findChildByName("none") === null);
+
+  // actor.connect("touched", onTouched);
+
+  // var inserted = new dali.TextActor(); // TextActor no more RIP
+  // inserted.parentOrigin = [0.5, 0.5, 0.5];
+  // inserted.anchorPoint = [0.5, 0.5, 0.5];
+  // inserted.text = "inserted";
+  // inserted.name = inserted.text;
+  // inserted.size = [100, 100, 1];
+  // inserted.position = [0, 0, 50];
+  // actor.insert(1, inserted);
+  // assert(actor.getChildAt(1).text === "inserted");
+
+  clear();
+  console.log("  -> ok test_hierarchy");
+};
+
+Test.prototype.registerPropery = function() {
+  "use strict";
+  console.log("test_registerPropery...");
+  var s = dali.stage;
+  var root = s.rootRotationActor;
+
+  var another = new dali.ImageActor();
+  another.parentOrigin = [0.5, 0.5, 0.5];
+  another.anchorPoint = [0.5, 0.5, 0.5];
+  another.text = "peppa";
+  another.name = another.text;
+  another.size = [100, 100, 1];
+  another.position = [-50, 100, 0];
+  root.add(another);
+
+  // var imageText = addTextImageFromCanvas("Colour");
+  // imageText.connect("touched", onTouched);
+
+  var c = root.getChildAt(root.getChildCount() - 1);
+  //var n = c.getChildCount();
+  var p = c.getParent();
+  assert(p.getId() == root.getId());
+
+  var matrix = c.worldMatrix;
+
+  assert(matrix.length === 16);
+
+  // todo - no longer supported (?)
+  // another.registerProperty("data_output", true);
+  // assert(another.getPropertyType("data_output") === "BOOLEAN");
+  // assert(another.data_output === true);
+  // another.data_output = false;
+  // assert(another.data_output === false);
+  // dali.__updateOnce();
+  // another.data_output = 2.5;
+  // assert(another.data_output === 2.5);
+  // assert(another.getPropertyType("data_output") === "FLOAT");
+
+  clear();
+  console.log("  -> ok test_registerPropery");
+};
+
+Test.prototype.js_math = function() {
+  console.log("test_js_math...");
+  assert(dali.vectorLength([1, 2, 3, 4]) === Math.sqrt(1 * 1 + 2 * 2 + 3 * 3));
+  assert(dali.vectorLengthSquared(dali.normalize([0, 0, 0, 1])) === 0);
+
+  // for(var f=0; f < 6; f+=1)
+  // {
+  var f = 2;
+  assert(1 === dali.vectorLengthSquared(dali.normalize([Math.cos(f) * 10.0,
+                                                        Math.cos(f + 1.0) * 10.0,
+                                                        Math.cos(f + 2.0) * 10.0,
+                                                        1.0
+                                                       ])));
+
+  function assertArray(a, b, epsilon) {
+    assert(a.length === b.length);
+    for (var i = 0, len = a.length; i < len; ++i) {
+      assert(a[i] > b[i] - epsilon && a[i] < b[i] + epsilon);
+    }
+  }
+
+  assertArray(dali.axisAngleToQuaternion([1.0, 2.0, 3.0, Math.PI / 3.0, Math.PI / 2.0]), [0.189, 0.378, 0.567, 0.707], 0.001);
+
+  assertArray(dali.quaternionToAxisAngle([1.1, 3.4, 2.7, 0.932]), [3.03, 9.38, 7.45, 0.74],
+              0.01);
+
+  assertArray(dali.vectorCross([0, 1, 0], [0, 0, 1]), [1, 0, 0], 0.001);
+
+  assertArray(dali.vectorAdd([1, 2, 3], [2, 3, 4], [1, 1, 1]), [4, 6, 8], 0.001);
+
+  var mq = dali.vectorAdd(dali.vectorCross([0.045, 0.443, 0.432], [0.612, 0.344, -0.144]),
+                          dali.vectorByScalar([0.612, 0.344, -0.144], 0.784),
+                          dali.vectorByScalar([0.045, 0.443, 0.432], 0.697));
+
+  assertArray(dali.quatByQuat([0.045, 0.443, 0.432, 0.784], [0.612, 0.344, -0.144, 0.697]), [mq[0], mq[1], mq[2], (0.784 * 0.697) - dali.vectorDot([0.045, 0.443, 0.432], [0.612, 0.344, -0.144])],
+              0.001);
+
+  clear();
+  console.log("  -> ok test_js_math");
+};
+
+Test.prototype.getset = function() {
+  "use strict";
+  console.log("test_getset...");
+  threeSquares();
+  var col = {};
+  collectByName(col);
+  var actor = col.red;
+  var p = actor.position;
+  actor.position = [1, 1, 1];
+  assert(compareArrays(actor.position, [1, 1, 1]));
+  actor.position = [3, 3, 3];
+  assert(compareArrays(actor.position, [3, 3, 3]));
+  actor.position = p;
+
+  clear();
+  console.log("  -> ok test_getset");
+};
+
+Test.prototype.animation_spline = function() {
+  "use strict";
+  console.log("test_animation_spline...");
+  threeSquares();
+  var col = {};
+  collectByName(col);
+  var actor = col.red;
+
+  var a = new dali.Animation();
+  var path = new dali.Path();
+
+  path.points = [
+    [-150, -50, 0],
+    [0.0, 70.0, 0.0],
+    [190.0, -150.0, 0.0]
+  ];
+
+  assert(compareArrays(path.points, [
+    [-150, -50, 0],
+    [0.0, 70.0, 0.0],
+    [190.0, -150.0, 0.0]
+  ]));
+
+  dali.generateControlPoints(path, 0.35);
+
+  assert(compareArrays(path.controlPoints, [
+    [-97.5, -8, 0],
+    [-66.94940948486328, 76.16658020019531, 0],
+    [101.31224060058594, 60.66832733154297, 0],
+    [123.5, -73, 0]
+  ]));
+
+  a.setDuration(3);
+  a.animatePath(actor, path, [1, 0, 0], "Linear", 0, 3);
+  a.play();
+
+  function checkPos() {
+    assert(actor.position = path.points[2]);
+    clear();
+    actor.delete();
+    path.delete();
+    a.delete();
+    console.log("  -> ok test_animation_spline");
+  }
+
+  window.setTimeout(checkPos, 4000);
+};
+
+Test.prototype.animation = function() {
+  "use strict";
+  console.log("test_animation...");
+  threeSquares();
+  var col = {};
+  collectByName(col);
+  var actor = col.red;
+
+  var a = new dali.Animation();
+  a.setDuration(3);
+  a.animateTo(actor, "position", [20, 0, 0], "Linear", 0, 3);
+  a.play();
+
+  function checkNewPos() {
+    assert(actor.position = [120, 100, 0]);
+    clear();
+    a.delete();
+    actor.delete();
+
+    console.log("  -> ok test_animation");
+  }
+
+  function checkPos() {
+    assert(actor.position = [20, 0, 0]);
+    actor.position = [100, 100, 0];
+
+    var a = new dali.Animation();
+    a.setDuration(3);
+    a.animateBy(actor, "position", [20, 0, 0], "Linear", 0, 3);
+    a.play();
+
+    window.setTimeout(checkNewPos, 4000);
+  }
+
+  window.setTimeout(checkPos, 4000);
+};
+
+Test.prototype.shadereffect1 = function() {
+  "use strict";
+  console.log("test_shadereffect1...");
+
+  threeSquares();
+  var col = {};
+  collectByName(col);
+  var actor = col.red;
+
+  var shader = new dali.ShaderEffect({
+    vertex: "void main(void)\n" +
+      "{\n" +
+      "gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n" +
+      "vTexCoord = aTexCoord;\n" +
+      "}\n",
+    fragment: "precision mediump float;\n" +
+      "uniform vec4 weight;\n" +
+      "void main()\n" +
+      "{\n" +
+      "  gl_FragColor = weight;\n" +
+      "}\n"
+  });
+  actor.setShaderEffect(shader);
+
+  var final = [1, 0, 0, 1];
+
+  var a = new dali.Animation();
+  a.setDuration(3);
+  a.setLooping(false);
+  a.animateTo(shader, "weight", final, "Linear", 0, 3);
+  a.play();
+
+  a.delete();
+
+  function checkPos() {
+    console.log(shader.weight);
+    console.log(final);
+    assert(compareArrays(shader.weight, final));
+
+    console.log("  -> ok test_shadereffect1");
+    shader.delete(); // wrapper
+    actor.delete(); // wrapper
+  }
+
+  window.setTimeout(checkPos, 4000);
+  
+};
+
+Test.prototype.onePane = function() {
+  var w = dali.canvas.width;
+  var h = dali.canvas.height;
+  var col = dali.getClearColor(0);
+  dali.onePane();
+  dali.setFrontView(0, 0, 0, w, h);
+  dali.setClearColor(0, col);
+};
+
+Test.prototype.threePane = function() {
+  var w = dali.canvas.width;
+  var h = dali.canvas.height;
+  dali.threePane();
+  dali.setClearColor(0, [0.4, 0, 0, 1]);
+  dali.setClearColor(1, [0, 0.4, 0, 1]);
+  dali.setClearColor(2, [0, 0, 0.4, 1]);
+  dali.setFrontView(0, 0, 0, w / 2 - 5, h);
+  dali.setTopView(1, w / 2, 0, w / 2, h / 2 - 5);
+  dali.setRightView(2, w / 2, h / 2 + 5, w / 2, h / 2 - 5);
+};
+
+Test.prototype.twoPane = function() {
+  var w = dali.canvas.width;
+  var h = dali.canvas.height;
+  dali.twoPane();
+  dali.setFrontView(0, 0, 0, w / 2 - 10, h);
+  dali.setTopView(1, 210, 0, w / 2 - 10, h);
+  dali.setClearColor(0, [0.4, 0, 0, 1]);
+  dali.setClearColor(1, [0, 0.4, 0, 1]);
+};
+
+Test.prototype.views = function() {
+  "use strict";
+  console.log("test_views");
+
+  var w = dali.canvas.width;
+  var h = dali.canvas.height;
+  var col = dali.getClearColor(0);
+  console.log(col);
+
+  function one() {
+    dali.onePane();
+    dali.setFrontView(0, 0, 0, w, h);
+    dali.setClearColor(0, col);
+  }
+
+  function three() {
+    dali.threePane();
+    dali.setClearColor(0, [0.4, 0, 0, 1]);
+    dali.setClearColor(1, [0, 0.4, 0, 1]);
+    dali.setClearColor(2, [0, 0, 0.4, 1]);
+    dali.setFrontView(0, 0, 0, w / 2 - 5, h);
+    dali.setTopView(1, w / 2, 0, w / 2, h / 2 - 5);
+    dali.setRightView(2, w / 2, h / 2 + 5, w / 2, h / 2 - 5);
+
+    window.setTimeout(one, 1000);
+  }
+
+  function two() {
+    dali.twoPane();
+    dali.setFrontView(0, 0, 0, w / 2 - 10, h);
+    dali.setTopView(1, 210, 0, w / 2 - 10, h);
+    dali.setClearColor(0, [0.4, 0, 0, 1]);
+    dali.setClearColor(1, [0, 0.4, 0, 1]);
+
+    window.setTimeout(three, 1000);
+  }
+
+  one();
+
+  window.setTimeout(two, 1000);
+};
+
+Test.prototype.blinking = function() {
+  "use strict";
+  var layer = new dali.Layer();
+  layer.name = "frameLayer";
+  dali.stage.add(layer);
+
+  var a = dali.createSolidColorActor([0.5, 0.5, 0.5, 1],
+                                     false, [0, 0, 0, 1],
+                                     0);
+  a.relayoutEnabled = false;
+  a.size = [100,100,1];
+
+  layer.add(a);
+
+  var camera = firstCamera();
+
+  camera.position = [ camera.position[0]+10, camera.position[1]+20, camera.position[2] + 10 ];
+
+  layer.delete();   // wrapper
+  a.delete();       // wrapper
+  camera.delete();  // wrapper
+};
+
+Test.prototype.uniformMetaData = function() {
+  for(var i = 0; i < shaderSources.length; i++) {
+    console.log(dali.uniformMetaData(shaderSources[i].vertex, shaderSources[i].fragment));
+  }
+};
+
+Test.prototype.signals = function() {
+  "use strict";
+  console.log("test_signals...");
+
+  function onStage() {
+    console.log("   -> ok test signals");
+    //eventHandler.onTouched(actor);
+  }
+
+  var actor = new dali.ImageActor();
+  actor.parentOrigin = [0.5, 0.5, 0.5];
+  actor.anchorPoint = [0.5, 0.5, 0.5];
+  actor.text = "actor";
+  actor.name = actor.text;
+  actor.size = [100, 100, 1];
+  actor.position = [0, 0, 10];
+
+  actor.connect("on-stage", onStage);
+
+  dali.stage.add(actor);
+};
+
+
+function demo(numberOrUndefined) {
+  "use strict";
+
+  //addNewAnimation();
+
+  var properties = animationList[animationSelectionIndex];
+
+  var start = 0;
+  var end = shaderSources.length;
+  if(numberOrUndefined !== undefined)
+  {
+    start = numberOrUndefined;
+    end = numberOrUndefined+1;
+  }
+
+  for(var i = start; i < end; i++) {
+    var options = shaderSources[i];
+    if("animateTo" in options) {
+      var img = addTestImage(3);
+      selectActor(img.getId());
+      loadShader(i);
+      img.name = img.name + "-" + options.name;
+      for(var j = 0; j < options.animateTo.length; j++) {
+        var animateToOptions = options.animateTo[j];
+        //addPropertyToAnimation(img.getId(), animateToOptions[0]); // name
+
+        animationList[animationSelectionIndex].properties.push( {actor: img,
+                                                                 property: animateToOptions[0],
+                                                                 value: animateToOptions[1],
+                                                                 interpolation: animateToOptions[2],
+                                                                 delay: animateToOptions[3],
+                                                                 duration: animateToOptions[4]} );
+        animationList[animationSelectionIndex].dirtyData = true;
+
+        // var prop = properties.properties[ properties.properties.length - 1 ];
+        // prop.value = animateToOptions[1];
+        // prop.interpolation = animateToOptions[2];
+        // prop.delay = animateToOptions[3];
+        // prop.duration = animateToOptions[4];
+
+      }
+      selectActor(null);
+    }
+  }
+
+  $("#loopOn")[0].click();
+  playAnimation();
+}
+
+function createColorActor(color) {
+  "use strict";
+  var a = dali.createSolidColorActor(color, false, [0, 0, 0, 1], 0);
+  a.relayoutEnabled = false;
+  a.parentOrigin = [0.5, 0.5, 0.5];
+  a.anchorPoint = [0.5, 0.5, 0.5];
+  a.name = "color:" + color;
+  a.size = [100, 100, 1];
+  return a;
+}
+
+function createImageActor(stockImageIndexOrUndefined) {
+  "use strict";
+  var i = stockImageIndexOrUndefined;
+  if(i === undefined) {
+    i = 1;
+  }
+  var a = new dali.ImageActor();
+  a.setImageData( getStockImageData(i) );
+  a.parentOrigin = [0.5, 0.5, 0.5];
+  a.anchorPoint = [0.5, 0.5, 0.5];
+  a.name = "image:" + i;
+  a.size = [100, 100, 1];
+  return a;
+};
+
+//------------------------------------------------------------------------------
+// regression test
+//------------------------------------------------------------------------------
+
+Test.prototype.regression = function() {
+  "use strict";
+  this.hierarchy();
+  this.registerPropery();
+  this.js_math();
+  this.getset();
+  this.animation();
+  this.animation_spline();
+  this.shadereffect1();
+  this.views();
+  this.signals();
+};
+
+Test.prototype.remote_execution = function() {
+  "use strict";
+  this.regression();
+};
+
+Test.prototype.stacking = function() {
+  "use strict";
+
+  eventHandler.selectActor( dali.stage.rootRotationActor );
+
+  var a = dali.createSolidColorActor([1.0, 0.0, 0.0, 1.0],
+                                     false, [0, 0, 0, 1],
+                                     0);
+  a.relayoutEnabled = false;
+  app.addActor(a);
+
+  eventHandler.selectActor( a );
+
+  var b = dali.createSolidColorActor([0.0, 0.0, 1.0, 1.0],
+                                     false, [0, 0, 0, 1],
+                                     0);
+  a.relayoutEnabled = false;
+  app.addActor(b);
+
+
+  a.sizeWidth = a.sizeHeight = 100;
+  b.sizeWidth = b.sizeHeight = 50;
+
+  b.sizeWidth = 150;
+
+  return [a, b];
+};
+
+
+var runTest = function(functionName) {
+  "use strict";
+
+  clear();
+
+  dali.stage.setBackgroundColor([0.3, 0.3, 0.3, 1]);
+
+  var test = dali[functionName]();
+
+  if( test )
+  {
+    if( !test.complete() )
+    {
+      function check() {
+        if( !test.complete() ) {
+          window.setTimeout(checkPos, 500);
+        } else {
+          console.log("test success");
+        }
+      }
+    }
+  }
+
+};
+
+//------------------------------------------------------------------------------
+// scratch
+//------------------------------------------------------------------------------
+// function animationDataShaderEffect(shaderSource)
+// {
+//   var uniforms = [];
+//   dali.sourceUniformMetaData(shaderSource.vertex).map( function(item) {uniforms.push(item); } );
+//   dali.sourceUniformMetaData(shaderSource.fragment).map( function(item) {uniforms.push(item); } );
+
+//   var uniformNames = [];
+//   for(var i =0; i < uniforms.length; i++)
+//   {
+//     var type = uniforms[i][0];
+//     var name = uniforms[i][1];
+//     var typeIndex = dali.supportedUniformTypes.indexOf(type);
+//     if(dali.defaultUniforms.indexOf(name) < 0)
+//     {
+//       if(typeIndex >= 0 && uniformNames.indexOf(name) < 0 )
+//       {
+//         console.log("Uniform registered:", name);
+//         uniformNames.push(name);
+// }
+
+
+function animateShaderEffect2(actor) {
+  "use strict";
+  var shader = new dali.ShaderEffect({
+    vertex: shaderSource2.vertex,
+    fragment: shaderSource2.fragment
+  });
+
+  actor.setShaderEffect(shader);
+
+  var final = [5, 5, 5, 1];
+
+  var a = new dali.Animation();
+  a.setDuration(3);
+  a.setLooping(true);
+  a.animateTo(shader, "weight", final, "Linear", 0, 3);
+
+  a.play();
+
+  a.delete();
+
+}
+
+
+var testfile = { // output from clara.io "Threejs scene output"
+  "metadata": {
+    "version": 4.3, // This isnt as its documented on threejs website
+    "type": "Object", // and the general format looks more like format V3.
+    "generator": "ObjectExporter"
+  },
+  "geometries": [{
+    "uuid": "2f167add-e571-47c2-9da2-6f0e45cc1119",
+    "type": "Geometry",
+    "data": {
+      "vertices": [
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5, -0.5,
+        0.5, -0.5,
+        0.5,
+        0.5, -0.5, -0.5, -0.5,
+        0.5, -0.5, -0.5,
+        0.5,
+        0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
+        0.5
+      ],
+      "normals": [
+        1,
+        0,
+        0, -1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0, -1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0, -1
+      ],
+      "uvs": [
+        [
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1
+        ]
+      ],
+      "faces": [
+        56,
+
+        0,
+        2,
+        3,
+
+        0,
+        1,
+        2,
+
+        0,
+        0,
+        0,
+
+        0,
+
+        56,
+        0,
+        3,
+        1,
+        0,
+        2,
+        3,
+        0,
+        0,
+        0,
+        0,
+        56,
+        4,
+        6,
+        7,
+        0,
+        1,
+        2,
+        1,
+        1,
+        1,
+        1,
+        56,
+        4,
+        7,
+        5,
+        0,
+        2,
+        3,
+        1,
+        1,
+        1,
+        1,
+        56,
+        4,
+        5,
+        0,
+        0,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        56,
+        4,
+        0,
+        1,
+        0,
+        2,
+        3,
+        2,
+        2,
+        2,
+        2,
+        56,
+        7,
+        6,
+        3,
+        0,
+        1,
+        2,
+        3,
+        3,
+        3,
+        3,
+        56,
+        7,
+        3,
+        2,
+        0,
+        2,
+        3,
+        3,
+        3,
+        3,
+        3,
+        56,
+        5,
+        7,
+        2,
+        0,
+        1,
+        2,
+        4,
+        4,
+        4,
+        4,
+        56,
+        5,
+        2,
+        0,
+        0,
+        2,
+        3,
+        4,
+        4,
+        4,
+        4,
+        56,
+        1,
+        3,
+        6,
+        0,
+        1,
+        2,
+        5,
+        5,
+        5,
+        5,
+        56,
+        1,
+        6,
+        4,
+        0,
+        2,
+        3,
+        5,
+        5,
+        5,
+        5
+      ]
+    }
+  }],
+  "materials": [{
+    "uuid": "14D499F1-27EF-45BF-A457-FD24DAB11205",
+    "type": "MeshPhongMaterial",
+    "color": 11579568,
+    "ambient": 11579568,
+    "emissive": 0,
+    "specular": 0,
+    "shininess": 50,
+    "opacity": 1,
+    "transparent": false,
+    "wireframe": false
+  }],
+  "object": {
+    "uuid": "BFEFB48D-0E6E-46A6-8568-5E258BA17078",
+    "type": "Scene",
+    "matrix": [
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    "children": [{
+      "uuid": "aa901bec-9e47-4b3b-bf3c-4efb0fe5d298",
+      "name": "Box",
+      "type": "Mesh",
+      "geometry": "2f167add-e571-47c2-9da2-6f0e45cc1119",
+      "material": "14D499F1-27EF-45BF-A457-FD24DAB11205",
+      "castShadow": true,
+      "receiveShadow": true,
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    }]
+  }
+};
+
+
+
+//
+//
+// Event/widget setup
+//
+//
+
+// btnShaderSourceJS.addEventListener("click", function(// e
+// ) {
+//   "use strict";
+//   var i;
+//   var info = getShadersFromUi();
+
+//   var data = "var shaderOptions = {vertex:\n";
+
+//   var lines = info.vertex.split("\n");
+//   for(i = 0; i < lines.length; i++) {
+//     data += "                     \"" + lines[i] + "\\n\" +\n";
+//   }
+//   data += "                     \"\",\n";
+
+//   data += "                     fragment:\n";
+//   lines = info.fragment.split("\n");
+//   for(i = 0; i < lines.length; i++) {
+//     data += "                     \"" + lines[i] + "\\n\" +\n";
+//   }
+//   data += "                     \"\",\n";
+
+//   data += "                     shaderHints: \"" + info.shaderHints + "\"\n";
+//   data += "                     };\n";
+
+//   data = data.replace(/<([^ ]*)/g, "< $1"); // for loops are interpreted by browser as tags and dont print?
+//   // data = data.replace(/</g, "&lt;");
+//   // data = data.replace(/>/g, "&gt;");
+
+//   // var myWindow = window.open("data:text/html," + encodeURIComponent(data));
+//   // //                             "_blank");  // , "width=00,height=100");
+//   // myWindow.focus();
+
+//   var modalBody = $("#modalCodeInfoBody")[0];
+//   removeAllChildren(modalBody);
+//   modalBody.innerHTML = "<code><pre>" + data + "</pre></code>";
+//   $("#modalCodeInfo").modal("show");
+
+// });
+
+//------------------------------------------------------------------------------
+//
+// UI General
+//
+//------------------------------------------------------------------------------
+function UIApp() {
+  var self = this;
+  
+  self.modalQuestionYesFunction = null;
+  self.modalQuestionNoFunction = null;
+
+  var _modalQuestionYes = function() {
+    if(self.modalQuestionYesFunction) {
+      self.modalQuestionYesFunction();
+    }
+    self.modalQuestionYesFunction = null;
+    self.modalQuestionNoFunction = null;
+  };
+
+  var _modalQuestionNo = function() {
+    if(self.modalQuestionNo) {
+      self.modalQuestionNo();
+    }
+    self.modalQuestionYesFunction = null;
+    self.modalQuestionNoFunction = null;
+  };
+
+  var _modalInputOk = function() {
+    if(self.modalInputOkFunction) {
+      var input = $("#modalInputText")[0];
+      self.modalInputOkFunction(input.value);
+    }
+    self.modalInputOkFunction = null;
+    self.modalInputCancelFunction = null;
+  };
+
+  var _modalInputCancel = function() {
+    if(self.modalInputCancel) {
+      self.modalInputCancel();
+    }
+    self.modalInputOkFunction = null;
+    self.modalInputCancelFunction = null;
+  };
+
+  $("#modalQuestionYes")[0].addEventListener("click", _modalQuestionYes);
+  $("#modalQuestionNo")[0].addEventListener("click", _modalQuestionNo);
+
+  self.modalInputYesFunction = null;
+  self.modalInputNoFunction = null;
+
+  $("#modalInputOk")[0].addEventListener("click", _modalInputOk);
+  $("#modalInputCancel")[0].addEventListener("click", _modalInputCancel);
+
+}
+
+UIApp.prototype.messageBoxHTML = function(innerHtmlText) {
+  "use strict";
+  var modalBody = $("#modalCodeInfoBody")[0];
+  removeAllChildren(modalBody);
+  modalBody.innerHTML = innerHtmlText;
+  $("#modalCodeInfo").modal("show");
+};
+
+UIApp.prototype.messageBox = function(message) {
+  this.messageBoxHTML("<p>" + message + "</p>");
+};
+
+UIApp.prototype.questionBox = function(message, yesFunction, noFunction) {
+  var modalBody = $("#modalQuestionBody")[0];
+  removeAllChildren(modalBody);
+  modalBody.innerHTML = "<p>" + message + "</p>";
+
+  this.modalQuestionYesFunction = yesFunction;
+  this.modalQuestionNoFunction = noFunction;
+
+  $("#modalQuestion").modal("show");
+};
+
+UIApp.prototype.codeInformationBox = function(code) {
+  var modalBody = $("#modalCodeInfoBody")[0];
+  removeAllChildren(modalBody);
+  modalBody.innerHTML = "<pre>" + code + "</pre>";
+  $("#modalCodeInfo").modal("show");
+};
+
+UIApp.prototype.inputbox = function(message, okFunction, cancelFunction) {
+  var modalBody = $("#modalInputBody")[0];
+  removeAllChildren(modalBody);
+  modalBody.innerHTML = "<p>" + message + "</p>";
+
+  this.modalInputOkFunction = okFunction;
+  this.modalInputCancelFunction = cancelFunction;
+
+  $("#modalInput").modal("show");
+};
+
+UIApp.prototype.getTypedBuffer = function(file, callback) {
+  "use strict";
+  if (!file) {
+    return;
+  }
+  var reader = new FileReader();
+  reader._theFilename = file.name;
+  reader.onload = function(// e
+  ) {
+    var uint8View = new Uint8Array(reader.result); // convert ArrayBuffer into a typed array?
+    callback(file.name, uint8View);
+  };
+
+  reader.readAsArrayBuffer(file);
+};
+
+
+//------------------------------------------------------------------------------
+//
+// Javascript UI Tab
+//
+//------------------------------------------------------------------------------
+var loadJavascript = function(name) {
+  "use strict";
+  database.readJavascript(name,
+                          function(data) {
+                            // save current
+                            var currentData = uiJavascriptTab.getJavascriptData();
+                            if(currentData) {
+                              database.writeJavascript(currentData);
+                            }
+
+                            uiJavascriptTab.setJavascriptData(data);
+                          });
+
+};
+
+function UIJavascriptTab() {
+  "use strict";
+  var self = this;
+
+  this.addBuffer = function() {
+    var alreadyExists = function() {
+      self.addBuffer();
+    };
+
+    var readOK = function() {
+      uiApp.messageBox("Name already exsists", alreadyExists);
+    };
+
+    var writeOK = function() {
+      var openRequest = database.open();
+
+      openRequest.onsuccess = function(event) {
+        var db = event.target.result;
+        self.rebuildDropdown(db);
+      };
+    };
+
+    function makeReadBad(name) {
+      return function() {
+        var data = {name: name, source: ""};
+        database.writeJavascript(data, writeOK);
+      };
+    }
+
+    var inputOk = function(name) {
+      database.readJavascript(name, readOK, makeReadBad(name));
+    };
+
+    uiApp.inputbox("BufferName?", inputOk);
+
+  };
+
+  this.renameBuffer = function() {
+    var writeOK = function() {
+      var openRequest = database.open();
+
+      openRequest.onsuccess = function(event) {
+        var db = event.target.result;
+        self.rebuildDropdown(db);
+      };
+    };
+
+    var inputOk = function(name) {
+      var data = uiJavascriptTab.getJavascriptData();
+      data.name = name;
+      database.writeJavascript(data, writeOK);
+    };
+
+    uiApp.inputbox("BufferName?", inputOk);
+
+  };
+
+
+  document.getElementById("btnJavascriptSourceJson").addEventListener(
+    "click",
+    function(/*e*/) {
+      self.showModalJSON();
+    });
+
+  document.getElementById("btnJavascriptClearRun").addEventListener(
+    "click",
+    function(/*e*/) {
+      self.clearStageAndEval();
+    });
+
+  document.getElementById("btnJavascriptRun").addEventListener(
+    "click",
+    function(/*e*/) {
+      self.eval();
+    });
+
+  document.getElementById("btnJavascriptAddBuffer").addEventListener(
+    "click",
+    function(/*e*/) {
+      self.addBuffer();
+    });
+
+  document.getElementById("btnJavascriptRenameBuffer").addEventListener(
+    "click",
+    function(/*e*/) {
+      self.renameBuffer();
+    });
+
+  this.currentName = undefined;
+
+  database.readJavascriptNames( function(names) {
+    if(names.length) {
+      loadJavascript(names[0]); // load first javascript buffer
+    }
+  });
+
+}
+
+UIJavascriptTab.prototype.getJavascriptData = function() {
+  var e = ace.edit("editorJavascript");
+  var ascii = native2ascii(e.getSession().getValue());
+
+  if(this.currentName !== undefined) {
+    return { name: this.currentName,
+             source: ascii };
+  } else {
+    return undefined;
+  }
+};
+
+UIJavascriptTab.prototype.setJavascriptData = function(data) {
+  this.currentName = data.name;
+  // set new
+  var editor = ace.edit("editorJavascript");
+  editor.getSession().setValue(data.source);
+};
+
+UIJavascriptTab.prototype.showModalJSON = function() {
+  "use strict";
+  var e = ace.edit("editorJavascript");
+  var ascii = native2ascii(e.getSession().getValue());
+
+  var lines = ascii.split("\n");
+
+  var data = "{source:";
+
+  for(var i = 0; i < lines.length; i++) {
+    data += "\"" + lines[i].replace(/"/g, "\\\"") + "\\n\" +\n";
+  }
+
+  data += "\n\"\"}";
+
+  // data = data.replace(/<([^ ]*)/g, "< $1"); // for loops are interpreted by browser as tags and dont print?
+
+  // data = data.replace(/"/g, "\\\""); // for loops are interpreted by browser as tags and dont print?
+
+  // data = data.replace(/<([^ ]*)/g, "< $1"); // for loops are interpreted by browser as tags and dont print?
+
+  uiApp.codeInformationBox( data );
+
+};
+
+UIJavascriptTab.prototype.clearStageAndEval = function() {
+  "use strict";
+  var e = ace.edit("editorJavascript");
+  var ascii = native2ascii(e.getSession().getValue());
+  clear();
+  // as of ecma5 an indirect call like this is in global scope
+  var globalEval = eval;
+  globalEval(ascii);
+};
+
+UIJavascriptTab.prototype.eval = function() {
+  "use strict";
+  var e = ace.edit("editorJavascript");
+  var ascii = native2ascii(e.getSession().getValue());
+  // as of ecma5 an indirect call like this is in global scope
+  var globalEval = eval;
+  globalEval(ascii);
+};
+
+UIJavascriptTab.prototype.rebuildDropdown = function(db) {
+  "use strict";
+  rebuildDropdown( document.getElementById("javascriptDropDown"),
+                   db,
+                   "javascript",
+                   function(name) {
+                     return ["javascript:loadJavascript(\"" + name + "\")",
+                             name];
+                   }
+                 );
+};
+
+
+//------------------------------------------------------------------------------
+//
+// Image UI Tab
+//
+//------------------------------------------------------------------------------
+var loadImage = function(name) {
+  "use strict";
+  database.readImage(name,
+                     function(data) {
+                       uiImageTab.setBuffer(data);
+                     });
+
+};
+
+function UIImageTab() {
+  "use strict";
+  var self = this;
+
+  // document.getElementById("fileInput").fileInput.addEventListener(
+  //   "change",
+  //   function(/* e */) {
+  //     var fileInput = document.getElementById("fileInput");
+  //     var file = fileInput.files[0];
+  //     uiApp.getTypedBuffer(file, addImageActor);
+  //   });
+
+  document.getElementById("btnImageAddBuffer").addEventListener(
+    "change",
+    function() {
+      var fileInput = document.getElementById("btnImageAddBuffer");
+      var file = fileInput.files[0];
+      self.getBufferImageRGB(
+        file,
+        function(name, typedBuffer) {
+          self.addBuffer(typedBuffer);
+        });
+    });
+
+  this.getBufferImageRGB = function(file, callback) {
+    if (!file) {
+      return;
+    }
+
+    var img = new HTML5Image(); // the renamed Image()
+
+    var objectUrl = window.URL.createObjectURL(file);
+
+    img.onload = function( //e
+    ) {
+      var imageCanvas = document.createElement("canvas");
+      imageCanvas.width = img.width; // naturalWidth;
+      imageCanvas.height = img.height; // naturalHeight;
+      var context = imageCanvas.getContext("2d");
+      context.drawImage(img, 0, 0 );
+      var imageData = context.getImageData(0, 0, img.naturalWidth, img.naturalHeight); // <-ImageData
+      callback(file.name, imageData);
+      window.URL.revokeObjectURL(objectUrl);
+    };
+
+    img.src = objectUrl;
+
+  };
+
+
+  // function addImageActor(filename, typedBuffer) {
+//   "use strict";
+//   var i = createImageFromTypeBuffer(filename, typedBuffer);
+//   app.addActor(i);
+// }
+
+// function addImageActorRGB(filename, imageData) {
+//   "use strict";
+//   var i = createImageRGBFromImageData(filename, imageData);
+//   app.addActor(i);
+// }
+
+
+// function defaultImageSetup(imageActor, filename) {
+//   "use strict";
+//   var i = imageActor;
+//   i.visible = true;
+//   i.anchorPoint = [0.5, 0.5, 0.5];
+//   i.parentOrigin = [0.5, 0.5, 0.5];
+//   i.position = [0, 0, -10];
+//   i.size = [100, 100, 1];
+//   i.name = filename.replace(/-/g, "_").replace(/\./g, "_");
+// }
+
+// function createImageRGBAFromImageData(filename, imageData) {
+//   "use strict";
+//   var i = new dali.ImageActor();
+//   i.setImageData(imageData); // decoded RGBA data
+//   defaultImageSetup(i, filename);
+//   return i;
+// }
+
+// function addImageActorRGBA(filename, imageData) {
+//   "use strict";
+//   var i = createImageRGBAFromImageData(filename, imageData);
+//   app.addActor(i);
+// }
+
+// function asyncFileReaderGetImageData(file, callback) {
+//   "use strict";
+//   if (!file) {
+//     return;
+//   }
+
+//   var img = new Image();
+
+//   var objectUrl = window.URL.createObjectURL(file);
+
+//   img.onload = function( //e
+//     ) {
+//       var canvas = document.createElement("canvas");
+//       canvas.width = img.width; // naturalWidth;
+//       canvas.height = img.height; // naturalHeight;
+//       var context = canvas.getContext("2d");
+//       context.drawImage(img, 0, 0 );
+//       var imageData = context.getImageData(0, 0, img.naturalWidth, img.naturalHeight); // <-ImageData
+//       callback(file.name, imageData);
+//       window.URL.revokeObjectURL(objectUrl);
+//     };
+
+//   img.src = objectUrl;
+
+// }
+
+// btnTextActorAdd.addEventListener("click", function(// e
+// ) {
+//   "use strict";
+
+//   var text = textInput.value;
+//   if (text) {
+//     console.log(text);
+
+//     var a = addTextImageFromCanvas(text);
+//     app.addActor(a);
+//   }
+
+// });
+
+// function defaultImageSetup(imageActor, filename) {
+//   "use strict";
+//   var i = imageActor;
+//   i.visible = true;
+//   i.anchorPoint = [0.5, 0.5, 0.5];
+//   i.parentOrigin = [0.5, 0.5, 0.5];
+//   i.position = [0, 0, -10];
+//   i.size = [100, 100, 1];
+//   i.name = filename.replace(/-/g, "_").replace(/\./g, "_");
+// }
+
+// function createImageFromTypeBuffer(filename, typedBuffer) {
+//   "use strict";
+//   var i = new dali.ImageActor();
+//   //
+//   // Setting image isn't property based as browser cannot load from a file
+//   //
+//   // i.image         = {"filename":"dali-logo.png"};
+//   i.setImage(typedBuffer); // encoded image data
+//   defaultImageSetup(i, filename);
+//   return i;
+// }
+
+// function createImageRGBFromTypeBuffer(filename, typedBuffer) {
+//   "use strict";
+//   var i = new dali.ImageActor();
+//   i.setImageDataRGB(typedBuffer);
+//   defaultImageSetup(i, filename);
+//   return i;
+// }
+
+// function createImageRGBFromImageData(filename, imageData)
+// {
+//   "use strict";
+//   var i = new dali.ImageActor();
+//   i.setImageDataRGB(imageData); // decoded RGB data
+//   defaultImageSetup(i, filename);
+//   return i;
+// }
+
+// function asyncFileReaderGetImageData(file, callback) {
+//   "use strict";
+//   if (!file) {
+//     return;
+//   }
+
+//   var img = new Image();
+
+//   var objectUrl = window.URL.createObjectURL(file);
+
+//   img.onload = function( //e
+//     ) {
+//       var canvas = document.createElement("canvas");
+//       canvas.width = img.width; // naturalWidth;
+//       canvas.height = img.height; // naturalHeight;
+//       var context = canvas.getContext("2d");
+//       context.drawImage(img, 0, 0 );
+//       var imageData = context.getImageData(0, 0, img.naturalWidth, img.naturalHeight); // <-ImageData
+//       callback(file.name, imageData);
+//       window.URL.revokeObjectURL(objectUrl);
+//     };
+
+//   img.src = objectUrl;
+
+// }
+
+  document.getElementById("btnImageRenameBuffer").addEventListener(
+    "click",
+    function(/*e*/) {
+      this.renameBuffer();
+    });
+
+  this.addBuffer = function(data) {
+    var alreadyExists = function() {
+      self.addBuffer();
+    };
+
+    var readOK = function() {
+      uiApp.messageBox("Name already exsists", alreadyExists);
+    };
+
+    var writeOK = function() {
+      var openRequest = database.open();
+
+      openRequest.onsuccess = function(event) {
+        var db = event.target.result;
+        self.rebuildDropdown(db);
+      };
+    };
+
+    function makeReadBad(name) {
+      return function() {
+        database.writeImage(name, data, writeOK);
+      };
+    }
+
+    var inputOk = function(name) {
+      database.readImage(name, readOK, makeReadBad(name));
+    };
+
+    uiApp.inputbox("BufferName?", inputOk);
+
+  };
+
+  this.renameBuffer = function() {
+    var writeOK = function() {
+      var openRequest = database.open();
+
+      openRequest.onsuccess = function(event) {
+        var db = event.target.result;
+        self.rebuildDropdown(db);
+      };
+    };
+
+    var inputOk = function(name) {
+      var data = uiJavascriptTab.getJavascriptData();
+      data.name = name;
+      database.writeJavascript(data, writeOK);
+    };
+
+    uiApp.inputbox("BufferName?", inputOk);
+
+  };
+
+  database.readImageNames( function(names) {
+    if(names.length) {
+      loadImage(names[0]); // load first image buffer
+    }
+  });
+
+}
+
+UIImageTab.prototype.rebuildDropdown = function(db) {
+  "use strict";
+  rebuildDropdown( document.getElementById("imageDropDown"),
+                   db,
+                   "images",
+                   function(name) {
+                     return ["javascript:loadImage(\"" + name + "\")",
+                             name];
+                   }
+                 );
+};
+
+
+function addTextImageFromCanvas(canvas, text) {
+  "use strict";
+  // var testCanvas = document.getElementById("testCanvas");
+  var ctx = canvas.getContext("2d");
+  var pixelHeight = 30;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.font = pixelHeight + "px Verdana";
+  // Create gradient
+  var gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+  gradient.addColorStop("0", "magenta");
+  gradient.addColorStop("0.5", "blue");
+  gradient.addColorStop("1.0", "red");
+  // Fill with gradient
+  ctx.fillStyle = gradient;
+  ctx.fillText(text, 0, pixelHeight);
+
+  // var m = ctx.measureText(text);
+
+  // var a = new dali.ImageActor();
+
+  // a.setImageData(ctx.getImageData(0, 0, m.width, pixelHeight));
+
+  // a.name = text;
+
+  // app.addActor(a);
+
+  // return a;
+}
+
+UIImageTab.prototype.setBuffer = function(data) {
+  "use strict";
+  var imageViewCanvas = document.getElementById("imageViewCanvas"); // createElement("canvas");
+  imageViewCanvas.width = data.width; // naturalWidth;
+  imageViewCanvas.height = data.height; // naturalHeight;
+  var context = imageViewCanvas.getContext("2d");
+  // var imageData = context.createImageData(data);
+  context.putImageData( data, 0, 0 );
+  // addTextImageFromCanvas(imageViewCanvas, "some text");
+
+};
+
+
+//------------------------------------------------------------------------------
+//
+// Shader UI Tab
+//
+//------------------------------------------------------------------------------
+var loadShader = function(name) {
+  "use strict";
+  database.readShader(name,
+                      function(data) {
+                        uiShaderTab.setData( data );
+                      });
+};
+  // var options;
+  // if(!dali.actor) {
+  //   messageBox("Please select an actor to load a shader into");
+  //   return;
+  // }
+  // var id = dali.actor.getId();
+
+  // if( id in actorIdToShaderSet ) {
+  //   // save the old one if desired
+  //   modalSaveOldShader = getShadersFromUi();
+  //   $("#modalSaveShaderName")[0].value = new Date().toUTCString();
+  //   $("#modalSaveShader").modal("show");
+  // }
+
+  // options = shaderSources[index];
+
+  // // copy object
+  // actorIdToShaderSet[id] = {name: options.name,
+  //                           shaderHints: options.shaderHints,
+  //                           vertex: options.vertex,
+  //                           fragment: options.fragment};
+
+  // setShaderUI(actorIdToShaderSet[id]);
+// };
+function ShaderBuffer(name) {
+  return uiShaderTab.createDaliShader(name);
+};
+
+UIShaderTab.prototype.createDaliShader = function(name) {
+  "use strict";
+  if(!(name in this.shadersCreated)) {
+    this.shadersCreated[name] = [];
+  }
+
+  var options = this.getData();
+
+  var daliShader = new dali.Shader(options.vertex,
+                                   options.fragment,
+                                   dali.ShaderHints.HINT_NONE.value); //@todo hints
+
+  uiShaderTab.shadersCreated.push( daliShader );
+
+  return daliShader;
+};
+
+function UIShaderTab() {
+  "use strict";
+  var self = this;
+  this.shadersCreated =  {}; // array of dali shader objects created index by shader name
+  document.getElementById("btnShaderAddBuffer").addEventListener(
+    "click",
+    function(/*e*/) {
+      this.addBuffer();
+    });
+
+  document.getElementById("btnShaderRenameBuffer").addEventListener(
+    "click",
+    function(/*e*/) {
+      this.renameBuffer();
+    });
+
+  document.getElementById("btnShaderSourceJSON").addEventListener(
+    "click",
+    function(/*e*/) {
+      this.showModalJSON();
+    });
+
+  document.getElementById("btnShaderSourceC").addEventListener(
+    "click",
+    function(/*e*/) {
+      this.showModalC();
+    });
+
+  document.getElementById("btnShaderSourceJS").addEventListener(
+    "click",
+    function(/*e*/) {
+      this.showModalJS();
+    });
+
+  database.readShaderNames( function(names) {
+    if(names.length) {
+      loadShader(names[0]); // load first image buffer
+    }
+  });
+
+  this.addBuffer = function() {
+    var alreadyExists = function() {
+      self.addBuffer();
+    };
+
+    var readOK = function() {
+      uiApp.messageBox("Name already exsists", alreadyExists);
+    };
+
+    var writeOK = function() {
+      var openRequest = database.open();
+
+      openRequest.onsuccess = function(event) {
+        var db = event.target.result;
+        self.rebuildDropdown(db);
+      };
+    };
+
+    function makeReadBad(name) {
+      return function() {
+        var data = {name: name, fragment: "", vertex: "", shaderHints: ""};
+        database.writeShader(data, writeOK);
+      };
+    }
+
+    var inputOk = function(name) {
+      database.readJavascript(name, readOK, makeReadBad(name));
+    };
+
+    uiApp.inputbox("BufferName?", inputOk);
+
+  };
+
+  this.renameBuffer = function() {
+    var writeOK = function() {
+      var openRequest = database.open();
+
+      openRequest.onsuccess = function(event) {
+        var db = event.target.result;
+        self.rebuildDropdown(db);
+      };
+    };
+
+    var inputOk = function(name) {
+      var data = self.getData();
+      data.name = name;
+      database.writeShader(data, writeOK);
+    };
+
+    uiApp.inputbox("BufferName?", inputOk);
+
+  };
+
+  database.readImageNames( function(names) {
+    if(names.length) {
+      loadImage(names[0]); // load first image buffer
+    }
+  });
+
+  var editor = ace.edit("editorVertex");
+  editor.getSession().addEventListener("change", function() {
+    if(userEditingShader) {
+      self.checkAndUpdateShader();
+    }
+  });
+
+  editor = ace.edit("editorFragment");
+  editor.getSession().addEventListener("change", function() {
+    if(userEditingShader) {
+      self.checkAndUpdateShader();
+    }
+  });
+
+
+}
+
+UIShaderTab.prototype.setData = function(options) {
+  "use strict";
+  var e;
+  var vertex = "";
+  var fragment = "";
+  var shaderHints = "";
+
+  vertex = options.vertex;
+  fragment = options.fragment;
+  shaderHints = options.shaderHints;
+
+  $("#requiresSelfDepthTest").prop("checked", (shaderHints.search("requiresSelfDepthTest") >= 0));
+  $("#outputIsTransparent").prop("checked", (shaderHints.search("outputIsTransparent") >= 0));
+  $("#outputIsOpaque").prop("checked", (shaderHints.search("outputIsOpaque") >= 0));
+  $("#modifiesGeometry").prop("checked", (shaderHints.search("modifiesGeometry") >= 0));
+
+  // do this after setting up the checkboxes as it will trigger storing the checkbox state
+  // in the actorIdToShaderSet map
+  e = ace.edit("editorVertex");
+  e.getSession().setValue(vertex);
+
+  e = ace.edit("editorFragment");
+  e.getSession().setValue(fragment);
+
+};
+
+UIShaderTab.prototype.getData = function() {
+  "use strict";
+  var e = ace.edit("editorVertex");
+  var ret = {};
+  ret.vertex = native2ascii(e.getSession().getValue());
+  e = ace.edit("editorFragment");
+  ret.fragment = native2ascii(e.getSession().getValue());
+
+  ret.shaderHints = "";
+  if( $("#requiresSelfDepthTest")[0].checked ) {
+    ret.shaderHints += " requiresSelfDepthTest";
+  }
+  if( $("#outputIsTransparent")[0].checked ) {
+    ret.shaderHints += " outputIsTransparent";
+  }
+  if( $("#outputIsOpaque")[0].checked ) {
+    ret.shaderHints += " outputIsOpaque";
+  }
+  if( $("#modifiesGeometry")[0].checked ) {
+    ret.shaderHints += " modifiesGeometry";
+  }
+
+
+  return ret;
+};
+
+// $("#modalSaveShaderYes")[0].addEventListener("click", function(//e
+// ) {
+//   "use strict";
+//   var name = $("#modalSaveShaderName")[0].value;
+
+//   var info = modalSaveOldShader;
+//   info.name = name;
+//   shaderSources.push(info);
+
+//   rebuildShaderDropdown();
+
+//   console.log("changed property");
+
+// });
+
+// var getShaderInfo = function() {
+//   "use strict";
+//   var uishaders = getShadersFromUi();
+
+//   return dali.getProgramInfo( canvas.getContext("webgl"),
+//                               uishaders.vertex,
+//                               uishaders.fragment );
+// };
+
+UIShaderTab.prototype.checkShader = function() {
+  "use strict";
+  var info = this.getData();
+  // var info = {
+  //   attributes: [],
+  //   uniforms: [],
+  //   attributeCount: 0,
+  //   uniformCount: 0,
+  //   hasError: false,    // compiles without error
+  //   vertexError: "",
+  //   fragmentError: "",
+  //   linkError: ""
+  // };
+
+  var vertexPrepend = "";
+  var fragmentPrepend = "";
+
+  var errors = "";
+  var count;
+  var editor;
+  var description;
+  var col;
+  var line;
+  var i;
+
+  textShaderErrors.value = "";
+
+  editor = ace.edit("editorVertex");
+  if (info.hasError && info.vertexError) {
+    editor.getSession().setOption("useWorker", false);
+    textShaderErrors.value = "VERTEX:\n" + info.vertexError;
+    errors = info.vertexError.split("\n");
+    count = vertexPrepend.split("\n").length;
+    for(i = 0; i < errors.length; i++) {
+      if(errors[i]) {
+        description = errors[i].split(":");
+        col = Number(description[1]);
+        try {
+          line = Number(description[2]);
+        } catch(e) {
+          line = "unknown";
+        }
+        editor.getSession().setAnnotations([{row: line - count, column: col, text: errors[i], type: "error"}]);
+      }
+    }
+  } else {
+    editor.getSession().setOption("useWorker", true);
+    editor.getSession().setAnnotations([]);
+  }
+
+  editor = ace.edit("editorFragment");
+  if (info.hasError && info.fragmentError) {
+    editor.getSession().setOption("useWorker", false);
+    textShaderErrors.value += "FRAGMENT:\n" + info.fragmentError;
+    errors = info.fragmentError.split("\n");
+    count = fragmentPrepend.split("\n").length;
+    for(i = 0; i < errors.length; i++) {
+      if(errors[i]) {
+        description = errors[i].split(":");
+        col = Number(description[1]);
+        try {
+          line = Number(description[2]);
+        } catch(e) {
+          line = "unknown";
+        }
+        editor.getSession().setAnnotations([{row: line - count, column: col, text: errors[i], type: "error"}]);
+      }
+    }
+  } else {
+    editor.getSession().setOption("useWorker", true);
+    editor.getSession().setAnnotations([]);
+  }
+
+  // @todo
+  // if(!info.hasError) {
+  //   if(shaderSourceSelection >= 0) {
+  //     shaderSources[shaderSourceSelection].vertex = info.vertex;
+  //     shaderSources[shaderSourceSelection].fragment = info.fragment;
+  //   }
+  // }
+
+  return !info.hasError;
+};
+
+// var setShader = function(actor) {
+//   "use strict";
+//   var ret = false;
+//   if (checkShader()) { // otherwise dali stops working
+//     var id = actor.getId();
+//     if( id in actorIdToShaderSet) {
+//       if("shaderEffect" in actorIdToShaderSet[id]) {
+//         actorIdToShaderSet[id].shaderEffect.delete(); // the wrapper
+//         delete actorIdToShaderSet[id].shaderEffect;
+//       }
+//     }
+
+//     var shaderOptions = getShadersFromUi();
+//     var shaderEffect = new dali.ShaderEffect(shaderOptions);
+//     actor.setShaderEffect(shaderEffect);
+//     actorIdToShaderSet[ id ] = shaderOptions;
+//     actorIdToShaderSet[ id ].shaderEffect = shaderEffect;
+
+//     eventHandler.selectActor(actor); // redoes property tree
+
+//     ret = true;
+//   } else {
+//     console.log("Cannot set shader");
+//   }
+//   return ret;
+// };
+
+
+// var getShader = function(actor) {
+//   "use strict";
+//   if(actor == null) {
+//     actor = eventHandler.touchedActor;
+//   }
+
+//   if( actor.getId() in actorIdToShaderSet) {
+//     if("shaderEffect" in actorIdToShaderSet[actor.getId()]) {
+//       return actorIdToShaderSet[actor.getId()].shaderEffect;
+//     }
+//   }
+//   return null;
+// };
+
+UIShaderTab.prototype.checkAndUpdateShader = function() {
+  "use strict";
+  var options = this.getData();
+
+  if(this.checkShader(options)) {
+    if( options.name in this.shadersCreated ) {
+      var daliShaders = this.shadersCreated[options.name];
+      for(var i = 0; i < daliShaders.length; i++) {
+        daliShaders[i].program = {vertex: "", fragment: "", hints: ""};
+      }
+    }
+  }
+
+  // if(this.checkShader()) {
+  //   var actor = eventHandler.touchedActor;
+
+  //   if(actor) {
+  //     var animationInfo = animationList[animationSelectionIndex];
+  //     var animation = animationInfo.animation;
+  //     var progress;
+  //     if(animation) {
+  //       progress = animation.getCurrentProgress();
+  //       animation.stop();
+  //       animationInfo.dirtyData = true; // trigger reload on playAnimation
+  //     }
+
+  //     setShader(actor);
+
+  //     if(animation) {
+  //       playAnimation();
+  //       if(animationInfo.animation) {
+  //         animationInfo.animation.setCurrentProgress(progress); // where we left off
+  //       }
+  //     }
+  //   }
+  // }
+};
+
+
+UIShaderTab.prototype.showModalC = function() {
+  "use strict";
+  var i;
+  var info = this.getData();
+
+  var data = "#define MAKE_STRING(A)#A\n\n" +
+        "std::string vertexShader = MAKE_STRING(\n";
+
+  var lines = info.vertex.split("\n");
+  for(i = 0; i < lines.length; i++) {
+    data += lines[i] + "\n";
+  }
+  data += ");\n\n";
+
+  data += "std::string fragShader = MAKE_STRING(\n";
+
+  lines = info.fragment.split("\n");
+  for(i = 0; i < lines.length; i++) {
+    data += lines[i] + "\n";
+  }
+  data += ");\n\n";
+
+  data += "ShaderEffect shaderEffect;\n" +
+    "shaderEffect = ShaderEffect::New( vertexShader, fragmentShader,\n" +
+    "                                ShaderEffect::ShaderHint( " + info.shaderHints + " ) )\n";
+
+  data = data.replace(/<([^ ]*)/g, "< $1"); // for loops are interpreted by browser as tags and dont print?
+
+  uiApp.codeInformationBox( data );
+
+  // data = data.replace(/</g, "&lt;");
+  // data = data.replace(/>/g, "&gt;");
+
+  // var myWindow = window.open("data:text/html," + encodeURIComponent(data));
+  // //                             "_blank");  // , "width=00,height=100");
+  // myWindow.focus();
+
+};
+
+UIShaderTab.prototype.showModalJSON = function() {
+  "use strict";
+  var info = this.getData();
+
+  var hints = ""; // tbd
+
+  var vertex = info.vertex.replace(/\n/g, "\\n");
+  var fragment = info.fragment.replace(/\n/g, "\\n");
+
+  var data = "{\"shader-effects\": {\n" +
+        "  \"" + "effect" + "\": {\n" +
+        "    \"program\": {\n" +
+        "    \"vertexPrefix\": \"\",\n" +
+        "    \"vertex\": \"" + vertex + "\",\n" +
+        "    \"fragmentPrefix\": \"\",\n" +
+        "    \"fragment\": \"" + fragment + "\"\n" +
+        "    },\n" +
+        "    \"geometry-hints\": \"" + hints + "\",\n" +
+        "    \"grid-density\": \"" + "0" + "\",\n" +
+        "    \"image\": {\n" +
+        "      \"filename\": \"\"\n" +
+        "    }\n" +
+        "  }\n" +
+        " }\n" +
+        "}\n";
+
+//   var myWindow = window.open("data:text/html," + encodeURIComponent(data));
+// //                             "_blank");  // , "width=00,height=100");
+//   myWindow.focus();
+
+  data = data.replace(/<([^ ]*)/g, "< $1"); // for loops are interpreted by browser as tags and dont print?
+
+  uiApp.codeInformationBox( data );
+
+};
+
+btnRewriteDatabase.addEventListener("click", function(// e
+) {
+  "use strict";
+
+  database.delete(function() {
+    database.init();
+  });
+
+});
+
+// $("#btnCreateSolidActor")[0].addEventListener("click", function(// e
+// ) {
+//   "use strict";
+
+//   var c = getColorForElement("solidActorColor");
+//   var cb = getColorForElement("solidActorBorderColor");
+//   var a = dali.createSolidColorActor( c,
+//                                       Number($("#solidActorBorder")[0].value),
+//                                       cb,
+//                                       Number($("#solidActorBorderSize")[0].value) );
+//   a.relayoutEnabled = false;
+
+//   a.size = [Number($("#solidActorWidth")[0].value), Number($("#solidActorHeight")[0].value), 1];
+
+//   app.addActor(a);
+// });
+
+window.setTimeout(init, 1000);
+
+function updateStatistics(eventHandler){
+  "use strict";
+
+  var elem = $("#statistics")[0];
+
+  var actor = eventHandler.touchedActor;
+
+  var usedRootLayer = false;
+
+  if(!actor) {
+    usedRootLayer = true;
+    actor = dali.stage.getRootLayer();
+  }
+
+  var rt = dali.stage.getRenderTaskList().getTask(0);
+
+  var xy;
+  try {
+    xy = dali.screenToLocal(eventHandler.mouseX, eventHandler.mouseY,
+                            actor, rt);
+  } catch(err) {
+    xy = [0, 0];
+  }
+
+  var screenxy = dali.worldToScreen(actor.position, rt);
+
+  var name = "Actor";
+
+  if(usedRootLayer) {
+    name = "Root Actor";
+  }
+
+  var prec = 3;
+  var px = "none";
+  var py = "none";
+  if(eventHandler.mouseDownPosition) {
+    px = eventHandler.mouseDownPosition[0].toFixed(prec);
+    py = eventHandler.mouseDownPosition[1].toFixed(prec);
+  }
+
+  elem.innerHTML = name + " (" + actor.getId() + ") '" + actor.name + "'" + "<br>" +
+    "Screen:" + eventHandler.mouseX.toFixed(prec) + "," + eventHandler.mouseY.toFixed(prec) + "<br>" +
+    name + " Screen To Local:" + xy[0].toFixed(prec) + "," + xy[1].toFixed(prec) + "<br>" +
+    name + " To Screen:" + screenxy[0].toFixed(prec) + "," + screenxy[1].toFixed(prec) + "<br>" +
+    name + " Drag dx/dy:" + eventHandler.dragDx.toFixed(prec) + "," + eventHandler.dragDy.toFixed(prec) + "<br>" +
+    name + " pos:" + actor.position + "<br>"+
+    name + " pos:" + px + "," + py + "<br>";
+
+  if(usedRootLayer) { // dont delete eventHandler object
+    actor.delete(); // wrapper
+  }
+
+  rt.delete(); // wrapper
+
+}
+
+
+$(".btn-toggle").click(function() {
+  "use strict";
+  $(this).find(".btn").toggleClass("active");
+
+  if($(this).find(".btn-primary").size() > 0) {
+    $(this).find(".btn").toggleClass("btn-primary");
+  }
+
+  $(this).find(".btn").toggleClass("btn-default");
+
+  if(this.id === "loop") {
+    var looping = $(this).find("#loopOn").hasClass("active");
+    animationList[animationSelectionIndex].looping = looping;
+    animationList[animationSelectionIndex].dirtyData = true;
+  }
+
+  if(this.id === "endAction") {
+    var bake = $(this).find("#endBake").hasClass("active");
+    if(bake) {
+      animationList[animationSelectionIndex].endAction = "Bake";
+    } else {
+      animationList[animationSelectionIndex].endAction = "Discard";
+    }
+    animationList[animationSelectionIndex].dirtyData = true;
+  }
+
+});
+
+function rebuildDropdown(dropdownElement, db, dbStoreName, optionalItemDataFunc) {
+  "use strict";
+  removeAllChildren(dropdownElement);
+
+  var func = optionalItemDataFunc;
+  if( !func ) {
+    func = function(name) {
+      return [null, name];
+    };
+  }
+
+  var li;
+  var a;
+
+  var tr = db.transaction([dbStoreName], "readonly");
+  var store = tr.objectStore(dbStoreName);
+  var cursor = store.openCursor();
+
+  cursor.onsuccess = function(e) {
+    var res = e.target.result; // another cursor
+    if(res) {
+      li = document.createElement("li");
+      var hrefText = func(res.key);
+      if( hrefText[0] ) {
+        a = document.createElement("a");
+        a.href = hrefText[0];
+        a.text = hrefText[1];
+      } else {
+        a = document.createElement("p");
+        a.textContent = hrefText[1];
+      }
+      li.appendChild(a);
+      dropdownElement.appendChild(li);
+      res.continue();
+    }
+  };
+
+}
+
+// function rebuildShaderDropdown(db) {
+//   "use strict";
+//   rebuildDropdown( document.getElementById("shaderDropDown"),
+//                    db,
+//                    "shaders",
+//                    function(name) {
+//                      return ["javascript:loadShader(\"" + name + "\")",
+//                              name];
+//                    }
+//                  );
+// }
+
+// function rebuildImageDropdown(db) {
+//   "use strict";
+//   rebuildDropdown( document.getElementById("shaderDropDown"),
+//                    db,
+//                    "shaders",
+//                    function(name) {
+//                      return ["javascript:loadShader(\"" + name + "\")",
+//                              name];
+//                    }
+//                  );
+// }
+
+// function rebuildTestsDropdown()
+// {
+//   "use strict";
+//   var testFunctions = [];
+
+//   for(var name in dali) {
+//     if( name.startsWith("test_") ) {
+//       if( typeof dali[name] === "function" ) {
+//         testFunctions.push( name );
+//       }
+//     }
+//   }
+
+//   rebuildDropdown( document.getElementById("testsDropDown"),
+//                    testFunctions,
+//                    function(index, item) {
+//                      return ["javascript:runTest(" + index + ")",
+//                              item];
+//                    }
+//                  );
+// }
+
+
+// function rebuildShaderDropdown()
+// {
+//   "use strict";
+//   //
+//   // shader source drop down
+//   //
+//   var e = document.getElementById("shaderDropDown");
+//   var count = e.children.length;
+//   for (var i = 0; i < count; i++) {
+//     e.removeChild(e.children[0]);
+//   }
+//   var li;
+//   var a;
+//   for(i = 0; i < shaderSources.length; i++) {
+//     li = document.createElement("li");
+//     a = document.createElement("a");
+//      a.href = "javascript:loadShader(" + i + ")";
+//     a.text = shaderSources[i].name;
+//     li.appendChild(a);
+//     e.appendChild(li);
+//   }
+
+//   // li = document.createElement("li");
+//   // li.className = "divider";
+//   // e.appendChild(li);
+
+//   // li = document.createElement("li");
+//   // a = document.createElement("a");
+//   // a.href = "javascript:loadShader(-1)";
+//   // a.text = "Shader for current selected actor"; //shaderSources[0].name;
+//   // li.appendChild(a);
+//   // e.appendChild(li);
+// }
+
+// switch to index db if available
+// var shaderStore;
+
+function Database() {
+  "use strict";
+  this.currentVersion = 1;
+  this.name = "dalitoy";
+  this.self = this;
+  this.init();
+}
+
+Database.prototype.open = function() {
+  "use strict";
+  return window.indexedDB.open(this.name, this.currentVersion);
+};
+
+Database.prototype.delete = function(onsuccess, onerror, onblocked) {
+  "use strict";
+  var req = indexedDB.deleteDatabase(this.name);
+  req.onsuccess = onsuccess;
+  req.onerror = onerror;
+  req.onblocked = onblocked;
+};
+
+Database.prototype.upgrade = function(db, oldVersion) {
+  // force upgrade
+  "use strict";
+  if (oldVersion < 1) {
+    // Version 1 is the first version of the database.
+    var store = db.createObjectStore("shaders", {keyPath: "name"});
+
+    for(var i = 0; i < shaderSources.length; i++) {
+      store.put( shaderSources[i] );
+    }
+
+    store = db.createObjectStore("javascript", {keyPath: "name"});
+    for(var i = 0; i < javascriptSources.length; i++) {
+      store.put( javascriptSources[i] );
+    }
+
+    store = db.createObjectStore("images");
+
+    // default images in html page
+    store.put( getStockImageData(1), "girl1" );
+    store.put( getStockImageData(2), "funnyface" );
+    store.put( getStockImageData(3), "ducks" );
+    store.put( getStockImageData(4), "field" );
+  }
+};
+
+Database.prototype.init = function() {
+  "use strict";
+
+  if("indexedDB" in window) {
+    var openRequest = this.open();
+
+    openRequest.onupgradeneeded = function(event) {
+      var db = event.target.result;
+      database.upgrade(db, event.oldVersion);
+    };
+
+    openRequest.onsuccess = function(event) {
+      var db = event.target.result;
+      uiJavascriptTab.rebuildDropdown(db);
+      uiImageTab.rebuildDropdown(db);
+      // uiShaderTab.rebuildDropdown(db);
+    };
+
+    openRequest.onerror = function(event) {
+      //var db = event.target.result;
+      console.log("Error");
+      console.dir(event);
+    };
+
+  }
+
+};
+
+Database.prototype.writeJavascript = function(data, callback)
+{
+  "use strict";
+  var openRequest = this.open();
+
+  openRequest.onsuccess = function(event) {
+    var db = event.target.result;
+    var tr = db.transaction(["javascript"], "readwrite");
+    var store = tr.objectStore("javascript");
+
+    var ob = store.put(data);
+
+    ob.onsuccess = callback;
+    // ob.onerror = errorCallback;
+    ob.onerror = function(e) {
+      //var db = event.target.result;
+      console.log("Error");
+      console.dir(e);
+    };
+  };
+
+  // openRequest.onerror = function(event) {
+  //   //var db = event.target.result;
+  //   console.log("Error");
+  //   console.dir(event);
+  // };
+};
+
+Database.prototype.readJavascript = function(name, callback, errorCallback) {
+  "use strict";
+  this.readObjectStore("javascript", name, callback, errorCallback);
+};
+
+Database.prototype.readKeys = function(dbStoreName, callback) {
+  "use strict";
+
+  var openRequest = database.open();
+
+  openRequest.onsuccess = function(event) {
+    var db = event.target.result;
+    var tr = db.transaction([dbStoreName], "readonly");
+    var store = tr.objectStore(dbStoreName);
+    var cursor = store.openCursor();
+    var keys = [];
+    cursor.onsuccess = function(e) {
+      var res = e.target.result; // another cursor
+      if(res) {
+        keys.push(res.key);
+        res.continue();
+      } else {
+        callback(keys);
+      }
+    };
+    cursor.onerror = function(e) {
+      //var db = event.target.result;
+      console.log("Error");
+      console.dir(e);
+    };
+  };
+
+};
+
+Database.prototype.readJavascriptNames = function( callback) {
+  "use strict";
+  this.readKeys("javascript", callback);
+};
+
+Database.prototype.writeShader = function(data, callback) {
+  "use strict";
+  var openRequest = this.open();
+
+  openRequest.onsuccess = function(event) {
+    var db = event.target.result;
+    var tr = db.transaction(["shaders"], "readwrite");
+    var store = tr.objectStore("shaders");
+
+    var ob = store.put(data);
+
+    ob.onsuccess = callback;
+    // ob.onerror = errorCallback;
+    ob.onerror = function(e) {
+      //var db = event.target.result;
+      console.log("Error");
+      console.dir(e);
+    };
+  };
+
+  // openRequest.onerror = function(event) {
+  //   //var db = event.target.result;
+  //   console.log("Error");
+  //   console.dir(event);
+  // };
+};
+
+Database.prototype.readShader = function(name, callback, errorCallback) {
+  "use strict";
+  this.readObjectStore("shaders", name, callback, errorCallback);
+};
+
+Database.prototype.readShaderNames = function(callback) {
+  "use strict";
+  this.readKeys("shaders", callback);
+};
+
+Database.prototype.readObjectStore = function(objectStoreName, recordName, callback, errorCallback) {
+  "use strict";
+  var openRequest = window.indexedDB.open(this.name, this.currentVersion);
+
+  openRequest.onsuccess = function(event) {
+    var db = event.target.result;
+
+    var transaction = db.transaction([objectStoreName], "readonly");
+    var objectStore = transaction.objectStore(objectStoreName);
+
+    //x is some value
+    var ob = objectStore.get(recordName);
+
+    ob.onsuccess = function(e) {
+      // read with undefined is still a success (should probably do this with cursor?)
+      if(e.target.result) {
+        callback(e.target.result);
+      } else {
+        errorCallback();
+      }
+    };
+
+    ob.onerror = errorCallback;
+
+  };
+
+  openRequest.onerror = errorCallback;
+
+};
+
+Database.prototype.writeImage = function(name, data, callback) {
+  "use strict";
+  var openRequest = this.open();
+
+  openRequest.onsuccess = function(event) {
+    var db = event.target.result;
+    var tr = db.transaction(["images"], "readwrite");
+    var store = tr.objectStore("images");
+
+    var ob = store.put(data, name);
+
+    ob.onsuccess = callback;
+    // ob.onerror = errorCallback;
+    ob.onerror = function(e) {
+      //var db = event.target.result;
+      console.log("Error");
+      console.dir(e);
+    };
+  };
+
+  // openRequest.onerror = function(event) {
+  //   //var db = event.target.result;
+  //   console.log("Error");
+  //   console.dir(event);
+  // };
+};
+
+Database.prototype.readImage = function(name, callback, errorCallback) {
+  "use strict";
+  this.readObjectStore("images", name, callback, errorCallback);
+};
+
+Database.prototype.readImageNames = function( callback) {
+  "use strict";
+  this.readKeys("images", callback);
+};
+
+function init() {
+  "use strict";
+
+  // var root = dali.stage.getRootLayer();
+  // root.name = "*" + root.name; // * at start means non selectable by convention
+  // root.delete(); // wrapper
+
+  database = new Database();
+
+  uiApp = new UIApp();
+
+  uiJavascriptTab = new UIJavascriptTab();
+
+  uiImageTab = new UIImageTab();
+
+  uiShaderTab = new UIShaderTab();
+
+
+  ace.require("ace/ext/language_tools");
+  editor = ace.edit("editorJavascript");
+
+  var _thisFunctions = [];
+  for(var attr in this) {
+    if( !(attr.startsWith("_") || attr.startsWith("dynCall") || attr.startsWith("invoke") ) ) {
+      if( typeof this[attr] === "function") {
+        _thisFunctions.push( attr );
+      }
+    }
+  }
+
+  var myCompleter = {
+    getCompletions: function(theEditor, session, pos, prefix, callback) {
+      var wordlist = [];
+      if(prefix === "dali.") {
+        for(attr in dali) {
+          if( !(attr.startsWith("_") || attr.startsWith("dynCall") || attr.startsWith("invoke") ) ) {
+            if( typeof dali[attr] === "function") {
+              wordlist.push( attr );
+            }
+          }
+        }
+      } else {
+        wordlist = _thisFunctions;
+      }
+      callback(null, wordlist.map(function(word) {
+        return {
+          caption: word,
+          value: word,
+          meta: "static"
+        };
+      }));
+    }
+  };
+
+  editor.completers = [ myCompleter ];
+
+  editor.setOptions({
+    enableBasicAutocompletion: true,
+    enableSnippets: true,
+    enableLiveAutocompletion: true
+  });
+
+
+  var shaderTab = $("#tab2primary")[0];
+  var lastClassName = shaderTab.className;
+  window.setInterval( function() {
+    var className = shaderTab.className;
+    if (className !== lastClassName) {
+      //
+      // an attempt to get the editboxes to display the correct content.
+      // when you setValue() the content and they aren't visible then
+      // they dont update properly until you click in the box
+      //
+      var e = ace.edit("editorVertex");
+      e.setShowInvisibles(true);
+      e.setShowInvisibles(false);
+
+      e = ace.edit("editorFragment");
+      e.setShowInvisibles(true);
+      e.setShowInvisibles(false);
+      lastClassName = className;
+    }
+  }, 1);
+
+  addNewAnimation();    // add at least one animation
+
+  $("a[rel=popover]").tooltip();
+
+  Object.defineProperty(dali, "shader", {
+    enumerable: true,
+    configurable: false,
+    get: function() {
+      return getShader();
+    }
+  });
+
+  Object.defineProperty(dali, "actor", {
+    enumerable: true,
+    configurable: false,
+    get: function() {
+      return getActor();
+    }
+  });
+
+  Object.defineProperty(dali, "animation", {
+    enumerable: true,
+    configurable: false,
+    get: function() {
+      return getAnimation();
+    }
+  });
+
+  eventHandler.handlersMouseMove.push(updateStatistics);
+
+}
+
+// function rebuildShaderDropdown()
+// {
+// // function rebuildShaderDropdown()
+// // {
+// //testsDropDown
+// }
+// ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// function postRenderTest() {
+//   console.log("rendered");
+// }
+
+dali.postRenderFunction = undefined;
+// dali.postRenderFunction = function() {
+//   postRenderTest();
+// };
+
+
+
+
+
+
+
+
+
+
+
+// var vertex = "" +
+//   "attribute mediump vec2    aInitPos;" +
+//   "attribute mediump vec2    aFinalPos;" +
+//   "attribute mediump vec3    aColor;" +
+//   "uniform   mediump mat4    uMvpMatrix;" +
+//   "uniform   mediump vec3    uSize;" +
+//   "uniform   mediump float   uDelta;" +
+//   "uniform   lowp    vec4    uColor;" +
+//   "varying   lowp    vec4    vColor;" +
+//   "" +
+//   "void main()" +
+//   "{" +
+//   "  mediump vec4 vertexPosition = vec4(mix(aInitPos, aFinalPos, uDelta), 0.0, 1.0);" +
+//   "  vertexPosition.xyz *= uSize;" +
+//   "  vertexPosition = uMvpMatrix * vertexPosition;" +
+//   "  gl_Position = vertexPosition;" +
+//   "  vColor = vec4(aColor, 0.) * uColor;" +
+//   "}" +
+//   ");" +
+//   "" +
+//   "const char* FRAGMENT_SHADER = MAKE_SHADER(" +
+//   "varying   lowp    vec4    vColor;" +
+//   "" +
+//   "void main()" +
+//   "{" +
+//   "  gl_FragColor = vColor;" +
+//   "}" +
+//   ");" +
+//   "";
+
+// var fragment = "" +
+//       "varying   lowp    vec4    vColor;" +
+//       "" +
+//       "void main()" +
+//       "{" +
+//       "  gl_FragColor = vColor;" +
+//       "}" +
+//       ");" +
+//       "";
+
+
+// var quads = [
+//   // yellow
+//   [-.5, -.5],
+//   [ .0,  .0],
+//   [-.5,  .5],
+
+//   // green
+//   [-.5, -.5],
+//   [ .5, -.5],
+//   [ .0,  .0],
+
+//   // blue
+//   [.5,  -.5],
+//   [.5,   .0],
+//   [.25, -.25],
+
+//   // red
+//   [.25, -.25],
+//   [.5,   .0],
+//   [.25,  .25],
+//   [.25,  .25],
+//   [.0,   .0],
+//   [.25, -.25],
+
+//   // cyan
+//   [ .0,  .0],
+//   [ .25, .25],
+//   [-.25, .25],
+
+//   // magenta
+//   [-.25, .25],
+//   [ .25, .25],
+//   [ .0,  .5],
+//   [ .0,  .5],
+//   [-.5,  .5],
+//   [-.25, .25],
+
+//   // orange
+//   [ .5, .0],
+//   [ .5, .5],
+//   [ .0, .5],
+// ];
+
+// var bigSide = 0.707106781;
+// var side = bigSide * .5;
+// // float smallSide = side * .5f;
+
+// var pA = [ side, .25 ];
+// var pB = dali.vectorAdd(pA, [ 0., bigSide ]);
+// var pC = dali.vectorAdd(pB, [ -bigSide, 0. ]);
+// var pD = dali.vectorAdd(pA, [-.5, -.5 ]);
+// var pE = dali.vectorAdd(pD, [ .0, 1. ]);
+// var pF = dali.vectorAdd(pD, [-side, side ]);
+// var pF2 = dali.vectorAdd(pD, [ 0., bigSide ]);
+// var pG = dali.vectorAdd(pD, [-.25, .25 ]);
+// var pH = dali.vectorAdd(pD, [ -.5, .0 ]);
+// var pI = dali.vectorAdd(pD, [-.25, -.25 ]);
+// var pJ = dali.vectorAdd(pD, [ 0., -.5]);
+// var pK = dali.vectorAdd(pD, [-.5, -.5]);
+// var pL = dali.vectorAdd(pB, [0, -side]);
+// var pM = dali.vectorAdd(pL, [side, -side]);
+// var pN = dali.vectorAdd(pB, [side, -side]);
+
+// var cat = [
+//   // yellow
+//   [ pA ],
+//   [ pB ],
+//   [ pC ],
+
+//   // green
+//   [ pD ],
+//   [ pA ],
+//   [ pE ],
+
+//   // blue
+//   [ pJ ],
+//   [ pD ],
+//   [ pI ],
+
+//   // red
+//   [ pI ],
+//   [ pD ],
+//   [ pG ],
+//   [ pG ],
+//   [ pH ],
+//   [ pI ],
+
+//   // cyan
+//   [ pI ],
+//   [ pH ],
+//   [ pK ],
+
+//   // magenta
+//   [ pL ],
+//   [ pM ],
+//   [ pN ],
+//   [ pN ],
+//   [ pB ],
+//   [ pL ],
+
+//   // orange
+//   [ pD ],
+//   [ pF2 ],
+//   [ pF ]
+// ];
+
+// var colors = [
+//   // yellow
+//   [ 1., 1., 0. ],
+//   [ 1., 1., 0. ],
+//   [ 1., 1., 0. ],
+
+//   // green
+//   [ 0., 1., 0. ],
+//   [ 0., 1., 0. ],
+//   [ 0., 1., 0. ],
+
+//   // blue
+//   [ 0., 0., 1. ],
+//   [ 0., 0., 1. ],
+//   [ 0., 0., 1. ],
+
+//   // red
+//   [ 1., 0., 0. ],
+//   [ 1., 0., 0. ],
+//   [ 1., 0., 0. ],
+//   [ 1., 0., 0. ],
+//   [ 1., 0., 0. ],
+//   [ 1., 0., 0. ],
+
+//   // cyan
+//   [ 0., 1., 1. ],
+//   [ 0., 1., 1. ],
+//   [ 0., 1., 1. ],
+
+//   // magenta
+//   [ 1., 0., 1. ],
+//   [ 1., 0., 1. ],
+//   [ 1., 0., 1. ],
+//   [ 1., 0., 1. ],
+//   [ 1., 0., 1. ],
+//   [ 1., 0., 1. ],
+
+//   // orange
+//   [ 1., 0.5, 0. ],
+//   [ 1., 0.5, 0. ],
+//   [ 1., 0.5, 0. ]
+// ];
+
+// var format;
+// var data;
+// var length;
+
+// format = { aInitPos: dali.PropertyType.VECTOR2.value }
+
+// function createPropertyBuffer(format, data)
+// {
+//   for(key in format)
+// }
+
+// var initialPos = new dali.PropertyBuffer ;
+
+// var verts = new dali.PropertyBuffer(format, data.length);
+
+// var buffer = new ArrayBuffer(data.length * (4 + 4 + 4));
+
+// var floatView = new Float32Array(buffer, 0, 1);
+
+// var componentSize = data[0].length;
+
+// for(var itemIndex = 0; itemIndex < data.length; itemIndex++) {
+//   for(var componentIndex = 0; componentIndex < componentSize; componentIndex++) {
+//     floatView[ itemIndex * componentSize + componentIndex ] = data[itemIndex][componentIndex];
+//   }
+// }
+
+// var add = function() {
+//   floatView
+// }
+
+
+// verts.setData(buffer);
+
