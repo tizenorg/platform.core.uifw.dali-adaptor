@@ -46,10 +46,6 @@ const unsigned int MICROSECONDS_PER_MILLISECOND( 1000u );
 const float        MICROSECONDS_TO_SECONDS( 0.000001f );
 
 const unsigned int HISTORY_SIZE(3);
-
-// constants to keep code readability with unsigned int has to be used as boolean (due to multithreading)
-const unsigned int TRUE = 1u;
-const unsigned int FALSE = 0u;
 } // unnamed namespace
 
 
@@ -60,8 +56,8 @@ FrameTime::FrameTime( PlatformAbstraction& platform )
   mLastSyncTimeAtUpdate( 0u ),
   mLastSyncFrameNumber( 0u ),
   mLastUpdateFrameNumber( 0u ),
-  mRunning( TRUE ),
-  mFirstFrame( TRUE ),
+  mRunning( true ),
+  mFirstFrame( true ),
   writePos( 0u ),
   mExtraUpdatesSinceSync( 0u )
 {
@@ -101,7 +97,7 @@ void FrameTime::SetSyncTime( unsigned int frameNumber )
 
 void FrameTime::Suspend()
 {
-  mRunning = FALSE;
+  mRunning = false;
 
   // Reset members
   mLastSyncFrameNumber = 0;
@@ -123,9 +119,9 @@ void FrameTime::Resume()
   DALI_LOG_INFO( gLogFilter, Debug::Concise, "FrameTime: Resuming\n" );
 
   SetLastSyncTime();   // Should only update the last Sync time so the elapsed time during suspension is taken into consideration when we next update.
-  mFirstFrame = TRUE;
+  mFirstFrame = true;
 
-  mRunning = TRUE;
+  mRunning = true;
 }
 
 void FrameTime::Sleep()
@@ -142,8 +138,8 @@ void FrameTime::WakeUp()
 
   SetLastSyncTime();
   mLastSyncTimeAtUpdate = mLastSyncTime; // We do not want any animations to progress as we have just been woken up.
-  mFirstFrame = TRUE;
-  mRunning = TRUE;
+  mFirstFrame = true;
+  mRunning = true;
 }
 
 void FrameTime::PredictNextSyncTime( float& lastFrameDeltaSeconds, unsigned int& lastSyncTimeMilliseconds, unsigned int& nextSyncTimeMilliseconds )
@@ -203,7 +199,7 @@ void FrameTime::PredictNextSyncTime( float& lastFrameDeltaSeconds, unsigned int&
 
     mLastUpdateFrameNumber = lastSyncFrameNumber;
     mLastSyncTimeAtUpdate = lastSyncTime;
-    mFirstFrame = FALSE;
+    mFirstFrame = false;
 
     // Calculate the time till the next render
     unsigned int timeTillNextRender( minimumFrameTimeInterval * framesTillNextSync );
