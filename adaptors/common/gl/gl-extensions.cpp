@@ -57,7 +57,7 @@ void GlExtensions::DiscardFrameBuffer(GLenum target, GLsizei numAttachments, con
     Initialize();
   }
 
-#ifdef GL_EXT_discard_framebuffer
+#ifdef PFNGLDISCARDFRAMEBUFFEREXTPROC
   if( mGlDiscardFramebuffer )
   {
     mGlDiscardFramebuffer(target, numAttachments, attachments);
@@ -78,7 +78,7 @@ void GlExtensions::GetProgramBinaryOES(GLuint program, GLsizei bufSize, GLsizei 
     Initialize();
   }
 
-#ifdef GL_OES_get_program_binary
+#ifdef PFNGLGETPROGRAMBINARYOESPROC
   if (mGlGetProgramBinaryOES)
   {
     mGlGetProgramBinaryOES(program, bufSize, length, binaryFormat, binary);
@@ -100,7 +100,7 @@ void GlExtensions::ProgramBinaryOES(GLuint program, GLenum binaryFormat, const G
     Initialize();
   }
 
-#ifdef GL_OES_get_program_binary
+#ifdef PFNGLGETPROGRAMBINARYOESPROC
   if (mGlProgramBinaryOES)
   {
     mGlProgramBinaryOES(program, binaryFormat, binary, length);
@@ -117,14 +117,15 @@ void GlExtensions::Initialize()
 {
   mInitialized = true;
 
-#ifdef GL_EXT_discard_framebuffer
+#ifdef PFNGLDISCARDFRAMEBUFFEREXTPROC
   mGlDiscardFramebuffer = (PFNGLDISCARDFRAMEBUFFEREXTPROC) eglGetProcAddress("glDiscardFramebufferEXT");
 #endif
 
-#ifdef GL_OES_get_program_binary
+#ifdef PFNGLGETPROGRAMBINARYOESPROC
   mGlGetProgramBinaryOES = (PFNGLGETPROGRAMBINARYOESPROC) eglGetProcAddress("glGetProgramBinaryOES");
   mGlProgramBinaryOES = (PFNGLPROGRAMBINARYOESPROC) eglGetProcAddress("glProgramBinaryOES");
 #endif
+
 }
 
 #endif // DALI_GLES_VERSION < 30

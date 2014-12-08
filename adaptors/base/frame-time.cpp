@@ -101,7 +101,7 @@ void FrameTime::SetSyncTime( unsigned int frameNumber )
 
 void FrameTime::Suspend()
 {
-  mRunning = FALSE;
+  mRunning = false;
 
   // Reset members
   mLastSyncFrameNumber = 0;
@@ -123,9 +123,9 @@ void FrameTime::Resume()
   DALI_LOG_INFO( gLogFilter, Debug::Concise, "FrameTime: Resuming\n" );
 
   SetLastSyncTime();   // Should only update the last Sync time so the elapsed time during suspension is taken into consideration when we next update.
-  mFirstFrame = TRUE;
+  mFirstFrame = true;
 
-  mRunning = TRUE;
+  mRunning = true;
 }
 
 void FrameTime::Sleep()

@@ -108,11 +108,12 @@ private:
 
 #if DALI_GLES_VERSION < 30
 
-#ifdef GL_EXT_discard_framebuffer
+#ifdef PFNGLDISCARDFRAMEBUFFEREXTPROC
   PFNGLDISCARDFRAMEBUFFEREXTPROC mGlDiscardFramebuffer;
 #endif
 
-#ifdef GL_OES_get_program_binary
+
+#ifdef PFNGLGETPROGRAMBINARYOESPROC
   PFNGLGETPROGRAMBINARYOESPROC mGlGetProgramBinaryOES;
   PFNGLPROGRAMBINARYOESPROC mGlProgramBinaryOES;
 #endif
