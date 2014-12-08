@@ -35,7 +35,7 @@
 #include <dali/integration-api/debug.h>
 
 // INTERNAL INCLUDES
-#include <gl/egl-implementation.h>
+#include "egl-implementation.h"
 
 
 namespace
