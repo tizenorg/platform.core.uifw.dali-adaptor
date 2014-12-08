@@ -24,7 +24,7 @@
 #include <dali/public-api/common/dali-vector.h>
 
 // INTERNAL INCLUDES
-#include <egl-interface.h>
+#include <adaptors/integration-api/egl-interface.h>
 
 namespace Dali
 {
@@ -169,7 +169,6 @@ private:
   Vector<EGLint>       mContextAttribs;
 
   EGLNativeDisplayType mEglNativeDisplay;
-  EGLNativeWindowType  mEglNativeWindow;
   EGLNativePixmapType  mEglNativePixmap;
 
   EGLDisplay           mEglDisplay;
