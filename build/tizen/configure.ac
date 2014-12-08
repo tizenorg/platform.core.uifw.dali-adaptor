@@ -266,6 +266,13 @@ AC_SUBST(DALI_PROFILE_CFLAGS)
 devincludepath=${includedir}
 AC_SUBST(devincludepath)
 
+AC_LANG_PUSH([C++])
+CPPFLAGS="$DALI_CFLAGS"
+LDFLAGS="$DALI_LDFLAGS"
+AC_CHECK_HEADER(tr1/functional,[AC_DEFINE([HAVE_TR1_FUNCTIONAL],[],["Have tr1 functional"])],[])
+AC_CHECK_HEADER(boost/function.hpp,[AC_DEFINE([HAVE_BOOST_FUNCTIONAL_HPP],[],["Have boost functional"])],[])
+AC_LANG_POP([C++])
+
 AC_CONFIG_FILES([
  Makefile
  adaptor/Makefile
