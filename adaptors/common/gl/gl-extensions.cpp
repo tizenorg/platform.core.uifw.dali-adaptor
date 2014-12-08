@@ -100,7 +100,7 @@ void GlExtensions::ProgramBinaryOES(GLuint program, GLenum binaryFormat, const G
     Initialize();
   }
 
-#ifdef GL_OES_get_program_binary
+#ifdef PFNGLGETPROGRAMBINARYOESPROC
   if (mGlProgramBinaryOES)
   {
     mGlProgramBinaryOES(program, binaryFormat, binary, length);
