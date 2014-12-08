@@ -8,6 +8,7 @@ T.O.C.
  2.   Building for Ubuntu desktop
  2.1. Minimum Requirements
  2.2. Building the Repository
+ 3.   Building for Emscripten
 
 
 
@@ -53,3 +54,41 @@ Then run the following commands:
  ./configure --prefix=$DESKTOP_PREFIX --enable-profile=UBUNTU --enable-gles=20
  make install -j8
 
+
+3. Building for Emscripten
+==========================
+
+Currently the build for emscripten uses a minimal adaptor which does not support dali-toolkit.
+
+1) Install emsdk_portable from the emscripten website
+
+   (Warning: As of 19/01/2015 with a userID > 6 digits there was a bug in llvm that caused
+   the build to fail. So I've used the incoming branches of the emscripten sdk and not latest)
+
+   # setup env script for builds (after installing depencies; node, python etc)
+   ~/installs/emsdk_portable/emsdk_env.sh
+
+2) Build dali-core with emscripten's own llvm to llvm bitcode
+
+   # setup env
+   ~/installs/emsdk_portable/emsdk_set_env.sh
+   cd dali/build/slp
+   # use llvm's drop in replacements for configure/make
+   autoreconf --install
+   emconfigure ./configure --prefix=$DESKTOP_PREFIX --enable-emscripten=yes
+   emmake make install -j9
+
+2) Build the minimal dali-adaptor
+
+  cd ./Build
+  rm CMakeCache.txt # deleting the cache like this might not be needed
+  /usr/bin/cmake .. -DCMAKE_BUILD_TYPE=Debug -DEMSCRIPTEN=1
+  make -j9
+  # use emscriptens emcc to compile byte code to javascript
+  #  (full opengl es support with stb-image loading library and cpp bindings)
+  mv dali-emscripten dali-emscripten.bc
+  emcc dali-emscripten.bc -o dali-emscripten.html -s FULL_ES2=1 -s STB_IMAGE=1 -s ALLOW_MEMORY_GROWTH=1 -s ASSERTIONS=0 -s DISABLE_EXCEPTION_CATCHING=2  -s EXPORT_NAME=\\\"dali\\\" -O2 --bind
+
+  # there are alternative debub options. (I've not had much luck with side-by-side asm.js/c++ code views in the browser)
+  # debug options
+  # emcc dali-emscripten.bc -o dali-emscripten.html -s FULL_ES2=1 -s STB_IMAGE=1 -s ALLOW_MEMORY_GROWTH=1 -s ASSERTIONS=2 -s DISABLE_EXCEPTION_CATCHING=0 -s EXPORT_NAME=\\\"dali\\\" -O1 --js-opts 0 -g4 --bind
