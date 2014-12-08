@@ -21,7 +21,6 @@
 // EXTERNAL INCLUDES
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include <boost/any.hpp>
 #include <dali/public-api/common/dali-vector.h>
 
 // INTERNAL INCLUDES
