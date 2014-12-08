@@ -47,6 +47,23 @@ include_directories(${CMAKE_SOURCE_DIR}/../../adaptors/tizen)
 include_directories(${CMAKE_SOURCE_DIR}/../../adaptors/emscripten)
 include_directories(${CMAKE_SOURCE_DIR}/../../platform-abstractions/slp)
 
+configure_file(${CMAKE_SOURCE_DIR}/../../adaptors/emscripten/wrappers/tests/all.html all.html COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/../../adaptors/emscripten/wrappers/tests/dali-page.html dali-page.html COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/../../adaptors/emscripten/wrappers/tests/dali-tests.css dali-tests.css COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/../../adaptors/emscripten/wrappers/tests/dali-tests.html dali-tests.html COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/../../adaptors/emscripten/wrappers/tests/geometry.js geometry.js COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/../../adaptors/emscripten/wrappers/tests/properties.js properties.js COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/../../adaptors/emscripten/wrappers/tests/signals.js signals.js COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/../../adaptors/emscripten/wrappers/tests/math.js math.js COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/../../adaptors/emscripten/wrappers/tests/animation.js animation.js COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/../../adaptors/emscripten/wrappers/tests/utilities.js utilities.js COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/../../adaptors/emscripten/wrappers/tests/shaders.js shaders.js COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/../../adaptors/emscripten/wrappers/tests/views.js views.js COPYONLY)
+
+configure_file(${CMAKE_SOURCE_DIR}/../../adaptors/emscripten/wrappers/tests/qunit/qunit-1.21.0.css qunit-1.21.0.css COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/../../adaptors/emscripten/wrappers/tests/qunit/qunit-1.21.0.js qunit-1.21.0.js COPYONLY)
+
+
 set(VENDOR "samsung")
 set(PACKAGE ${PROJECT_NAME})
 set(DESKTOP_PREFIX $ENV{DESKTOP_PREFIX})
