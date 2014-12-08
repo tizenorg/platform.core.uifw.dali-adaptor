@@ -1,0 +1,30 @@
+# Add local source files here:
+
+slp_platform_abstraction_src_files = \
+  $(slp_platform_abstraction_src_dir)/actor-wrapper.cpp \
+  $(slp_platform_abstraction_src_dir)/animation-wrapper.cpp \
+  $(slp_platform_abstraction_src_dir)/dali-wrapper.cpp \
+  $(slp_platform_abstraction_src_dir)/dali-wrapper.cpp \
+  $(slp_platform_abstraction_src_dir)/emscripten-callbacks.cpp \
+  $(slp_platform_abstraction_src_dir)/emscripten-callbacks.cpp \
+  $(slp_platform_abstraction_src_dir)/emscripten-utils.cpp \
+  $(slp_platform_abstraction_src_dir)/handle-wrapper.cpp \
+  $(slp_platform_abstraction_src_dir)/layer-wrapper.cpp \
+  $(slp_platform_abstraction_src_dir)/property-map-wrapper.cpp \
+  $(slp_platform_abstraction_src_dir)/property-buffer-wrapper.cpp \
+  $(slp_platform_abstraction_src_dir)/render-task-list-wrapper.cpp \
+  $(slp_platform_abstraction_src_dir)/render-task-wrapper.cpp \
+  $(slp_platform_abstraction_src_dir)/sdl-platform-abstraction.cpp \
+  $(slp_platform_abstraction_src_dir)/sdl-platform-abstraction.cpp \
+  $(slp_platform_abstraction_src_dir)/shader-effect-wrapper.cpp \
+  $(slp_platform_abstraction_src_dir)/stage-wrapper.cpp \
+  $(slp_platform_abstraction_src_dir)/type-info-wrapper.cpp \
+  $(slp_platform_abstraction_src_dir)/type-registry-wrapper.cpp
+
+slp_assimp_src_files =
+
+slp_assimp_stub_src_files =
+
+# Add public headers here:
+
+# platform_abstraction_header_files =
