@@ -153,11 +153,7 @@ dalifeedbacktheme_DATA = ${dali_plugin_theme_files}
 endif
 endif
 
-if TURBO_JPEG_IS_ON
-  slp_platform_abstraction_src_files += $(slp_turbo_jpeg_loader)
-else
-  slp_platform_abstraction_src_files += $(slp_jpeg_loader)
-endif
+slp_platform_abstraction_src_files += $(slp_turbo_jpeg_loader)
 
 lib_LTLIBRARIES = libdali-adaptor.la
 
@@ -299,15 +295,11 @@ libdali_adaptor_la_CXXFLAGS += $(HAPTIC_CFLAGS)
 libdali_adaptor_la_LIBADD +=
 endif
 
-if TURBO_JPEG_IS_ON
 libdali_adaptor_la_LIBADD += -lturbojpeg
 CFLAGS += -D_TURBO_JPEG_LOADER
 if UBUNTU_PROFILE
 libdali_adaptor_la_LIBADD += -ljpeg
 CFLAGS += -fPIC
-endif
-else
-libdali_adaptor_la_LIBADD += -ljpeg
 endif
 
 tizenadaptorpublicapidir = $(devincludepath)/dali/public-api

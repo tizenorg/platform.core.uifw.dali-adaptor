@@ -42,9 +42,6 @@ slp_platform_abstraction_src_files = \
 slp_turbo_jpeg_loader = \
   $(slp_platform_abstraction_src_dir)/image-loaders/loader-jpeg-turbo.cpp
 
-slp_jpeg_loader = \
-  $(slp_platform_abstraction_src_dir)/image-loaders/loader-jpeg.cpp
-
 slp_assimp_src_files = \
   $(slp_platform_abstraction_src_dir)/resource-loader/assimp-proxy.cpp \
   $(slp_platform_abstraction_src_dir)/resource-loader/assimp-model-builder.cpp \

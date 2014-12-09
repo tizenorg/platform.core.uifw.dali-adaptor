@@ -97,14 +97,6 @@ AC_ARG_ENABLE([gles],
 
 DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DDALI_GLES_VERSION=${enable_gles}"
 
-AC_ARG_WITH([jpeg-turbo],
-            [AC_HELP_STRING([--with-jpeg-turbo],
-                            [Use the JPEG Turbo library])],
-            [with_jpeg_turbo=$withval],
-            [with_jpeg_turbo=yes])
-
-AM_CONDITIONAL(TURBO_JPEG_IS_ON, test $with_jpeg_turbo = yes)
-
 # Tizen Profile options
 AC_ARG_ENABLE([profile],
               [AC_HELP_STRING([--enable-profile=COMMON,MOBILE,LITE,WEARABLE,TV,UBUNTU],
@@ -270,7 +262,6 @@ Configuration
   Debug Build:                      $enable_debug
   Compile flags                     $DALI_ADAPTOR_CFLAGS
   Using Assimp Library:             $enable_assimp
-  Using JPEG Turbo Library:         $with_jpeg_turbo
   Profile:                          $enable_profile
   Data Dir (Read/Write):            $dataReadWriteDir
   Data Dir (Read Only):             $dataReadOnlyDir
