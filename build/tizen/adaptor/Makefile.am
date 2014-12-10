@@ -287,7 +287,10 @@ libdali_adaptor_la_LIBADD += \
 endif
 
 if LITE_PROFILE
-libdali_adaptor_la_CXXFLAGS += $(HAPTIC_CFLAGS)
+libdali_adaptor_la_CXXFLAGS += $(HAPTIC_CFLAGS) \
+                               $(EFL_ASSIST_CFLAGS)
+
+libdali_adaptor_la_LIBADD += $(EFL_ASSIST_LIBS)
 endif
 
 if WEARABLE_PROFILE
