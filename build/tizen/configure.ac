@@ -139,29 +139,35 @@ AM_CONDITIONAL([WAYLAND], [test x$enable_wayland = xyes])
 if test "x$enable_profile" = "xCOMMON"; then
 PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
 PKG_CHECK_MODULES(HAPTIC, haptic)
+DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DTIZEN_SDK_2_2"
 fi
 
 if test "x$enable_profile" = "xMOBILE"; then
 PKG_CHECK_MODULES(OPENGLES20, opengl-es-20)
 PKG_CHECK_MODULES(DEVICED, deviced)
 enable_assimp=yes
+DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DTIZEN_SDK_2_2"
 fi
 
 if test "x$enable_profile" = "xLITE"; then
 PKG_CHECK_MODULES(OPENGLES20, gles20)
+DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DTIZEN_SDK_2_3"
 fi
 
 if test "x$enable_profile" = "xWEARABLE"; then
 PKG_CHECK_MODULES(OPENGLES20, gles20)
+DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DTIZEN_SDK_2_3"
 fi
 
 if test "x$enable_profile" = "xTV"; then
 PKG_CHECK_MODULES(OPENGLES20, gles20)
 PKG_CHECK_MODULES(HAPTIC, haptic)
+DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DTIZEN_SDK_2_2"
 fi
 
 if test "x$enable_profile" = "xUBUNTU"; then
 PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
+DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DTIZEN_SDK_2_2"
 else
 PKG_CHECK_MODULES(CAPI_APPFW_APPLICATION, capi-appfw-application)
 PKG_CHECK_MODULES(DLOG, dlog)

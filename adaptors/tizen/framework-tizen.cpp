@@ -40,6 +40,11 @@ namespace Adaptor
 
 namespace
 {
+#if defined(TIZEN_SDK_2_2)
+typedef service_h AppControl;
+#elif defined(TIZEN_SDK_2_3)
+typedef app_control_h AppControl;
+#endif
 
 /// Application Status Enum
 enum
@@ -67,7 +72,11 @@ struct Framework::Impl
     mEventCallback.terminate = AppTerminate;
     mEventCallback.pause = AppPause;
     mEventCallback.resume = AppResume;
-    mEventCallback.service = AppService;
+#if defined(TIZEN_SDK_2_2)
+    mEventCallback.service = AppReset;
+#elif defined(TIZEN_SDK_2_3)
+    mEventCallback.app_control = AppReset;
+#endif
     mEventCallback.low_memory = NULL;
     mEventCallback.low_battery = NULL;
     mEventCallback.device_orientation = DeviceRotated;
@@ -128,15 +137,19 @@ struct Framework::Impl
    * Called by AppCore when the application is launched from another module (e.g. homescreen).
    * @param[in] b the bundle data which the launcher module sent
    */
-  static void AppService(service_h service, void *data)
+  static void AppReset(AppControl appControl, void *data)
   {
     Framework* framework = static_cast<Framework*>(data);
 
     if(framework)
     {
       bundle *bundleData = NULL;
-      service_to_bundle(service, &bundleData);
 
+#if defined(TIZEN_SDK_2_2)
+      service_to_bundle(appControl, &bundleData);
+#elif defined(TIZEN_SDK_2_3)
+      app_control_to_bundle(appControl, &bundleData);
+#endif
       if(bundleData)
       {
         // get bundle name
