@@ -1,0 +1,14 @@
+/*
+ * This file contains the ABI for the whole of native DALi.
+ * In essence, the only symbols which have to be exported are
+ * those called by Java after loading a shared library.
+ * To get an up to date accurate list, use
+ *     grep -h JNIEXPORT jni/jniGlue/headers/* | awk '{ print $NF }'
+ * For now, a couple of regular expression patterns produce the required result.
+ */
+JNIDALI_V1.0 {
+  global:
+    Java_com_sec_daliviews_*; JNI_OnLoad;
+  local:
+    *;
+};
