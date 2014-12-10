@@ -1,0 +1,9 @@
+#!/bin/bash
+ndk-build BUILD_RELEASE=1 $*
+rc=$?
+if [ $rc -eq 0 ]
+then
+  _scriptdir=$(dirname ${BASH_SOURCE[0]})
+  $_scriptdir/../tools/androidsyms/genSymbolsFromBuildOutput libdaliapp
+fi
+exit $rc
