@@ -23,6 +23,7 @@
 #include <bundle.h>
 #include <Ecore.h>
 #include <boost/bind.hpp>
+#include <dlog.h>
 
 #include <dali/integration-api/debug.h>
 
@@ -60,14 +61,18 @@ enum
 struct Framework::Impl
 {
   // Constructor
-
+/*
   Impl(void* data)
   {
     mEventCallback.create = AppCreate;
     mEventCallback.terminate = AppTerminate;
     mEventCallback.pause = AppPause;
     mEventCallback.resume = AppResume;
+#ifdef UNDER_TIZEN_2_3_CAPI
     mEventCallback.service = AppService;
+#else
+    mEventCallback.app_control = AppControl;
+#endif
     mEventCallback.low_memory = NULL;
     mEventCallback.low_battery = NULL;
     mEventCallback.device_orientation = DeviceRotated;
@@ -85,11 +90,51 @@ struct Framework::Impl
     delete mCallbackManager;
   }
 
-  // Data
+// Data
 
+boost::function<void(void)> mAbortCallBack;
+app_event_callback_s mEventCallback;
+CallbackManager *mCallbackManager;
+// Static methods
+*/
+
+
+Impl(void* data)
+{
+  LOG(LOG_INFO, "SHEOM",  "Framework Tizen Impl First!!" );
+
+  mEventCallback.create = AppCreate;
+  mEventCallback.terminate = AppTerminate;
+  mEventCallback.pause = AppPause;
+  mEventCallback.resume = AppResume;
+  mEventCallback.app_control = AppControl;
+
+  ui_app_add_event_handler(&handlers[APP_EVENT_LOW_BATTERY], APP_EVENT_LOW_BATTERY, AppLowBattery, this);//&ad_data);
+  ui_app_add_event_handler(&handlers[APP_EVENT_LOW_MEMORY], APP_EVENT_LOW_MEMORY, AppLowMemory, this);//&ad_data);
+  ui_app_add_event_handler(&handlers[APP_EVENT_DEVICE_ORIENTATION_CHANGED], APP_EVENT_DEVICE_ORIENTATION_CHANGED, AppDeviceRotated, this);//&ad_data);
+  ui_app_add_event_handler(&handlers[APP_EVENT_LANGUAGE_CHANGED], APP_EVENT_LANGUAGE_CHANGED, AppLanguageChange, this);//&ad_data);
+  ui_app_add_event_handler(&handlers[APP_EVENT_REGION_FORMAT_CHANGED], APP_EVENT_REGION_FORMAT_CHANGED, AppRegionChanged, this);//&ad_data);
+  ui_app_remove_event_handler(handlers[APP_EVENT_LOW_MEMORY]); //////???
+
+  mCallbackManager = CallbackManager::New();
+  LOG(LOG_INFO, "SHEOM",  "Framework Tizen Impl Done!!" );
+}
+
+~Impl()
+{
+  // we're quiting the main loop so
+  // mCallbackManager->RemoveAllCallBacks() does not need to be called
+  // to delete our abort handler
+  delete mCallbackManager;
+}
+
+  // Data
   boost::function<void(void)> mAbortCallBack;
-  app_event_callback_s mEventCallback;
   CallbackManager *mCallbackManager;
+  ui_app_lifecycle_callback_s mEventCallback;// = {0,};
+  app_event_handler_h handlers[5];// = {NULL, };
+//  appdata_s ad_data;// = {0,};
+
   // Static methods
 
   /**
@@ -124,19 +169,14 @@ struct Framework::Impl
     static_cast<Framework*>(data)->SlpAppStatusHandler(APP_RESUME);
   }
 
-  /**
-   * Called by AppCore when the application is launched from another module (e.g. homescreen).
-   * @param[in] b the bundle data which the launcher module sent
-   */
-  static void AppService(service_h service, void *data)
+  static void AppControl(app_control_h app_control, void *data)
   {
     Framework* framework = static_cast<Framework*>(data);
 
     if(framework)
     {
       bundle *bundleData = NULL;
-      service_to_bundle(service, &bundleData);
-
+      app_control_to_bundle(app_control, &bundleData);
       if(bundleData)
       {
         // get bundle name
@@ -160,10 +200,97 @@ struct Framework::Impl
   /**
    * Called by AppCore when the language changes on the device.
    */
+  static void AppLanguageChange(app_event_info_h event_info, void *user_data)
+  {
+    static_cast<Framework*>(user_data)->SlpAppStatusHandler(APP_LANGUAGE_CHANGE);
+  }
+
+
+  static void AppDeviceRotated(app_event_info_h event_info, void *user_data)
+  {
+    /*APP_EVENT_DEVICE_ORIENTATION_CHANGED*/
+    switch(app_get_device_orientation())
+    {
+      case APP_DEVICE_ORIENTATION_0:
+        break;
+      case APP_DEVICE_ORIENTATION_90:
+        break;
+      case APP_DEVICE_ORIENTATION_180:
+        break;
+      case APP_DEVICE_ORIENTATION_270:
+        break;
+    }
+
+  }
+
+  static void AppRegionChanged(app_event_info_h event_info, void *user_data)
+  {
+    /*APP_EVENT_REGION_FORMAT_CHANGED*/
+  }
+
+  static void AppLowBattery(app_event_info_h event_info, void *user_data)
+  {
+    /*APP_EVENT_LOW_BATTERY*/
+  }
+
+  static void AppLowMemory(app_event_info_h event_info, void *user_data)
+  {
+    /*APP_EVENT_LOW_MEMORY*/
+  }
+
+
+  /**
+   * Called by AppCore when the application is launched from another module (e.g. homescreen).
+   * @param[in] b the bundle data which the launcher module sent
+   */
+/*
+#ifdef UNDER_TIZEN_2_3_CAPI
+  static void AppService(service_h service, void *data)
+#else
+  static void AppControl(app_control_h app_control, void *data)
+#endif
+  {
+    Framework* framework = static_cast<Framework*>(data);
+
+    if(framework)
+    {
+      bundle *bundleData = NULL;
+#ifdef UNDER_TIZEN_2_3_CAPI
+      service_to_bundle(service, &bundleData);
+#else
+      app_control_to_bundle(app_control, &bundleData);
+#endif
+      if(bundleData)
+      {
+        // get bundle name
+        char* bundleName = const_cast<char*>(bundle_get_val(bundleData, "name"));
+        if(bundleName != NULL)
+        {
+          framework->SetBundleName(bundleName);
+        }
+
+        // get bundle id
+        char* bundleId = const_cast<char*>(bundle_get_val(bundleData, "id"));
+        if(bundleId != NULL)
+        {
+          framework->SetBundleId(bundleId);
+        }
+      }
+      framework->SlpAppStatusHandler(APP_RESET);
+    }
+  }
+
+*/
+
+
+
+
+/*
   static void AppLanguageChange(void* data)
   {
     static_cast<Framework*>(data)->SlpAppStatusHandler(APP_LANGUAGE_CHANGE);
   }
+
 
   static void DeviceRotated(app_device_orientation_e orientation, void *user_data)
   {
@@ -179,7 +306,7 @@ struct Framework::Impl
         break;
     }
   }
-
+*/
 };
 
 Framework::Framework(Framework::Observer& observer, int *argc, char ***argv, const std::string& name)
@@ -194,6 +321,8 @@ Framework::Framework(Framework::Observer& observer, int *argc, char ***argv, con
   mAbortHandler(boost::bind(&Framework::AbortCallback, this)),
   mImpl(NULL)
 {
+  LOG(LOG_INFO, "SHEOM",  "Framework Tizen initialized!!" );
+
   InitThreads();
   mImpl = new Impl(this);
 }
@@ -208,11 +337,30 @@ Framework::~Framework()
   delete mImpl;
 }
 
+/*
 void Framework::Run()
 {
   mRunning = true;
 
   app_efl_main(mArgc, mArgv, &mImpl->mEventCallback, this);
+
+  mRunning = false;
+}
+
+*/
+
+void Framework::Run()
+{
+  int ret = 0;
+
+  mRunning = true;
+  LOG(LOG_INFO, "SHEOM",  "Framework - tizen.cpp run start LOG (%d, %d, %d)!!" ,*mArgc, *mArgv, mImpl);
+
+  ret = ui_app_main(*mArgc, *mArgv, &mImpl->mEventCallback, this);///&mImpl->ad_data);
+  if (ret != APP_ERROR_NONE) {
+    LOG(LOG_ERROR, "SHEOM", "ui_app_main() is failed. err = %d", ret);
+  }
+  LOG(LOG_INFO, "SHEOM",  "Framework - tizen.cpp run start LOG Done (%d)!!" ,ret);
 
   mRunning = false;
 }
@@ -267,6 +415,8 @@ void Framework::AbortCallback( )
 
 bool Framework::SlpAppStatusHandler(int type)
 {
+  dlog_print(DLOG_ERROR, LOG_TAG, "SlpAppStatusHandler (%d) !!" + type);
+
   switch (type)
   {
     case APP_CREATE:
@@ -305,6 +455,7 @@ bool Framework::SlpAppStatusHandler(int type)
     default:
       break;
   }
+  dlog_print(DLOG_ERROR, LOG_TAG, "SlpAppStatusHandler Done !!");
 
   return true;
 }

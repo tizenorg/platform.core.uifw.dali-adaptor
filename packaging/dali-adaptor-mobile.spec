@@ -10,7 +10,7 @@ Source0:    %{name}-%{version}.tar.gz
 %define dali_profile MOBILE
 %define dali_mobile_profile 1
 %define dali_feedback_plugin 1
-%define dali_bullet_plugin 1
+#%define dali_bullet_plugin 1
 %define dali_assimp_plugin 1
 
 Requires(post): /sbin/ldconfig
@@ -81,7 +81,7 @@ Feedback plugin to play haptic and audio feedback for Dali
 %package dali-bullet-plugin
 Summary:    Plugin to provide physics
 Group:      System/Libraries
-BuildRequires:  libbullet-devel
+#BuildRequires:  libbullet-devel
 
 %description dali-bullet-plugin
 Dynamics plugin to wrap the libBulletDynamics libraries
@@ -122,6 +122,11 @@ export FFLAGS="$FFLAGS -DTIZEN_DEBUG_ENABLE"
 CXXFLAGS+=" -D_ARCH_ARM_ -lgcc"
 %endif
 
+%if 0%{?under_tizen_2_3_capi_enable}
+CFLAGS+=" -DUNDER_TIZEN_2_3_CAPI"
+CXXFLAGS+=" -DUNDER_TIZEN_2_3_CAPI"
+%endif
+
 libtoolize --force
 cd %{_builddir}/%{name}-%{version}/build/tizen
 autoreconf --install
@@ -132,7 +137,7 @@ FONT_DOWNLOADED_PATH="%{font_downloaded_path}" ; export FONT_DOWNLOADED_PATH
 FONT_APPLICATION_PATH="%{font_application_path}" ; export FONT_APPLICATION_PATH
 FONT_CONFIGURATION_FILE="%{font_configuration_file}" ; export FONT_CONFIGURATION_FILE
 
-%configure --with-jpeg-turbo --enable-gles=30 --enable-profile=%{dali_profile} --libdir=%{_libdir}
+%configure --with-jpeg-turbo --enable-gles=20 --enable-profile=%{dali_profile} --libdir=%{_libdir}
 
 make %{?jobs:-j%jobs}
 
@@ -179,7 +184,7 @@ exit 0
 %endif
 
 %if 0%{?dali_bullet_plugin}
-%post dali-bullet-plugin
+#%post dali-bullet-plugin
 /sbin/ldconfig
 exit 0
 %endif
@@ -200,7 +205,7 @@ exit 0
 exit 0
 
 %if 0%{?dali_feedback_plugin}
-%postun dali-feedback-plugin
+#%postun dali-feedback-plugin
 /sbin/ldconfig
 exit 0
 %endif
@@ -230,16 +235,3 @@ exit 0
 %{dev_include_path}/dali/*
 %{_libdir}/pkgconfig/dali*.pc
 
-%if 0%{?dali_feedback_plugin}
-%files dali-feedback-plugin
-%defattr(-,root,root,-)
-%{_libdir}/libdali-feedback-plugin.so*
-%{dali_plugin_sound_files}/*
-%{dali_plugin_theme_files}/*
-%endif
-
-%if 0%{?dali_bullet_plugin}
-%files dali-bullet-plugin
-%defattr(-,root,root,-)
-%{_libdir}/libdali-bullet-plugin.so*
-%endif

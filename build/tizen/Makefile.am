@@ -16,13 +16,13 @@
 
 SUBDIRS = adaptor
 
-if ! LITE_PROFILE
-if ! WEARABLE_PROFILE
-if ! UBUNTU_PROFILE
-SUBDIRS += plugins
-endif
-endif
-endif
+#if ! LITE_PROFILE
+#if ! WEARABLE_PROFILE
+#if ! UBUNTU_PROFILE
+#SUBDIRS += plugins
+#endif
+#endif
+#endif
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = dali.pc

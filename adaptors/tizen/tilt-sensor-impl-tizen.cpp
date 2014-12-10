@@ -20,10 +20,11 @@
 
 // EXTERNAL INCLUDES
 #include <cmath>
-#ifdef DALI_PROFILE_LITE
-#include <sensor_internal.h>
-#else
+
+#ifdef UNDER_TIZEN_2_3_CAPI
 #include <sensor.h>
+#else
+#include <sensor_internal.h>
 #endif
 
 #include <dali/public-api/object/type-registry.h>
