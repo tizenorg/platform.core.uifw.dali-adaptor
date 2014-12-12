@@ -25,6 +25,7 @@
 #include <dali/public-api/dali-core.h>
 #include <dali/public-api/object/ref-object.h>
 #include <dali/public-api/object/base-object.h>
+#include "scoped-pointer.h"
 
 #include "binary-model-builder.h"
 
@@ -38,13 +39,14 @@
 using namespace Dali::Integration;
 using boost::mutex;
 using boost::unique_lock;
-using boost::scoped_ptr;
 
 namespace Dali
 {
 
 namespace SlpPlatform
 {
+
+using Dali::Internal::ScopedPointer;
 
 ResourceThreadModel::ResourceThreadModel(ResourceLoader& resourceLoader)
 : ResourceThreadBase(resourceLoader),
@@ -72,9 +74,9 @@ void ResourceThreadModel::Load(const ResourceRequest& request)
   bool success(false);
   ModelData modelData;
 
-  scoped_ptr<ModelBuilder> modelBuilder( CreateModelBuilder(request.GetPath()) );
+  ScopedPointer<ModelBuilder> modelBuilder( CreateModelBuilder(request.GetPath()) );
 
-  if( modelBuilder )
+  if( modelBuilder.GetOwned() != 0 )
   {
     modelData = ModelData::New(modelBuilder->GetModelName());
     success = modelBuilder->Build(modelData);
@@ -111,7 +113,7 @@ void ResourceThreadModel::Save(const ResourceRequest& request)
     ModelData modelData = ModelData::DownCast(baseHandle);
     if( modelData )
     {
-      scoped_ptr<BinaryModelBuilder> modelBuilder (new BinaryModelBuilder(request.GetPath().c_str()));
+      ScopedPointer<BinaryModelBuilder> modelBuilder (new BinaryModelBuilder(request.GetPath().c_str()));
       if ( modelBuilder->Write(modelData) )
       {
         success = true;
