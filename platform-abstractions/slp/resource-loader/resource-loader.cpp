@@ -40,7 +40,7 @@
 #include "loader-font.h"
 #include "../interfaces/font-controller.h"
 #include "../interfaces/data-cache.h"
-
+#include "scoped-pointer.h"
 
 /**
  * A macro to expand an argument to a compile time constant string literal.
