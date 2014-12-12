@@ -2,7 +2,7 @@
 
 Name:       dali-adaptor
 Summary:    The DALi Tizen Adaptor
-Version:    1.0.20
+Version:    1.0.21
 Release:    1
 Group:      System/Libraries
 License:    Apache-2.0
@@ -23,11 +23,13 @@ BuildRequires:  pkgconfig
 BuildRequires:  gawk
 BuildRequires:  pkgconfig(sensor)
 BuildRequires:  pkgconfig(aul)
+BuildRequires:  pkgconfig(appcore-efl)
 BuildRequires:  boost-devel
 BuildRequires:  giflib-devel
 BuildRequires:  pkgconfig(fontconfig)
 BuildRequires:  pkgconfig(elementary)
 BuildRequires:  pkgconfig(capi-appfw-application)
+BuildRequires:  pkgconfig(capi-appfw-app-control)
 BuildRequires:  libjpeg-turbo-devel
 BuildRequires:  pkgconfig(evas)
 BuildRequires:  dali-devel

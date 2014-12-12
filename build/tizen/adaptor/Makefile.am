@@ -169,7 +169,8 @@ libdali_adaptor_la_SOURCES = \
                      $(base_adaptor_src_files) \
                      $(slp_platform_abstraction_src_files) \
                      $(public_api_src_files) \
-                     $(adaptor_internal_src_files)
+                     $(adaptor_internal_src_files) \
+                     $(adaptor_appcore_internal_src_files)
 
 libdali_adaptor_la_DEPENDENCIES =
 
@@ -198,6 +199,7 @@ libdali_adaptor_la_includes += \
 else
 libdali_adaptor_la_includes += \
                       -I../../../adaptors/tizen
+
 endif
 
 daliDefaultFontCacheDir = ${dataReadOnlyDir}/glyphcache/
@@ -227,6 +229,9 @@ libdali_adaptor_la_CXXFLAGS = \
                       $(FONTCONFIG_CFLAGS) \
                       $(PNG_CFLAGS) \
                       $(CAPI_APPFW_APPLICATION_CFLAGS) \
+                      $(CAPI_APPFW_APP_CONTROL_CFLAGS) \
+                      $(AUL_CFLAGS) \
+                      $(APPCOREEFL_CFLAGS) \
                       $(ELEMENTARY_CFLAGS) \
                       $(EVAS_CFLAGS) \
                       $(ECORE_CFLAGS) \
@@ -250,6 +255,7 @@ libdali_adaptor_la_LIBADD = \
                       $(FONTCONFIG_LIBS) \
                       $(PNG_LIBS) \
                       $(AUL_LIBS) \
+                      $(CAPI_APPFW_APP_CONTROL_LIBS) \
                       $(ECORE_LIBS) \
                       $(ECORE_IPC_LIBS) \
                       $(ECORE_IMF_LIBS) \
@@ -264,7 +270,6 @@ libdali_adaptor_la_LIBADD = \
                       $(LIBDRM_LIBS) \
                       $(LIBEXIF_LIBS) \
                       $(CAPI_SYSTEM_SYSTEM_SETTINGS_LIBS) \
-                      $(CAPI_APPFW_APPLICATION_LIBS) \
                       -lgif \
                       -lboost_thread
 
@@ -297,7 +302,6 @@ endif
 if LITE_PROFILE
 libdali_adaptor_la_CXXFLAGS += $(HAPTIC_CFLAGS) \
                                $(EFL_ASSIST_CFLAGS)
-
 libdali_adaptor_la_LIBADD += $(EFL_ASSIST_LIBS)
 endif
 

@@ -219,6 +219,7 @@ void Appcore::Initialize(const char* name, int argc, char** argv)
       GetDirName(dirname, PATH_MAX);
       SetupEnvironment(name, dirname);
       mVconfEventHandler = new VconfEvents(*this);
+
       aul_launch_init(AulHandlerCallback, this);
       aul_launch_argv_handler(argc, const_cast<char**>(argv));
     }
