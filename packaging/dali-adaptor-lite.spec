@@ -23,6 +23,7 @@ BuildRequires:  pkgconfig
 BuildRequires:  gawk
 BuildRequires:  pkgconfig(sensor)
 BuildRequires:  pkgconfig(aul)
+BuildRequires:  pkgconfig(appsvc)
 BuildRequires:  pkgconfig(appcore-efl)
 BuildRequires:  boost-devel
 BuildRequires:  giflib-devel
