@@ -237,7 +237,9 @@ libdali_adaptor_la_CXXFLAGS = \
                       $(LIBDRM_CFLAGS) \
                       $(LIBEXIF_CFLAGS) \
                       $(ASSIMP_CFLAGS) \
-                      $(CAPI_SYSTEM_SYSTEM_SETTINGS_CFLAGS)
+                      $(CAPI_SYSTEM_SYSTEM_SETTINGS_CFLAGS) \
+                      $(CAPI_MEDIA_PLAYER_CFLAGS) \
+                      $(LIBTBM_CFLAGS)
 
 libdali_adaptor_la_LIBADD = \
                       $(DALICORE_LIBS) \
@@ -257,6 +259,8 @@ libdali_adaptor_la_LIBADD = \
                       $(LIBEXIF_LIBS) \
                       $(CAPI_SYSTEM_SYSTEM_SETTINGS_LIBS) \
                       $(CAPI_APPFW_APPLICATION_LIBS) \
+                      $(CAPI_MEDIA_PLAYER_LIBS) \
+                      $(LIBTBM_LIBS) \
                       -lgif \
                       -lboost_thread
 

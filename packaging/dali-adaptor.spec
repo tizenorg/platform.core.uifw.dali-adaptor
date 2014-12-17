@@ -48,6 +48,9 @@ BuildRequires:  pkgconfig(xdamage)
 BuildRequires:  pkgconfig(utilX)
 BuildRequires:  pkgconfig(gles20)
 %endif
+BuildRequires:  pkgconfig(capi-media-player)
+BuildRequires:  libtbm-devel
+BuildRequires:  pkgconfig(libtbm)
 
 %description
 The DALi Tizen Adaptor provides a Tizen specific implementation of the dali-core

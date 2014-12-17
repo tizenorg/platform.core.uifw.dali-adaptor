@@ -37,6 +37,9 @@ BuildRequires:  pkgconfig(xfixes)
 BuildRequires:  pkgconfig(xdamage)
 BuildRequires:  pkgconfig(utilX)
 BuildRequires:  pkgconfig(gles20)
+BuildRequires:  pkgconfig(capi-media-player)
+BuildRequires:  libtbm-devel
+BuildRequires:  pkgconfig(libtbm)
 
 %description
 The DALi Tizen Adaptor provides a Tizen specific implementation of the dali-core
@@ -101,7 +104,7 @@ Dynamics plugin to wrap the libBulletDynamics libraries
 ##############################
 %build
 PREFIX+="/usr"
-CXXFLAGS+=" -Wall -g -Os -fPIC -fvisibility-inlines-hidden -fdata-sections -ffunction-sections "
+CXXFLAGS+=" -Wall -g -Os -fPIC -fvisibility-inlines-hidden -fdata-sections -ffunction-sections -D_TIZEN_SDK_2_2_"
 LDFLAGS+=" -Wl,--rpath=%{_libdir} -Wl,--as-needed -Wl,--gc-sections "
 
 %if 0%{?sec_build_binary_debug_enable}

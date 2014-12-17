@@ -44,6 +44,8 @@ PKG_CHECK_MODULES(PNG, libpng)
 PKG_CHECK_MODULES(XML, libxml-2.0)
 PKG_CHECK_MODULES(LIBEXIF, libexif)
 PKG_CHECK_MODULES(LIBDRM, libdrm)
+PKG_CHECK_MODULES(CAPI_MEDIA_PLAYER, capi-media-player)
+PKG_CHECK_MODULES(LIBTBM, libtbm)
 
 # Check for availability of BulletPhysics
 PKG_CHECK_EXISTS(bullet, [

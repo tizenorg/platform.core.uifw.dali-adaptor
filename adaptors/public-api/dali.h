@@ -42,7 +42,6 @@
 #include <dali/public-api/adaptor-framework/lifecycle-controller.h>
 #include <dali/public-api/adaptor-framework/orientation.h>
 #include <dali/public-api/adaptor-framework/physical-keyboard.h>
-#include <dali/public-api/adaptor-framework/performance-logger.h>
 #include <dali/public-api/adaptor-framework/pixmap-image.h>
 #include <dali/public-api/adaptor-framework/render-surface.h>
 #include <dali/public-api/adaptor-framework/singleton-service.h>
@@ -51,7 +50,9 @@
 #include <dali/public-api/adaptor-framework/style-monitor.h>
 #include <dali/public-api/adaptor-framework/timer.h>
 #include <dali/public-api/adaptor-framework/tilt-sensor.h>
+#include <dali/public-api/adaptor-framework/tizen-buffer-image.h>
 #include <dali/public-api/adaptor-framework/tts-player.h>
+#include <dali/public-api/adaptor-framework/video-player.h>
 #include <dali/public-api/adaptor-framework/virtual-keyboard.h>
 #include <dali/public-api/adaptor-framework/window.h>
 

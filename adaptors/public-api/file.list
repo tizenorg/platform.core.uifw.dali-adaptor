@@ -15,7 +15,6 @@ public_api_src_files = \
   $(adaptor_public_api_dir)/adaptor-framework/lifecycle-controller.cpp \
   $(adaptor_public_api_dir)/adaptor-framework/orientation.cpp \
   $(adaptor_public_api_dir)/adaptor-framework/physical-keyboard.cpp \
-  $(adaptor_public_api_dir)/adaptor-framework/performance-logger.cpp \
   $(adaptor_public_api_dir)/adaptor-framework/pixmap-image.cpp \
   $(adaptor_public_api_dir)/adaptor-framework/render-surface.cpp \
   $(adaptor_public_api_dir)/adaptor-framework/singleton-service.cpp \
@@ -23,7 +22,9 @@ public_api_src_files = \
   $(adaptor_public_api_dir)/adaptor-framework/style-monitor.cpp \
   $(adaptor_public_api_dir)/adaptor-framework/tilt-sensor.cpp \
   $(adaptor_public_api_dir)/adaptor-framework/timer.cpp \
+  $(adaptor_public_api_dir)/adaptor-framework/tizen-buffer-image.cpp \
   $(adaptor_public_api_dir)/adaptor-framework/tts-player.cpp \
+  $(adaptor_public_api_dir)/adaptor-framework/video-player.cpp \
   $(adaptor_public_api_dir)/adaptor-framework/virtual-keyboard.cpp \
   $(adaptor_public_api_dir)/adaptor-framework/window.cpp \
   $(adaptor_public_api_dir)/dali-adaptor-version.cpp
@@ -52,7 +53,6 @@ public_api_adaptor_framework_header_files = \
   $(adaptor_public_api_dir)/adaptor-framework/lifecycle-controller.h \
   $(adaptor_public_api_dir)/adaptor-framework/orientation.h \
   $(adaptor_public_api_dir)/adaptor-framework/physical-keyboard.h \
-  $(adaptor_public_api_dir)/adaptor-framework/performance-logger.h \
   $(adaptor_public_api_dir)/adaptor-framework/pixmap-image.h \
   $(adaptor_public_api_dir)/adaptor-framework/render-surface.h \
   $(adaptor_public_api_dir)/adaptor-framework/singleton-service.h \
@@ -61,7 +61,9 @@ public_api_adaptor_framework_header_files = \
   $(adaptor_public_api_dir)/adaptor-framework/style-monitor.h \
   $(adaptor_public_api_dir)/adaptor-framework/timer.h \
   $(adaptor_public_api_dir)/adaptor-framework/tilt-sensor.h \
+  $(adaptor_public_api_dir)/adaptor-framework/tizen-buffer-image.h \
   $(adaptor_public_api_dir)/adaptor-framework/tts-player.h \
+  $(adaptor_public_api_dir)/adaptor-framework/video-player.h \
   $(adaptor_public_api_dir)/adaptor-framework/virtual-keyboard.h \
   $(adaptor_public_api_dir)/adaptor-framework/window.h
 
