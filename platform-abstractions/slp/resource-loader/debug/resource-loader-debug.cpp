@@ -22,7 +22,6 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <dali/integration-api/glyph-set.h>
 
 namespace Dali
 {
@@ -34,22 +33,6 @@ using namespace Dali::Integration;
  * Filter for resource loader debug. Change levels here to turn on debugging
  */
 Debug::Filter* gLoaderFilter = Debug::Filter::New(Debug::Concise, false, "LOG_RESOURCE_LOADER");
-
-
-std::string DebugRequestList(TextResourceType::CharacterList& chars)
-{
-  std::string textString;
-
-  for(std::size_t i=0, length=chars.size(); i<length; i++)
-  {
-    std::ostringstream oss;
-    const TextResourceType::GlyphPosition& glyph = chars[i];
-    oss << static_cast<char>(glyph.character) << "(" << glyph.xPosition << "," << glyph.yPosition
-        << " " << (glyph.quality?"Hg":"Lw") << " " << (glyph.loaded?"LD":"UN") << ") ";
-    textString.append(oss.str());
-  }
-  return textString;
-}
 
 std::string DebugResourceList(LoadedResource& partialResource)
 {
