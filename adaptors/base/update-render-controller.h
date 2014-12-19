@@ -90,6 +90,12 @@ public:
   void RequestUpdateOnce();
 
   /**
+   * Called when the surface has been lost
+   */
+
+  void SurfaceLost();
+
+  /**
    * Replaces the surface.
    * @param surface new surface
    */
