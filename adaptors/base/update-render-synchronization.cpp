@@ -86,6 +86,7 @@ void UpdateRenderSynchronization::Stop()
   mRenderFinishedCondition.notify_one();
   mVSyncSleepCondition.notify_one();
   mVSyncReceivedCondition.notify_one();
+  mRenderRequestSleepCondition.notify_one();
 
   mFrameTime.Suspend();
 }
@@ -297,7 +298,7 @@ bool UpdateRenderSynchronization::UpdateTryToSleep()
   return mRunning;
 }
 
-void UpdateRenderSynchronization::RenderSyncWithRequest(RenderRequest*& requestPtr)
+bool UpdateRenderSynchronization::RenderSyncWithRequest(RenderRequest*& requestPtr)
 {
   boost::unique_lock< boost::mutex > lock( mMutex );
 
@@ -310,6 +311,7 @@ void UpdateRenderSynchronization::RenderSyncWithRequest(RenderRequest*& requestP
     requestPtr = &mReplaceSurfaceRequest;
   }
   mReplaceSurfaceRequested = false;
+  return mRunning;
 }
 
 bool UpdateRenderSynchronization::RenderSyncWithUpdate(RenderRequest*& requestPtr)

@@ -168,7 +168,7 @@ bool RenderThread::Run()
 
     bool processRequests = true;
     bool requestProcessed = false;
-    while( processRequests )
+    while( processRequests && running)
     {
       // Check if we've got any requests from the main thread (e.g. replace surface)
       requestProcessed = ProcessRequest( request );
@@ -183,7 +183,7 @@ bool RenderThread::Run()
       else
       {
         // Block until new surface... - cleared by ReplaceSurface code in UpdateRenderController
-        mUpdateRenderSync.RenderSyncWithRequest(request);
+        running = mUpdateRenderSync.RenderSyncWithRequest(request);
       }
     }
 

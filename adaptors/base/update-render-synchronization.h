@@ -157,7 +157,7 @@ public:
    * surface.
    * @param[in] request Pointer to set if there are any requests
    */
-  void RenderSyncWithRequest(RenderRequest*& request );
+  bool RenderSyncWithRequest(RenderRequest*& request );
 
   /**
    * Called by the render-thread to wait for a buffer to read from and then render.
