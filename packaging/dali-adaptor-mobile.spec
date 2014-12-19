@@ -7,10 +7,10 @@ License:    Apache-2.0
 URL:        https://review.tizen.org/git/?p=platform/core/uifw/dali-adaptor.git;a=summary
 Source0:    %{name}-%{version}.tar.gz
 
-%define dali_profile MOBILE
+%define dali_profile LITE 
 %define dali_mobile_profile 1
-%define dali_feedback_plugin 1
-%define dali_bullet_plugin 1
+%define dali_feedback_plugin 0
+%define dali_bullet_plugin 0
 %define dali_assimp_plugin 1
 
 Requires(post): /sbin/ldconfig
@@ -85,7 +85,7 @@ Feedback plugin to play haptic and audio feedback for Dali
 %package dali-bullet-plugin
 Summary:    Plugin to provide physics
 Group:      System/Libraries
-BuildRequires:  libbullet-devel
+#BuildRequires: pkgconfig(bullet)
 
 %description dali-bullet-plugin
 Dynamics plugin to wrap the libBulletDynamics libraries

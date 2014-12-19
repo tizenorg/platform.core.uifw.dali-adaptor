@@ -19,27 +19,14 @@
  */
 
 #include <video-player.h>
+#include <video-player-plugin.h>
 
 // INTERNAL INCLUDES
 #include <dali/public-api/object/base-object.h>
 #include <dali/public-api/images/image.h>
 
-#if _TIZEN_BUFFER_MANAGER_SUPPORT_
-
-#include <tizen-buffer-image.h>
-#include <timer.h>
-#else
-
-#include <pixmap-image.h>
-
-#endif
-
 // EXTERNAL INCLUDES
 #include <string>
-#include <Ecore_X.h>
-#include <player.h>
-#include <glib.h>
-
 #include <dali/integration-api/debug.h>
 
 namespace Dali
@@ -59,8 +46,6 @@ class VideoPlayer : public Dali::BaseObject, public ConnectionTracker
 public:
 
   static Dali::VideoPlayer New();
-
-  static Dali::VideoPlayer Get();
 
   void SetVideoFile(const std::string& strFilename);
 
@@ -91,39 +76,9 @@ private:
 
   virtual ~VideoPlayer();
 
-#if _TIZEN_BUFFER_MANAGER_SUPPORT_
-  void CreateTizenBufferSurface(int width, int height);
-  void InitTizenBufferPlayer();
-#else
-  void CreateXPixmapSurface(int width, int height);
-  void InitX11Player();
-#endif
+  Dali::VideoPlayerPlugin* mPlugin;
+  void* mHandle;
 
-private:
-
-  bool mLoopFlag;
-  std::string mVideoFilename;
-  player_h mPlayer;
-  int mViewWidth;
-  int mViewHeight;
-  Dali::Image mVideoStream;
-  Dali::ImageActor mImageActor;
-
-#if _TIZEN_BUFFER_MANAGER_SUPPORT_
-
-  media_packet_h mPacket;
-  Dali::TizenBufferImagePtr mTbImagePtr;
-  Dali::Timer mTimer;
-#else
-  Ecore_X_Pixmap mPixmap;
-  Dali::PixmapImagePtr mPixmapImage;
-#endif
-
-public:
-
-#if _TIZEN_BUFFER_MANAGER_SUPPORT_
-  GMutex mBufferLock;
-#endif
 };
 
 } // namespace Adaptor

@@ -67,7 +67,8 @@ struct Framework::Impl
     mEventCallback.terminate = AppTerminate;
     mEventCallback.pause = AppPause;
     mEventCallback.resume = AppResume;
-    mEventCallback.service = AppService;
+    mEventCallback.app_control = AppReset;
+//    mEventCallback.service = AppService;
     mEventCallback.low_memory = NULL;
     mEventCallback.low_battery = NULL;
     mEventCallback.device_orientation = DeviceRotated;
@@ -128,14 +129,16 @@ struct Framework::Impl
    * Called by AppCore when the application is launched from another module (e.g. homescreen).
    * @param[in] b the bundle data which the launcher module sent
    */
-  static void AppService(service_h service, void *data)
+  static void AppReset(app_control_h appControl, void *data)
+//  static void AppService(service_h service, void *data)
   {
     Framework* framework = static_cast<Framework*>(data);
 
     if(framework)
     {
       bundle *bundleData = NULL;
-      service_to_bundle(service, &bundleData);
+      app_control_to_bundle(appControl, &bundleData);
+//      service_to_bundle(service, &bundleData);
 
       if(bundleData)
       {
