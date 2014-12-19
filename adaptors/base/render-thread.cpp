@@ -81,6 +81,24 @@ bool ReplaceSurfaceRequest::GetReplaceCompleted()
 }
 
 
+SurfaceLostRequest::SurfaceLostRequest()
+: RenderRequest(RenderRequest::SURFACE_LOST),
+  mReplaceCompleted(false)
+{
+}
+
+void SurfaceLostRequest::ReplaceCompleted()
+{
+  mReplaceCompleted = true;
+}
+
+bool SurfaceLostRequest::GetReplaceCompleted()
+{
+  return mReplaceCompleted != 0u;
+}
+
+
+
 RenderThread::RenderThread( UpdateRenderSynchronization& sync,
                             AdaptorInternalServices& adaptorInterfaces,
                             const EnvironmentOptions& environmentOptions )
@@ -91,7 +109,8 @@ RenderThread::RenderThread( UpdateRenderSynchronization& sync,
   mEGL( NULL ),
   mThread( NULL ),
   mEnvironmentOptions( environmentOptions ),
-  mSurfaceReplaced(false)
+  mSurfaceReplaced(false),
+  mSurfaceLost(false)
 {
   // set the initial values before render thread starts
   mSurface = adaptorInterfaces.GetRenderSurfaceInterface();
@@ -114,6 +133,7 @@ void RenderThread::Start()
   mThread = new boost::thread(boost::bind(&RenderThread::Run, this));
 
   mSurface->StartRender();
+  mSurfaceLost = false;
 }
 
 void RenderThread::Stop()
@@ -191,8 +211,11 @@ bool RenderThread::Run()
     {
        // Render
       DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run. 4 - Core.Render()\n");
-      mCore.Render( renderStatus );
-
+      if (!mSurfaceLost)
+      {
+        mCore.Render( renderStatus );
+      }
+    
       // Notify the update-thread that a render has completed
       DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run. 5 - Sync.RenderFinished()\n");
       mUpdateRenderSync.RenderFinished( renderStatus.NeedsUpdate(), requestProcessed );
@@ -210,6 +233,8 @@ bool RenderThread::Run()
     }
   }
 
+  mSurfaceLost = false;
+  mUpdateRenderSync.SurfaceLostCancel();
   // shut down egl
   ShutdownEgl();
 
@@ -266,6 +291,14 @@ bool RenderThread::ProcessRequest( RenderRequest* request )
         ReplaceSurface( replaceSurfaceRequest->GetSurface() );
         replaceSurfaceRequest->ReplaceCompleted();
         processedRequest = true;
+        mSurfaceLost = false;
+        break;
+      }
+      case RenderRequest::SURFACE_LOST:
+      {
+        mSurfaceLost = true;
+        processedRequest = true;
+        mCore.ContextDestroyed();
         break;
       }
     }
@@ -311,6 +344,7 @@ void RenderThread::ShutdownEgl()
 
   // delete the GL context / egl surface
   mEGL->TerminateGles();
+  mEGL = NULL; // needed for restart
 }
 
 bool RenderThread::PreRender()

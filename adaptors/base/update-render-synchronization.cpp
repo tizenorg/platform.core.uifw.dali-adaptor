@@ -56,7 +56,8 @@ UpdateRenderSynchronization::UpdateRenderSynchronization( AdaptorInternalService
   mFrameTime( adaptorInterfaces.GetPlatformAbstractionInterface() ),
   mPerformanceInterface( adaptorInterfaces.GetPerformanceInterface() ),
   mReplaceSurfaceRequest(),
-  mReplaceSurfaceRequested( false )
+  mReplaceSurfaceRequested( false ),
+  mSurfaceLostRequested(false)
 {
 }
 
@@ -89,6 +90,11 @@ void UpdateRenderSynchronization::Stop()
   mRenderRequestSleepCondition.notify_one();
 
   mFrameTime.Suspend();
+  // reset state variables
+  mUpdateReadyCount = 0;
+  mRunning = false;
+  mUpdateRequired = false;
+  mUpdateRequested = false;
 }
 
 void UpdateRenderSynchronization::Pause()
@@ -139,6 +145,17 @@ void UpdateRenderSynchronization::UpdateWhilePaused()
   mPausedCondition.notify_one();
 }
 
+void UpdateRenderSynchronization::SurfaceLost()
+{
+  mSurfaceLostRequested = true;
+  UpdateWhilePaused();
+}
+
+void UpdateRenderSynchronization::SurfaceLostCancel()
+{
+  mSurfaceLostRequested = false;
+}
+
 bool UpdateRenderSynchronization::ReplaceSurface( RenderSurface* newSurface )
 {
   bool result=false;
@@ -154,6 +171,8 @@ bool UpdateRenderSynchronization::ReplaceSurface( RenderSurface* newSurface )
     mRenderRequestFinishedCondition.wait(lock); // wait unlocks the mutex on entry, and locks again on exit.
 
     mReplaceSurfaceRequested = false;
+    mSurfaceLostRequested = false;
+
     result = mReplaceSurfaceRequest.GetReplaceCompleted();
   }
 
@@ -335,6 +354,9 @@ bool UpdateRenderSynchronization::RenderSyncWithUpdate(RenderRequest*& requestPt
   if( mReplaceSurfaceRequested )
   {
     requestPtr = &mReplaceSurfaceRequest;
+    mReplaceSurfaceRequested = false;
+    // receiving a new surface cancels any existing surface lost
+    mSurfaceLostRequested = false;
   }
   mReplaceSurfaceRequested = false;
 
