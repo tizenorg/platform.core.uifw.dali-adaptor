@@ -50,8 +50,11 @@
 #include <dali/public-api/adaptor-framework/style-change.h>
 #include <dali/public-api/adaptor-framework/style-monitor.h>
 #include <dali/public-api/adaptor-framework/timer.h>
+#include <dali/public-api/adaptor-framework/tizen-buffer-image.h>
 #include <dali/public-api/adaptor-framework/tilt-sensor.h>
 #include <dali/public-api/adaptor-framework/tts-player.h>
+#include <dali/public-api/adaptor-framework/video-player-plugin.h>
+#include <dali/public-api/adaptor-framework/video-player.h>
 #include <dali/public-api/adaptor-framework/virtual-keyboard.h>
 #include <dali/public-api/adaptor-framework/window.h>
 
