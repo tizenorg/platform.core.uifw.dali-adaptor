@@ -73,8 +73,15 @@ AC_ARG_ENABLE([feedback],
               [enable_feedback=yes],
               [enable_feedback=no])
 
+AC_ARG_ENABLE([videoplayer],
+              [AC_HELP_STRING([ --enable-videoplayer],
+                              [Enable video player plugin])],
+              [enable_videoplayer=yes],
+              [enable_videoplayer=no])
+
 AM_CONDITIONAL([USE_BULLET], [test x$BULLET = xyes && test x$enable_bullet = xyes])
 AM_CONDITIONAL([USE_FEEDBACK], [test x$enable_feedback = xyes])
+AM_CONDITIONAL([USE_VIDEOPLAYER], [test x$enable_videoplayer = xyes])
 
 DALI_ADAPTOR_CFLAGS=-DPLATFORM_SLP
 
@@ -218,6 +225,11 @@ if test "x$enable_assimp" = "xyes" ; then
   ASSIMP_CFLAGS+=-DASSIMP_ENABLED
 fi
 
+if test "x$enable_videoplayer" = "xyes" ; then
+  PKG_CHECK_MODULES(CAPI_MEDIA_PLAYER, capi-media-player)
+  PKG_CHECK_MODULES(LIBTBM, libtbm)
+fi
+
 # Don't move this - it depends on the platform defaults above
 AM_CONDITIONAL([ASSIMP_ENABLED], [test x$enable_assimp = xyes])
 
@@ -277,7 +289,7 @@ AC_CONFIG_FILES([
 
 AM_CONDITIONAL([USE_PLUGIN], [test x$enable_feedback = xyes || test x$enable_bullet = xyes])
 
-if test "x$enable_feedback" = "xyes" || test "x$enable_bullet" = "xyes"; then
+if test "x$enable_feedback" = "xyes" || test "x$enable_bullet" = "xyes" || test "x$enable_videoplayer" = "xyes"; then
 AC_CONFIG_FILES([
  plugins/Makefile
 ])

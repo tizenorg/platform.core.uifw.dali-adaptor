@@ -32,6 +32,7 @@ adaptor_common_internal_src_files = \
   $(adaptor_common_dir)/timer-impl.cpp \
   $(adaptor_common_dir)/trigger-event.cpp \
   $(adaptor_common_dir)/trigger-event-factory.cpp \
+  $(adaptor_common_dir)/video-player-impl.cpp \
   $(adaptor_common_dir)/virtual-keyboard-impl.cpp \
   \
   $(adaptor_common_dir)/events/gesture-manager.cpp \
@@ -45,10 +46,12 @@ adaptor_common_internal_src_files = \
   $(adaptor_common_dir)/feedback/feedback-plugin-proxy.cpp \
   \
   $(adaptor_common_dir)/gl/egl-factory.cpp \
-  $(adaptor_common_dir)/gl/egl-image-extensions.cpp \
   $(adaptor_common_dir)/gl/egl-sync-implementation.cpp \
   $(adaptor_common_dir)/gl/gl-proxy-implementation.cpp \
   $(adaptor_common_dir)/gl/gl-extensions.cpp
+
+adaptor_common_internal_gl_extensions_src_files = \
+  $(adaptor_common_dir)/gl/egl-image-extensions.cpp
 
 adaptor_common_internal_default_profile_src_files = \
   $(adaptor_common_dir)/color-controller-impl.cpp \

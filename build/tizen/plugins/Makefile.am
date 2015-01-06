@@ -33,6 +33,10 @@ if USE_BULLET
 lib_LTLIBRARIES += libdali-bullet-plugin.la
 endif
 
+if USE_VIDEOPLAYER
+lib_LTLIBRARIES += libdali-videoplayer-plugin.la
+endif
+
 if USE_FEEDBACK
 dalisounddir = ${dataReadOnlyDir}/plugins/sounds/
 dalisound_DATA = ${dali_plugin_sound_files}
@@ -111,4 +115,33 @@ libdali_bullet_plugin_la_LDFLAGS = \
                       -rdynamic
 
 libdali_bullet_plugin_la_DEPENDENCIES =
+endif
+
+if USE_VIDEOPLAYER
+libdali_videoplayer_plugin_la_SOURCES = \
+                     $(videoplayer_tbm_plugin_src_files)
+
+libdali_videoplayer_plugin_la_CXXFLAGS = -DDALI_COMPILATION \
+                      $(DALICORE_CFLAGS) \
+                      $(DLOG_CFLAGS) \
+                      $(CAPI_MEDIA_PLAYER_CFLAGS) \
+                      $(LIBTBM_CFLAGS) \
+                      -I../../../adaptors/public-api \
+                      -I../../../adaptors/public-api/adaptor-framework \
+                      -I../../../adaptors/common \
+                      -I../../../adaptors/tizen \
+                      -I../../../platform-abstractions/slp \
+                      -I../../.. \
+                      -Werror -Wall
+
+libdali_videoplayer_plugin_la_LIBADD = \
+                      $(DLOG_LIBS) \
+                      $(CAPI_MEDIA_PLAYER_LIBS) \
+                      $(LIBTBM_LIBS)
+
+libdali_videoplayer_plugin_la_LDFLAGS = \
+                      -rdynamic
+
+libdali_videoplayer_plugin_la_DEPENDENCIES =
+
 endif
