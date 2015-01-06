@@ -11,7 +11,8 @@ Source0:    %{name}-%{version}.tar.gz
 %define dali_mobile_profile 1
 %define dali_feedback_plugin 0
 %define dali_bullet_plugin 1
-%define dali_assimp_plugin 1
+%define dali_assimp_plugin 0
+%define dali_videoplayer_plugin 0
 
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
@@ -94,6 +95,21 @@ BuildRequires:  libbullet-devel
 Dynamics plugin to wrap the libBulletDynamics libraries
 
 ##############################
+# Dali Video Player Plugin
+##############################
+%package dali-videoplayer-plugin
+Summary:    Plugin to provide video player function
+Group:      System/Libraries
+%if 0%{?dali_videoplayer_plugin}
+BuildRequires:  pkgconfig(capi-media-player)
+BuildRequires:  libtbm-devel
+BuildRequires:  pkgconfig(libtbm)
+%endif
+
+%description dali-videoplayer-plugin
+VideoPlayer plugin to wrap the Player libraries
+
+##############################
 # Preparation
 ##############################
 %prep
@@ -149,6 +165,9 @@ FONT_CONFIGURATION_FILE="%{font_configuration_file}" ; export FONT_CONFIGURATION
 %if 0%{?dali_assimp_plugin}
            --enable-assimp \
 %endif
+%if 0%{?dali_videoplayer_plugin}
+           --enable-videoplayer \
+%endif
            --libdir=%{_libdir}
 
 make %{?jobs:-j%jobs}
@@ -201,6 +220,11 @@ exit 0
 exit 0
 %endif
 
+%if 0%{?dali_videoplayer_plugin}
+%post dali-videoplayer-plugin
+/sbin/ldconfig
+exit 0
+%endif
 ##############################
 #   Pre Uninstall old package
 ##############################
@@ -228,6 +252,11 @@ exit 0
 exit 0
 %endif
 
+%if 0%{?dali_videoplayer_plugin}
+%postun dali-videoplayer-plugin
+/sbin/ldconfig
+exit 0
+%endif
 ##############################
 # Files in Binary Packages
 ##############################
@@ -259,4 +288,10 @@ exit 0
 %files dali-bullet-plugin
 %defattr(-,root,root,-)
 %{_libdir}/libdali-bullet-plugin.so*
+%endif
+
+%if 0%{?dali_videoplayer_plugin}
+%files dali-videoplayer-plugin
+%defattr(-,root,root,-)
+%{_libdir}/libdali-videoplayer-plugin.so*
 %endif
