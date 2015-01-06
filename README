@@ -29,6 +29,9 @@ T.O.C.
 
  gbs build -A [TARGET_ARCH] --spec dali-adaptor-wearable.spec
 
+1.4. under tizen core api(capi) 2.3
+---------------------
+ gbs build -A [TARGET_ARCH] --define "%under_tizen_2_3_capi_enable 1" --spec ...
 
 
 2. Building for Ubuntu desktop
