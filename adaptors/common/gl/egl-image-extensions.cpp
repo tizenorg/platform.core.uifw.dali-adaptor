@@ -37,7 +37,6 @@
 // INTERNAL INCLUDES
 #include <gl/egl-implementation.h>
 
-
 namespace
 {
 // function pointers assigned in InitializeEglImageKHR
@@ -59,7 +58,8 @@ namespace Adaptor
 EglImageExtensions::EglImageExtensions(EglImplementation* eglImpl)
 : mEglImplementation(eglImpl),
   mImageKHRInitialized(false),
-  mImageKHRInitializeFailed(false)
+  mImageKHRInitializeFailed(false),
+  mInputTbmSurface(false)
 {
   DALI_ASSERT_ALWAYS( eglImpl && "EGL Implementation not instantiated" );
 }
@@ -142,6 +142,87 @@ void* EglImageExtensions::CreateImageKHR(EGLClientBuffer pixmap)
   return (void*)eglImage;
 }
 
+void* EglImageExtensions::CreateImageKHR(tbm_surface_h surface)
+{
+#if _TIZEN_BUFFER_MANAGER_SUPPORT_
+  if (mImageKHRInitialized == false)
+  {
+    InitializeEglImageKHR();
+  }
+
+  if (mImageKHRInitialized == false)
+  {
+    return NULL;
+  }
+
+  // Use the EGL image extension
+  const EGLint attribs[] =
+  {
+    EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+    EGL_NONE
+  };
+
+  EGLImageKHR eglImage  = eglCreateImageKHR( mEglImplementation->GetDisplay(),
+                                             EGL_NO_CONTEXT,
+                                             EGL_NATIVE_SURFACE_TIZEN,
+                                             surface,
+                                             attribs );
+  DALI_ASSERT_DEBUG( EGL_NO_IMAGE_KHR != eglImage && "TizenBufferImage::GlExtensionCreate eglCreateImageKHR failed!\n");
+  if( EGL_NO_IMAGE_KHR != eglImage )
+  {
+    switch( eglGetError() )
+    {
+      case EGL_SUCCESS :
+      {
+        break;
+      }
+      case EGL_BAD_DISPLAY:
+      {
+        DALI_LOG_ERROR( "EGL_BAD_DISPLAY: Invalid EGLDisplay object" );
+        break;
+      }
+      case EGL_BAD_CONTEXT:
+      {
+        DALI_LOG_ERROR( "EGL_BAD_CONTEXT: Invalid EGLContext object" );
+        break;
+      }
+      case EGL_BAD_PARAMETER:
+      {
+        DALI_LOG_ERROR( "EGL_BAD_PARAMETER: Invalid target parameter or attribute in attrib_list" );
+        break;
+      }
+      case EGL_BAD_MATCH:
+      {
+        DALI_LOG_ERROR( "EGL_BAD_MATCH: attrib_list does not match target" );
+        break;
+      }
+      case EGL_BAD_ACCESS:
+      {
+        DALI_LOG_ERROR( "EGL_BAD_ACCESS: Previously bound off-screen, or EGLImage sibling error" );
+        break;
+      }
+      case EGL_BAD_ALLOC:
+      {
+        DALI_LOG_ERROR( "EGL_BAD_ALLOC: Insufficient memory is available" );
+        break;
+      }
+      default:
+      {
+        break;
+      }
+    }
+  }
+
+  mInputTbmSurface = true;
+
+  return (void*)eglImage;
+
+#else
+  DALI_LOG_ERROR( "TIZEN BUFFER MANAGER (TBM) surface is not supported\n" );
+  return NULL;
+#endif
+}
+
 void EglImageExtensions::DestroyImageKHR(void* eglImageKHR)
 {
   DALI_ASSERT_DEBUG( mImageKHRInitialized );
@@ -199,7 +280,14 @@ void EglImageExtensions::TargetTextureKHR(void* eglImageKHR)
     GLint glError = glGetError();
 #endif
 
-    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, (GLeglImageOES)eglImage);
+    if(mInputTbmSurface == true)
+    {
+      glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, (GLeglImageOES)eglImage);
+    }
+    else
+    {
+      glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, (GLeglImageOES)eglImage);
+    }
 
 #ifdef EGL_ERROR_CHECKING
     glError = glGetError();
@@ -229,6 +317,7 @@ void EglImageExtensions::InitializeEglImageKHR()
   {
     mImageKHRInitializeFailed = true;
   }
+  mInputTbmSurface = false;
 }
 
 } // namespace Adaptor
