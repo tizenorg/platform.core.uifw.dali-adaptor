@@ -107,6 +107,11 @@ export FFLAGS="$FFLAGS -DTIZEN_DEBUG_ENABLE"
 CXXFLAGS+=" -D_ARCH_ARM_ -lgcc"
 %endif
 
+%if 0%{?under_tizen_2_3_capi_enable}
+CFLAGS+=" -DUNDER_TIZEN_2_3_CAPI"
+CXXFLAGS+=" -DUNDER_TIZEN_2_3_CAPI"
+%endif
+
 libtoolize --force
 cd %{_builddir}/%{name}-%{version}/build/tizen
 autoreconf --install
@@ -117,7 +122,7 @@ FONT_DOWNLOADED_PATH="%{font_downloaded_path}" ; export FONT_DOWNLOADED_PATH
 FONT_APPLICATION_PATH="%{font_application_path}" ; export FONT_APPLICATION_PATH
 FONT_CONFIGURATION_FILE="%{font_configuration_file}" ; export FONT_CONFIGURATION_FILE
 
-%configure --with-jpeg-turbo --enable-gles=30 --enable-profile=%{dali_profile} --libdir=%{_libdir}
+%configure --with-jpeg-turbo --enable-gles=20 --enable-profile=%{dali_profile} --libdir=%{_libdir}
 
 make %{?jobs:-j%jobs}
 
