@@ -2,7 +2,7 @@
 
 plugin_src_files = \
    $(plugin_src_dir)/dali-feedback.cpp
-   
+
 bullet_plugin_src_files = \
    $(plugin_src_dir)/dynamics/bullet/bullet-dynamics-body.cpp \
    $(plugin_src_dir)/dynamics/bullet/bullet-dynamics-debug.cpp \

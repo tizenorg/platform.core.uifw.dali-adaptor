@@ -129,6 +129,7 @@ libdali_videoplayer_plugin_la_CXXFLAGS = -DDALI_COMPILATION \
                       -I../../../adaptors/public-api \
                       -I../../../adaptors/public-api/adaptor-framework \
                       -I../../../adaptors/common \
+                      -I../../../adaptors/tizen \
                       -I../../../platform-abstractions/slp \
                       -I../../.. \
                       -Werror -Wall

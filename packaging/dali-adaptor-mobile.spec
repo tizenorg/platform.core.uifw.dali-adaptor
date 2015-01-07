@@ -94,7 +94,7 @@ BuildRequires:  libbullet-devel
 %description dali-bullet-plugin
 Dynamics plugin to wrap the libBulletDynamics libraries
 
-############################## 
+##############################
 # Dali Video Player Plugin
 ##############################
 %package dali-videoplayer-plugin

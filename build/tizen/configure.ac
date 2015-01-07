@@ -77,7 +77,7 @@ AC_ARG_ENABLE([videoplayer],
               [AC_HELP_STRING([ --enable-videoplayer],
                               [Enable video player plugin])],
               [enable_videoplayer=yes],
-              [enable_videoplayer=no]) 
+              [enable_videoplayer=no])
 
 AM_CONDITIONAL([USE_BULLET], [test x$BULLET = xyes && test x$enable_bullet = xyes])
 AM_CONDITIONAL([USE_FEEDBACK], [test x$enable_feedback = xyes])

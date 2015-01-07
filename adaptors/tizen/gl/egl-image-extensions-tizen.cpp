@@ -17,13 +17,12 @@
 
 
 // CLASS HEADER
-#include "egl-image-extensions.h"
+#include <gl/egl-image-extensions.h>
 
 // EXTERNAL INCLUDES
 #if DALI_GLES_VERSION >= 30
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
-
 #else
 #include <GLES2/gl2.h>
 #endif // DALI_GLES_VERSION >= 30
@@ -32,11 +31,17 @@
 
 #include <EGL/eglext.h>
 
+#include <tbm_surface.h>
+
+// TBM surface support
+#ifndef EGL_NATIVE_SURFACE_TIZEN
+# define EGL_NATIVE_SURFACE_TIZEN 0x32A1
+#endif
+
 #include <dali/integration-api/debug.h>
 
 // INTERNAL INCLUDES
 #include <gl/egl-implementation.h>
-
 
 namespace
 {
@@ -68,7 +73,7 @@ EglImageExtensions::~EglImageExtensions()
 {
 }
 
-void* EglImageExtensions::CreateImageKHR(EGLClientBuffer pixmap)
+void* EglImageExtensions::CreateImageKHR(EGLClientBuffer clientBuffer)
 {
   if (mImageKHRInitialized == false)
   {
@@ -89,11 +94,10 @@ void* EglImageExtensions::CreateImageKHR(EGLClientBuffer pixmap)
 
   EGLImageKHR eglImage  = eglCreateImageKHR( mEglImplementation->GetDisplay(),
                                              EGL_NO_CONTEXT,
-                                             EGL_NATIVE_PIXMAP_KHR,
-                                             pixmap,
+                                             EGL_NATIVE_SURFACE_TIZEN,
+                                             clientBuffer,
                                              attribs );
-
-  DALI_ASSERT_DEBUG( EGL_NO_IMAGE_KHR != eglImage && "X11Image::GlExtensionCreate eglCreateImageKHR failed!\n");
+  DALI_ASSERT_DEBUG( EGL_NO_IMAGE_KHR != eglImage && "TizenBufferImage::GlExtensionCreate eglCreateImageKHR failed!\n");
   if( EGL_NO_IMAGE_KHR != eglImage )
   {
     switch( eglGetError() )
@@ -199,7 +203,7 @@ void EglImageExtensions::TargetTextureKHR(void* eglImageKHR)
     GLint glError = glGetError();
 #endif
 
-    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, (GLeglImageOES)eglImage);
+    glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, (GLeglImageOES)eglImage);
 
 #ifdef EGL_ERROR_CHECKING
     glError = glGetError();

@@ -23,7 +23,6 @@ public_api_src_files = \
   $(adaptor_public_api_dir)/adaptor-framework/style-monitor.cpp \
   $(adaptor_public_api_dir)/adaptor-framework/tilt-sensor.cpp \
   $(adaptor_public_api_dir)/adaptor-framework/timer.cpp \
-  $(adaptor_public_api_dir)/adaptor-framework/tizen-buffer-image.cpp \
   $(adaptor_public_api_dir)/adaptor-framework/tts-player.cpp \
   $(adaptor_public_api_dir)/adaptor-framework/video-player.cpp \
   $(adaptor_public_api_dir)/adaptor-framework/virtual-keyboard.cpp \
@@ -62,7 +61,6 @@ public_api_adaptor_framework_header_files = \
   $(adaptor_public_api_dir)/adaptor-framework/style-change.h \
   $(adaptor_public_api_dir)/adaptor-framework/style-monitor.h \
   $(adaptor_public_api_dir)/adaptor-framework/timer.h \
-  $(adaptor_public_api_dir)/adaptor-framework/tizen-buffer-image.h \
   $(adaptor_public_api_dir)/adaptor-framework/tilt-sensor.h \
   $(adaptor_public_api_dir)/adaptor-framework/tts-player.h \
   $(adaptor_public_api_dir)/adaptor-framework/video-player-plugin.h \

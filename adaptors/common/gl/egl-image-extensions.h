@@ -21,21 +21,6 @@
 // EXTERNAL INCLUDES
 #include <EGL/egl.h>
 
-#if _TIZEN_BUFFER_MANAGER_SUPPORT_
-
-#include <tbm_surface.h>
-
-// TBM surface support
-#ifndef EGL_NATIVE_SURFACE_TIZEN
-# define EGL_NATIVE_SURFACE_TIZEN 0x32A1
-#endif
-
-#else
-
-typedef int* tbm_surface_h;
-
-#endif // if _TIZEN_SDK_2_3_
-
 #include <dali/public-api/images/pixel.h>
 
 namespace Dali
@@ -68,18 +53,10 @@ public:   // EGLImageKHR extension support
   /**
    * If the EGL Image extension is available this function returns a
    * EGLImageKHR
-   * @param pixmap The pixmap
+   * @param clientBuffer The pixmap or ...
    * @return an object that holds a EGLImageKHR
    */
-  void* CreateImageKHR(EGLClientBuffer pixmap);
-
-  /**
-   * If the EGL Image extension is available this function returns a
-   * EGLImageKHR
-   * @param tbmSurface The TBM (Tizen Buffer Manager) surface
-   * @return an object that holds a EGLImageKHR
-   */
-  void* CreateImageKHR(tbm_surface_h surface);
+  void* CreateImageKHR(EGLClientBuffer clientBuffer);
 
   /**
    * If the EGL Image extension is available this function
@@ -105,7 +82,6 @@ private:
   bool mImageKHRInitialized;             ///< Flag for whether extended KHR functions loaded
   bool mImageKHRInitializeFailed;        ///< Flag to avoid trying to reload extended KHR functions, if
                                          /// it fails the first time
-  bool mInputTbmSurface;                 /// < Flag for whether TBM surface input
 };
 
 } // namespace Adaptor

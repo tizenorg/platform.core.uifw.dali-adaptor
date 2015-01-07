@@ -3,15 +3,7 @@
 
 #include <dali/public-api/images/native-image.h>
 
-#if _TIZEN_BUFFER_MANAGER_SUPPORT_
-
 #include <tbm_surface.h>
-
-#else
-
-typedef int* tbm_surface_h;
-
-#endif
 
 namespace Dali DALI_IMPORT_API
 {
