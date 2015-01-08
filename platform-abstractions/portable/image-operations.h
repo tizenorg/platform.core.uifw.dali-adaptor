@@ -52,6 +52,40 @@ enum BoxDimensionTest
 Integration::BitmapPtr ApplyAttributesToBitmap( Integration::BitmapPtr bitmap, const ImageAttributes& requestedAttributes );
 
 /**
+ * inPixels is allowed to alias outPixels.
+ */
+inline void PointSampleRGBA8888(
+    const unsigned char * inPixels,
+    unsigned int inputWidth, unsigned int inputHeight,
+    unsigned char * outPixels,
+    unsigned int desiredWidth, unsigned int desiredHeight )
+{
+  if( inputWidth < 1u || inputHeight < 1u || desiredWidth < 1u || desiredHeight < 1u )
+  {
+    return;
+  }
+  const uint32_t* const inAligned = reinterpret_cast<const uint32_t*>(inPixels);
+  uint32_t* const       outAligned = reinterpret_cast<uint32_t*>(outPixels);
+  const unsigned int deltaX = (inputWidth  << 16u) / desiredWidth;
+  const unsigned int deltaY = (inputHeight << 16u) / desiredHeight;
+
+  unsigned int inY = 0;
+  for ( unsigned int outY = 0; outY < desiredHeight; ++outY )
+  {
+    const uint32_t* const inScanline = &inAligned[inputWidth * (inY >> 16u)];
+    uint32_t* const outScanline = &outAligned[desiredWidth * outY];
+    unsigned int inX = 0;
+    for ( unsigned int outX = 0; outX < desiredWidth; ++outX )
+    {
+      const uint32_t* const inPixelAddress = &inScanline[(inX >> 16u)];
+      outScanline[outX] = *inPixelAddress;
+      inX += deltaX;
+    }
+    inY += deltaY;
+  }
+}
+
+/**
  * @brief Apply downscaling to a bitmap according to requested attributes.
  * @note Only rough power of 2 box filtering is currently performed.
  * @note The input bitmap may be modified and left in an invalid state so must be discarded.
