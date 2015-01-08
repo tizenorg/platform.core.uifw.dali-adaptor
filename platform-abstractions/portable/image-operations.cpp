@@ -677,6 +677,117 @@ void DownscaleInPlacePow2SingleBytePerPixel(
   DownscaleInPlacePow2Generic<1, HalveScanlineInPlace1Byte, AverageScanlines1>( pixels, inputWidth, inputHeight, desiredWidth, desiredHeight, dimensionTest, outWidth, outHeight );
 }
 
+namespace
+{
+
+// Point sample an image to a new resolution (like GL_NEAREST).
+template<typename PIXEL>
+void PointSampleAddressablePixels(
+    const unsigned char * inPixels,
+    unsigned int inputWidth, unsigned int inputHeight,
+    unsigned char * outPixels,
+    unsigned int desiredWidth, unsigned int desiredHeight )
+{
+  DALI_ASSERT_DEBUG( ((desiredHeight <= inputHeight && desiredWidth <= inputHeight) || outPixels >= inPixels + inputWidth * inputHeight * sizeof(PIXEL) || outPixels <= inPixels - desiredWidth * desiredHeight * sizeof(PIXEL)) && "The input and output buffers must not overlap for an upscaling.");
+  DALI_ASSERT_DEBUG( ((uint64_t) inPixels)  % sizeof(PIXEL) == 0 && "Pixel pointers need to be aligned to the size of the pixels (E.g., 4 bytes for RGBA, 2 bytes for RGB565, ...)." );
+  DALI_ASSERT_DEBUG( ((uint64_t) outPixels) % sizeof(PIXEL) == 0 && "Pixel pointers need to be aligned to the size of the pixels (E.g., 4 bytes for RGBA, 2 bytes for RGB565, ...)." );
+
+  if( inputWidth < 1u || inputHeight < 1u || desiredWidth < 1u || desiredHeight < 1u )
+  {
+    return;
+  }
+  const PIXEL* const inAligned = reinterpret_cast<const PIXEL*>(inPixels);
+  PIXEL* const       outAligned = reinterpret_cast<PIXEL*>(outPixels);
+  const unsigned int deltaX = (inputWidth  << 16u) / desiredWidth;
+  const unsigned int deltaY = (inputHeight << 16u) / desiredHeight;
+
+  unsigned int inY = 0;
+  for ( unsigned int outY = 0; outY < desiredHeight; ++outY )
+  {
+    const PIXEL* const inScanline = &inAligned[inputWidth * (inY >> 16u)];
+    PIXEL* const outScanline = &outAligned[desiredWidth * outY];
+    unsigned int inX = 0;
+    for ( unsigned int outX = 0; outX < desiredWidth; ++outX )
+    {
+      const PIXEL* const inPixelAddress = &inScanline[(inX >> 16u)];
+      outScanline[outX] = *inPixelAddress;
+      inX += deltaX;
+    }
+    inY += deltaY;
+  }
+}
+}
+
+/*
+ * RGBA8888
+ */
+void PointSample4BPP(
+    const unsigned char * inPixels,
+    unsigned int inputWidth, unsigned int inputHeight,
+    unsigned char * outPixels,
+    unsigned int desiredWidth, unsigned int desiredHeight )
+{
+  PointSampleAddressablePixels<uint32_t>( inPixels, inputWidth, inputHeight, outPixels, desiredWidth, desiredHeight );
+}
+
+/*
+ * RGB565, LA88
+ */
+void PointSample2BPP(
+    const unsigned char * inPixels,
+    unsigned int inputWidth, unsigned int inputHeight,
+    unsigned char * outPixels,
+    unsigned int desiredWidth, unsigned int desiredHeight )
+{
+  PointSampleAddressablePixels<uint16_t>( inPixels, inputWidth, inputHeight, outPixels, desiredWidth, desiredHeight );
+}
+
+/*
+ * L8, A8
+ */
+void PointSample1BPP(
+    const unsigned char * inPixels,
+    unsigned int inputWidth, unsigned int inputHeight,
+    unsigned char * outPixels,
+    unsigned int desiredWidth, unsigned int desiredHeight )
+{
+  PointSampleAddressablePixels<uint8_t>( inPixels, inputWidth, inputHeight, outPixels, desiredWidth, desiredHeight );
+}
+
+/*
+ * RGB888
+ * RGB888 is a special case as its pixels are not aligned addressable units.
+ */
+void PointSample3BPP(
+    const uint8_t * inPixels,
+    unsigned int inputWidth, unsigned int inputHeight,
+    uint8_t * outPixels,
+    unsigned int desiredWidth, unsigned int desiredHeight )
+{
+  if( inputWidth < 1u || inputHeight < 1u || desiredWidth < 1u || desiredHeight < 1u )
+  {
+    return;
+  }
+  const unsigned int BYTES_PER_PIXEL = 3;
+  const unsigned int deltaX = (inputWidth  << 16u) / desiredWidth;
+  const unsigned int deltaY = (inputHeight << 16u) / desiredHeight;
+
+  unsigned int inY = 0;
+  for ( unsigned int outY = 0; outY < desiredHeight; ++outY )
+  {
+    const uint8_t* const inScanline = &inPixels[inputWidth * (inY >> 16u) * BYTES_PER_PIXEL];
+    uint8_t* const outScanline = &outPixels[desiredWidth * outY * BYTES_PER_PIXEL];
+    unsigned int inX = 0;
+    for ( unsigned int outX = 0; outX < desiredWidth; ++outX )
+    {
+      const uint8_t* const inPixelAddress = &inScanline[(inX >> 16u) * BYTES_PER_PIXEL];
+      outScanline[outX] = *inPixelAddress;
+      inX += deltaX;
+    }
+    inY += deltaY;
+  }
+}
+
 } /* namespace Platform */
 } /* namespace Internal */
 } /* namespace Dali */

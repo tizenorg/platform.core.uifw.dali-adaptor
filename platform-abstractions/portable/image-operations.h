@@ -44,6 +44,11 @@ enum BoxDimensionTest
 };
 
 /**
+ * @defgroup BitmapOperations Bitmap-to-Bitmap Image operations.
+ * @{
+ */
+
+/**
  * @brief Apply requested attributes to bitmap.
  * @param[in] bitmap The input bitmap.
  * @param[in] requestedAttributes Attributes which should be applied to bitmap.
@@ -53,10 +58,17 @@ Integration::BitmapPtr ApplyAttributesToBitmap( Integration::BitmapPtr bitmap, c
 
 /**
  * @brief Apply downscaling to a bitmap according to requested attributes.
+ * @note The input bitmap pixel buffer may be modified and used as scratch working space for efficiency, so it must be discarded.
  * @note Only rough power of 2 box filtering is currently performed.
- * @note The input bitmap may be modified and left in an invalid state so must be discarded.
  **/
 Integration::BitmapPtr DownscaleBitmap( Integration::Bitmap& bitmap, const ImageAttributes& requestedAttributes );
+
+/**@}*/ //< BitmapOperations Bitmap-to-Bitmap Image operations
+
+/**
+ * @defgroup ImageBufferScalingAlgorithms Pixel buffer-level scaling algorithms.
+ * @{
+ */
 
 /**
  * @brief Destructive in-place downscaling by a power of 2 factor.
@@ -124,6 +136,43 @@ void DownscaleInPlacePow2SingleBytePerPixel(
     unsigned int desiredWidth, unsigned int desiredHeight,
     BoxDimensionTest dimensionTest,
     unsigned int& outWidth, unsigned int& outHeight );
+
+/**
+ * @note inPixels is allowed to alias outPixels if this is a downscaling, but not for upscaling.
+ */
+void PointSample4BPP(
+    const unsigned char * inPixels,
+    unsigned int inputWidth, unsigned int inputHeight,
+    unsigned char * outPixels,
+    unsigned int desiredWidth, unsigned int desiredHeight );
+
+/**
+ * RGB888.
+ */
+void PointSample3BPP(
+    const unsigned char * inPixels,
+    unsigned int inputWidth, unsigned int inputHeight,
+    unsigned char * outPixels,
+    unsigned int desiredWidth, unsigned int desiredHeight );
+
+void PointSample2BPP(
+    const unsigned char * inPixels,
+    unsigned int inputWidth, unsigned int inputHeight,
+    unsigned char * outPixels,
+    unsigned int desiredWidth, unsigned int desiredHeight );
+
+void PointSample1BPP(
+    const unsigned char * inPixels,
+    unsigned int inputWidth, unsigned int inputHeight,
+    unsigned char * outPixels,
+    unsigned int desiredWidth, unsigned int desiredHeight );
+
+/**@}*/ //< ImageBufferScalingAlgorithms Pixel buffer-level scaling algorithms.
+
+/**
+ * @defgroup ScalingAlgorithmFragments Composable subunits of the scaling algorithms.
+ * @{
+ */
 
 /**
  * @brief Average adjacent pairs of pixels, overwriting the input array.
@@ -212,9 +261,13 @@ void AverageScanlinesRGB565(
     unsigned char* outputScanline,
     unsigned int width );
 
+/**@}*/ //< ScalingAlgorithmFragments Composable subunits of the scaling algorithms.
+
 /**
- * @brief Inline functions exposed in header to allow unit testing.
+ * @defgroup TestableInlines Inline functions exposed in header to allow unit testing.
+ * @{
  */
+
 /**
  * @brief Average two integer arguments.
  * @return The average of two uint arguments.
@@ -259,6 +312,8 @@ inline uint32_t AveragePixelRGB565( uint32_t a, uint32_t b )
     (AverageComponent( a & 0x1f,   b & 0x1f ) );
   return avg;
 }
+
+/**@}*/ //< TestableInlines Inline functions exposed in header to allow unit testing.
 
 } /* namespace Platform */
 } /* namespace Internal */
