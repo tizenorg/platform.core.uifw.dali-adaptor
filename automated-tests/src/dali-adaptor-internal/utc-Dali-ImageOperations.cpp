@@ -16,8 +16,9 @@
  */
 
 #include <dali-test-suite-utils.h>
-
 #include "platform-abstractions/portable/image-operations.h"
+
+#include <sys/mman.h>
 
 using namespace Dali::Internal::Platform;
 
@@ -1080,3 +1081,136 @@ int UtcDaliImageOperationsAverageScanlinesRGB565(void)
 
   END_TEST;
 }
+
+namespace
+{
+
+void MakeSingleColorImageRGBA8888( unsigned int width, unsigned int height, uint32_t *inputImage )
+{
+  const uint32_t inPixel = PixelRGBA8888( 255, 192, 128, 64 );
+  for( unsigned int i = 0; i < width * height; ++i )
+  {
+    inputImage[i] = inPixel;
+  }
+}
+
+void MakeGuardedOutputImage( unsigned int desiredWidth,  unsigned int desiredHeight, uint32_t *& outputBuffer, uint32_t *& outputImage )
+{
+  const size_t outputBufferSize = getpagesize() + sizeof(uint32_t) * desiredWidth * desiredHeight + getpagesize();
+  outputBuffer = (uint32_t *) valloc( outputBufferSize );
+  mprotect( outputBuffer, getpagesize(), PROT_READ );
+  mprotect( ((char*) outputBuffer) + outputBufferSize - getpagesize(), getpagesize(), PROT_READ );
+  outputImage = outputBuffer + getpagesize() / sizeof(outputBuffer[0]);
+  // Segfaults: outputImage[0] = 0;
+}
+
+}
+
+/**
+ * @brief Test that a scaling doesn't stray outside the bounds of the destination image.
+ */
+int UtcDaliImageOperationsPointSampleRGB888InBounds(void)
+{
+  const unsigned int inputWidth = 163;
+  const unsigned int inputHeight = 691;
+  const unsigned int desiredWidth = 67;
+  const unsigned int desiredHeight = 271;
+
+  uint32_t inputImage[ inputWidth * inputHeight ];
+
+  // Allocate an output image buffer with read-only guard pages at either end:
+  // The test will segfault if it strays into the guard pages.
+  uint32_t *outputBuffer, *outputImage;
+  MakeGuardedOutputImage( desiredWidth, desiredHeight, outputBuffer, outputImage );
+
+  Dali::Internal::Platform::PointSampleRGB888( (const unsigned char *) inputImage, inputWidth, inputHeight, (unsigned char*) outputImage, desiredWidth, desiredHeight );
+
+  free( outputBuffer );
+  DALI_TEST_EQUALS( true, true, TEST_LOCATION );
+
+  END_TEST;
+}
+
+/**
+ * @brief Test that a scaling preserves input color in destination image.
+ */
+int UtcDaliImageOperationsPointSampleRGB888PixelsCorrectColor(void)
+{
+  const unsigned int inputWidth = 137;
+  const unsigned int inputHeight = 571;
+  const unsigned int desiredWidth = 59;
+  const unsigned int desiredHeight = 257;
+
+  uint32_t inputImage[ inputWidth * inputHeight ];
+  MakeSingleColorImageRGBA8888( inputWidth, inputHeight, inputImage );
+
+  uint32_t *outputBuffer, *outputImage;
+  MakeGuardedOutputImage( desiredWidth, desiredHeight, outputBuffer, outputImage );
+
+  Dali::Internal::Platform::PointSampleRGB888( (const unsigned char *) inputImage, inputWidth, inputHeight, (unsigned char*) outputImage, desiredWidth, desiredHeight );
+
+  ///@ToDo: BOOKMARK <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<,
+
+  free( outputBuffer );
+  DALI_TEST_EQUALS( true, true, TEST_LOCATION );
+
+  END_TEST;
+}
+
+/**
+ * @brief Test that scaling down to a 1x1 image works.
+ */
+int UtcDaliImageOperationsPointSampleRGB888ScaleToSinglePixel(void)
+{
+  const unsigned int desiredWidth = 1;
+  const unsigned int desiredHeight = 1;
+
+  uint32_t inputImage[ 1024 * 1024 ];
+  MakeSingleColorImageRGBA8888( 1024, 1024, inputImage );
+  uint32_t outputImage = 0;
+
+  // Try several different starting image sizes:
+
+  // 1x1 -> 1x1:
+  Dali::Internal::Platform::PointSampleRGB888( (const unsigned char *) inputImage,    1,    1, (unsigned char*) &outputImage, desiredWidth, desiredHeight );
+  DALI_TEST_EQUALS( outputImage, inputImage[0], TEST_LOCATION );
+  outputImage = 0;
+
+  // Single-pixel wide tall stripe:
+  Dali::Internal::Platform::PointSampleRGB888( (const unsigned char *) inputImage,    1, 1024, (unsigned char*) &outputImage, desiredWidth, desiredHeight );
+  DALI_TEST_EQUALS( outputImage, inputImage[0], TEST_LOCATION );
+  outputImage = 0;
+
+  // Single-pixel tall, wide strip:
+  Dali::Internal::Platform::PointSampleRGB888( (const unsigned char *) inputImage, 1024,    1, (unsigned char*) &outputImage, desiredWidth, desiredHeight );
+  DALI_TEST_EQUALS( outputImage, inputImage[0], TEST_LOCATION );
+  outputImage = 0;
+
+  // Square mid-size image:
+  Dali::Internal::Platform::PointSampleRGB888( (const unsigned char *) inputImage,  103,  103, (unsigned char*) &outputImage, desiredWidth, desiredHeight );
+  DALI_TEST_EQUALS( outputImage, inputImage[0], TEST_LOCATION );
+  outputImage = 0;
+
+  // Wide mid-size image:
+  Dali::Internal::Platform::PointSampleRGB888( (const unsigned char *) inputImage,  313,  79, (unsigned char*) &outputImage, desiredWidth, desiredHeight );
+  DALI_TEST_EQUALS( outputImage, inputImage[0], TEST_LOCATION );
+  outputImage = 0;
+
+  // Tall mid-size image:
+  Dali::Internal::Platform::PointSampleRGB888( (const unsigned char *) inputImage,   53,  467, (unsigned char*) &outputImage, desiredWidth, desiredHeight );
+  DALI_TEST_EQUALS( outputImage, inputImage[0], TEST_LOCATION );
+  outputImage = 0;
+
+  // 0 x 0 input image (make sure output not written to):
+  outputImage = 0xDEADBEEF;
+  Dali::Internal::Platform::PointSampleRGB888( (const unsigned char *) inputImage,    0,    0, (unsigned char*) &outputImage, desiredWidth, desiredHeight );
+  DALI_TEST_EQUALS( outputImage, 0xDEADBEEF, TEST_LOCATION );
+  outputImage = 0;
+
+  END_TEST;
+}
+
+/*
+ * ToDo:
+ * > Scale to 0 x 0 images: doesn't crash, doesn't write.
+ */
