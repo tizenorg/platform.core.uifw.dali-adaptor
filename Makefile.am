@@ -28,11 +28,8 @@ slp_platform_abstraction_src_dir = ../../../platform-abstractions/slp
 include ../../../platform-abstractions/slp/file.list
 
 # Text Abstraction
-text_abstraction_internal_src_dir = ../../../text-abstraction/internal
-include ../../../text-abstraction/internal/file.list
-
-text_abstraction_public_src_dir = ../../../text-abstraction/public-api
-include ../../../text-abstraction/public-api/file.list
+text_abstraction_src_dir = ../../../text-abstraction
+include ../../../text-abstraction/file.list
 
 # Internal Common
 adaptor_common_dir = ../../../adaptors/common
@@ -169,10 +166,9 @@ endif
 lib_LTLIBRARIES = libdali-adaptor.la
 
 libdali_adaptor_la_SOURCES = \
+                     $(text_abstraction_src_files) \
                      $(base_adaptor_src_files) \
                      $(slp_platform_abstraction_src_files) \
-                     $(text_abstraction_internal_src_files) \
-                     $(text_abstraction_public_src_files) \
                      $(public_api_src_files) \
                      $(adaptor_internal_src_files)
 
@@ -188,8 +184,8 @@ libdali_adaptor_la_includes = \
                       -I../../../adaptors/public-api \
                       -I../../../adaptors/public-api/adaptor-framework \
                       -I../../../adaptors/common \
+                      -I../../../text-abstraction \
                       -I../../../adaptors/
-
 if WAYLAND
 libdali_adaptor_la_includes += \
                       -I../../../adaptors/wayland
@@ -323,9 +319,6 @@ endif
 tizenadaptorpublicapidir = $(devincludepath)/dali/public-api
 tizenadaptorpublicapi_HEADERS = $(public_api_header_files)
 
-tizenadaptortextabstractionpublicapidir = $(tizenadaptorpublicapidir)/text-abstraction
-tizenadaptortextabstractionpublicapi_HEADERS = $(public_text_abstraction_header_files)
-
 tizenadaptorframeworkpublicapidir = $(tizenadaptorpublicapidir)/adaptor-framework
 tizenadaptorframeworkpublicapi_HEADERS = $(public_api_adaptor_framework_header_files)
 
@@ -355,7 +348,6 @@ linker_test_CXXFLAGS = \
   -Werror -Wall
 
 linker_test_DEPENDENCIES = libdali-adaptor.la
-
 linker_test_LDADD = \
   $(DALICORE_LIBS) \
   $(VCONF_LIBS) \

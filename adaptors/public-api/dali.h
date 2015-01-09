@@ -55,6 +55,16 @@
 #include <dali/public-api/adaptor-framework/virtual-keyboard.h>
 #include <dali/public-api/adaptor-framework/window.h>
 
+// Text Abstraction
+
+#include <dali/public-api/text-abstraction/font-run.h>
+#include <dali/public-api/text-abstraction/glyph-info.h>
+#include <dali/public-api/text-abstraction/item-run.h>
+#include <dali/public-api/text-abstraction/text-abstraction-interface.h>
+#include <dali/public-api/text-abstraction/text-type-definitions.h>
+
+// Adaptor Version
+
 #include <dali/public-api/dali-adaptor-version.h>
 
 #endif //__DALI_H__

@@ -1,0 +1,9 @@
+text_abstraction_public_src_files = \
+   $(text_abstraction_public_src_dir)/text-abstraction-interface.cpp
+
+public_text_abstraction_header_files = \
+  $(text_abstraction_public_src_dir)/glyph-info.h \
+  $(text_abstraction_public_src_dir)/font-run.h \
+  $(text_abstraction_public_src_dir)/item-run.h \
+  $(text_abstraction_public_src_dir)/text-abstraction-interface.h \
+  $(text_abstraction_public_src_dir)/text-type-definitions.h
