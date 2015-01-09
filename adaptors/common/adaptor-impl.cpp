@@ -54,7 +54,7 @@
 #include <clipboard-impl.h>
 #include <vsync-monitor.h>
 #include <object-profiler.h>
-
+#include <text-abstraction/internal/plugin-proxy.h>
 #include <slp-logging.h>
 
 
@@ -234,6 +234,8 @@ void Adaptor::Initialize(Dali::Configuration::ContextLoss configuration)
 
   mDaliFeedbackPlugin = new FeedbackPluginProxy( FeedbackPluginProxy::DEFAULT_OBJECT_NAME );
 
+  mTextAbstractionInterface = new TextAbstraction::PluginProxy();
+
   // Should be called after Core creation
   if( mEnvironmentOptions.GetPanGestureLoggingLevel() )
   {
@@ -282,6 +284,7 @@ Adaptor::~Adaptor()
   delete mDaliFeedbackPlugin;
   delete mGLES;
   delete mGestureManager;
+  delete mTextAbstractionInterface;   // unloads the plugin
   delete mPlatformAbstraction;
   delete mCallbackManager;
   delete mPerformanceInterface;
@@ -627,6 +630,11 @@ Dali::Integration::PlatformAbstraction& Adaptor::GetPlatformAbstractionInterface
   return *mPlatformAbstraction;
 }
 
+Dali::TextAbstraction::TextAbstractionInterface& Adaptor::GetTextAbstractionInterface()
+{
+  return *mTextAbstractionInterface;
+}
+
 Dali::Integration::GlAbstraction& Adaptor::GetGlesInterface()
 {
   return *mGLES;
@@ -863,7 +871,8 @@ Adaptor::Adaptor(Dali::Adaptor& adaptor, RenderSurface* surface, const DeviceLay
   mBaseLayout(baseLayout),
   mEnvironmentOptions(),
   mPerformanceInterface(NULL),
-  mObjectProfiler(NULL)
+  mObjectProfiler(NULL),
+  mTextAbstractionInterface( NULL )
 {
   DALI_ASSERT_ALWAYS( gThreadLocalAdaptor.get() == NULL && "Cannot create more than one Adaptor per thread" );
   gThreadLocalAdaptor.reset(this);
