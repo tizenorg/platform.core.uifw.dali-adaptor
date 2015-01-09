@@ -1,0 +1,8 @@
+# Add local source files here
+
+text_abstraction_src_files = \
+   $(text_abstraction_src_dir)/text-abstraction-interface.cpp \
+   $(text_abstraction_src_dir)/plugin-proxy.cpp
+   
+
+
