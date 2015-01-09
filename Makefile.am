@@ -166,9 +166,9 @@ endif
 lib_LTLIBRARIES = libdali-adaptor.la
 
 libdali_adaptor_la_SOURCES = \
+                     $(text_abstraction_src_files) \
                      $(base_adaptor_src_files) \
                      $(slp_platform_abstraction_src_files) \
-                     $(text_abstraction_src_files) \
                      $(public_api_src_files) \
                      $(adaptor_internal_src_files)
 

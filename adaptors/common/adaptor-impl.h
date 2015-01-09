@@ -54,6 +54,11 @@ namespace Integration
 class Core;
 class GlAbstraction;
 }
+namespace TextAbstraction
+{
+class PluginProxy;
+class TextAbstractionInterface;
+}
 
 namespace Internal
 {
@@ -76,6 +81,7 @@ class VSyncMonitor;
 class PerformanceInterface;
 class LifeCycleObserver;
 class ObjectProfiler;
+
 
 /**
  * Implementation of the Adaptor class.
@@ -300,6 +306,10 @@ public:
    */
   void NotifyLanguageChanged();
 
+  // @return TextAbstraction interface
+   Dali::TextAbstraction::TextAbstractionInterface& GetTextAbstractionInterface();
+
+
 public:  //AdaptorInternalServices
 
   /**
@@ -521,6 +531,7 @@ private: // Data
   KernelTrace                           mKernelTracer;                ///< Kernel tracer
   TriggerEventFactory                   mTriggerEventFactory;         ///< Trigger event factory
   ObjectProfiler*                       mObjectProfiler;              ///< Tracks object lifetime for profiling
+  TextAbstraction::PluginProxy*         mTextAbstractionInterface;    ///< Provides text abstraction interface
 public:
   inline static Adaptor& GetImplementation(Dali::Adaptor& adaptor) {return *adaptor.mImpl;}
 };
