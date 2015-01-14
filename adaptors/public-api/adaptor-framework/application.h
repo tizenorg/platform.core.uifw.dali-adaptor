@@ -91,6 +91,7 @@ class DALI_IMPORT_API Application : public BaseHandle
 public:
 
   typedef SignalV2< void (Application&) > AppSignalV2;
+  typedef SignalV2< void (Application&, void *) > CtrlSignalV2;
 
   /**
    * Decides whether a Dali application window is opaque or transparent.
@@ -321,9 +322,34 @@ public:  // Signals
   AppSignalV2& ResizeSignal();
 
   /**
+   * This signal is emitted when there is control signal from the framework.
+   */
+  CtrlSignalV2& ControlSignal();
+
+  /**
    * This signal is emitted when the language is changed on the device.
    */
   AppSignalV2& LanguageChangedSignal();
+
+  /**
+   * This signal is emitted when the device is rotated.
+   */
+  AppSignalV2& DeviceRotatedSignal();
+
+  /**
+   * This signal is emitted when the region of the device is changed.
+   */
+  AppSignalV2& RegionChangedSignal();
+
+  /**
+   * This signal is emitted when the battery level of the device is low.
+   */
+  AppSignalV2& LowBatterySignal();
+
+  /**
+   * This signal is emitted when the memory level of the device is low.
+   */
+  AppSignalV2& LowMemorySignal();
 
 public: // Not intended for application developers
   /**
