@@ -59,6 +59,7 @@ class Application : public BaseObject, public Framework::Observer
 public:
 
   typedef Dali::Application::AppSignalV2 AppSignalV2;
+  typedef Dali::Application::CtrlSignalV2 CtrlSignalV2;
 
   /**
    * Constructor
@@ -172,6 +173,11 @@ public: // From Framework::Observer
   virtual void OnResume();
 
   /**
+   * Called when the framework received controlSignal.
+   */
+  virtual void OnControl(void *data);
+
+  /**
    * Called when the framework informs the application that it should reset itself.
    */
   virtual void OnReset();
@@ -180,6 +186,27 @@ public: // From Framework::Observer
    * Called when the framework informs the application that the language of the device has changed.
    */
   virtual void OnLanguageChanged();
+
+  /**
+   * Called when the framework informs the application that the rotation of the device has changed.
+   */
+  virtual void OnDeviceRotated();
+
+  /**
+   * Called when the framework informs the application that the region of the device has changed.
+   */
+  virtual void OnRegionChanged();
+
+  /**
+   * Called when the framework informs the application that the battery level of the device is low.
+   */
+  virtual void OnLowBattery();
+
+  /**
+   * Called when the framework informs the application that the memory level of the device is low.
+   */
+  virtual void OnLowMemory();
+
 
 public:
 
@@ -217,6 +244,11 @@ public:  // Signals
   Dali::Application::AppSignalV2& ResetSignal() { return mResetSignalV2; }
 
   /**
+   * @copydoc Dali::Application::ControlSignal()
+   */
+  Dali::Application::CtrlSignalV2& ControlSignal() { return mControlSignalV2; }
+
+  /**
    * @copydoc Dali::Application::ResizeSignal()
    */
   Dali::Application::AppSignalV2& ResizeSignal() { return mResizeSignalV2; }
@@ -225,6 +257,27 @@ public:  // Signals
    * @copydoc Dali::Application::LanguageChangedSignal()
    */
   Dali::Application::AppSignalV2& LanguageChangedSignal() { return mLanguageChangedSignalV2; }
+
+  /**
+   * @copydoc Dali::Application::DeviceRotatedSignal()
+   */
+  Dali::Application::AppSignalV2& DeviceRotatedSignal() { return mDeviceRotatedSignalV2; }
+
+  /**
+   * @copydoc Dali::Application::RegionChangedSignal()
+   */
+  Dali::Application::AppSignalV2& RegionChangedSignal() { return mRegionChangedSignalV2; }
+
+  /**
+   * @copydoc Dali::Application::LowBatterySignal()
+   */
+  Dali::Application::AppSignalV2& LowBatterySignal() { return mLowBatterySignalV2; }
+
+  /**
+   * @copydoc Dali::Application::LowMemorySignal()
+   */
+  Dali::Application::AppSignalV2& LowMemorySignal() { return mLowMemorySignalV2; }
+
 
 private:
 
@@ -256,7 +309,12 @@ private:
   AppSignalV2                           mResumeSignalV2;
   AppSignalV2                           mResetSignalV2;
   AppSignalV2                           mResizeSignalV2;
+  CtrlSignalV2                          mControlSignalV2;
   AppSignalV2                           mLanguageChangedSignalV2;
+  AppSignalV2                           mDeviceRotatedSignalV2;
+  AppSignalV2                           mRegionChangedSignalV2;
+  AppSignalV2                           mLowBatterySignalV2;
+  AppSignalV2                           mLowMemorySignalV2;
 
   EventLoop*                            mEventLoop;
   Framework*                            mFramework;
