@@ -91,6 +91,7 @@ class DALI_IMPORT_API Application : public BaseHandle
 public:
 
   typedef SignalV2< void (Application&) > AppSignalV2;
+  typedef SignalV2< void (Application&, void *) > AppControlSignalV2;
 
   /**
    * Decides whether a Dali application window is opaque or transparent.
@@ -321,9 +322,32 @@ public:  // Signals
   AppSignalV2& ResizeSignal();
 
   /**
+   * This signal is emitted when another application sends a launch request to the application.
+   * When the application is launched, this signal is emitted after the main loop of the application starts up. 
+   * The passed parameter describes the launch request and contains the information about why the application is launched.
+   *  https://developer.tizen.org -> Documentation -> Dev Guide -> API Reference -> Native API reference
+   */
+  AppControlSignalV2& AppControlSignal();
+
+  /**
    * This signal is emitted when the language is changed on the device.
    */
   AppSignalV2& LanguageChangedSignal();
+
+  /**
+   * This signal is emitted when the region of the device is changed.
+   */
+  AppSignalV2& RegionChangedSignal();
+
+  /**
+   * This signal is emitted when the battery level of the device is low.
+   */
+  AppSignalV2& BatteryLowSignal();
+
+  /**
+   * This signal is emitted when the memory level of the device is low.
+   */
+  AppSignalV2& MemoryLowSignal();
 
 public: // Not intended for application developers
   /**
