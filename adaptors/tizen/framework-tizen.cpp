@@ -23,6 +23,7 @@
 #include <bundle.h>
 #include <Ecore.h>
 #include <boost/bind.hpp>
+#include <dlog.h>
 
 #include <dali/integration-api/debug.h>
 
@@ -49,7 +50,12 @@ enum
   APP_PAUSE,
   APP_RESUME,
   APP_RESET,
+  APP_CONTROL,
   APP_LANGUAGE_CHANGE,
+  APP_DEVICE_ROTATED,
+  APP_REGION_CHANGED,
+  APP_LOW_BATTERY,
+  APP_LOW_MEMORY
 };
 
 } // Unnamed namespace
@@ -60,20 +66,20 @@ enum
 struct Framework::Impl
 {
   // Constructor
-
   Impl(void* data)
   {
     mEventCallback.create = AppCreate;
     mEventCallback.terminate = AppTerminate;
     mEventCallback.pause = AppPause;
     mEventCallback.resume = AppResume;
-    mEventCallback.service = AppService;
-    mEventCallback.low_memory = NULL;
-    mEventCallback.low_battery = NULL;
-    mEventCallback.device_orientation = DeviceRotated;
-    mEventCallback.language_changed = AppLanguageChange;
-    mEventCallback.region_format_changed = NULL;
 
+    mEventCallback.app_control = AppControl;
+
+    ui_app_add_event_handler(&handlers[APP_EVENT_LOW_BATTERY], APP_EVENT_LOW_BATTERY, AppLowBattery, data);
+    ui_app_add_event_handler(&handlers[APP_EVENT_LOW_MEMORY], APP_EVENT_LOW_MEMORY, AppLowMemory, data);
+    ui_app_add_event_handler(&handlers[APP_EVENT_DEVICE_ORIENTATION_CHANGED], APP_EVENT_DEVICE_ORIENTATION_CHANGED, AppDeviceRotated, data);
+    ui_app_add_event_handler(&handlers[APP_EVENT_LANGUAGE_CHANGED], APP_EVENT_LANGUAGE_CHANGED, AppLanguageChanged, data);
+    ui_app_add_event_handler(&handlers[APP_EVENT_REGION_FORMAT_CHANGED], APP_EVENT_REGION_FORMAT_CHANGED, AppRegionChanged, data);
     mCallbackManager = CallbackManager::New();
   }
 
@@ -85,19 +91,22 @@ struct Framework::Impl
     delete mCallbackManager;
   }
 
-  // Data
 
-  boost::function<void(void)> mAbortCallBack;
-  app_event_callback_s mEventCallback;
-  CallbackManager *mCallbackManager;
-  // Static methods
+// Data
+	boost::function<void(void)> mAbortCallBack;
+	CallbackManager *mCallbackManager;
+
+  ui_app_lifecycle_callback_s mEventCallback;
+  app_event_handler_h handlers[5];
+
 
   /**
    * Called by AppCore on application creation.
    */
+
   static bool AppCreate(void *data)
   {
-    return static_cast<Framework*>(data)->SlpAppStatusHandler(APP_CREATE);
+    return static_cast<Framework*>(data)->SlpAppStatusHandler(APP_CREATE, (void *)NULL);
   }
 
   /**
@@ -105,7 +114,7 @@ struct Framework::Impl
    */
   static void AppTerminate(void *data)
   {
-    static_cast<Framework*>(data)->SlpAppStatusHandler(APP_TERMINATE);
+    static_cast<Framework*>(data)->SlpAppStatusHandler(APP_TERMINATE, (void *)NULL);
   }
 
   /**
@@ -113,7 +122,7 @@ struct Framework::Impl
    */
   static void AppPause(void *data)
   {
-    static_cast<Framework*>(data)->SlpAppStatusHandler(APP_PAUSE);
+    static_cast<Framework*>(data)->SlpAppStatusHandler(APP_PAUSE, (void *)NULL);
   }
 
   /**
@@ -121,21 +130,22 @@ struct Framework::Impl
    */
   static void AppResume(void *data)
   {
-    static_cast<Framework*>(data)->SlpAppStatusHandler(APP_RESUME);
+    static_cast<Framework*>(data)->SlpAppStatusHandler(APP_RESUME, (void *)NULL);
   }
 
   /**
    * Called by AppCore when the application is launched from another module (e.g. homescreen).
    * @param[in] b the bundle data which the launcher module sent
    */
-  static void AppService(service_h service, void *data)
+
+  static void AppControl(app_control_h app_control, void *data)
   {
     Framework* framework = static_cast<Framework*>(data);
 
     if(framework)
     {
       bundle *bundleData = NULL;
-      service_to_bundle(service, &bundleData);
+      app_control_to_bundle(app_control, &bundleData);
 
       if(bundleData)
       {
@@ -153,21 +163,22 @@ struct Framework::Impl
           framework->SetBundleId(bundleId);
         }
       }
-      framework->SlpAppStatusHandler(APP_RESET);
+      framework->SlpAppStatusHandler(APP_RESET, (void *)NULL);
+      framework->SlpAppStatusHandler(APP_CONTROL, (void *)app_control);
     }
   }
 
   /**
    * Called by AppCore when the language changes on the device.
    */
-  static void AppLanguageChange(void* data)
+  static void AppLanguageChanged(app_event_info_h event_info, void *user_data)
   {
-    static_cast<Framework*>(data)->SlpAppStatusHandler(APP_LANGUAGE_CHANGE);
+    static_cast<Framework*>(user_data)->SlpAppStatusHandler(APP_LANGUAGE_CHANGE, (void *)NULL);
   }
 
-  static void DeviceRotated(app_device_orientation_e orientation, void *user_data)
+  static void AppDeviceRotated(app_event_info_h event_info, void *user_data)
   {
-    switch(orientation)
+    switch(app_get_device_orientation())
     {
       case APP_DEVICE_ORIENTATION_0:
         break;
@@ -178,6 +189,22 @@ struct Framework::Impl
       case APP_DEVICE_ORIENTATION_270:
         break;
     }
+    static_cast<Framework*>(user_data)->SlpAppStatusHandler(APP_DEVICE_ROTATED, (void *)NULL);
+  }
+
+  static void AppRegionChanged(app_event_info_h event_info, void *user_data)
+  {
+    static_cast<Framework*>(user_data)->SlpAppStatusHandler(APP_REGION_CHANGED, (void *)NULL);
+  }
+
+  static void AppLowBattery(app_event_info_h event_info, void *user_data)
+  {
+    static_cast<Framework*>(user_data)->SlpAppStatusHandler(APP_LOW_BATTERY, (void *)NULL);
+  }
+
+  static void AppLowMemory(app_event_info_h event_info, void *user_data)
+  {
+    static_cast<Framework*>(user_data)->SlpAppStatusHandler(APP_LOW_MEMORY, (void *)NULL);
   }
 
 };
@@ -211,9 +238,10 @@ Framework::~Framework()
 void Framework::Run()
 {
   mRunning = true;
-
-  app_efl_main(mArgc, mArgv, &mImpl->mEventCallback, this);
-
+  int ret = ui_app_main(*mArgc, *mArgv, &mImpl->mEventCallback, this);
+  if (ret != APP_ERROR_NONE) {
+    LOG(LOG_ERROR, "Framework::Run()", "ui_app_main() is failed. err = %d", ret);
+  }
   mRunning = false;
 }
 
@@ -265,7 +293,7 @@ void Framework::AbortCallback( )
   }
 }
 
-bool Framework::SlpAppStatusHandler(int type)
+bool Framework::SlpAppStatusHandler(int type, void *bundleData)
 {
   switch (type)
   {
@@ -298,8 +326,28 @@ bool Framework::SlpAppStatusHandler(int type)
       mObserver.OnPause();
       break;
 
+    case APP_CONTROL:
+      mObserver.OnControl(bundleData);
+      break;
+
     case APP_LANGUAGE_CHANGE:
       mObserver.OnLanguageChanged();
+      break;
+
+    case APP_DEVICE_ROTATED:
+      mObserver.OnDeviceRotated();
+      break;
+
+    case APP_REGION_CHANGED:
+      mObserver.OnRegionChanged();
+      break;
+
+    case APP_LOW_BATTERY:
+      mObserver.OnLowBattery();
+      break;
+
+    case APP_LOW_MEMORY:
+      mObserver.OnLowMemory();
       break;
 
     default:

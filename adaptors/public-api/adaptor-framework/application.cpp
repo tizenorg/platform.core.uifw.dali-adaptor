@@ -181,10 +181,36 @@ Application::AppSignalV2& Application::ResizeSignal()
   return Internal::Adaptor::GetImplementation(*this).ResizeSignal();
 }
 
+Application::CtrlSignalV2& Application::ControlSignal()
+{
+  return Internal::Adaptor::GetImplementation(*this).ControlSignal();
+}
+
 Application::AppSignalV2& Application::LanguageChangedSignal()
 {
   return Internal::Adaptor::GetImplementation(*this).LanguageChangedSignal();
 }
+
+Application::AppSignalV2& Application::DeviceRotatedSignal()
+{
+  return Internal::Adaptor::GetImplementation(*this).DeviceRotatedSignal();
+}
+
+Application::AppSignalV2& Application::RegionChangedSignal()
+{
+  return Internal::Adaptor::GetImplementation(*this).RegionChangedSignal();
+}
+
+Application::AppSignalV2& Application::LowBatterySignal()
+{
+  return Internal::Adaptor::GetImplementation(*this).LowBatterySignal();
+}
+
+Application::AppSignalV2& Application::LowMemorySignal()
+{
+  return Internal::Adaptor::GetImplementation(*this).LowMemorySignal();
+}
+
 
 Application::Application(Internal::Adaptor::Application* application)
 : BaseHandle(application)
