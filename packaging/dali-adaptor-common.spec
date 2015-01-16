@@ -1,3 +1,5 @@
+%bcond_with wayland
+
 Name:       dali-adaptor
 Summary:    The DALi Tizen Adaptor
 Version:    1.0.25
@@ -13,25 +15,39 @@ Requires:       boost-thread
 Requires:       giflib
 BuildRequires:  pkgconfig
 BuildRequires:  gawk
+BuildRequires:  pkgconfig(sensor)
 BuildRequires:  pkgconfig(aul)
 BuildRequires:  boost-devel
 BuildRequires:  giflib-devel
 BuildRequires:  pkgconfig(fontconfig)
 BuildRequires:  pkgconfig(elementary)
+BuildRequires:  pkgconfig(capi-appfw-application)
 BuildRequires:  libjpeg-turbo-devel
 BuildRequires:  pkgconfig(evas)
 BuildRequires:  dali-devel
 BuildRequires:  dali-integration-devel
 BuildRequires:  libxml2-devel
+BuildRequires:  pkgconfig(vconf)
+BuildRequires:  tts-devel
+BuildRequires:  pkgconfig(dlog)
 BuildRequires:  libdrm-devel
 BuildRequires:  pkgconfig(libexif)
+BuildRequires:  pkgconfig(capi-system-system-settings)
 BuildRequires:  pkgconfig(efl-assist)
 BuildRequires:  pkgconfig(libpng)
+%if %{with wayland}
+BuildRequires:  pkgconfig(glesv2)
+BuildRequires:  pkgconfig(egl)
+BuildRequires:  pkgconfig(ecore-wayland)
+BuildRequires:  pkgconfig(wayland-egl)
+BuildRequires:  pkgconfig(wayland-client)
+%else
 BuildRequires:  pkgconfig(xi)
 BuildRequires:  pkgconfig(xfixes)
 BuildRequires:  pkgconfig(xdamage)
 BuildRequires:  pkgconfig(utilX)
 BuildRequires:  pkgconfig(gles20)
+%endif
 
 %description
 The DALi Tizen Adaptor provides a Tizen specific implementation of the dali-core
@@ -49,6 +65,31 @@ Requires:   %{name} = %{version}-%{release}
 Development components for the DALi Tizen Adaptor - public headers and package configs
 
 ##############################
+# Dali Feedback Plugin
+##############################
+%package dali-feedback-plugin
+Summary:    Plugin to play haptic and audio feedback for Dali
+Group:      System/Libraries
+#Requires:       libdeviced
+BuildRequires:  pkgconfig(mm-sound)
+BuildRequires:  pkgconfig(haptic)
+BuildRequires:  libfeedback-devel
+
+%description dali-feedback-plugin
+Feedback plugin to play haptic and audio feedback for Dali
+
+##############################
+# Dali Dynamics/Bullet Plugin
+##############################
+%package dali-bullet-plugin
+Summary:    Plugin to provide physics
+Group:      System/Libraries
+BuildRequires:  pkgconfig(bullet)
+
+%description dali-bullet-plugin
+Dynamics plugin to wrap the libBulletDynamics libraries
+
+##############################
 # Preparation
 ##############################
 %prep
@@ -61,6 +102,8 @@ Development components for the DALi Tizen Adaptor - public headers and package c
 %define font_downloaded_path     /opt/share/fonts/
 %define font_application_path    /usr/share/app_fonts/
 %define font_configuration_file  /opt/etc/fonts/conf.avail/99-slp.conf
+%define dali_plugin_sound_files  %{dali_data_ro_dir}/plugins/sounds/
+%define dali_plugin_theme_files  %{dali_data_ro_dir}/themes/feedback-themes/
 
 %define dev_include_path %{_includedir}
 
@@ -82,9 +125,15 @@ export FFLAGS="$FFLAGS -DTIZEN_DEBUG_ENABLE"
 CXXFLAGS+=" -D_ARCH_ARM_ -lgcc"
 %endif
 
+%if %{with wayland}
+CFLAGS+=" -DWAYLAND"
+CXXFLAGS+=" -DWAYLAND"
+configure_flags="--enable-wayland"
+%endif
+
 libtoolize --force
 cd %{_builddir}/%{name}-%{version}/build/tizen && autoreconf --install
-cd %{_builddir}/%{name}-%{version}/build/tizen && CXXFLAGS=$CXXFLAGS LDFLAGS=$LDFLAGS DALI_DATA_RW_DIR="%{dali_data_rw_dir}" DALI_DATA_RO_DIR="%{dali_data_ro_dir}" FONT_PRELOADED_PATH="%{font_preloaded_path}" FONT_DOWNLOADED_PATH="%{font_downloaded_path}" FONT_APPLICATION_PATH="%{font_application_path}" FONT_CONFIGURATION_FILE="%{font_configuration_file}" %configure --prefix=$PREFIX --with-jpeg-turbo --enable-gles=20 --enable-profile=UBUNTU $configure_flags --libdir=%{_libdir}
+cd %{_builddir}/%{name}-%{version}/build/tizen && CXXFLAGS=$CXXFLAGS LDFLAGS=$LDFLAGS DALI_DATA_RW_DIR="%{dali_data_rw_dir}" DALI_DATA_RO_DIR="%{dali_data_ro_dir}" FONT_PRELOADED_PATH="%{font_preloaded_path}" FONT_DOWNLOADED_PATH="%{font_downloaded_path}" FONT_APPLICATION_PATH="%{font_application_path}" FONT_CONFIGURATION_FILE="%{font_configuration_file}" %configure --prefix=$PREFIX --with-jpeg-turbo --enable-gles=20 --enable-profile=COMMON $configure_flags --libdir=%{_libdir}
 
 make %{?jobs:-j%jobs}
 
@@ -123,6 +172,15 @@ exit 0
 chown 5000:5000 %{user_font_cache_dir}
 chown 5000:5000 %{user_shader_cache_dir}
 exit 0
+
+%post dali-feedback-plugin
+/sbin/ldconfig
+exit 0
+
+%post dali-bullet-plugin
+/sbin/ldconfig
+exit 0
+
 ##############################
 #   Pre Uninstall old package
 ##############################
@@ -137,6 +195,16 @@ exit 0
 %postun
 /sbin/ldconfig
 exit 0
+
+%postun dali-feedback-plugin
+/sbin/ldconfig
+exit 0
+
+%postun dali-bullet-plugin
+/sbin/ldconfig
+exit 0
+
+
 ##############################
 # Files in Binary Packages
 ##############################
@@ -155,3 +223,13 @@ exit 0
 %defattr(-,root,root,-)
 %{dev_include_path}/dali/*
 %{_libdir}/pkgconfig/dali*.pc
+
+%files dali-feedback-plugin
+%defattr(-,root,root,-)
+%{_libdir}/libdali-feedback-plugin.so*
+%{dali_plugin_sound_files}/*
+%{dali_plugin_theme_files}/*
+
+%files dali-bullet-plugin
+%defattr(-,root,root,-)
+%{_libdir}/libdali-bullet-plugin.so*
