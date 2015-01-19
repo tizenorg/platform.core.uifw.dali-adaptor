@@ -85,6 +85,16 @@ private:
 
   void* mPlugin; ///< TODO replace this with bidirectional support plugin
 
+private:
+
+  /**
+   * Stores bidirectional info per paragraph.
+   */
+  struct BidirectionalInfo;
+
+  Vector<BidirectionalInfo*>                   mParagraphBidirectionalInfo; ///< Stores the bidirectional info per paragraph.
+  Vector<Dali::TextAbstraction::BidiInfoIndex> mFreeIndices;                ///< Stores indices of free positions in the bidirectional info vector.
+
 }; // class BidirectionalSupport
 
 
