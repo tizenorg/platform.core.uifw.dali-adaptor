@@ -21,44 +21,67 @@
 // INTERNAL INCLUDES
 #include <singleton-service-impl.h>
 
-namespace Dali
-{
+// EXTERNAL INCLUDES
+#include <memory.h>
+#include <fribidi/fribidi.h>
 
-namespace Internal
+namespace Dali
 {
 
 namespace TextAbstraction
 {
 
-BidirectionalSupport::BidirectionalSupport()
-: mPlugin( NULL )
+namespace Internal
 {
 
+struct BidirectionalSupport::BidirectionalInfo
+{
+  FriBidiCharType* characterTypes;      ///< The type of each character (right, left, neutral, ...)
+  FriBidiLevel*    embeddedLevels;      ///< Embedded levels.
+  FriBidiParType   paragraphDirection;  ///< The paragraph's direction.
+};
+
+BidirectionalSupport::BidirectionalSupport()
+: mPlugin( NULL ),
+  mParagraphBidirectionalInfo(),
+  mFreeIndices()
+{
 }
 
 BidirectionalSupport::~BidirectionalSupport()
 {
+  // free all resources.
+  for( Vector<BidirectionalInfo*>::Iterator it = mParagraphBidirectionalInfo.Begin(),
+         endIt = mParagraphBidirectionalInfo.End();
+       it != endIt;
+       ++it )
+  {
+    BidirectionalInfo* info = *it;
 
+    free( info->embeddedLevels );
+    free( info->characterTypes );
+    delete info;
+  }
 }
 
-Dali::TextAbstraction::BidirectionalSupport BidirectionalSupport::Get()
+TextAbstraction::BidirectionalSupport BidirectionalSupport::Get()
 {
-  Dali::TextAbstraction::BidirectionalSupport bidirectionalSupportHandle;
+  TextAbstraction::BidirectionalSupport bidirectionalSupportHandle;
 
-  Dali::SingletonService service( SingletonService::Get() );
+  SingletonService service( SingletonService::Get() );
   if ( service )
   {
      // Check whether the singleton is already created
-     Dali::BaseHandle handle = service.GetSingleton( typeid( Dali::TextAbstraction::BidirectionalSupport ) );
+     BaseHandle handle = service.GetSingleton( typeid( TextAbstraction::BidirectionalSupport ) );
      if(handle)
      {
        // If so, downcast the handle
-       BidirectionalSupport* impl = dynamic_cast< Dali::Internal::TextAbstraction::BidirectionalSupport* >( handle.GetObjectPtr() );
-       bidirectionalSupportHandle = Dali::TextAbstraction::BidirectionalSupport( impl );
+       BidirectionalSupport* impl = dynamic_cast< BidirectionalSupport* >( handle.GetObjectPtr() );
+       bidirectionalSupportHandle = TextAbstraction::BidirectionalSupport( impl );
      }
      else // create and register the object
      {
-       bidirectionalSupportHandle = Dali::TextAbstraction::BidirectionalSupport( new BidirectionalSupport);
+       bidirectionalSupportHandle = TextAbstraction::BidirectionalSupport( new BidirectionalSupport );
        service.Register( typeid( bidirectionalSupportHandle ), bidirectionalSupportHandle );
      }
    }
@@ -66,25 +89,98 @@ Dali::TextAbstraction::BidirectionalSupport BidirectionalSupport::Get()
    return bidirectionalSupportHandle;
 }
 
-Dali::TextAbstraction::BidiInfoIndex BidirectionalSupport::CreateInfo( const Dali::TextAbstraction::Character* const paragraph,
-                                                                       Dali::TextAbstraction::Length numberOfCharacters )
+BidiInfoIndex BidirectionalSupport::CreateInfo( const Character* const paragraph,
+                                                Length numberOfCharacters )
 {
-  return 0u;
+  // Reserve memory for the paragraph's bidirectional info.
+  BidirectionalInfo* bidirectionalInfo = new BidirectionalInfo();
+
+  bidirectionalInfo->characterTypes = reinterpret_cast<FriBidiCharType*>( malloc( numberOfCharacters * sizeof( FriBidiCharType ) ) );
+  bidirectionalInfo->embeddedLevels = reinterpret_cast<FriBidiLevel*>( malloc( numberOfCharacters * sizeof( FriBidiLevel ) ) );
+
+  // Retrieve the type of each character..
+  fribidi_get_bidi_types( paragraph, numberOfCharacters, bidirectionalInfo->characterTypes );
+
+  // Retrieve the paragraph's direction.
+  bidirectionalInfo->paragraphDirection = fribidi_get_par_direction( paragraph, numberOfCharacters );
+
+  // Retrieve the embedding levels.
+  fribidi_get_par_embedding_levels( paragraph, numberOfCharacters, &bidirectionalInfo->paragraphDirection, bidirectionalInfo->embeddedLevels );
+
+  // Store the bidirectional info and return the index.
+  BidiInfoIndex index = 0u;
+  const std::size_t numberOfItems = mFreeIndices.Count();
+  if( numberOfItems != 0u )
+  {
+    Vector<BidiInfoIndex>::Iterator it = mFreeIndices.End() - 1u;
+
+    index = *it;
+
+    mFreeIndices.Remove( it );
+
+    *( mParagraphBidirectionalInfo.Begin() + index ) = bidirectionalInfo;
+  }
+  else
+  {
+    index = static_cast<BidiInfoIndex>( numberOfItems );
+
+    mParagraphBidirectionalInfo.PushBack( bidirectionalInfo );
+  }
+
+  return index;
 }
 
-void BidirectionalSupport::DestroyInfo( Dali::TextAbstraction::BidiInfoIndex bidiInfoIndex )
+void BidirectionalSupport::DestroyInfo( BidiInfoIndex bidiInfoIndex )
 {
+  // Retrieve the paragraph's bidirectional info.
+  BidirectionalInfo* bidirectionalInfo = *( mParagraphBidirectionalInfo.Begin() + bidiInfoIndex );
+
+  // Free resources and destroy the container.
+  free( bidirectionalInfo->embeddedLevels );
+  free( bidirectionalInfo->characterTypes );
+  delete bidirectionalInfo;
+
+  // Add the index to the free indices vector.
+  mFreeIndices.PushBack( bidiInfoIndex );
 }
 
-void BidirectionalSupport::Reorder( Dali::TextAbstraction::BidiInfoIndex bidiInfoIndex,
-                                    Dali::TextAbstraction::CharacterIndex firstCharacterIndex,
-                                    Dali::TextAbstraction::Length numberOfCharacters,
-                                    Dali::TextAbstraction::CharacterIndex* visualToLogicalMap )
+void BidirectionalSupport::Reorder( BidiInfoIndex bidiInfoIndex,
+                                    CharacterIndex firstCharacterIndex,
+                                    Length numberOfCharacters,
+                                    CharacterIndex* visualToLogicalMap )
 {
-}
+  const FriBidiFlags flags = FRIBIDI_FLAGS_DEFAULT | FRIBIDI_FLAGS_ARABIC;
 
-} // namespace TextAbstraction
+  // Retrieve the paragraph's bidirectional info.
+  const BidirectionalInfo* const bidirectionalInfo = *( mParagraphBidirectionalInfo.Begin() + bidiInfoIndex );
+
+  // Initialize the visual to logical mapping table to the identity. Otherwise fribidi_reorder_line fails to retrieve a valid mapping table.
+  for( CharacterIndex index = 0u; index < numberOfCharacters; ++index )
+  {
+    visualToLogicalMap[ index ] = index;
+  }
+
+  // Copy embedded levels as fribidi_reorder_line() may change them.
+  const uint32_t embeddedLevelsSize = numberOfCharacters * sizeof( FriBidiLevel );
+  FriBidiLevel* embeddedLevels = reinterpret_cast<FriBidiLevel*>( malloc( embeddedLevelsSize ) );
+  memcpy( embeddedLevels, bidirectionalInfo->embeddedLevels + firstCharacterIndex,  embeddedLevelsSize );
+
+  // Reorder the line.
+  fribidi_reorder_line( flags,
+                        bidirectionalInfo->characterTypes + firstCharacterIndex,
+                        numberOfCharacters,
+                        0u,
+                        bidirectionalInfo->paragraphDirection,
+                        embeddedLevels,
+                        NULL,
+                        reinterpret_cast<FriBidiStrIndex*>( visualToLogicalMap ) );
+
+  // Free resources.
+  free( embeddedLevels );
+}
 
 } // namespace Internal
+
+} // namespace TextAbstraction
 
 } // namespace Dali
