@@ -7,3 +7,7 @@ adaptor_tizen_internal_src_files = \
   $(adaptor_tizen_dir)/tilt-sensor-impl-tizen.cpp \
   $(adaptor_tizen_dir)/tts-player-impl-tizen.cpp
 
+adaptor_common_internal_tizen_buffer_image_src_files = \
+  $(adaptor_tizen_dir)/tizen-buffer-image-tizen.cpp \
+  $(adaptor_tizen_dir)/tizen-buffer-image-impl-tizen.cpp \
+  $(adaptor_tizen_dir)/gl/egl-image-extensions-tizen.cpp
