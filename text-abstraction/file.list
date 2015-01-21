@@ -1,0 +1,5 @@
+# Add local source files here
+
+text_abstraction_src_files = \
+   $(text_abstraction_src_dir)/public-api/clipboard-2.cpp \
+   $(text_abstraction_src_dir)/internal/clipboard-impl-2.cpp
