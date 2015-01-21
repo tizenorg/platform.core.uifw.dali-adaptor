@@ -75,10 +75,12 @@ else
 slp_platform_abstraction_src_files += $(slp_assimp_stubs_src_files)
 endif # ASSIMP_ENABLED
 
+adaptor_internal_src_files =
+
 # COMMON
 if COMMON_PROFILE
 
-adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
+adaptor_internal_src_files += $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_default_profile_src_files) \
                              $(adaptor_tizen_internal_src_files)
 
@@ -95,7 +97,7 @@ endif # COMMON_PROFILE
 # UBUNTU
 if UBUNTU_PROFILE
 
-adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
+adaptor_internal_src_files += $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_default_profile_src_files) \
                              $(adaptor_ubuntu_internal_src_files) \
                              $(adaptor_x11_ubuntu_internal_src_files) \
@@ -107,7 +109,7 @@ endif # UBUNTU_PROFILE
 # MOBILE
 if MOBILE_PROFILE
 
-adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
+adaptor_internal_src_files += $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_mobile_profile_src_files) \
                              $(adaptor_tizen_internal_src_files) \
                              $(adaptor_x11_tizen_internal_src_files)
@@ -118,7 +120,7 @@ endif
 # LITE
 if LITE_PROFILE
 
-adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
+adaptor_internal_src_files += $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_mobile_profile_src_files) \
                              $(adaptor_tizen_internal_src_files) \
                              $(adaptor_x11_tizen_internal_src_files)
@@ -128,7 +130,7 @@ endif
 # WEARABLE
 if WEARABLE_PROFILE
 
-adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
+adaptor_internal_src_files += $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_mobile_profile_src_files) \
                              $(adaptor_tizen_internal_src_files) \
                              $(adaptor_x11_tizen_internal_src_files)
@@ -138,7 +140,7 @@ endif
 # TV
 if TV_PROFILE
 
-adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
+adaptor_internal_src_files += $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_tv_profile_src_files) \
                              $(adaptor_tizen_internal_src_files) \
                              $(adaptor_x11_tv_internal_src_files)
@@ -150,6 +152,13 @@ plugin_themes_dir = ../../../adaptors/common/feedback
 dali_plugin_theme_files = $(plugin_themes_dir)/default-feedback-theme.json
 dalifeedbackthemedir = ${dataReadOnlyDir}/themes/feedback-themes/
 dalifeedbacktheme_DATA = ${dali_plugin_theme_files}
+endif
+
+# gl image extension and tizen buffer image for videoplayer Plugin
+if USE_VIDEOPLAYER
+adaptor_internal_src_files += $(adaptor_common_internal_tizen_buffer_image_src_files)
+else
+adaptor_internal_src_files += $(adaptor_common_internal_gl_extensions_src_files)
 endif
 
 if TURBO_JPEG_IS_ON
@@ -311,6 +320,10 @@ else
 libdali_adaptor_la_LIBADD += -ljpeg
 endif
 
+if USE_VIDEOPLAYER
+libdali_adaptor_la_CXXFLAGS += $(LIBTBM_CFLAGS)
+endif
+
 tizenadaptorpublicapidir = $(devincludepath)/dali/public-api
 tizenadaptorpublicapi_HEADERS = $(public_api_header_files)
 
@@ -348,3 +361,7 @@ linker_test_LDADD = \
   $(VCONF_LIBS) \
   libdali-adaptor.la \
   -L${prefix}/lib
+
+if USE_VIDEOPLAYER
+linker_test_LDADD += $(LIBTBM_LIBS)
+endif
