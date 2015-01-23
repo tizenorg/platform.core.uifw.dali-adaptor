@@ -18,3 +18,5 @@
 /missing
 *.pc
 /documentation.list
+COPYING
+INSTALL

@@ -32,6 +32,7 @@
 #include <vconf-keys.h>
 #endif // DALI_PROFILE_UBUNTU
 
+#include <media-data-type.h>
 #include <dali/public-api/common/vector-wrapper.h>
 #include <dali/public-api/events/touch-point.h>
 #include <dali/public-api/events/key-event.h>
@@ -550,9 +551,9 @@ struct EventHandler::Impl
         }
       }
 
-      // Clipboard don't support that whether clipboard is shown or not. Hide clipboard.
-      Dali::Clipboard clipboard = Clipboard::Get();
-      clipboard.HideClipboard();
+//      // Clipboard don't support that whether clipboard is shown or not. Hide clipboard.
+//      Dali::Clipboard clipboard = Clipboard::Get();
+//      clipboard.HideClipboard();
     }
 
     return ECORE_CALLBACK_PASS_ON;
@@ -951,8 +952,8 @@ struct EventHandler::Impl
         ecore_x_selection_secondary_set(handler->mImpl->mWindow, "", 1);
 
         // Show the clipboard window
-        Dali::Clipboard clipboard = Dali::Clipboard::Get();
-        clipboard.ShowClipboard();
+        //Dali::Clipboard clipboard = Dali::Clipboard::Get();
+        //clipboard.ShowClipboard();
       }
     }
     else if( clientMessageEvent->message_type == ECORE_X_ATOM_E_WINDOW_ROTATION_CHANGE_PREPARE )
@@ -1027,13 +1028,17 @@ struct EventHandler::Impl
         }
         else if ( selectionNotifyEvent->selection == ECORE_X_SELECTION_SECONDARY )
         {
-          // We have got the selected content, inform the clipboard event listener (if we have one).
-          if ( handler->mClipboardEventNotifier )
+          // If clipboard content is selected, inform the clipboard if we have one.
+          if ( handler->mClipboard )
           {
-            ClipboardEventNotifier& clipboardEventNotifier( ClipboardEventNotifier::GetImplementation( handler->mClipboardEventNotifier ) );
+            Clipboard& clipboard( Clipboard::GetImplementation( handler->mClipboard ) );
             std::string content( (char*) selectionData->data, selectionData->length );
-            clipboardEventNotifier.SetContent( content );
-            clipboardEventNotifier.EmitContentSelectedSignal();
+            Ecore_X_Atom atomType = selectionData->content;
+            std::cout << "atomType:" << ecore_x_atom_name_get(atomType) << std::endl;
+            // Package selected clip into the appropriate MediaDataType.
+            MediaDataType plainText;
+            plainText.setPlainText( content );
+            clipboard.EmitPasteDataSignal( plainText );
           }
 
           // Claim the ownership of the SECONDARY selection.
@@ -1108,7 +1113,6 @@ EventHandler::EventHandler( RenderSurface* surface, CoreEventInterface& coreEven
   mRotationObserver( NULL ),
   mDragAndDropDetector( dndDetector ),
   mAccessibilityManager( AccessibilityManager::Get() ),
-  mClipboardEventNotifier( ClipboardEventNotifier::Get() ),
   mClipboard(Clipboard::Get()),
   mImpl( NULL )
 {

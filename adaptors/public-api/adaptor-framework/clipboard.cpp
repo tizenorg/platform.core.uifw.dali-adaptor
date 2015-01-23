@@ -24,12 +24,16 @@
 namespace Dali
 {
 
+const char* const Clipboard::SIGNAL_PASTE_DATA( "clipboard-data-selected" );
+
 Clipboard::Clipboard()
 {
 }
+
 Clipboard::~Clipboard()
 {
 }
+
 Clipboard::Clipboard(Internal::Adaptor::Clipboard *impl)
   : BaseHandle(impl)
 {
@@ -39,29 +43,28 @@ Clipboard Clipboard::Get()
 {
   return Internal::Adaptor::Clipboard::Get();
 }
-bool Clipboard::SetItem( const std::string &itemData)
+void Clipboard::Copy( MediaDataType& data )
 {
-  return GetImplementation(*this).SetItem( itemData );
+  Internal::Adaptor::Clipboard::GetImplementation(*this).Copy( data );
 }
 
-std::string Clipboard::GetItem( unsigned int index )
+void Clipboard::Paste()
 {
-  return GetImplementation(*this).GetItem( index );
+  Internal::Adaptor::Clipboard::GetImplementation(*this).Paste();
 }
 
-unsigned int Clipboard::NumberOfItems()
+void Clipboard::PasteWithUI()
 {
-  return GetImplementation(*this).NumberOfItems();
+  Internal::Adaptor::Clipboard::GetImplementation(*this).PasteWithUI();
+}
+bool Clipboard::IsEmpty()
+{
+  return Internal::Adaptor::Clipboard::GetImplementation(*this).IsEmpty();
 }
 
-void Clipboard::ShowClipboard()
+Clipboard::ClipboardPasteDataSignalType& Clipboard::PasteDataSignal()
 {
-  GetImplementation(*this).ShowClipboard();
-}
-
-void Clipboard::HideClipboard()
-{
-  GetImplementation(*this).HideClipboard();
+  return Internal::Adaptor::Clipboard::GetImplementation(*this).PasteDataSignal();
 }
 
 } // namespace Dali

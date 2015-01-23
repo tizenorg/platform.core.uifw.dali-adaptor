@@ -19,10 +19,11 @@
  */
 
 
-// EXTERNAL INCLUDES
 #include <dali/public-api/math/rect.h>
 #include <dali/public-api/object/base-handle.h>
+#include <dali/public-api/signals/dali-signal.h>
 
+#include "media-data-type.h"
 
 namespace Dali
 {
@@ -33,18 +34,40 @@ namespace Internal DALI_INTERNAL
 namespace Adaptor
 {
 class Clipboard;
-}
-}
+} // Adaptor
+} // Internal
 
 /**
- * @brief Interface to the device's clipboard.
+ * @brief Interface to the system clipboard.
  *
- * Clipboard can manage it's item and set show / hide status.
+ * Once a handle to the Clipboard is retrieved using Get() the Clipboard API can be used on it.
+ *
+ * The clipboard uses the MediaDataType as a container for data to be push and retrieved from the Clipboard.
+ *
+ * Copy() pushes the data to the Clipboard, making it the head item.
+ * Paste() can be used to retrieve the last item pushed to the system Clipboard.
+ *
+ * The MediaDataType Class provides methods to package and strip data from itself to be used by the user.
+ * It is the DataType that is sent back from the Clipboard to the user and the data type the user sends to the clipboard.
+ * The Clipboard implementation unpacks and packs the data into the format the underlying system uses and sends it to the clipboard in that form.
+ * Retrieval of data from the system Clipboard is done by the appropriate implementation and packaged into a MediaDataType object.
+ *
+ * Show or Hide can be used if a graphical representation of the Clipboard is supported by the system.
+ * If a graphical representation is supported then the user can connect to EmitContentSelectedSignal so when an item is selected from
+ * the Clipboard that item is packaged into a MediaDataType and returned with the signal.
  */
 
 class DALI_IMPORT_API Clipboard : public BaseHandle
 {
 public:
+
+  // Typedefs
+
+  typedef Signal< void ( Clipboard&, const MediaDataType& )> ClipboardPasteDataSignalType;
+
+  // Signal Names
+  static const char* const SIGNAL_PASTE_DATA; ///< name "clipboard-paste-data
+
   /**
    * @brief Create an uninitialized Clipboard.
    *
@@ -76,35 +99,44 @@ public:
   /**
    * @brief Send the given string to the clipboard.
    *
-   * @param[in] itemData string to send to clip board
-   * @return bool true if the internal clip board sending was successful.
+   * @param[in] data MediaDataType object holding the data to be pushed to Clipboard
    */
-  bool SetItem( const std::string& itemData );
+  void Copy( MediaDataType& data );
 
   /**
-   * @brief Retreive the string at the given index in the clipboard.
+   * @brief Initiate Retrieval of the MediaDataType object from the clipboard.  If more than one item it will be the last item Set.
    *
-   * @param[in] index item in clipboard list to retrieve
-   * @return string the text item at the current index.
+   * Will trigger a EmitPasteDataSignal with the MediaDataType object.
    */
-  std::string GetItem( unsigned int index );
+  void Paste();
 
   /**
-   * @brief Returns the number of item currently in the clipboard.
+   * @brief Show the Clipboard UI and let user select which item to paste.
    *
-   * @return unsigned int number of clipboard items
+   * Will trigger a EmitPasteDataSignal with the MediaDataType object once user selects an item.
+   *
+   * This will fall back to Paste() if UI Clipboard not support by system.
    */
-  unsigned int NumberOfItems();
+  void PasteWithUI();
 
   /**
-   * @brief Show the clipboard window.
+   * @brief Returns the number of item currently in the Clipboard.
+   *
+   * @return unsigned int number of Clipboard items
    */
-  void ShowClipboard();
+  bool IsEmpty();
 
   /**
-   * @brief Hide the clipboard window.
+   * @brief Signal from the Clipboard that an item has been selected for pasting.
+   *
+   * A callback of the following type may be connected:
+   * @code
+   *   bool YourCallback( Clipboard& clipboard, const MediaDataType data  );
+   * @endcode
+   *
+   * @return The signal to connect to.
    */
-  void HideClipboard();
+  ClipboardPasteDataSignalType& PasteDataSignal();
 
 };
 } // namespace Dali

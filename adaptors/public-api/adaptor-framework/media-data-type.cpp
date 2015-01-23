@@ -34,17 +34,17 @@ MediaDataType::MediaDataType( const std::string& plainText )
 
 bool MediaDataType::IsPlainText()
 {
-  return true;
+  return true; //todo
 }
 
 bool MediaDataType::IsHTML()
 {
-  return true;
+  return true; //todo
 }
 
 bool MediaDataType::IsImage()
 {
-  return true;
+  return true; //todo
 }
 
 void MediaDataType::setPlainText( std::string& plainText )
@@ -57,16 +57,16 @@ void MediaDataType::setPlainText( std::string& plainText )
 void MediaDataType::setHTML( std::string& htmlData )
 {
   mData = htmlData;
-  mDataType = "text/plain";
+  mDataType = "text/plain"; //todo
 }
 
 void MediaDataType::setImage( std::string& imageData )
 {
   mData = imageData;
-  mDataType = "text/plain";
+  mDataType = "text/plain"; //todo
 }
 
-std::string& MediaDataType::getPlainText()
+const std::string& MediaDataType::getPlainText() const
 {
   return mData;
 }

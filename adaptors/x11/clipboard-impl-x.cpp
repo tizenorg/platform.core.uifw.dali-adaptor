@@ -28,6 +28,7 @@
 #include <adaptor-impl.h>
 #include <ecore-x-window-interface.h>
 #include <singleton-service-impl.h>
+#include <media-data-type.h>
 
 namespace //unnamed namespace
 {
@@ -89,6 +90,23 @@ BaseHandle Create()
 }
 TypeRegistration CLIPBOARD_TYPE( typeid(Dali::Clipboard), typeid(Dali::BaseHandle), Create, true /* Create Instance At Startup */ );
 
+/**
+ * Takes the given Atom Item type and returns true if that fits the notion of plain text.
+ * @param[in] atomItemType An Ecore Atom type
+ */
+bool plainText( Ecore_X_Atom &atomItemType )
+{
+  bool result = false;
+
+  if ( ( atomItemType == ECORE_X_ATOM_UTF8_STRING )  || ( atomItemType == ECORE_X_ATOM_STRING )
+    || ( atomItemType == ECORE_X_ATOM_COMPOUND_TEXT ) )
+  {
+    result = true;
+  }
+
+  return result;
+}
+
 } // unnamed namespace
 
 Clipboard::Clipboard( Ecore_X_Window ecoreXwin)
@@ -118,95 +136,129 @@ Dali::Clipboard Clipboard::Get()
 
   return clipboard;
 }
-bool Clipboard::SetItem(const std::string &itemData )
+void Clipboard::Copy( MediaDataType& itemData )
 {
+  std::string dataToCopy = "";
+  if ( itemData.IsPlainText() )
+  {
+    dataToCopy = itemData.getPlainText();
+  }
+
+  printf("dataToCopy[%s]\n", dataToCopy.c_str() );
+
   Ecore_X_Window cbhmWin = ECore::WindowInterface::GetWindow();
   Ecore_X_Atom atomCbhmItem = ecore_x_atom_get( CBHM_ITEM );
   Ecore_X_Atom dataType = ECORE_X_ATOM_STRING;
 
   // Set item (property) to send
-  ecore_x_window_prop_property_set( cbhmWin, atomCbhmItem, dataType, 8, const_cast<char*>( itemData.c_str() ), itemData.length() + 1 );
+  ecore_x_window_prop_property_set( cbhmWin, atomCbhmItem, dataType, 8, const_cast<char*>( dataToCopy.c_str() ), dataToCopy.length() + 1 );
   ecore_x_sync();
+
+
+  /* @info
+  ecore_x_window_prop_property_set Internal Xlib code.
+  http://sourcecodebrowser.com/ecore/0.9.9.063/ecore__x__window__prop_8c_source.html
+  XChangeProperty(_ecore_x_disp, cbhmWin, atomCbhmItem, dataType, 8, PropModeReplace,(unsigned char *)data, number);
+  XChangeProperty(dpy, *win, *pty, XA_ATOM, 32, PropModeReplace, (unsigned char *) types, (int) (sizeof(types) / sizeof(Atom))
+   */
 
   // Trigger sending of item (property)
   Ecore_X_Atom atomCbhmMsg = ecore_x_atom_get( CBHM_MSG );
   ECore::WindowInterface::SendXEvent(ecore_x_display_get(), cbhmWin, False, NoEventMask, atomCbhmMsg, 8, SET_ITEM );
-  return true;
 }
 
-/*
- * Get string at given index of clipboard
+/**
+ * Get data item from  clipboard
  */
-std::string Clipboard::GetItem( unsigned int index )  // change string to a Dali::Text object.
+void Clipboard::Paste()
 {
-  if ( index >= NumberOfItems() )
+  // If clipboard empty then nothing to paste
+  if ( !IsEmpty() )
   {
-    return "";
-  }
+    char sendBuf[20];
+    const int index = 0 ;
+    snprintf( sendBuf, 20,  "%s%d", CBHM_ITEM, index );
+    Ecore_X_Atom xAtomCbhmItem = ecore_x_atom_get( sendBuf );
+    Ecore_X_Atom xAtomItemType = 0;
 
-  std::string emptyString( "" );
-  char sendBuf[20];
+    std::string clipboardString( ECore::WindowInterface::GetWindowProperty(xAtomCbhmItem, &xAtomItemType, index ) );
 
-  snprintf( sendBuf, 20,  "%s%d", CBHM_ITEM, index );
-  Ecore_X_Atom xAtomCbhmItem = ecore_x_atom_get( sendBuf );
-  Ecore_X_Atom xAtomItemType = 0;
-
-  std::string clipboardString( ECore::WindowInterface::GetWindowProperty(xAtomCbhmItem, &xAtomItemType, index ) );
-  if ( !clipboardString.empty() )
-  {
-    Ecore_X_Atom xAtomCbhmError = ecore_x_atom_get( CBHM_ERROR );
-    if ( xAtomItemType != xAtomCbhmError )
+    // Check the retrieved clip item is a valid item.
+    if ( !clipboardString.empty() )
     {
-      return clipboardString;
+      Ecore_X_Atom xAtomCbhmError = ecore_x_atom_get( CBHM_ERROR );
+      if ( xAtomItemType != xAtomCbhmError )
+      {
+        if ( plainText( xAtomItemType  ) )
+        {
+          // Package clip item into appropriate MediaDataType and emit it as a signal.
+          MediaDataType data;
+          data.setPlainText( clipboardString );
+          Dali::Clipboard handle( this );
+          EmitPasteDataSignal( data );
+        }
+      }
     }
-   }
-   return emptyString;
+  }
 }
 
-/*
- * Get number of items in clipboard
- */
-unsigned int Clipboard::NumberOfItems()
+void Clipboard::PasteWithUI()
+{
+  /**
+   * Show clipboard window
+   * Function to send message to show the Clipboard (cbhm) as no direct API available
+   * Reference elementary/src/modules/ctxpopup_copypasteUI/cbhm_helper.c
+   */
+
+  // Claim the ownership of the SECONDARY selection.
+  ecore_x_selection_secondary_set(mApplicationWindow, "", 1);
+  Ecore_X_Window cbhmWin = ECore::WindowInterface::GetWindow();
+  // Launch the clipboard window
+  Ecore_X_Atom atomCbhmMsg = ecore_x_atom_get( CBHM_MSG );
+  ECore::WindowInterface::SendXEvent( ecore_x_display_get(), cbhmWin, False, NoEventMask, atomCbhmMsg, 8, SHOW );
+
+  // If no Clipboard UI exists then should just paste the current clip ( top of the stack )
+}
+
+bool Clipboard::IsEmpty()
 {
   Ecore_X_Atom xAtomCbhmCountGet = ecore_x_atom_get( CBHM_cCOUNT );
 
+  // Use window properties to get number of clip items in the clipboard
   std::string ret( ECore::WindowInterface::GetWindowProperty( xAtomCbhmCountGet, NULL, 0 ) );
-  int count = -1;
+  bool count = true;
 
   if ( !ret.empty() )
   {
-    count = atoi( ret.c_str() );
+    if ( atoi( ret.c_str()) > 0 )
+    {
+      count = false;
+    }
   }
 
   return count;
 }
 
-/**
- * Show clipboard window
- * Function to send message to show the Clipboard (cbhm) as no direct API available
- * Reference elementary/src/modules/ctxpopup_copypasteUI/cbhm_helper.c
- */
-void Clipboard::ShowClipboard()
+void Clipboard::EmitPasteDataSignal( MediaDataType data )
 {
-  // Claim the ownership of the SECONDARY selection.
-  ecore_x_selection_secondary_set(mApplicationWindow, "", 1);
-  Ecore_X_Window cbhmWin = ECore::WindowInterface::GetWindow();
-
-  // Launch the clipboard window
-  Ecore_X_Atom atomCbhmMsg = ecore_x_atom_get( CBHM_MSG );
-  ECore::WindowInterface::SendXEvent( ecore_x_display_get(), cbhmWin, False, NoEventMask, atomCbhmMsg, 8, SHOW );
+  if( !mPasteSignal.Empty() )
+  {
+    Dali::Clipboard handle( this );
+    mPasteSignal.Emit( handle, data );
+  }
 }
 
-void Clipboard::HideClipboard()
-{
-  Ecore_X_Window cbhmWin = ECore::WindowInterface::GetWindow();
-  // Launch the clipboard window
-  Ecore_X_Atom atomCbhmMsg = ecore_x_atom_get( CBHM_MSG );
-  ECore::WindowInterface::SendXEvent( ecore_x_display_get(), cbhmWin, False, NoEventMask, atomCbhmMsg, 8, HIDE );
-
-  // release the ownership of SECONDARY selection
-  ecore_x_selection_secondary_clear();
-}
+//
+//void Clipboard::HideClipboard()
+//{
+//  Ecore_X_Window cbhmWin = ECore::WindowInterface::GetWindow();
+//  // Launch the clipboard window
+//  Ecore_X_Atom atomCbhmMsg = ecore_x_atom_get( CBHM_MSG );
+//  ECore::WindowInterface::SendXEvent( ecore_x_display_get(), cbhmWin, False, NoEventMask, atomCbhmMsg, 8, HIDE );
+//
+//  // release the ownership of SECONDARY selection
+//  ecore_x_selection_secondary_clear();
+//}
 
 
 } // namespace Adaptor
