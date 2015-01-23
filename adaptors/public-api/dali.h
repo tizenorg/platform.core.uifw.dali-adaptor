@@ -30,7 +30,6 @@
 #include <dali/public-api/adaptor-framework/bitmap-loader.h>
 #include <dali/public-api/adaptor-framework/bitmap-saver.h>
 #include <dali/public-api/adaptor-framework/clipboard.h>
-#include <dali/public-api/adaptor-framework/clipboard-event-notifier.h>
 #include <dali/public-api/adaptor-framework/color-controller.h>
 #include <dali/public-api/adaptor-framework/device-layout.h>
 #include <dali/public-api/adaptor-framework/drag-and-drop-detector.h>

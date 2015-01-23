@@ -36,6 +36,7 @@
 #include <dali/public-api/events/touch-point.h>
 #include <dali/public-api/events/key-event.h>
 #include <dali/public-api/events/mouse-wheel-event.h>
+#include <dali/public-api/adaptor-framework/media-data-type.h>
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/events/key-event-integ.h>
 #include <dali/integration-api/events/touch-event-integ.h>
@@ -556,9 +557,9 @@ struct EventHandler::Impl
         }
       }
 
-      // Clipboard don't support that whether clipboard is shown or not. Hide clipboard.
-      Dali::Clipboard clipboard = Clipboard::Get();
-      clipboard.HideClipboard();
+//      // Clipboard don't support that whether clipboard is shown or not. Hide clipboard.
+//      Dali::Clipboard clipboard = Clipboard::Get();
+//      clipboard.HideClipboard();
     }
 
     return ECORE_CALLBACK_PASS_ON;
@@ -1034,12 +1035,12 @@ struct EventHandler::Impl
         else if ( selectionNotifyEvent->selection == ECORE_X_SELECTION_SECONDARY )
         {
           // We have got the selected content, inform the clipboard event listener (if we have one).
-          if ( handler->mClipboardEventNotifier )
+          if ( handler->mClipboard )
           {
-            ClipboardEventNotifier& clipboardEventNotifier( ClipboardEventNotifier::GetImplementation( handler->mClipboardEventNotifier ) );
-            std::string content( (char*) selectionData->data, selectionData->length );
-            clipboardEventNotifier.SetContent( content );
-            clipboardEventNotifier.EmitContentSelectedSignal();
+            Clipboard& clipboard( Clipboard::GetImplementation( handler->mClipboard ) );
+            //std::string content( (char*) selectionData->data, selectionData->length );
+
+            clipboard.PasteDataSignal();
           }
 
           // Claim the ownership of the SECONDARY selection.
@@ -1114,7 +1115,6 @@ EventHandler::EventHandler( RenderSurface* surface, CoreEventInterface& coreEven
   mRotationObserver( NULL ),
   mDragAndDropDetector( dndDetector ),
   mAccessibilityManager( AccessibilityManager::Get() ),
-  mClipboardEventNotifier( ClipboardEventNotifier::Get() ),
   mClipboard(Clipboard::Get()),
   mImpl( NULL )
 {

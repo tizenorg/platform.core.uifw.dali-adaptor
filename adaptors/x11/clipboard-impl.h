@@ -2,7 +2,7 @@
 #define __DALI_INTERNAL_CLIPBOARD_H__
 
 /*
- * Copyright (c) 2014 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,13 @@
  *
  */
 
-// EXTERNAL INCLUDES
-#include <clipboard.h>
+// DALI INCLUDES
 #include <dali/public-api/object/base-object.h>
-#include <Ecore_X.h>
+#include <clipboard.h>
+#include <media-data-type.h>
 
+// EXTERNAL INCLUDES
+#include <Ecore_X.h>
 
 
 namespace Dali
@@ -42,6 +44,8 @@ class Clipboard :  public Dali::BaseObject
 {
 public:
 
+  typedef Dali::Clipboard::ClipboardPasteDataSignal ClipboardPasteDataSignal;
+
   /**
    * @copydoc Dali::ClipboardEventNotifier::Get()
    */
@@ -56,42 +60,46 @@ public:
   virtual ~Clipboard();
 
   /**
-   * @copydoc Dali::Clipboard::SetItem()
+   * @copydoc Dali::Clipboard::Copy()
    */
-  bool SetItem(const std::string &itemData);
+  void Copy( MediaDataType& Copy );
 
   /**
-   * @copydoc Dali::Clipboard::GetItem()
+   * @copydoc Dali::Clipboard::Paste()
    */
-  std::string GetItem( unsigned int index );
+  void Paste();
 
   /**
-   * @copydoc Dali::Clipboard::NumberOfClipboardItems()
+   * @copydoc Dali::Clipboard::PasteWithUI()
    */
-  unsigned int NumberOfItems();
+  void PasteWithUI();
 
   /**
-   * @copydoc Dali::Clipboard::ShowClipboard()
+   * @copydoc Dali::Clipboard::IsEmpty()
    */
-  void ShowClipboard();
+  bool IsEmpty();
+
+public: // Signals
 
   /**
-   * @copydoc Dali::Clipboard::HideClipboard()
+   * @copydoc Dali::Clipboard::PasteDataSignal
    */
-  void HideClipboard();
 
-  
+  ClipboardPasteDataSignal& PasteDataSignal()
+  {
+    return mPasteSignal;
+  }
+
 private:
   Ecore_X_Window mApplicationWindow;
   Clipboard( const Clipboard& );
   Clipboard& operator=( Clipboard& );
 
-}; // class clipboard
+  Dali::Clipboard::ClipboardPasteDataSignal mPasteSignal;
 
+public:
 
-} // namespace Adaptor
-
-} // namespace Internal
+  // Helpers for public-api forwarding methods
 
   inline static Internal::Adaptor::Clipboard& GetImplementation(Dali::Clipboard& clipboard)
   {
@@ -106,6 +114,13 @@ private:
     const BaseObject& handle = clipboard.GetBaseObject();
     return static_cast<const Internal::Adaptor::Clipboard&>(handle);
   }
+
+}; // class clipboard
+
+
+} // namespace Adaptor
+
+} // namespace Internal
 
 } // namespace Dali
 
