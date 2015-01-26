@@ -10,3 +10,8 @@ text_abstraction_src_files = \
    $(text_abstraction_src_dir)/internal/reordering-impl.cpp \
    $(text_abstraction_src_dir)/internal/font-client-impl.cpp
 
+text_abstraction_header_files = \
+   $(text_abstraction_src_dir)/public-api/shaping.h \
+   $(text_abstraction_src_dir)/public-api/segmentation.h \
+   $(text_abstraction_src_dir)/public-api/reordering.h \
+   $(text_abstraction_src_dir)/public-api/font-client.h
