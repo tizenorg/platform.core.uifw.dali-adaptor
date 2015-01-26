@@ -22,8 +22,6 @@
 #include <public-api/font-client.h>
 #include <dali/public-api/object/base-object.h>
 
-
-
 namespace Dali
 {
 
@@ -56,7 +54,17 @@ public:
    */
   static Dali::TextAbstraction::FontClient Get();
 
+  /**
+   * @copydoc Dali::FontClient::Get()
+   */
+  FontId GetFontId( const std::string& path, FaceIndex face );
+
 private:
+
+  /**
+   * Helper for lazy initialization.
+   */
+  void CreateImpl();
 
   // Undefined copy constructor.
   FontClient( const FontClient& );
@@ -64,26 +72,28 @@ private:
   // Undefined assignment constructor.
   FontClient& operator=( FontClient& );
 
-  void* mPlugin; ///< TODO replace this with font client
+private:
+
+  struct Impl;
+  Impl* mImpl;
 
 }; // class FontClient
-
 
 } // namespace TextAbstraction
 
 } // namespace Internal
 
-inline static Internal::TextAbstraction::FontClient& GetImplementation(Dali::TextAbstraction::FontClient& reordering)
+inline static Internal::TextAbstraction::FontClient& GetImplementation(Dali::TextAbstraction::FontClient& fontClient)
 {
-  DALI_ASSERT_ALWAYS( reordering && "reordering handle is empty" );
-  BaseObject& handle = reordering.GetBaseObject();
+  DALI_ASSERT_ALWAYS( fontClient && "fontClient handle is empty" );
+  BaseObject& handle = fontClient.GetBaseObject();
   return static_cast<Internal::TextAbstraction::FontClient&>(handle);
 }
 
-inline static const  Internal::TextAbstraction::FontClient& GetImplementation(const Dali::TextAbstraction::FontClient& reordering)
+inline static const  Internal::TextAbstraction::FontClient& GetImplementation(const Dali::TextAbstraction::FontClient& fontClient)
 {
-  DALI_ASSERT_ALWAYS( reordering && "reordering handle is empty" );
-  const BaseObject& handle = reordering.GetBaseObject();
+  DALI_ASSERT_ALWAYS( fontClient && "fontClient handle is empty" );
+  const BaseObject& handle = fontClient.GetBaseObject();
   return static_cast<const Internal::TextAbstraction::FontClient&>(handle);
 }
 
