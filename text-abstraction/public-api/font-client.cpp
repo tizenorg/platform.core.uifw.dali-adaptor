@@ -30,19 +30,35 @@ namespace TextAbstraction
 FontClient::FontClient()
 {
 }
+
 FontClient::~FontClient()
 {
 }
-FontClient::FontClient(Dali::Internal::TextAbstraction::FontClient *impl)
-  : BaseHandle(impl)
+
+FontClient::FontClient( Internal::FontClient* internal )
+: BaseHandle( internal )
 {
 }
 
 FontClient FontClient::Get()
 {
-  return Dali::Internal::TextAbstraction::FontClient::Get();
+  return Internal::FontClient::Get();
 }
 
+FontId FontClient::GetFontId( const std::string& path, FaceIndex faceIndex )
+{
+  return GetImplementation(*this).GetFontId( path, faceIndex );
+}
+
+bool FontClient::CreateMetrics( FontId fontId, GlyphMetrics& metrics )
+{
+  return GetImplementation(*this).CreateMetrics( fontId, metrics );
+}
+
+bool FontClient::CreateMetrics( FontId fontId, GlyphMetrics* array, uint32_t size )
+{
+  return GetImplementation(*this).CreateMetrics( fontId, array, size );
+}
 
 } // namespace TextAbstraction
 
