@@ -24,22 +24,27 @@
 namespace Dali
 {
 
-namespace Internal
-{
-
 namespace TextAbstraction
 {
 
-
-FontClient::FontClient()
-:mPlugin(NULL)
+namespace Internal
 {
 
+struct FontClient::Impl
+{
+  FontId GetFontId( const std::string& path, FaceIndex face )
+  {
+    return 0; // TODO
+  }
+};
+
+FontClient::FontClient()
+: mImpl( NULL )
+{
 }
 
 FontClient::~FontClient()
 {
-
 }
 
 Dali::TextAbstraction::FontClient FontClient::Get()
@@ -49,24 +54,41 @@ Dali::TextAbstraction::FontClient FontClient::Get()
   Dali::SingletonService service( SingletonService::Get() );
   if ( service )
   {
-     // Check whether the singleton is already created
-     Dali::BaseHandle handle = service.GetSingleton( typeid( Dali::TextAbstraction::FontClient ) );
-     if(handle)
-     {
-       // If so, downcast the handle
-       FontClient* impl = dynamic_cast< Dali::Internal::TextAbstraction::FontClient* >( handle.GetObjectPtr() );
-       fontClientHandle = Dali::TextAbstraction::FontClient( impl );
-     }
-     else // create and register the object
-     {
-       fontClientHandle = Dali::TextAbstraction::FontClient( new FontClient);
-       service.Register( typeid( fontClientHandle ), fontClientHandle );
-     }
-   }
+    // Check whether the singleton is already created
+    Dali::BaseHandle handle = service.GetSingleton( typeid( Dali::TextAbstraction::FontClient ) );
+    if(handle)
+    {
+      // If so, downcast the handle
+      FontClient* impl = dynamic_cast< Dali::TextAbstraction::Internal::FontClient* >( handle.GetObjectPtr() );
+      fontClientHandle = Dali::TextAbstraction::FontClient( impl );
+    }
+    else // create and register the object
+    {
+      fontClientHandle = Dali::TextAbstraction::FontClient( new FontClient );
+      service.Register( typeid( fontClientHandle ), fontClientHandle );
+    }
+  }
 
-   return fontClientHandle;
+  return fontClientHandle;
 }
 
-} // namespace FontClient
+FontId FontClient::GetFontId( const std::string& path, FaceIndex face )
+{
+  CreateImpl();
+
+  return mImpl->GetFontId( path, face );
+}
+
+void FontClient::CreateImpl()
+{
+  if( !mImpl )
+  {
+    mImpl = new Impl();
+  }
+}
+
 } // namespace Internal
+
+} // namespace FontClient
+
 } // namespace Dali
