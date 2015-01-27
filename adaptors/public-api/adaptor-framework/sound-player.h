@@ -90,6 +90,8 @@ public:
    *
    * @pre The SoundPlayer needs to be initialized.
    * @return The signal to connect to.
+   *
+   * @note The signal name is "sound-play-finished" if using BaseHandle::ConnectSignal()
    */
   SoundPlayFinishedSignalV2& SoundPlayFinishedSignal();
 

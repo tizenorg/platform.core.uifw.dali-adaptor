@@ -30,6 +30,8 @@
 namespace // unnamed namespace
 {
 
+const char* const SIGNAL_TILTED = "tilted";
+
 const int NUMBER_OF_SAMPLES = 10;
 
 const float MAX_ACCELEROMETER_XY_VALUE = 9.8f;
@@ -42,7 +44,7 @@ Dali::BaseHandle Create()
 
 Dali::TypeRegistration typeRegistration( typeid(Dali::TiltSensor), typeid(Dali::BaseHandle), Create );
 
-Dali::SignalConnectorType signalConnector1( typeRegistration, Dali::TiltSensor::SIGNAL_TILTED, Dali::Internal::Adaptor::TiltSensor::DoConnectSignal );
+Dali::SignalConnectorType signalConnector1( typeRegistration, SIGNAL_TILTED, Dali::Internal::Adaptor::TiltSensor::DoConnectSignal );
 
 } // unnamed namespace
 
@@ -185,8 +187,7 @@ bool TiltSensor::DoConnectSignal( BaseObject* object, ConnectionTrackerInterface
   bool connected( true );
   TiltSensor* sensor = dynamic_cast<TiltSensor*>( object );
 
-  if( sensor &&
-      Dali::TiltSensor::SIGNAL_TILTED == signalName )
+  if( sensor && ( SIGNAL_TILTED == signalName ) )
   {
     sensor->TiltedSignal().Connect( tracker, functor );
   }
