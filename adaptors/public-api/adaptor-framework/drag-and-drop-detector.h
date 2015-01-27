@@ -38,8 +38,10 @@ class DragAndDropDetector;
 
 /**
  * @brief The DragAndDropDetector%s provides signals when draggable objects are dragged into our window.
+ *
  * It provides signals for when the draggable object enters our window, moves around in our window,
  * leaves our window and when it is finally dropped into our window.
+ *
  * The basic usage is shown below:
  *
  * @code
@@ -91,16 +93,15 @@ public:
 
   // Typedefs
 
-  /**
-   * @brief Drag & Drop signal.
-   */
-  typedef SignalV2< void ( DragAndDropDetector ) > DragAndDropSignalV2;
+  typedef SignalV2< void ( DragAndDropDetector ) > DragAndDropSignalV2; ///< Drag & Drop signal
 
-  // Signal Names
-  static const char* const SIGNAL_ENTERED;///< name "drag-and-drop-entered"
-  static const char* const SIGNAL_EXITED; ///< name "drag-and-drop-exited"
-  static const char* const SIGNAL_MOVED;  ///< name "drag-and-drop-moved"
-  static const char* const SIGNAL_DROPPED;///< name "drag-and-drop-dropped"
+  /// @name Signals
+  /** @{ */
+  static const char* const SIGNAL_ENTERED; ///< name "drag-and-drop-entered"
+  static const char* const SIGNAL_EXITED;  ///< name "drag-and-drop-exited"
+  static const char* const SIGNAL_MOVED;   ///< name "drag-and-drop-moved"
+  static const char* const SIGNAL_DROPPED; ///< name "drag-and-drop-dropped"
+  /** @} */
 
   /**
    * @brief Create an uninitialized handle.
@@ -131,7 +132,7 @@ public:
    */
   Vector2 GetCurrentScreenPosition() const;
 
-public:  // Signals
+  // Signals
 
   /**
    * @brief This is emitted when a dragged object enters a DALi window.
@@ -162,7 +163,6 @@ public:  // Signals
    * @code
    *   void YourCallback( DragAndDropDetector detector );
    * @endcode
-   * This will be replaced by a property notification system once that is in place.
    * @return The signal to connect to.
    */
   DragAndDropSignalV2& MovedSignal();
