@@ -86,7 +86,7 @@ public:
   /**
    * @copydoc Dali::FontClient::CreateMetrics()
    */
-  bool CreateMetrics( FontId fontId, GlyphMetrics* array, uint32_t size, bool horizontal );
+  bool GetGlyphMetrics( FontId fontId, GlyphInfo* array, uint32_t size, bool horizontal );
 
   /**
    * @copydoc Dali::FontClient::CreateBitmap()
