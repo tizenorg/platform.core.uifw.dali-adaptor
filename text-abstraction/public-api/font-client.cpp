@@ -75,9 +75,9 @@ GlyphIndex FontClient::GetGlyphIndex( FontId fontId, Character charcode )
   return GetImplementation(*this).GetGlyphIndex( fontId, charcode );
 }
 
-bool FontClient::CreateMetrics( FontId fontId, GlyphMetrics* array, uint32_t size, bool horizontal )
+bool FontClient::GetGlyphMetrics( FontId fontId, GlyphInfo* array, uint32_t size, bool horizontal )
 {
-  return GetImplementation(*this).CreateMetrics( fontId, array, size, horizontal );
+  return GetImplementation(*this).GetGlyphMetrics( fontId, array, size, horizontal );
 }
 
 BitmapImage FontClient::CreateBitmap( FontId fontId, GlyphIndex glyphIndex )
