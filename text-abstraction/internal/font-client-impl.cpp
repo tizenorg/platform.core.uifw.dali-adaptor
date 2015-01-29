@@ -257,7 +257,7 @@ struct FontClient::Plugin
     return FontId(0);
   }
 
-  bool CreateMetrics( FontId fontId, GlyphMetrics* array, uint32_t size, bool horizontal )
+  bool GetGlyphInfo( FontId fontId, GlyphInfo* array, uint32_t size, bool horizontal )
   {
     bool success( true );
 
@@ -478,11 +478,11 @@ GlyphIndex FontClient::GetGlyphIndex( FontId fontId, Character charcode )
   return mPlugin->GetGlyphIndex( fontId, charcode );
 }
 
-bool FontClient::CreateMetrics( FontId fontId, GlyphMetrics* array, uint32_t size, bool horizontal )
+bool FontClient::GetGlyphInfo( FontId fontId, GlyphInfo* array, uint32_t size, bool horizontal )
 {
   CreatePlugin();
 
-  return mPlugin->CreateMetrics( fontId, array, size, horizontal );
+  return mPlugin->GetGlyphInfo( fontId, array, size, horizontal );
 }
 
 BitmapImage FontClient::CreateBitmap( FontId fontId, GlyphIndex glyphIndex )
