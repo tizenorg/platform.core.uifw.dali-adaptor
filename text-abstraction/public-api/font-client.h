@@ -22,7 +22,7 @@
 #include <dali/public-api/images/bitmap-image.h>
 #include <dali/public-api/common/dali-vector.h>
 #include "text-type-definitions.h"
-#include "glyph-metrics.h"
+#include "glyph-info.h"
 #include "font-list.h"
 
 namespace Dali
@@ -137,14 +137,13 @@ public:
   /**
    * @brief Retrieve the metrics for a series of glyphs.
    *
-   * @param[in] fontId The ID of the font for these glyphs.
-   * @param[in,out] metrics An array of metrics with initialized glyph IDs.
-   * On return, the remaining values will be initialized e.g. glyph size & bearing values.
+   * @param[in,out] metrics An array of glyph-info structures with initialized FontId & GlyphIndex values.
+   * On return, the remaining metrics values will be initialized e.g. glyph size & bearing values.
    * @param[in] size The size of the array.
    * @param[in] horizontal True for horizontal layouts (set to false for vertical layouting).
-   * @return True if metrics were found.
+   * @return True if all of the requested metrics were found.
    */
-  bool CreateMetrics( FontId fontId, GlyphMetrics* array, uint32_t size, bool horizontal = true );
+  bool GetGlyphMetrics( FontId fontId, GlyphInfo* array, uint32_t size, bool horizontal = true );
 
   /**
    * @brief Render a bitmap representation of a glyph.

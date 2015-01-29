@@ -14,7 +14,7 @@ text_abstraction_src_files = \
 text_abstraction_header_files = \
    $(text_abstraction_src_dir)/public-api/font-client.h \
    $(text_abstraction_src_dir)/public-api/font-list.h \
-   $(text_abstraction_src_dir)/public-api/glyph-metrics.h \
+   $(text_abstraction_src_dir)/public-api/glyph-info.h \
    $(text_abstraction_src_dir)/public-api/reordering.h \
    $(text_abstraction_src_dir)/public-api/segmentation.h \
    $(text_abstraction_src_dir)/public-api/shaping.h \
