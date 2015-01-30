@@ -88,7 +88,7 @@ class Adaptor : public Integration::RenderController,
 {
 public:
 
-  typedef Dali::Adaptor::AdaptorSignalV2 AdaptorSignalV2;
+  typedef Dali::Adaptor::AdaptorSignalType AdaptorSignalType;
 
   /**
    * Creates a New Adaptor
@@ -374,17 +374,17 @@ public: // Signals
   /**
    * @copydoc Dali::Adaptor::SignalResized
    */
-  AdaptorSignalV2& ResizedSignal()
+  AdaptorSignalType& ResizedSignal()
   {
-    return mResizedSignalV2;
+    return mResizedSignalType;
   }
 
   /**
    * @copydoc Dali::Adaptor::LanguageChangedSignal
    */
-  AdaptorSignalV2& LanguageChangedSignal()
+  AdaptorSignalType& LanguageChangedSignal()
   {
-    return mLanguageChangedSignalV2;
+    return mLanguageChangedSignalType;
   }
 
 private: // From Dali::Internal::Adaptor::CoreEventInterface
@@ -487,8 +487,8 @@ private: // Types
 
 private: // Data
 
-  AdaptorSignalV2                       mResizedSignalV2;             ///< Resized signal.
-  AdaptorSignalV2                       mLanguageChangedSignalV2;     ///< Language changed signal.
+  AdaptorSignalType                       mResizedSignalType;             ///< Resized signal.
+  AdaptorSignalType                       mLanguageChangedSignalType;     ///< Language changed signal.
 
   Dali::Adaptor&                        mAdaptor;                     ///< Reference to public adaptor instance.
   State                                 mState;                       ///< Current state of the adaptor

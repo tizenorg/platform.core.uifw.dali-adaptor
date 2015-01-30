@@ -312,7 +312,7 @@ void Window::IndicatorClosed( Indicator* indicator )
 
 void Window::IndicatorVisibilityChanged(bool isVisible)
 {
-  mIndicatorVisibilityChangedSignalV2.Emit(isVisible);
+  mIndicatorVisibilityChangedSignalType.Emit(isVisible);
 }
 
 void Window::SetIndicatorActorRotation()

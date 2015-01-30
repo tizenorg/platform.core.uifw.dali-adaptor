@@ -68,13 +68,13 @@ ApplicationPtr Application::New(
 }
 
 Application::Application( int* argc, char** argv[], const std::string& name, const DeviceLayout& baseLayout, Dali::Application::WINDOW_MODE windowMode)
-: mInitSignalV2(),
-  mTerminateSignalV2(),
-  mPauseSignalV2(),
-  mResumeSignalV2(),
-  mResetSignalV2(),
-  mResizeSignalV2(),
-  mLanguageChangedSignalV2(),
+: mInitSignalType(),
+  mTerminateSignalType(),
+  mPauseSignalType(),
+  mResumeSignalType(),
+  mResetSignalType(),
+  mResizeSignalType(),
+  mLanguageChangedSignalType(),
   mEventLoop( NULL ),
   mFramework( NULL ),
   mCommandLineOptions( NULL ),
@@ -163,7 +163,7 @@ void Application::QuitFromMainLoop()
   mAdaptor->Stop();
 
   Dali::Application application(this);
-  mTerminateSignalV2.Emit( application );
+  mTerminateSignalType.Emit( application );
 
   mFramework->Quit();
   // This will trigger OnTerminate(), below, after the main loop has completed.
@@ -211,7 +211,7 @@ void Application::OnInit()
   LanguageChangedSignal().Connect( &GetImplementation( lifecycleController ), &LifecycleController::OnLanguageChanged );
 
   Dali::Application application(this);
-  mInitSignalV2.Emit( application );
+  mInitSignalType.Emit( application );
 
   Internal::Adaptor::Adaptor::GetImplementation( *mAdaptor ).GetCore().SceneCreated();
 }
@@ -229,14 +229,14 @@ void Application::OnPause()
 {
   mAdaptor->Pause();
   Dali::Application application(this);
-  mPauseSignalV2.Emit( application );
+  mPauseSignalType.Emit( application );
 }
 
 void Application::OnResume()
 {
   mAdaptor->Resume();
   Dali::Application application(this);
-  mResumeSignalV2.Emit( application );
+  mResumeSignalType.Emit( application );
 }
 
 void Application::OnReset()
@@ -246,7 +246,7 @@ void Application::OnReset()
    * because Application class already handled initialization in OnInit(), OnReset do nothing.
    */
   Dali::Application application(this);
-  mResetSignalV2.Emit( application );
+  mResetSignalType.Emit( application );
 
   mWindow.Raise();
 }
@@ -259,7 +259,7 @@ void Application::OnLanguageChanged()
 void Application::OnResize(Dali::Adaptor& adaptor)
 {
   Dali::Application application(this);
-  mResizeSignalV2.Emit( application );
+  mResizeSignalType.Emit( application );
 }
 
 bool Application::AddIdle(boost::function<void(void)> callBack)

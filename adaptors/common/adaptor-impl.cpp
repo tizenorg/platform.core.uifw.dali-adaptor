@@ -809,12 +809,12 @@ void Adaptor::SurfaceSizeChanged(const PositionSize& positionSize)
   // let the core know the surface size has changed
   mCore->SurfaceResized(positionSize.width, positionSize.height);
 
-  mResizedSignalV2.Emit( mAdaptor );
+  mResizedSignalType.Emit( mAdaptor );
 }
 
 void Adaptor::NotifyLanguageChanged()
 {
-  mLanguageChangedSignalV2.Emit( mAdaptor );
+  mLanguageChangedSignalType.Emit( mAdaptor );
 }
 
 void Adaptor::RequestUpdateOnce()
@@ -837,8 +837,8 @@ void Adaptor::ProcessCoreEventsFromIdle()
 }
 
 Adaptor::Adaptor(Dali::Adaptor& adaptor, RenderSurface* surface, const DeviceLayout& baseLayout)
-: mResizedSignalV2(),
-  mLanguageChangedSignalV2(),
+: mResizedSignalType(),
+  mLanguageChangedSignalType(),
   mAdaptor(adaptor),
   mState(READY),
   mCore(NULL),

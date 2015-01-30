@@ -120,17 +120,17 @@ void StyleMonitor::SetTheme(const std::string& path)
   EmitStyleChangeSignal(styleChange);
 }
 
-Dali::StyleMonitor::StyleChangeSignalV2& StyleMonitor::StyleChangeSignal()
+Dali::StyleMonitor::StyleChangeSignalType& StyleMonitor::StyleChangeSignal()
 {
-  return mStyleChangeSignalV2;
+  return mStyleChangeSignalType;
 }
 
 void StyleMonitor::EmitStyleChangeSignal(StyleChange styleChange)
 {
-  if( !mStyleChangeSignalV2.Empty() )
+  if( !mStyleChangeSignalType.Empty() )
   {
     Dali::StyleMonitor handle( this );
-    mStyleChangeSignalV2.Emit( handle, styleChange );
+    mStyleChangeSignalType.Emit( handle, styleChange );
   }
 }
 

@@ -49,8 +49,8 @@ class AccessibilityManager : public Dali::BaseObject
 {
 public:
 
-  typedef Dali::AccessibilityManager::AccessibilityActionSignalV2 AccessibilityActionSignalV2;
-  typedef Dali::AccessibilityManager::AccessibilityActionScrollSignalV2 AccessibilityActionScrollSignalV2;
+  typedef Dali::AccessibilityManager::AccessibilityActionSignalType AccessibilityActionSignalType;
+  typedef Dali::AccessibilityManager::AccessibilityActionScrollSignalType AccessibilityActionScrollSignalType;
 
   // Creation
 
@@ -179,105 +179,105 @@ public: // Signals
   /**
    * @copydoc Dali::AccessibilityManager::StatusChangedSignal
    */
-  AccessibilityActionSignalV2& StatusChangedSignal()
+  AccessibilityActionSignalType& StatusChangedSignal()
   {
-    return mStatusChangedSignalV2;
+    return mStatusChangedSignalType;
   }
 
   /**
    * @copydoc Dali::AccessibilityManager::ActionNextSignal
    */
-  AccessibilityActionSignalV2& ActionNextSignal()
+  AccessibilityActionSignalType& ActionNextSignal()
   {
-    return mActionNextSignalV2;
+    return mActionNextSignalType;
   }
 
   /**
    * @copydoc Dali::AccessibilityManager::ActionPreviousSignal
    */
-  AccessibilityActionSignalV2& ActionPreviousSignal()
+  AccessibilityActionSignalType& ActionPreviousSignal()
   {
-    return mActionPreviousSignalV2;
+    return mActionPreviousSignalType;
   }
 
   /**
    * @copydoc Dali::AccessibilityManager::ActionActivateSignal
    */
-  AccessibilityActionSignalV2& ActionActivateSignal()
+  AccessibilityActionSignalType& ActionActivateSignal()
   {
-    return mActionActivateSignalV2;
+    return mActionActivateSignalType;
   }
 
   /**
    * @copydoc Dali::AccessibilityManager::ActionOverSignal
    */
-  AccessibilityActionSignalV2& ActionOverSignal()
+  AccessibilityActionSignalType& ActionOverSignal()
   {
-    return mActionOverSignalV2;
+    return mActionOverSignalType;
   }
 
   /**
    * @copydoc Dali::AccessibilityManager::ActionReadSignal
    */
-  AccessibilityActionSignalV2& ActionReadSignal()
+  AccessibilityActionSignalType& ActionReadSignal()
   {
-    return mActionReadSignalV2;
+    return mActionReadSignalType;
   }
 
   /**
    * @copydoc Dali::AccessibilityManager::ActionReadNextSignal
    */
-  AccessibilityActionSignalV2& ActionReadNextSignal()
+  AccessibilityActionSignalType& ActionReadNextSignal()
   {
-    return mActionReadNextSignalV2;
+    return mActionReadNextSignalType;
   }
 
   /**
    * @copydoc Dali::AccessibilityManager::ActionReadPreviousSignal
    */
-  AccessibilityActionSignalV2& ActionReadPreviousSignal()
+  AccessibilityActionSignalType& ActionReadPreviousSignal()
   {
-    return mActionReadPreviousSignalV2;
+    return mActionReadPreviousSignalType;
   }
 
   /**
    * @copydoc Dali::AccessibilityManager::ActionUpSignal
    */
-  AccessibilityActionSignalV2& ActionUpSignal()
+  AccessibilityActionSignalType& ActionUpSignal()
   {
-    return mActionUpSignalV2;
+    return mActionUpSignalType;
   }
 
   /**
    * @copydoc Dali::AccessibilityManager::ActionDownSignal
    */
-  AccessibilityActionSignalV2& ActionDownSignal()
+  AccessibilityActionSignalType& ActionDownSignal()
   {
-    return mActionDownSignalV2;
+    return mActionDownSignalType;
   }
 
   /**
    * @copydoc Dali::AccessibilityManager::ActionClearFocusSignal
    */
-  AccessibilityActionSignalV2& ActionClearFocusSignal()
+  AccessibilityActionSignalType& ActionClearFocusSignal()
   {
-    return mActionClearFocusSignalV2;
+    return mActionClearFocusSignalType;
   }
 
   /**
    * @copydoc Dali::AccessibilityManager::ActionBackSignal
    */
-  AccessibilityActionSignalV2& ActionBackSignal()
+  AccessibilityActionSignalType& ActionBackSignal()
   {
-    return mActionBackSignalV2;
+    return mActionBackSignalType;
   }
 
   /**
    * @copydoc Dali::AccessibilityManager::ActionScrollSignal
    */
-  AccessibilityActionScrollSignalV2& ActionScrollSignal()
+  AccessibilityActionScrollSignalType& ActionScrollSignal()
   {
-    return mActionScrollSignalV2;
+    return mActionScrollSignalType;
   }
 
 private:
@@ -307,19 +307,19 @@ private:
   Indicator* mIndicator; ///< The indicator
   bool mIndicatorFocused; ///< Whether the Indicator is focused
 
-  AccessibilityActionSignalV2 mStatusChangedSignalV2;
-  AccessibilityActionSignalV2 mActionNextSignalV2;
-  AccessibilityActionSignalV2 mActionPreviousSignalV2;
-  AccessibilityActionSignalV2 mActionActivateSignalV2;
-  AccessibilityActionSignalV2 mActionOverSignalV2;
-  AccessibilityActionSignalV2 mActionReadSignalV2;
-  AccessibilityActionSignalV2 mActionReadNextSignalV2;
-  AccessibilityActionSignalV2 mActionReadPreviousSignalV2;
-  AccessibilityActionSignalV2 mActionUpSignalV2;
-  AccessibilityActionSignalV2 mActionDownSignalV2;
-  AccessibilityActionSignalV2 mActionClearFocusSignalV2;
-  AccessibilityActionSignalV2 mActionBackSignalV2;
-  AccessibilityActionScrollSignalV2 mActionScrollSignalV2;
+  AccessibilityActionSignalType mStatusChangedSignalType;
+  AccessibilityActionSignalType mActionNextSignalType;
+  AccessibilityActionSignalType mActionPreviousSignalType;
+  AccessibilityActionSignalType mActionActivateSignalType;
+  AccessibilityActionSignalType mActionOverSignalType;
+  AccessibilityActionSignalType mActionReadSignalType;
+  AccessibilityActionSignalType mActionReadNextSignalType;
+  AccessibilityActionSignalType mActionReadPreviousSignalType;
+  AccessibilityActionSignalType mActionUpSignalType;
+  AccessibilityActionSignalType mActionDownSignalType;
+  AccessibilityActionSignalType mActionClearFocusSignalType;
+  AccessibilityActionSignalType mActionBackSignalType;
+  AccessibilityActionScrollSignalType mActionScrollSignalType;
 
 public:
 
