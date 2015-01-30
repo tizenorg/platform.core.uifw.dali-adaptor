@@ -128,13 +128,15 @@ void Adaptor::ParseEnvironmentOptions()
   // get logging options
   unsigned int logFrameRateFrequency = GetIntegerEnvironmentVariable( DALI_ENV_FPS_TRACKING, 0 );
   unsigned int logupdateStatusFrequency = GetIntegerEnvironmentVariable( DALI_ENV_UPDATE_STATUS_INTERVAL, 0 );
-  unsigned int logPerformanceLevel = GetIntegerEnvironmentVariable( DALI_ENV_LOG_PERFORMANCE, 0 );
+  unsigned int logPerformanceStats = GetIntegerEnvironmentVariable( DALI_ENV_LOG_PERFORMANCE_STATS, 0 );
+  unsigned int performanceTimeStampOutput= GetIntegerEnvironmentVariable( DALI_ENV_PERFORMANCE_TIMESTAMP_OUPUT, 0 );
+
   unsigned int logPanGesture = GetIntegerEnvironmentVariable( DALI_ENV_LOG_PAN_GESTURE, 0 );
 
   // all threads here (event, update, and render) will send their logs to SLP Platform's LogMessage handler.
   Dali::Integration::Log::LogFunction  logFunction(Dali::SlpPlatform::LogMessage);
 
-  mEnvironmentOptions.SetLogOptions( logFunction, logFrameRateFrequency, logupdateStatusFrequency, logPerformanceLevel, logPanGesture );
+  mEnvironmentOptions.SetLogOptions( logFunction, logFrameRateFrequency, logupdateStatusFrequency, logPerformanceStats, performanceTimeStampOutput, logPanGesture );
 
   int predictionMode;
   if( GetIntegerEnvironmentVariable(DALI_ENV_PAN_PREDICTION_MODE, predictionMode) )
@@ -198,7 +200,8 @@ void Adaptor::Initialize(Dali::Configuration::ContextLoss configuration)
   // Note, Tizen does not use DALI_RETAINS_ALL_DATA, as it can reload images from
   // files automatically.
 
-  if( mEnvironmentOptions.GetPerformanceLoggingLevel() > 0 )
+  if( mEnvironmentOptions.GetPerformanceStatsLoggingOptions() > 0 ||
+      mEnvironmentOptions.GetPerformanceTimeStampOutput() > 0 )
   {
     mPerformanceInterface = PerformanceInterfaceFactory::CreateInterface( *this, mEnvironmentOptions );
   }

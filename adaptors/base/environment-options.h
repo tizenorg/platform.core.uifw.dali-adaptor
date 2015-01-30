@@ -50,13 +50,15 @@ public:
    * @param logFilterOptions bitmask of the logging options defined in intergration/debug.h (e.g.
    * @param logFrameRateFrequency frequency of how often FPS is logged out (e.g. 0 = off, 2 = every 2 seconds).
    * @param logupdateStatusFrequency frequency of how often the update status is logged in number of frames
-   * @param logPerformanceLevel performance logging, 0 = disabled,  1+ =  enabled
+   * @param logPerformanceStats performance statistics logging, 0 = disabled,  1+ =  enabled
+   * @param performanceTimeStampOutput where to output performance related time stamps to
    * @param logPanGestureLevel pan-gesture logging, 0 = disabled,  1 = enabled
    */
   void SetLogOptions( const Dali::Integration::Log::LogFunction& logFunction,
                        unsigned int logFrameRateFrequency,
                        unsigned int logupdateStatusFrequency,
-                       unsigned int logPerformanceLevel,
+                       unsigned int logPerformanceStats,
+                       unsigned int performanceTimeStampOutput,
                        unsigned int logPanGestureLevel );
 
   /**
@@ -80,9 +82,14 @@ public:
   unsigned int GetUpdateStatusLoggingFrequency() const;
 
   /**
-   * @return logPerformanceLevel performance log level ( 0 = off )
+   * @return performance statistics log level ( 0 == off )
    */
-  unsigned int GetPerformanceLoggingLevel() const;
+  unsigned int GetPerformanceStatsLoggingOptions() const;
+
+  /**
+   * @return performance time stamp output ( 0 == off)
+   */
+  unsigned int GetPerformanceTimeStampOutput() const;
 
   /**
    * @return pan-gesture logging level ( 0 == off )
@@ -178,7 +185,8 @@ private:
 
   unsigned int mFpsFrequency;                     ///< how often fps is logged out in seconds
   unsigned int mUpdateStatusFrequency;            ///< how often update status is logged out in frames
-  unsigned int mPerformanceLoggingLevel;          ///< performance log level
+  unsigned int mPerformanceStatsLevel;            ///< performance statistics logging bitmask
+  unsigned int mPerformanceTimeStampOutput;       ///< performance time stamp output ( bitmask)
   unsigned int mPanGestureLoggingLevel;           ///< pan-gesture log level
   int mPanGesturePredictionMode;                  ///< prediction mode for pan gestures
   float mPanGesturePredictionAmount;              ///< prediction amount for pan gestures

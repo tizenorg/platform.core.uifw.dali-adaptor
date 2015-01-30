@@ -27,7 +27,18 @@ namespace Internal
 namespace Adaptor
 {
 
-#define DALI_ENV_LOG_PERFORMANCE "DALI_LOG_PERFORMANCE"
+/**
+ * What performance statistics are logged out to dlog
+ * see StatisticsLogOptions in performance-interface.h for values
+ */
+#define DALI_ENV_LOG_PERFORMANCE_STATS "DALI_LOG_PERFORMANCE_STATS"
+
+/**
+ * Where timestamped events for update/render/event and custom events
+ * are output.
+ * see TimeStampOutput in performance-interface.h for values
+ */
+#define DALI_ENV_PERFORMANCE_TIMESTAMP_OUPUT "DALI_PERFORMANCE_TIMESTAMP_OUPUT"
 
 // environment variable for enabling/disabling fps tracking
 #define DALI_ENV_FPS_TRACKING "DALI_FPS_TRACKING"
