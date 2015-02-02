@@ -35,6 +35,8 @@ typedef uint32_t Character;       ///< A UTF-32 representation of a character
 typedef uint32_t CharacterIndex;  ///< An index into an array of characters
 typedef uint32_t Length;          ///< The length of an array
 typedef uint32_t BidiInfoIndex;   ///< Index to the bidirectional info for a paragraph.
+typedef char     LineBreakInfo;   ///< Line break info (must break, allow break, no break).
+typedef char     WordBreakInfo;   ///< Word break info (break, no break).
 
 } // namespace TextAbstraction
 
