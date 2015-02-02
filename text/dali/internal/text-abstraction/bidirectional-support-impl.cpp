@@ -16,7 +16,7 @@
  */
 
 // CLASS  HEADER
-#include "reordering-impl.h"
+#include "bidirectional-support-impl.h"
 
 // INTERNAL INCLUDES
 #include <singleton-service-impl.h>
@@ -30,43 +30,44 @@ namespace Internal
 namespace TextAbstraction
 {
 
-
-Reordering::Reordering()
-:mPlugin(NULL)
+BidirectionalSupport::BidirectionalSupport()
+: mPlugin( NULL )
 {
 
 }
 
-Reordering::~Reordering()
+BidirectionalSupport::~BidirectionalSupport()
 {
 
 }
 
-Dali::TextAbstraction::Reordering Reordering::Get()
+Dali::TextAbstraction::BidirectionalSupport BidirectionalSupport::Get()
 {
-  Dali::TextAbstraction::Reordering reorderingHandle;
+  Dali::TextAbstraction::BidirectionalSupport bidirectionalSupportHandle;
 
   Dali::SingletonService service( SingletonService::Get() );
   if ( service )
   {
      // Check whether the singleton is already created
-     Dali::BaseHandle handle = service.GetSingleton( typeid( Dali::TextAbstraction::Reordering ) );
+     Dali::BaseHandle handle = service.GetSingleton( typeid( Dali::TextAbstraction::BidirectionalSupport ) );
      if(handle)
      {
        // If so, downcast the handle
-       Reordering* impl = dynamic_cast< Dali::Internal::TextAbstraction::Reordering* >( handle.GetObjectPtr() );
-       reorderingHandle = Dali::TextAbstraction::Reordering( impl );
+       BidirectionalSupport* impl = dynamic_cast< Dali::Internal::TextAbstraction::BidirectionalSupport* >( handle.GetObjectPtr() );
+       bidirectionalSupportHandle = Dali::TextAbstraction::BidirectionalSupport( impl );
      }
      else // create and register the object
      {
-       reorderingHandle = Dali::TextAbstraction::Reordering( new Reordering);
-       service.Register( typeid( reorderingHandle ), reorderingHandle );
+       bidirectionalSupportHandle = Dali::TextAbstraction::BidirectionalSupport( new BidirectionalSupport);
+       service.Register( typeid( bidirectionalSupportHandle ), bidirectionalSupportHandle );
      }
    }
 
-   return reorderingHandle;
+   return bidirectionalSupportHandle;
 }
 
-} // namespace Reordering
+} // namespace TextAbstraction
+
 } // namespace Internal
+
 } // namespace Dali
