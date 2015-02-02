@@ -43,7 +43,22 @@ Reordering Reordering::Get()
   return Dali::Internal::TextAbstraction::Reordering::Get();
 }
 
+Index Reordering::CreateBidirectionalInfo( const Character* const paragraph,
+                                           Length numberOfCharacters )
+{
+  return 0u;
+}
 
+void Reordering::DestroyBidirectionalInfo( Index bidiInfoIndex )
+{
+}
+
+void Reordering::Reorder( Index bidiInfoIndex,
+                          Index firstCharacterIndex,
+                          Length numberOfCharacters,
+                          Index* visualToLogicalMap )
+{
+}
 
 } // namespace TextAbstraction
 

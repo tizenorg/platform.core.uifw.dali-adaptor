@@ -71,7 +71,36 @@ public:
      */
     static Reordering Get();
 
+    /**
+     * Creates bidirectional data for the whole paragraph.
+     *
+     * @param[in] paragraph Pointer to the first character of the paragraph coded in UTF32.
+     * @param[in] numberOfCharacters The number of characters of the paragraph.
+     *
+     * @return An index to a table storing the bidirectional data.
+     */
+    Index CreateBidirectionalInfo( const Character* const paragraph,
+                                   Length numberOfCharacters );
 
+    /**
+     * Destroys the bidirectional data.
+     *
+     * @param[in] bidiInfoIndex The index to the table storing the bidirectional data for the current paragraph.
+     */
+    void DestroyBidirectionalInfo( Index bidiInfoIndex );
+
+    /**
+     * Reorders a line of a paragraph.
+     *
+     * @param[in] bidiInfoIndex The index to the table storing the bidirectional data for the current paragraph.
+     * @param[in] firstCharacterIndex The first character of the line within the whole paragraph.
+     * @param[in] numberOfCharacters The number of characters of the line.
+     * @param[out] visualToLogicalMap The visual to logical conversion map.
+     */
+    void Reorder( Index bidiInfoIndex,
+                  Index firstCharacterIndex,
+                  Length numberOfCharacters,
+                  Index* visualToLogicalMap );
 };
 
 } // namespace TextAbstraction
