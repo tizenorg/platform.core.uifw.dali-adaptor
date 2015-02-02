@@ -43,6 +43,23 @@ Shaping Shaping::Get()
   return Dali::Internal::TextAbstraction::Shaping::Get();
 }
 
+Length Shaping::Shape( const Character* const text,
+                       Length numberOfCharacters,
+                       FontId fontId,
+                       Script scriptId )
+{
+  return GetImplementation( *this ).Shape( text,
+                                           numberOfCharacters,
+                                           fontId,
+                                           scriptId );
+}
+
+void Shaping::GetGlyphs( GlyphInfo* glyphInfo,
+                         CharacterIndex* glyphToCharacterMap )
+{
+  GetImplementation( *this ).GetGlyphs( glyphInfo,
+                                        glyphToCharacterMap );
+}
 
 } // namespace TextAbstraction
 

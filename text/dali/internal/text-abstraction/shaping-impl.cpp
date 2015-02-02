@@ -30,9 +30,8 @@ namespace Internal
 namespace TextAbstraction
 {
 
-
 Shaping::Shaping()
-:mPlugin(NULL)
+: mPlugin( NULL )
 {
 
 }
@@ -67,6 +66,21 @@ Dali::TextAbstraction::Shaping Shaping::Get()
    return shapingHandle;
 }
 
-} // namespace Shaping
+Dali::TextAbstraction::Length Shaping::Shape( const Dali::TextAbstraction::Character* const text,
+                                              Dali::TextAbstraction::Length numberOfCharacters,
+                                              Dali::TextAbstraction::FontId fontId,
+                                              Dali::TextAbstraction::Script scriptId )
+{
+  return 0u;
+}
+
+void Shaping::GetGlyphs( Dali::TextAbstraction::GlyphInfo* glyphInfo,
+                         Dali::TextAbstraction::CharacterIndex* glyphToCharacterMap )
+{
+}
+
+} // namespace TextAbstraction
+
 } // namespace Internal
+
 } // namespace Dali
