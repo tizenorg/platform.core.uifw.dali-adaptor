@@ -17,6 +17,11 @@
  * limitations under the License.
  *
  */
+
+// INTERNAL INCLUDES
+#include <dali/public-api/text-abstraction/text-abstraction.h>
+
+// EXTERNAL INCLUDES
 #include <dali/public-api/object/base-handle.h>
 
 namespace Dali
@@ -34,9 +39,8 @@ class Shaping;
 namespace TextAbstraction
 {
 
-
 /**
- *   Shaping API
+ * Shaping API
  *
  */
 class DALI_IMPORT_API Shaping : public BaseHandle
@@ -44,33 +48,61 @@ class DALI_IMPORT_API Shaping : public BaseHandle
 
 public:
 
-    /**
-     * @brief Create an uninitialized TextAbstraction handle.
-     *
-     */
-    Shaping();
+  /**
+   * @brief Create an uninitialized TextAbstraction handle.
+   *
+   */
+  Shaping();
 
-    /**
-     * @brief Destructor
-     *
-     * This is non-virtual since derived Handle types must not contain data or virtual methods.
-     */
-    ~Shaping();
+  /**
+   * @brief Destructor
+   *
+   * This is non-virtual since derived Handle types must not contain data or virtual methods.
+   */
+  ~Shaping();
 
-    /**
-     * @brief This constructor is used by Shaping::Get().
-     *
-     * @param[in] shaping  A pointer to the internal shaping object.
-     */
-    explicit DALI_INTERNAL Shaping( Dali::Internal::TextAbstraction::Shaping* shaping);
+  /**
+   * @brief This constructor is used by Shaping::Get().
+   *
+   * @param[in] implementation A pointer to the internal shaping object.
+   */
+  explicit DALI_INTERNAL Shaping( Dali::Internal::TextAbstraction::Shaping* implementation );
 
-    /**
-     * @brief Retrieve a handle to the Shaping instance.
-     *
-     * @return A handle to the Shaping
-     */
-    static Shaping Get();
+  /**
+   * @brief Retrieve a handle to the Shaping instance.
+   *
+   * @return A handle to the Shaping
+   */
+  static Shaping Get();
 
+  /**
+   * Shapes the text.
+   *
+   * Call GetGlyphs() to retrieve the glyphs.
+   *
+   * @param[in] text Pointer to the first character of the text coded in UTF32.
+   * @param[in] numberOfCharacters The number of characters to be shaped
+   * @param[in] fontId The font to be used to shape the text.
+   * @param[in] script The text's script.
+   *
+   * @return The size of the buffer required to get the shaped text.
+   */
+  Length Shape( const Character* const text,
+                Length numberOfCharacters,
+                FontId fontId,
+                Script script );
+
+  /**
+   * Gets the shaped text data.
+   *
+   * @pre @p glyphInfo and @p glyphToCharacterMap must have enough space allocated for the number of glyphs.
+   * Call first Shape() to shape the text and get the number of glyphs.
+   *
+   * @param[out] glyphInfo Vector with indices to the glyph within the font, glyph's metrics and advance.
+   * @param[out] glyphToCharacterMap The glyph to character conversion map.
+   */
+  void GetGlyphs( GlyphInfo* glyphInfo,
+                  CharacterIndex* glyphToCharacterMap );
 };
 
 } // namespace TextAbstraction
