@@ -151,26 +151,6 @@ AM_CONDITIONAL([WAYLAND], [test x$enable_wayland = xyes])
 # should not disable features. This allows the developer to override
 # features through the command line.
 
-if test "x$enable_profile" = "xCOMMON"; then
-PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
-fi
-
-if test "x$enable_profile" = "xMOBILE"; then
-PKG_CHECK_MODULES(OPENGLES20, opengl-es-20)
-fi
-
-if test "x$enable_profile" = "xLITE"; then
-PKG_CHECK_MODULES(OPENGLES20, gles20)
-fi
-
-if test "x$enable_profile" = "xWEARABLE"; then
-PKG_CHECK_MODULES(OPENGLES20, gles20)
-fi
-
-if test "x$enable_profile" = "xTV"; then
-PKG_CHECK_MODULES(OPENGLES20, gles20)
-fi
-
 if test "x$enable_profile" = "xUBUNTU"; then
 PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
 else
@@ -180,10 +160,7 @@ PKG_CHECK_MODULES(SENSOR, sensor)
 PKG_CHECK_MODULES(TTS, tts)
 PKG_CHECK_MODULES(VCONF, vconf)
 PKG_CHECK_MODULES(CAPI_SYSTEM_SYSTEM_SETTINGS, capi-system-system-settings)
-fi
-
-if test "x$enable_profile" != "xTV" && test "x$enable_profile" != "xUBUNTU"; then
-PKG_CHECK_MODULES(EFL_ASSIST, efl-assist)
+PKG_CHECK_MODULES(OPENGLES20, gles20)
 fi
 
 if test "x$enable_wayland" = "xyes"; then
