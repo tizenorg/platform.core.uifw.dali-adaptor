@@ -23,7 +23,7 @@
 #ifdef DALI_PROFILE_LITE
 #include <sensor_internal.h>
 #else
-#include <sensor.h>
+#include <sensor_internal.h>
 #endif
 
 #include <dali/public-api/object/type-registry.h>
