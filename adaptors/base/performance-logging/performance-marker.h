@@ -115,13 +115,14 @@ public:
   static unsigned int MicrosecondDiff( const PerformanceMarker& start, const PerformanceMarker& end  );
 
   /**
+   * @param filter the filter to enable
    * @return if a marker is enabled as part of a group
    */
   bool IsFilterEnabled( MarkerFilter filter ) const;
 private:
 
-  PerformanceInterface::MarkerType mType;         ///< marker type
-  FrameTimeStamp mTimeStamp;                      ///< frame time stamp
+  PerformanceInterface::MarkerType    mType;         ///< marker type
+  FrameTimeStamp                      mTimeStamp;    ///< frame time stamp
 
 };
 

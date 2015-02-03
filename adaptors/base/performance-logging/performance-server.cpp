@@ -36,18 +36,31 @@ PerformanceServer::PerformanceServer( AdaptorInternalServices& adaptorServices,
 :mPlatformAbstraction( adaptorServices.GetPlatformAbstractionInterface() ),
  mEnvironmentOptions( environmentOptions ),
  mKernelTrace( adaptorServices.GetKernelTraceInterface() ),
+ mNetworkServer( adaptorServices, environmentOptions ),
  mStatContextManager( *this ),
  mStatisticsLogBitmask( 0 ),
+ mNetworkControlEnabled( mEnvironmentOptions.GetNetworkControlMode()),
  mLoggingEnabled( false ),
  mLogFunctionInstalled( false )
 {
   SetLogging( mEnvironmentOptions.GetPerformanceStatsLoggingOptions(),
               mEnvironmentOptions.GetPerformanceTimeStampOutput(),
               mEnvironmentOptions.GetPerformanceStatsLoggingFrequency());
+
+  if( mNetworkControlEnabled )
+  {
+    mLoggingEnabled  = true;
+    mNetworkServer.Start();
+  }
 }
 
 PerformanceServer::~PerformanceServer()
 {
+  if( mNetworkControlEnabled )
+  {
+    mNetworkServer.Stop();
+  }
+
   if( mLogFunctionInstalled )
   {
     mEnvironmentOptions.UnInstallLogFunction();
@@ -172,8 +185,11 @@ void PerformanceServer::LogContextStatistics( const char* const text )
 
 void PerformanceServer::LogMarker( const PerformanceMarker& marker, const char* const description )
 {
-
-
+  // log to the network ( this is thread safe)
+  if( mNetworkControlEnabled )
+  {
+    mNetworkServer.TransmitMarker( marker, description );
+  }
 
   // log to kernel trace
   if( mPerformanceOutputBitmask & OUTPUT_KERNEL_TRACE )

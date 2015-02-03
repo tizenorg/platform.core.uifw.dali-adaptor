@@ -56,6 +56,7 @@ public:
    * @param logPanGestureLevel pan-gesture logging, 0 = disabled,  1 = enabled
    */
   void SetLogOptions( const Dali::Integration::Log::LogFunction& logFunction,
+                       unsigned int networkControl,
                        unsigned int logFrameRateFrequency,
                        unsigned int logupdateStatusFrequency,
                        unsigned int logPerformanceStats,
@@ -72,6 +73,11 @@ public:
    * Un-install the log function for the current thread.
    */
   void UnInstallLogFunction() const;
+
+  /**
+   * @return whether network control is enabled or not ( 0 = off, 1 = on )
+   */
+  unsigned int GetNetworkControlMode() const;
 
   /**
    * @return frequency of how often FPS is logged out (e.g. 0 = off, 2 = every 2 seconds).
@@ -194,6 +200,7 @@ public:
 
 private:
 
+  unsigned int mNetworkControl;                   ///< whether network control is enabled
   unsigned int mFpsFrequency;                     ///< how often fps is logged out in seconds
   unsigned int mUpdateStatusFrequency;            ///< how often update status is logged out in frames
   unsigned int mPerformanceStatsLevel;            ///< performance statistics logging bitmask

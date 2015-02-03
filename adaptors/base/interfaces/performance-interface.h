@@ -50,10 +50,10 @@ public:
   enum StatisticsLogOptions
   {
     DISABLED             = 0,
-    LOG_EVERYTHING       = 1 << 0, ///< Bit 0 (1), log all statistics to the DALi log
-    LOG_UPDATE_RENDER    = 1 << 1, ///< Bit 1 (2), log update and render statistics to the DALi log
-    LOG_EVENT_PROCESS    = 1 << 2, ///< Bit 2 (4), log event task statistics to the DALi log
-    LOG_CUSTOM_MARKERS   = 1 << 3, ///< Bit 3 (8), log custom marker statistics to the DALi log
+    LOG_EVERYTHING       = 1 << 0, ///< Bit 0 (1), log all statistics
+    LOG_UPDATE_RENDER    = 1 << 1, ///< Bit 1 (2), log update and render statistics
+    LOG_EVENT_PROCESS    = 1 << 2, ///< Bit 2 (4), log event task statistics
+    LOG_CUSTOM_MARKERS   = 1 << 3, ///< Bit 3 (8), log custom marker statistics
   };
 
   /**
