@@ -21,6 +21,7 @@
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/resource-cache.h>
 #include <dali/integration-api/resource-types.h>
+#include <curl/curl.h>
 #include "portable/file-closer.h"
 #include "image-loaders/image-loader.h"
 
@@ -32,8 +33,8 @@ namespace Dali
 namespace SlpPlatform
 {
 
-ResourceThreadImage::ResourceThreadImage(ResourceLoader& resourceLoader)
-: ResourceThreadBase(resourceLoader)
+ResourceThreadImage::ResourceThreadImage(ResourceLoader& resourceLoader, bool forRemoteImage)
+: ResourceThreadBase(resourceLoader), mForRemoteImage(forRemoteImage)
 {
 }
 
@@ -46,6 +47,75 @@ void ResourceThreadImage::Load(const ResourceRequest& request)
   DALI_LOG_TRACE_METHOD( mLogFilter );
   DALI_LOG_INFO( mLogFilter, Debug::Verbose, "%s(%s)\n", __FUNCTION__, request.GetPath().c_str() );
 
+  if( mForRemoteImage )
+  {
+    char* blobBytes = NULL;
+    size_t blobSize = 0;
+    Dali::Internal::Platform::FileCloser fileCloser( &blobBytes, &blobSize );
+
+    FILE * const fp = fileCloser.GetFile();
+
+    CURL* curl_handle = curl_easy_init();
+    curl_easy_setopt( curl_handle, CURLOPT_VERBOSE, 0 );
+    curl_easy_setopt( curl_handle, CURLOPT_URL, request.GetPath().c_str() );
+    curl_easy_setopt( curl_handle, CURLOPT_WRITEDATA, fp );
+    curl_easy_setopt( curl_handle, CURLOPT_FAILONERROR, 1 );
+
+    CURLcode cresult = curl_easy_perform( curl_handle );
+    curl_easy_cleanup( curl_handle );
+    fileCloser.Flush();
+
+    if( cresult != CURLE_OK )
+    {
+      DALI_LOG_WARNING( "Failed to download file to load \"%s\"\n", request.GetPath().c_str() );
+
+      FailedResource resource(request.GetId(), FailureUnknown);
+      mResourceLoader.AddFailedLoad(resource);
+    }
+    else
+    {
+      DecodeMemoryRequest(blobBytes, blobSize, request);
+    }
+  }
+  else
+  {
+    LoadFileRequest(request);
+  }
+}
+
+void ResourceThreadImage::Decode(const ResourceRequest& request)
+{
+  DALI_LOG_TRACE_METHOD( mLogFilter );
+  DALI_LOG_INFO(mLogFilter, Debug::Verbose, "%s(%s)\n", __FUNCTION__, request.GetPath().c_str());
+
+  // Get the blob of binary data that we need to decode:
+  DALI_ASSERT_DEBUG( request.GetResource() );
+
+  DALI_ASSERT_DEBUG( 0 != dynamic_cast<Dali::RefCountedVector<uint8_t>*>( request.GetResource().Get() ) && "Only blobs of binary data can be decoded." );
+  Dali::RefCountedVector<uint8_t>* const encodedBlob = reinterpret_cast<Dali::RefCountedVector<uint8_t>*>( request.GetResource().Get() );
+
+  if( encodedBlob != 0 )
+  {
+    const size_t blobSize     = encodedBlob->GetVector().Size();
+    uint8_t * const blobBytes = &(encodedBlob->GetVector()[0]);
+    DecodeMemoryRequest(blobBytes, blobSize, request);
+  }
+  else
+  {
+    FailedResource resource(request.GetId(), FailureUnknown);
+    mResourceLoader.AddFailedLoad(resource);
+  }
+}
+
+void ResourceThreadImage::Save(const Integration::ResourceRequest& request)
+{
+  DALI_LOG_TRACE_METHOD( mLogFilter );
+  DALI_ASSERT_DEBUG( request.GetType()->id == ResourceBitmap );
+  DALI_LOG_WARNING( "Image saving not supported on background resource threads." );
+}
+
+void ResourceThreadImage::LoadFileRequest(const Integration::ResourceRequest& request)
+{
   bool fileNotFound = false;
   BitmapPtr bitmap = 0;
   bool result = false;
@@ -92,46 +162,31 @@ void ResourceThreadImage::Load(const ResourceRequest& request)
   }
 }
 
-void ResourceThreadImage::Decode(const ResourceRequest& request)
+void ResourceThreadImage::DecodeMemoryRequest(void* blobBytes, size_t blobSize, const Integration::ResourceRequest& request)
 {
-  DALI_LOG_TRACE_METHOD( mLogFilter );
-  DALI_LOG_INFO(mLogFilter, Debug::Verbose, "%s(%s)\n", __FUNCTION__, request.GetPath().c_str());
-
   BitmapPtr bitmap = 0;
 
-  // Get the blob of binary data that we need to decode:
-  DALI_ASSERT_DEBUG( request.GetResource() );
+  DALI_ASSERT_DEBUG( blobSize > 0U );
+  DALI_ASSERT_DEBUG( blobBytes != 0U );
 
-  DALI_ASSERT_DEBUG( 0 != dynamic_cast<Dali::RefCountedVector<uint8_t>*>( request.GetResource().Get() ) && "Only blobs of binary data can be decoded." );
-  Dali::RefCountedVector<uint8_t>* const encodedBlob = reinterpret_cast<Dali::RefCountedVector<uint8_t>*>( request.GetResource().Get() );
-
-  if( encodedBlob != 0 )
+  if( blobBytes != 0 && blobSize > 0U )
   {
-    const size_t blobSize     = encodedBlob->GetVector().Size();
-    uint8_t * const blobBytes = &(encodedBlob->GetVector()[0]);
-    DALI_ASSERT_DEBUG( blobSize > 0U );
-    DALI_ASSERT_DEBUG( blobBytes != 0U );
-
-    if( blobBytes != 0 && blobSize > 0U )
+    // Open a file handle on the memory buffer:
+    Dali::Internal::Platform::FileCloser fileCloser( blobBytes, blobSize, "rb" );
+    FILE * const fp = fileCloser.GetFile();
+    if ( fp != NULL )
     {
-      // Open a file handle on the memory buffer:
-      Dali::Internal::Platform::FileCloser fileCloser( blobBytes, blobSize, "rb" );
-      FILE * const fp = fileCloser.GetFile();
-      if ( fp != NULL )
+      bool result = ImageLoader::ConvertStreamToBitmap( *request.GetType(), request.GetPath(), fp, StubbedResourceLoadingClient(), bitmap );
+      if ( result && bitmap )
       {
-        bool result = ImageLoader::ConvertStreamToBitmap( *request.GetType(), request.GetPath(), fp, StubbedResourceLoadingClient(), bitmap );
-
-        if ( result && bitmap )
-        {
-          // Construct LoadedResource and ResourcePointer for image data
-          LoadedResource resource( request.GetId(), request.GetType()->id, ResourcePointer( bitmap.Get() ) );
-          // Queue the loaded resource
-          mResourceLoader.AddLoadedResource( resource );
-        }
-        else
-        {
-          DALI_LOG_WARNING( "Unable to decode bitmap supplied as in-memory blob.\n" );
-        }
+        // Construct LoadedResource and ResourcePointer for image data
+        LoadedResource resource( request.GetId(), request.GetType()->id, ResourcePointer( bitmap.Get() ) );
+        // Queue the loaded resource
+        mResourceLoader.AddLoadedResource( resource );
+      }
+      else
+      {
+        DALI_LOG_WARNING( "Unable to decode bitmap supplied as in-memory blob.\n" );
       }
     }
   }
@@ -142,14 +197,6 @@ void ResourceThreadImage::Decode(const ResourceRequest& request)
     mResourceLoader.AddFailedLoad(resource);
   }
 }
-
-void ResourceThreadImage::Save(const Integration::ResourceRequest& request)
-{
-  DALI_LOG_TRACE_METHOD( mLogFilter );
-  DALI_ASSERT_DEBUG( request.GetType()->id == ResourceBitmap );
-  DALI_LOG_WARNING( "Image saving not supported on background resource threads." );
-}
-
 
 } // namespace SlpPlatform
 
