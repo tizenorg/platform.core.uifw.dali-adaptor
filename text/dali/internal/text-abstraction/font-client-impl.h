@@ -74,19 +74,43 @@ public:
   void GetSystemFonts( FontList& systemFonts );
 
   /**
-   * @copydoc Dali::FontClient::FindSystemFont()
+   * @copydoc Dali::FontClient::GetDescription()
    */
-  bool FindSystemFont( Character charcode, FontDescription& systemFont );
-
-  /**
-   * @copydoc Dali::FontClient::GetFontId()
-   */
-  FontId GetFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex );
+  void GetDescription( FontId id, FontDescription& fontDescription );
 
   /**
    * @copydoc Dali::FontClient::FindDefaultFont()
    */
-  FontId FindDefaultFont( Character charcode );
+  FontId FindDefaultFont( Character charcode, Script script );
+
+  /**
+   * @copydoc Dali::FontClient::GetFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex )
+   */
+  FontId GetFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex );
+
+  /**
+   * @copydoc Dali::FontClient::GetFontId(const FontFamily& fontFamily, const FontStyle& fontStyle, PointSize26Dot6 pointSize, FaceIndex faceIndex )
+   */
+  FontId GetFontId( const FontFamily& fontFamily,
+                    const FontStyle& fontStyle,
+                    PointSize26Dot6 pointSize,
+                    FaceIndex faceIndex );
+
+  /**
+   * @copydoc Dali::FontClient::ValidateFonts()
+   */
+  Length ValidateFonts( const Character* const text,
+                        Length numberOfCharacters,
+                        const FontRun* const fontRuns,
+                        Length numberOfFontRuns,
+                        const ScriptRun* const scriptRuns,
+                        Length numberOfScriptRuns );
+
+  /**
+   * @copydoc Dali::FontClient::GetValidatedFonts()
+   */
+  void GetValidatedFonts( FontRun* fontRuns,
+                          Length numberOfFontRuns );
 
   /**
    * @copydoc Dali::FontClient::GetFontMetrics()

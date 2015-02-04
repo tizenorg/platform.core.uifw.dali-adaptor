@@ -1,5 +1,5 @@
-#ifndef __DALI_TEXT_ABSTRACTION_H__
-#define __DALI_TEXT_ABSTRACTION_H__
+#ifndef __DALI_TOOLKIT_TEXT_ABSTRACTION_FONT_RUN_H__
+#define __DALI_TOOLKIT_TEXT_ABSTRACTION_FONT_RUN_H__
 
 /*
  * Copyright (c) 2015 Samsung Electronics Co., Ltd.
@@ -18,14 +18,27 @@
  *
  */
 
-#include <dali/public-api/text-abstraction/bidirectional-support.h>
+// INTERNAL INCLUDES
 #include <dali/public-api/text-abstraction/character-run.h>
-#include <dali/public-api/text-abstraction/font-client.h>
-#include <dali/public-api/text-abstraction/font-metrics.h>
-#include <dali/public-api/text-abstraction/font-run.h>
-#include <dali/public-api/text-abstraction/glyph-info.h>
-#include <dali/public-api/text-abstraction/script-run.h>
-#include <dali/public-api/text-abstraction/segmentation.h>
-#include <dali/public-api/text-abstraction/shaping.h>
 
-#endif //__DALI_TEXT_ABSTRACTION_H__
+namespace Dali
+{
+
+namespace TextAbstraction
+{
+
+/**
+ * @brief Run of characters with the same font.
+ */
+struct FontRun
+{
+  CharacterRun characterRun; ///< The initial character index and the number of characters of the run.
+  FontId       fontId;       ///< Font id of the run.
+  bool         isDefault;    ///< Whether the font is a default font not defined by the user.
+};
+
+} // namespace TextAbstraction
+
+} // namespace Dali
+
+#endif // __DALI_TOOLKIT_TEXT_ABSTRACTION_FONT_RUN_H__

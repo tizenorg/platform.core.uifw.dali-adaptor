@@ -57,7 +57,7 @@ enum
   WORD_NO_BREAK = 1u, ///< Text can't be broken into a new word.
 };
 
-/*
+/**
  * @brief Script is the writing system used by a language.
  * Typically one script can be used to write different languages although one language could be written in different scrips.
  */

@@ -18,10 +18,9 @@
  *
  */
 
+// INTERNAL INCLUDES
 #include <dali/public-api/object/base-handle.h>
 #include <dali/public-api/images/bitmap-image.h>
-#include <dali/public-api/common/dali-vector.h>
-#include <dali/public-api/text-abstraction/text-abstraction-definitions.h>
 #include <dali/public-api/text-abstraction/glyph-info.h>
 #include <dali/public-api/text-abstraction/font-list.h>
 #include <dali/public-api/text-abstraction/font-metrics.h>
@@ -31,6 +30,9 @@ namespace Dali
 
 namespace TextAbstraction
 {
+
+struct FontRun;
+struct ScriptRun;
 
 namespace Internal DALI_INTERNAL
 {
@@ -94,6 +96,10 @@ public:
    */
   FontClient& operator=( const FontClient& handle );
 
+  ////////////////////////////////////////
+  // Font management and validation.
+  ////////////////////////////////////////
+
   /**
    * @brief Set the DPI of the target window.
    *
@@ -111,15 +117,25 @@ public:
   void GetSystemFonts( FontList& systemFonts );
 
   /**
+   * @brief Retrieves the font description of a given font @p id.
+   *
+   * @param[in] id The font id.
+   * @param[out] fontDescription The path, family & style describing the font.
+   */
+  void GetDescription( FontId id, FontDescription& fontDescription );
+
+  /**
    * @brief Find an appropriate system-font for displaying a UTF-32 character.
+   *
+   * Optionally a @p script could be provided to increase the performance.
    *
    * This is useful when localised strings are provided for multiple languages
    * i.e. when a single default font does not work for all languages.
    * @param[in] charcode The character for which a font is needed.
-   * @param[out] systemFont The path, family & style describing the font.
-   * @return True if an appropriate system font was found.
+   * @param[in] script The character's script.
+   * @return A valid font ID, or zero if the font does not exist.
    */
-  bool FindSystemFont( Character charcode, FontDescription& systemFont );
+  FontId FindDefaultFont( Character charcode, Script script = UNKNOWN );
 
   /**
    * @brief Retrieve the unique identifier for a font.
@@ -132,14 +148,57 @@ public:
   FontId GetFontId( const FontPath& path, PointSize26Dot6 pointSize = 12*64, FaceIndex faceIndex = 0 );
 
   /**
-   * @brief Retrieve the ID of the default font for displaying a UTF-32 character.
+   * @brief Retrieve the unique identifier for a font.
    *
-   * This is useful when localised strings are provided for multiple languages
-   * i.e. when a single default font does not work for all languages.
-   * @param[in] charcode The character for which a font is needed.
-   * @return A valid font ID, or zero if no appropriate font was found.
+   * @param[in] fontFamily The font family name.
+   * @param[in] fontStyle  The font style.
+   * @param[in] pointSize The point size in 26.6 fractional points; the default point size is 12*64.
+   * @param[in] faceIndex The index of the font face (optional).
+   * @return A valid font ID, or zero if the font does not exist.
    */
-  FontId FindDefaultFont( Character charcode );
+  FontId GetFontId( const FontFamily& fontFamily,
+                    const FontStyle& fontStyle,
+                    PointSize26Dot6 pointSize = 12*64,
+                    FaceIndex faceIndex = 0 );
+
+  /**
+   * @brief Validates the fonts for the given text. Ensures the whole text is going to be displayed by the
+   * right font. Provided the right fonts exists and are correctly installed.
+   *
+   * Scripts could be passed to increase performance.
+   *
+   * Call GetValidatedFonts() to retrieve the validated fonts.
+   *
+   * @param[in] text The text's characters encoded in UTF-32
+   * @param[in] numberOfCharacters The number of characters.
+   * @param[in] fontRuns Runs of consecutive characters with the same font.
+   * @param[in] numberOfFontRuns The number of font runs.
+   * @param[in] scriptRuns Runs of consecutive characters with the same script.
+   * @param[in] numberOfScriptRuns The number of script runs.
+   *
+   * @return The number of the validated font runs.
+   */
+  Length ValidateFonts( const Character* const text,
+                        Length numberOfCharacters,
+                        const FontRun* const fontRuns,
+                        Length numberOfFontRuns,
+                        const ScriptRun* const scriptRuns,
+                        Length numberOfScriptRuns );
+
+  /**
+   * @brief Retrieves the validated font runs.
+   *
+   * @pre Must call ValidateFonts() first to validate the fonts and get the size of the font run's buffer.
+   *
+   * @param[out] fontRuns The validated font runs.
+   * @param[in] numberOfFontRuns The number of font runs to be retrieved.
+   */
+  void GetValidatedFonts( FontRun* fontRuns,
+                          Length numberOfFontRuns );
+
+  ////////////////////////////////////////
+  // Font metrics, glyphs and bitmaps.
+  ////////////////////////////////////////
 
   /**
    * @brief Query the metrics for a font.

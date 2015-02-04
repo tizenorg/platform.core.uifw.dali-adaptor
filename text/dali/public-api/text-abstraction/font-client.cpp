@@ -61,9 +61,14 @@ void FontClient::GetSystemFonts( FontList& systemFonts )
   GetImplementation(*this).GetSystemFonts( systemFonts );
 }
 
-bool FontClient::FindSystemFont( Character charcode, FontDescription& systemFont )
+void FontClient::GetDescription( FontId id, FontDescription& fontDescription )
 {
-  return GetImplementation(*this).FindSystemFont( charcode, systemFont );
+  GetImplementation(*this).GetDescription( id, fontDescription );
+}
+
+FontId FontClient::FindDefaultFont( Character charcode, Script script )
+{
+  return GetImplementation(*this).FindDefaultFont( charcode, script );
 }
 
 FontId FontClient::GetFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex )
@@ -71,9 +76,36 @@ FontId FontClient::GetFontId( const FontPath& path, PointSize26Dot6 pointSize, F
   return GetImplementation(*this).GetFontId( path, pointSize, faceIndex );
 }
 
-FontId FontClient::FindDefaultFont( Character charcode )
+FontId FontClient::GetFontId( const FontFamily& fontFamily,
+                              const FontStyle& fontStyle,
+                              PointSize26Dot6 pointSize,
+                              FaceIndex faceIndex )
 {
-  return GetImplementation(*this).FindDefaultFont( charcode );
+  return GetImplementation(*this).GetFontId( fontFamily,
+                                             fontStyle,
+                                             pointSize,
+                                             faceIndex );
+}
+
+Length FontClient::ValidateFonts( const Character* const text,
+                                  Length numberOfCharacters,
+                                  const FontRun* const fontRuns,
+                                  Length numberOfFontRuns,
+                                  const ScriptRun* const scriptRuns,
+                                  Length numberOfScriptRuns )
+{
+  return GetImplementation(*this).ValidateFonts( text,
+                                                 numberOfCharacters,
+                                                 fontRuns,
+                                                 numberOfFontRuns,
+                                                 scriptRuns,
+                                                 numberOfScriptRuns );
+}
+
+void FontClient::GetValidatedFonts( FontRun* fontRuns,
+                                    Length numberOfFontRuns )
+{
+  GetImplementation(*this).GetValidatedFonts( fontRuns, numberOfFontRuns );
 }
 
 void FontClient::GetFontMetrics( FontId fontId, FontMetrics& metrics )

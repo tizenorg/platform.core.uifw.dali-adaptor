@@ -174,11 +174,16 @@ struct FontClient::Plugin
     return false;
   }
 
-  bool FindSystemFont( Character charcode, FontDescription& systemFont )
+  void GetDescription( FontId id, FontDescription& fontDescription ) const
+  {
+    // TODO
+  }
+
+  FontId FindDefaultFont( Character charcode, Script script )
   {
     // TODO - Use FcCharSetHasChar()
-
-    return false;
+    // TODO - Return cached results based on script
+    return FontId(0);
   }
 
   FontId GetFontId( const std::string& path, PointSize26Dot6 pointSize, FaceIndex faceIndex )
@@ -199,6 +204,30 @@ struct FontClient::Plugin
     }
 
     return id;
+  }
+
+  FontId GetFontId( const FontFamily& fontFamily,
+                    const FontStyle& fontStyle,
+                    PointSize26Dot6 pointSize,
+                    FaceIndex faceIndex )
+  {
+    return 0u;
+  }
+
+  Length ValidateFonts( const Character* const text,
+                        Length numberOfCharacters,
+                        const FontRun* const fontRuns,
+                        Length numberOfFontRuns,
+                        const ScriptRun* const scriptRuns,
+                        Length numberOfScriptRuns )
+  {
+    return 0u;
+  }
+
+  void GetValidatedFonts( FontRun* fontRuns,
+                          Length numberOfFontRuns )
+  {
+    // TODO
   }
 
   GlyphIndex GetGlyphIndex( FontId fontId, Character charcode )
@@ -255,12 +284,6 @@ struct FontClient::Plugin
     }
 
     return id;
-  }
-
-  FontId FindDefaultFont( Character charcode )
-  {
-    // TODO - Return cached results based on script
-    return FontId(0);
   }
 
   void GetFontMetrics( FontId fontId, FontMetrics& metrics )
@@ -468,6 +491,11 @@ void FontClient::SetDpi( unsigned int horizontalDpi, unsigned int verticalDpi  )
   }
 }
 
+void FontClient::GetDescription( FontId id, FontDescription& fontDescription )
+{
+  CreatePlugin();
+}
+
 void FontClient::GetSystemFonts( FontList& systemFonts )
 {
   CreatePlugin();
@@ -475,11 +503,11 @@ void FontClient::GetSystemFonts( FontList& systemFonts )
   mPlugin->GetSystemFonts( systemFonts );
 }
 
-bool FontClient::FindSystemFont( Character charcode, FontDescription& systemFont )
+FontId FontClient::FindDefaultFont( Character charcode, Script script )
 {
   CreatePlugin();
 
-  return mPlugin->FindSystemFont( charcode, systemFont );
+  return mPlugin->FindDefaultFont( charcode, script );
 }
 
 FontId FontClient::GetFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex )
@@ -489,11 +517,43 @@ FontId FontClient::GetFontId( const FontPath& path, PointSize26Dot6 pointSize, F
   return mPlugin->GetFontId( path, pointSize, faceIndex );
 }
 
-FontId FontClient::FindDefaultFont( Character charcode )
+FontId FontClient::GetFontId( const FontFamily& fontFamily,
+                              const FontStyle& fontStyle,
+                              PointSize26Dot6 pointSize,
+                              FaceIndex faceIndex )
 {
   CreatePlugin();
 
-  return mPlugin->FindDefaultFont( charcode );
+  return mPlugin->GetFontId( fontFamily,
+                             fontStyle,
+                             pointSize,
+                             faceIndex );
+}
+
+Length FontClient::ValidateFonts( const Character* const text,
+                                  Length numberOfCharacters,
+                                  const FontRun* const fontRuns,
+                                  Length numberOfFontRuns,
+                                  const ScriptRun* const scriptRuns,
+                                  Length numberOfScriptRuns )
+{
+  CreatePlugin();
+
+  return mPlugin->ValidateFonts( text,
+                                 numberOfCharacters,
+                                 fontRuns,
+                                 numberOfFontRuns,
+                                 scriptRuns,
+                                 numberOfScriptRuns );
+}
+
+void FontClient::GetValidatedFonts( FontRun* fontRuns,
+                                    Length numberOfFontRuns )
+{
+  CreatePlugin();
+
+  mPlugin->GetValidatedFonts( fontRuns,
+                              numberOfFontRuns );
 }
 
 void FontClient::GetFontMetrics( FontId fontId, FontMetrics& metrics )
