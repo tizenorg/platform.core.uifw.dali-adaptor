@@ -47,8 +47,8 @@ struct GlyphInfo
   GlyphIndex index;    ///< Uniquely identifies a glyph for a given FontId
   uint32_t width;      ///< The width of the glyph
   uint32_t height;     ///< The height of the glyph
-  uint32_t xBearing;   ///< The distance from the cursor position to the leftmost border of the glyph
-  uint32_t yBearing;   ///< The distance from the baseline to the topmost border of the glyph
+  int32_t xBearing;   ///< The distance from the cursor position to the leftmost border of the glyph
+  int32_t yBearing;   ///< The distance from the baseline to the topmost border of the glyph
   uint32_t advance;    ///< The distance to move the cursor for this glyph
 };
 
