@@ -40,7 +40,7 @@ public:
    * @brief Construct a FileCloser guarding a new FILE* for accessing the path passed in.
    */
   FileCloser( const char * const filename, const char * const mode ) :
-    mFile(fopen(filename, mode))
+    mFile(fopen(filename, mode)), mOutBufferPtr( NULL )
   {
     DALI_ASSERT_DEBUG( filename != 0 && "Cant open a null filename." );
     DALI_ASSERT_DEBUG( mode != 0 && "Null mode is undefined behaviour in spec." );
@@ -55,7 +55,7 @@ public:
    * @brief Construct a FileCloser guarding a FILE* for reading out of the memory buffer passed in.
    */
   FileCloser( void * const buffer, const size_t bufferSize, const char * const mode ) :
-    mFile( fmemopen( buffer, bufferSize, mode ) )
+    mFile( fmemopen( buffer, bufferSize, mode ) ), mOutBufferPtr( NULL )
   {
     DALI_ASSERT_DEBUG( buffer != 0 && "Cant open file on null buffer." );
     DALI_ASSERT_DEBUG( bufferSize > 0 && "Pointless to open file on empty buffer." );
@@ -67,9 +67,21 @@ public:
     }
   }
 
-   /**
-    * @brief Destroy the FileCloser and clean up its FILE*.
-    */
+  /**
+   * @brief Construct a FileCloser guarding a FILE* for writing to dynamically allocated memory buffer.
+   */
+  FileCloser( char ** out_bufferPtr, size_t* out_bufferSizePtr ) :
+    mFile( open_memstream( out_bufferPtr, out_bufferSizePtr ) ), mOutBufferPtr( out_bufferPtr )
+  {
+    if( mFile == 0 )
+    {
+      DALI_LOG_WARNING( "File open failed for dynamically allocated memory buffer.\n" );
+    }
+  }
+
+  /**
+   * @brief Destroy the FileCloser and clean up its FILE*.
+   */
   ~FileCloser()
   {
     if( mFile != 0 )
@@ -82,6 +94,14 @@ public:
       }
       mFile = 0;
     }
+
+    if( mOutBufferPtr )
+    {
+      if( *mOutBufferPtr )
+      {
+        free( *mOutBufferPtr );
+      }
+    }
   }
 
   /**
@@ -92,8 +112,20 @@ public:
     return mFile;
   }
 
+  /**
+   * @brief Flush its FILE*.
+   */
+  void Flush()
+  {
+    if( mFile != 0 )
+    {
+      fflush(mFile);
+    }
+  }
+
 private:
   FILE* mFile;
+  char** mOutBufferPtr;
 };
 
 } /* namespace Platform */

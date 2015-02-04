@@ -39,6 +39,7 @@ BuildRequires:  pkgconfig(libexif)
 BuildRequires:  pkgconfig(capi-system-system-settings)
 BuildRequires:  pkgconfig(efl-assist)
 BuildRequires:  pkgconfig(libpng)
+BuildRequires:  libcurl-devel
 %if %{with wayland}
 BuildRequires:  pkgconfig(glesv2)
 BuildRequires:  pkgconfig(egl)

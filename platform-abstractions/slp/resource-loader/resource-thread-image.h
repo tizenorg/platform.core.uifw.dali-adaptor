@@ -35,7 +35,7 @@ public:
    * Constructor
    * @param[in] resourceLoader A reference to the ResourceLoader
    */
-  ResourceThreadImage(ResourceLoader& resourceLoader);
+  ResourceThreadImage(ResourceLoader& resourceLoader, bool forRemoteImage);
 
   /**
    * Destructor
@@ -58,6 +58,19 @@ private:
    *@copydoc ResourceThreadBase::Save
    */
   virtual void Save(const Integration::ResourceRequest& request);
+
+  /**
+   *@copydoc ResourceThreadBase::Save
+   */
+  void LoadFileRequest(const Integration::ResourceRequest& request);
+
+  /**
+   *@copydoc ResourceThreadBase::Save
+   */
+  void DecodeMemoryRequest(void* blobBytes, size_t blobSize, const Integration::ResourceRequest& request);
+
+private:
+  bool mForRemoteImage;
 
 }; // class ResourceThreadImage
 
