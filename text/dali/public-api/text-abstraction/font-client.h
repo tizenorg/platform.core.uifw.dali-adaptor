@@ -132,6 +132,20 @@ public:
   FontId GetFontId( const FontPath& path, PointSize26Dot6 pointSize = 12*64, FaceIndex faceIndex = 0 );
 
   /**
+   * @brief Retrieve the unique identifier for a font.
+   *
+   * @param[in] fontFamily The font family name.
+   * @param[in] fontStyle  The font style.
+   * @param[in] pointSize The point size in 26.6 fractional points; the default point size is 12*64.
+   * @param[in] faceIndex The index of the font face (optional).
+   * @return A valid font ID, or zero if the font does not exist.
+   */
+  FontId GetFontId( const FontFamily& fontFamily,
+                    const FontStyle& fontStyle,
+                    PointSize26Dot6 pointSize = 12*64,
+                    FaceIndex faceIndex = 0 );
+
+  /**
    * @brief Retrieve the ID of the default font for displaying a UTF-32 character.
    *
    * This is useful when localised strings are provided for multiple languages
