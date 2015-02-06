@@ -43,7 +43,7 @@ Requires:       boost-thread
 Requires:       giflib
 BuildRequires:  pkgconfig
 BuildRequires:  gawk
-BuildRequires:  pkgconfig(sensor)
+BuildRequires:  pkgconfig(capi-system-sensor)
 BuildRequires:  pkgconfig(aul)
 BuildRequires:  boost-devel
 BuildRequires:  giflib-devel

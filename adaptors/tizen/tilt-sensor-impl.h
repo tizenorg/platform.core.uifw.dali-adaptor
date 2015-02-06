@@ -19,12 +19,14 @@
  */
 
 // EXTERNAL INCLUDES
+#include <sensors.h>
+
 #include <deque>
 #include <dali/public-api/object/base-object.h>
-#include <timer.h>
+#include <dali/public-api/adaptor-framework/common/timer.h>
 
 // INTERNAL INCLUDES
-#include <tilt-sensor.h>
+#include <public-api/adaptor-framework/common/tilt-sensor.h>
 
 namespace Dali
 {
@@ -42,7 +44,7 @@ class TiltSensor : public Dali::BaseObject
 {
 public:
 
-  typedef Dali::TiltSensor::TiltedSignalType TiltedSignalType;
+  typedef Dali::TiltSensor::TiltedSignalV2 TiltedSignalV2;
 
   /**
    * Create a TiltSensor.
@@ -89,7 +91,7 @@ public:
   /**
    * @copydoc Dali::TiltSensor::TiltedSignal()
    */
-  TiltedSignalType& TiltedSignal();
+  TiltedSignalV2& TiltedSignal();
 
   /**
    * @copydoc Dali::TiltSensor::SetUpdateFrequency()
@@ -122,7 +124,22 @@ public:
    */
   static bool DoConnectSignal( BaseObject* object, ConnectionTrackerInterface* tracker, const std::string& signalName, FunctorDelegate* functor );
 
+  /**
+   * Update sensor data
+   * @note This is called by static sensor callback function
+   * @param[in] event sensor event data
+   */
+  void Update(sensor_event_s *event);
+
 private:
+
+  enum State
+  {
+    DISCONNECTED,
+    CONNECTED,
+    STARTED,
+    STOPPED
+  };
 
   /**
    * Private constructor; see also TiltSensor::New()
@@ -135,9 +152,22 @@ private:
   virtual ~TiltSensor();
 
   /**
-   * Timer callback to update the tilt values
+   * Connect sensor device
    */
-  bool Update();
+  bool Connect();
+  /**
+   * Disconnect sensor device
+   */
+  void Disconnect();
+
+  /**
+   * Start sensor operation
+   */
+  bool Start();
+  /**
+   * Stop sensor operation
+   */
+  void Stop();
 
   // Undefined
   TiltSensor(const TiltSensor&);
@@ -146,12 +176,12 @@ private:
   TiltSensor& operator=(TiltSensor&);
 
 private:
-
+  State mState;
   float mFrequencyHertz;
-  Dali::Timer mTimer;
-  SlotDelegate< TiltSensor > mTimerSlot;
 
-  int mSensorFrameworkHandle;
+  sensor_type_e mSensorType;
+  sensor_h mSensor;
+  sensor_listener_h mSensorListener;
 
   float mRoll;
   float mPitch;
@@ -159,10 +189,7 @@ private:
 
   Radian mRotationThreshold;
 
-  std::deque<float> mRollValues;
-  std::deque<float> mPitchValues;
-
-  TiltedSignalType mTiltedSignal;
+  TiltedSignalV2 mTiltedSignalV2;
 };
 
 } // namespace Adaptor

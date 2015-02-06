@@ -20,17 +20,12 @@
 
 // EXTERNAL INCLUDES
 #include <cmath>
-#ifdef DALI_PROFILE_LITE
-#include <sensor_internal.h>
-#else
-#include <sensor.h>
-#endif
 
 #include <dali/public-api/object/type-registry.h>
 #include <dali/integration-api/debug.h>
 
 // INTERNAL INCLUDES
-#include <singleton-service-impl.h>
+#include <internal/common/adaptor-impl.h>
 
 #ifdef __arm__
 #define SENSOR_ENABLED
@@ -38,22 +33,19 @@
 
 namespace // unnamed namespace
 {
-
-const char* const SIGNAL_TILTED = "tilted";
-
-const int NUMBER_OF_SAMPLES = 10;
-
-const float MAX_ACCELEROMETER_XY_VALUE = 9.8f;
+const float MAX_ORIENTATION_ROLL_VALUE = 90.f;
+const float MAX_ORIENTATION_PITCH_VALUE = 180.f;
+const float MAX_ACCELEROMETER_VALUE = 9.8f;
 
 // Type Registration
-Dali::BaseHandle GetInstance()
+Dali::BaseHandle Create()
 {
   return Dali::Internal::Adaptor::TiltSensor::Get();
 }
 
-Dali::TypeRegistration typeRegistration( typeid(Dali::TiltSensor), typeid(Dali::BaseHandle), GetInstance );
+Dali::TypeRegistration typeRegistration( typeid(Dali::TiltSensor), typeid(Dali::BaseHandle), Create );
 
-Dali::SignalConnectorType signalConnector1( typeRegistration, SIGNAL_TILTED, Dali::Internal::Adaptor::TiltSensor::DoConnectSignal );
+Dali::SignalConnectorType signalConnector1( typeRegistration, Dali::TiltSensor::SIGNAL_TILTED, Dali::Internal::Adaptor::TiltSensor::DoConnectSignal );
 
 } // unnamed namespace
 
@@ -66,6 +58,50 @@ namespace Internal
 namespace Adaptor
 {
 
+static void sensor_changed_cb (sensor_h sensor, sensor_event_s *event, void *user_data)
+{
+  TiltSensor* tiltSensor = (TiltSensor*)user_data;
+
+  if(tiltSensor)
+  {
+    tiltSensor->Update(event);
+  }
+
+  return;
+}
+
+static std::string get_sensor_error_string(int errorValue)
+{
+  std::string ret;
+
+  switch(errorValue)
+  {
+    case SENSOR_ERROR_IO_ERROR:
+      ret = "SENSOR_ERROR_IO_ERROR";
+      break;
+    case SENSOR_ERROR_INVALID_PARAMETER:
+      ret = "SENSOR_ERROR_INVALID_PARAMETER";
+      break;
+    case SENSOR_ERROR_NOT_SUPPORTED:
+      ret = "SENSOR_ERROR_NOT_SUPPORTED";
+      break;
+    case SENSOR_ERROR_PERMISSION_DENIED:
+      ret = "SENSOR_ERROR_PERMISSION_DENIED";
+      break;
+    case SENSOR_ERROR_OUT_OF_MEMORY:
+      ret = "SENSOR_ERROR_OUT_OF_MEMORY";
+      break;
+    case SENSOR_ERROR_NOT_NEED_CALIBRATION:
+      ret = "SENSOR_ERROR_NOT_NEED_CALIBRATION";
+      break;
+    case SENSOR_ERROR_OPERATION_FAILED:
+      ret = "SENSOR_ERROR_OPERATION_FAILED";
+      break;
+  }
+
+  return ret;
+}
+
 Dali::TiltSensor TiltSensor::New()
 {
   Dali::TiltSensor sensor = Dali::TiltSensor(new TiltSensor());
@@ -77,11 +113,10 @@ Dali::TiltSensor TiltSensor::Get()
 {
   Dali::TiltSensor sensor;
 
-  Dali::SingletonService service( SingletonService::Get() );
-  if ( service )
+  if ( Adaptor::IsAvailable() )
   {
     // Check whether the keyboard focus manager is already created
-    Dali::BaseHandle handle = service.GetSingleton( typeid( Dali::TiltSensor ) );
+    Dali::BaseHandle handle = Dali::Adaptor::Get().GetSingleton( typeid( Dali::TiltSensor ) );
     if(handle)
     {
       // If so, downcast the handle of singleton to keyboard focus manager
@@ -90,8 +125,9 @@ Dali::TiltSensor TiltSensor::Get()
     else
     {
       // Create a singleton instance
+      Adaptor& adaptorImpl( Adaptor::GetImplementation( Adaptor::Get() ) );
       sensor = TiltSensor::New();
-      service.Register( typeid( sensor ), sensor );
+      adaptorImpl.RegisterSingleton( typeid( sensor ), sensor );
       handle = sensor;
     }
   }
@@ -101,44 +137,142 @@ Dali::TiltSensor TiltSensor::Get()
 
 TiltSensor::~TiltSensor()
 {
-  Disable();
+  Disconnect();
+}
+
+bool TiltSensor::Connect()
+{
+  if(mState != DISCONNECTED)
+  {
+    Stop();
+    Disconnect();
+  }
+
+  const int interval = 1000/mFrequencyHertz;
+
+  int ret = 0;
+  bool isSupported = false;
+
+  // try to use Orientation sensor at first for less power consumption.
+  ret = sensor_is_supported(SENSOR_ORIENTATION, &isSupported);
+
+  if(ret < 0)
+  {
+    DALI_LOG_ERROR("sensor_is_supported() failed : %s\n", get_sensor_error_string(ret).c_str());
+    return false;
+  }
+
+  if(isSupported == true)
+  {
+    mSensorType = SENSOR_ORIENTATION;
+  }
+  else
+  {
+    DALI_LOG_ERROR("sensor does not support SENSOR_ORIENTATION\n");
+
+    sensor_is_supported(SENSOR_ACCELEROMETER, &isSupported);
+
+    if(isSupported == false)
+    {
+      DALI_LOG_ERROR("sensor does not support both SENSOR_ORIENTATION and SENSOR_ACCELEROMETER\n");
+      return false;
+    }
+
+    mSensorType = SENSOR_ACCELEROMETER;
+  }
+
+  ret = sensor_get_default_sensor(mSensorType, &mSensor); /* mSensor should not be deleted */
+
+  if(ret < 0)
+  {
+    DALI_LOG_ERROR("sensor_get_default_sensor() failed : %s\n", get_sensor_error_string(ret).c_str());
+    return false;
+  }
+
+  sensor_create_listener(mSensor, &mSensorListener);
+  sensor_listener_set_event_cb(mSensorListener, interval, sensor_changed_cb, this);
+  sensor_listener_set_interval(mSensorListener, interval);
+
+  sensor_listener_set_option(mSensorListener, SENSOR_OPTION_DEFAULT /* Not receive data when LCD is off and in power save mode */);
+
+  mState = CONNECTED;
+
+  return true;
+}
+
+void TiltSensor::Disconnect()
+{
+  if(mSensorListener)
+  {
+    if(mState == STARTED)
+    {
+      Stop();
+    }
+
+    if(mState == STOPPED || mState == CONNECTED)
+    {
+      sensor_listener_unset_event_cb(mSensorListener);
+      sensor_listener_stop(mSensorListener);
+      sensor_destroy_listener(mSensorListener);
+
+      mSensor = NULL;
+      mSensorListener = NULL;
+      mState = DISCONNECTED;
+    }
+  }
+}
+
+bool TiltSensor::Start()
+{
+  if(mSensorListener && mState == CONNECTED)
+  {
+    int ret = 0;
+    ret = sensor_listener_start(mSensorListener);
+    if(ret != SENSOR_ERROR_NONE)
+    {
+      DALI_LOG_ERROR("sensor_listener_start() failed : %s\n", get_sensor_error_string(ret).c_str());
+      Disconnect();
+      return false;
+    }
+
+    mState = STARTED;
+    return true;
+  }
+  else
+  {
+    if(mState != CONNECTED)
+    {
+      DALI_LOG_ERROR("Wrong state [%d]\n", mState);
+    }
+
+    return false;
+  }
+}
+
+void TiltSensor::Stop()
+{
+  if(mSensorListener && mState == STARTED)
+  {
+    sensor_listener_stop( mSensorListener );
+    mState = STOPPED;
+  }
 }
 
 bool TiltSensor::Enable()
 {
-  // Make sure sensor API is responding
-  bool success = Update();
-
-  if ( success )
-  {
-    if ( !mTimer )
-    {
-      mTimer = Dali::Timer::New( 1000.0f / mFrequencyHertz );
-      mTimer.TickSignal().Connect( mTimerSlot, &TiltSensor::Update );
-    }
-
-    if ( mTimer &&
-         !mTimer.IsRunning() )
-    {
-      mTimer.Start();
-    }
-  }
-
-  return success;
+  // start sensor callback
+  return Start();
 }
 
 void TiltSensor::Disable()
 {
-  if ( mTimer )
-  {
-    mTimer.Stop();
-    mTimer.Reset();
-  }
+  // stop sensor callback
+  Stop();
 }
 
 bool TiltSensor::IsEnabled() const
 {
-  return ( mTimer && mTimer.IsRunning() );
+  return ( mSensorListener && mState == STARTED );
 }
 
 float TiltSensor::GetRoll() const
@@ -156,9 +290,9 @@ Quaternion TiltSensor::GetRotation() const
   return mRotation;
 }
 
-TiltSensor::TiltedSignalType& TiltSensor::TiltedSignal()
+TiltSensor::TiltedSignalV2& TiltSensor::TiltedSignal()
 {
-  return mTiltedSignal;
+  return mTiltedSignalV2;
 }
 
 void TiltSensor::SetUpdateFrequency( float frequencyHertz )
@@ -169,9 +303,10 @@ void TiltSensor::SetUpdateFrequency( float frequencyHertz )
   {
     mFrequencyHertz = frequencyHertz;
 
-    if ( mTimer )
+    if(mSensorListener)
     {
-      mTimer.SetInterval( 1000.0f / mFrequencyHertz );
+      const int interval = 1000/mFrequencyHertz;
+      sensor_listener_set_interval(mSensorListener, interval);
     }
   }
 }
@@ -196,7 +331,8 @@ bool TiltSensor::DoConnectSignal( BaseObject* object, ConnectionTrackerInterface
   bool connected( true );
   TiltSensor* sensor = dynamic_cast<TiltSensor*>( object );
 
-  if( sensor && ( SIGNAL_TILTED == signalName ) )
+  if( sensor &&
+      Dali::TiltSensor::SIGNAL_TILTED == signalName )
   {
     sensor->TiltedSignal().Connect( tracker, functor );
   }
@@ -210,102 +346,64 @@ bool TiltSensor::DoConnectSignal( BaseObject* object, ConnectionTrackerInterface
 }
 
 TiltSensor::TiltSensor()
-: mFrequencyHertz( Dali::TiltSensor::DEFAULT_UPDATE_FREQUENCY ),
-  mTimerSlot( this ),
-  mSensorFrameworkHandle( -1 ),
+: mState(DISCONNECTED),
+  mFrequencyHertz( Dali::TiltSensor::DEFAULT_UPDATE_FREQUENCY ),
+  mSensor( NULL ),
+  mSensorListener( NULL ),
   mRoll( 0.0f ),
   mPitch( 0.0f ),
   mRotation( 0.0f, Vector3::YAXIS ),
   mRotationThreshold( 0.0f )
 {
-  mRollValues.resize( NUMBER_OF_SAMPLES, 0.0f );
-  mPitchValues.resize( NUMBER_OF_SAMPLES, 0.0f );
+  // connect sensor
+  Connect();
 }
 
-bool TiltSensor::Update()
+void TiltSensor::Update(sensor_event_s *event)
 {
   float newRoll = 0.0f;
   float newPitch = 0.0f;
   Quaternion newRotation;
+
 #ifdef SENSOR_ENABLED
 
-  // Read accelerometer data
-
-  mSensorFrameworkHandle = sf_connect( ACCELEROMETER_SENSOR );
-  if ( mSensorFrameworkHandle < 0 )
+  if(mSensorType == SENSOR_ORIENTATION)
   {
-    DALI_LOG_ERROR( "Failed to connect to sensor framework" );
-    return false;
+    newPitch = Clamp( float(event->values[1] / MAX_ORIENTATION_PITCH_VALUE) /* -180 < pitch < 180 */, -1.0f/*min*/, 1.0f/*max*/ );
+    newRoll  = Clamp( float(event->values[2]  / MAX_ORIENTATION_ROLL_VALUE)  /* -90 < roll < 90 */, -1.0f/*min*/, 1.0f/*max*/ );
+  }
+  else if(mSensorType == SENSOR_ACCELEROMETER)
+  {
+    newRoll  = Clamp( float(event->values[0] / MAX_ACCELEROMETER_VALUE), -1.0f/*min*/, 1.0f/*max*/ );
+    newPitch = Clamp( float(event->values[1] / MAX_ACCELEROMETER_VALUE), -1.0f/*min*/, 1.0f/*max*/ );
+  }
+  else
+  {
+    DALI_LOG_ERROR("Invalid sensor type");
+    return;
   }
 
-  if ( sf_start(mSensorFrameworkHandle, 0) < 0 )
-  {
-    DALI_LOG_ERROR( "Failed to start sensor" );
-    sf_disconnect(mSensorFrameworkHandle);
-    return false;
-  }
-
-  sensor_data_t* base_data_values = (sensor_data_t*)malloc(sizeof(sensor_data_t));
-
-  int dataErr = sf_get_data(mSensorFrameworkHandle, ACCELEROMETER_BASE_DATA_SET, base_data_values);
-  if ( dataErr < 0 )
-  {
-    DALI_LOG_ERROR( "Failed to retrieve sensor data" );
-    free(base_data_values);
-    sf_stop(mSensorFrameworkHandle);
-    sf_disconnect(mSensorFrameworkHandle);
-    return false;
-  }
-
-  sf_stop(mSensorFrameworkHandle);
-  sf_disconnect(mSensorFrameworkHandle);
-
-  mRollValues.push_back( base_data_values->values[0] );
-  mRollValues.pop_front();
-
-  mPitchValues.push_back( base_data_values->values[1] );
-  mPitchValues.pop_front();
-
-  free(base_data_values);
-  base_data_values = NULL;
-
-  float averageRoll( 0.0f );
-  for ( std::deque<float>::const_iterator iter = mRollValues.begin(); mRollValues.end() != iter; ++iter )
-  {
-    averageRoll += *iter;
-  }
-  averageRoll /= mRollValues.size();
-
-  float averagePitch( 0.0f );
-  for ( std::deque<float>::const_iterator iter = mPitchValues.begin(); mPitchValues.end() != iter; ++iter )
-  {
-    averagePitch += *iter;
-  }
-  averagePitch /= mPitchValues.size();
-
-  newRoll  = Clamp( float(averageRoll  / MAX_ACCELEROMETER_XY_VALUE), -1.0f/*min*/, 1.0f/*max*/ );
-  newPitch = Clamp( float(averagePitch / MAX_ACCELEROMETER_XY_VALUE), -1.0f/*min*/, 1.0f/*max*/ );
-
-  newRotation = Quaternion( newRoll  * Math::PI * -0.5f, Vector3::YAXIS ) *
+  newRotation = Quaternion( newRoll * Math::PI * -0.5f, Vector3::YAXIS ) *
               Quaternion( newPitch * Math::PI * -0.5f, Vector3::XAXIS );
+
 #endif // SENSOR_ENABLED
 
   Radian angle(Quaternion::AngleBetween(newRotation, mRotation));
+
   // If the change in value is more than the threshold then emit tilted signal.
-  if( angle > mRotationThreshold )
+  if( angle >= mRotationThreshold )
   {
     mRoll = newRoll;
     mPitch = newPitch;
     mRotation = newRotation;
 
-    if ( !mTiltedSignal.Empty() )
+    // emit signal
+    if ( !mTiltedSignalV2.Empty() )
     {
       Dali::TiltSensor handle( this );
-      mTiltedSignal.Emit( handle );
+      mTiltedSignalV2.Emit( handle );
     }
   }
-
-  return true;
 }
 
 } // namespace Adaptor

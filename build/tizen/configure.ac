@@ -156,7 +156,7 @@ PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
 if test "x$enable_profile" != "xUBUNTU"; then
 PKG_CHECK_MODULES(CAPI_APPFW_APPLICATION, capi-appfw-application)
 PKG_CHECK_MODULES(DLOG, dlog)
-PKG_CHECK_MODULES(SENSOR, sensor)
+PKG_CHECK_MODULES(SENSOR, capi-system-sensor)
 PKG_CHECK_MODULES(TTS, tts)
 PKG_CHECK_MODULES(VCONF, vconf)
 PKG_CHECK_MODULES(CAPI_SYSTEM_SYSTEM_SETTINGS, capi-system-system-settings)
