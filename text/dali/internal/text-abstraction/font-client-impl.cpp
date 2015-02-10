@@ -154,6 +154,13 @@ BitmapImage FontClient::CreateBitmap( FontId fontId, GlyphIndex glyphIndex )
   return mPlugin->CreateBitmap( fontId, glyphIndex );
 }
 
+void FontClient::CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, unsigned int requiredWidth, double tolerancePerEm, GlyphyBlob& blob )
+{
+  CreatePlugin();
+
+  return mPlugin->CreateGlyphyBlob( fontId, glyphIndex, requiredWidth, tolerancePerEm, blob );
+}
+
 void FontClient::CreatePlugin()
 {
   if( !mPlugin )

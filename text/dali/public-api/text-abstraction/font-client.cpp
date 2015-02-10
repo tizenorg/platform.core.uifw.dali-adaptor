@@ -19,6 +19,7 @@
 #include <dali/public-api/text-abstraction/font-client.h>
 
 // INTERNAL INCLUDES
+#include <dali/public-api/text-abstraction/glyphy-blob.h>
 #include <dali/internal/text-abstraction/font-client-impl.h>
 
 namespace Dali
@@ -112,6 +113,14 @@ bool FontClient::GetGlyphMetrics( GlyphInfo* array, uint32_t size, bool horizont
 BitmapImage FontClient::CreateBitmap( FontId fontId, GlyphIndex glyphIndex )
 {
   return GetImplementation(*this).CreateBitmap( fontId, glyphIndex );
+}
+
+GlyphyBlob FontClient::CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, unsigned int requiredWidth, double tolerancePerEm )
+{
+  GlyphyBlob blob;
+  GetImplementation(*this).CreateGlyphyBlob( fontId, glyphIndex, requiredWidth, tolerancePerEm, blob );
+
+  return blob;
 }
 
 FontClient::FontClient( Internal::FontClient* internal )

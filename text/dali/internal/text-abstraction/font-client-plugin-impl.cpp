@@ -22,6 +22,7 @@
 #include <dali/public-api/common/vector-wrapper.h>
 #include <dali/public-api/text-abstraction/glyph-info.h>
 #include <dali/integration-api/debug.h>
+#include <dali/internal/glyphy/glyphy-helper.h>
 
 /**
  * Conversion from Fractional26.6 to float
@@ -416,6 +417,17 @@ void FontClient::Plugin::ConvertBitmap( BitmapImage& destBitmap,
         memcpy( destBuffer, srcBitmap.buffer, srcBitmap.width*srcBitmap.rows );
       }
     }
+  }
+}
+
+void FontClient::Plugin::CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, unsigned int requiredWidth, double tolerancePerEm, GlyphyBlob& blob )
+{
+  if( fontId > 0 &&
+      fontId-1 < mFontCache.size() )
+  {
+    FT_Face ftFace = mFontCache[fontId-1].mFreeTypeFace;
+
+    GetGlyphyBlob( ftFace, glyphIndex, requiredWidth, tolerancePerEm, blob );
   }
 }
 
