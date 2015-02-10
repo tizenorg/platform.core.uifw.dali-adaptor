@@ -38,6 +38,8 @@ namespace Internal DALI_INTERNAL
 class FontClient;
 }
 
+struct GlyphyBlob;
+
 /**
  * @brief FontClient provides access to font information and resources.
  *
@@ -60,9 +62,8 @@ class FontClient;
 class DALI_IMPORT_API FontClient : public BaseHandle
 {
 public:
-  static const PointSize26Dot6 DEFAULT_POINT_SIZE; ///< The default point size.
 
-public:
+  static const PointSize26Dot6 DEFAULT_POINT_SIZE; ///< The default point size.
 
   /**
    * @brief Retrieve a handle to the FontClient instance.
@@ -211,6 +212,17 @@ public:
    * @return A valid BitmapImage, or an empty handle if the glyph could not be rendered.
    */
   BitmapImage CreateBitmap( FontId fontId, GlyphIndex glyphIndex );
+
+  /**
+   * @brief Create a GLyphy blob representation of a glyph.
+   *
+   * @param[in] fontId The ID of the font.
+   * @param[in] glyphIndex The index of a glyph within the specified font.
+   * @param[in] requiredWidth The required width of the bitmap (this is arbitrary).
+   * @param[in] tolerancePerEm The tolerance for the arc accumulator in font design units.
+   * @return A BitmapImage and related blob metadata.
+   */
+  GlyphyBlob CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, unsigned int requiredWidth, double tolerancePerEm = 1.0/2048.0 );
 
 public: // Not intended for application developers
   /**
