@@ -21,8 +21,6 @@
 // EXTERNAL INCLUDES
 #include <dali/public-api/images/bitmap-image.h>
 #include <dali/public-api/actors/image-actor.h>
-#include <dali/public-api/actors/mesh-actor.h>
-#include <dali/public-api/geometry/animatable-mesh.h>
 #include <window.h>
 #include <timer.h>
 #include <dali/public-api/animation/animation.h>
@@ -401,20 +399,11 @@ private: // Implementation of ServerConnection::Observer
   virtual void ConnectionClosed();
 
 private:
-  /**
-   * Construct the gradient mesh
-   */
-  void ConstructBackgroundMesh();
-
-private:
-
   IndicatorBufferPtr               mIndicatorBuffer;     ///< class which handles indicator rendering
   PixmapId                         mPixmap;              ///< Pixmap including indicator content
   Dali::Image                      mImage;               ///< Image created from mIndicatorBuffer
   Dali::ImageActor                 mIndicatorImageActor; ///< Actor created from mImage
 
-  Dali::AnimatableMesh             mBackgroundMesh;
-  Dali::MeshActor                  mBackgroundActor;     ///< Actor for background
   Dali::Actor                      mIndicatorActor;      ///< Handle to topmost indicator actor
   Dali::Actor                      mEventActor;          ///< Handle to event
   Dali::PanGestureDetector         mPanDetector;         ///< Pan detector to find flick gesture for hidden indicator
