@@ -91,6 +91,8 @@ struct FontClient::Plugin
 
   void ConvertBitmap( BitmapImage& destBitmap, FT_Bitmap srcBitmap );
 
+  void CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, unsigned int requiredWidth, double tolerancePerEm, GlyphyBlob& blob );
+
 private:
 
   bool FindFont( const std::string& path, PointSize26Dot6 pointSize, FaceIndex faceIndex, FontId& found ) const;
