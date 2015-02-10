@@ -74,6 +74,9 @@ include ../../../adaptors/public-api/file.list
 static_libraries_libunibreak_src_dir = ../../../text/dali/internal/libunibreak
 include ../../../text/dali/internal/libunibreak/file.list
 
+static_libraries_glyphy_src_dir = ../../../text/dali/internal/glyphy
+include ../../../text/dali/internal/glyphy/file.list
+
 ############# source files #############
 
 if ASSIMP_ENABLED
@@ -88,7 +91,8 @@ if COMMON_PROFILE
 adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_default_profile_src_files) \
                              $(adaptor_tizen_internal_src_files) \
-                             $(static_libraries_libunibreak_src_files)
+                             $(static_libraries_libunibreak_src_files) \
+                             $(static_libraries_glyphy_src_files)
 
 if WAYLAND
 adaptor_internal_src_files += $(adaptor_wayland_tizen_internal_src_files) \
@@ -108,7 +112,8 @@ adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
                              $(adaptor_ubuntu_internal_src_files) \
                              $(adaptor_x11_ubuntu_internal_src_files) \
                              $(adaptor_x11_internal_default_profile_src_files) \
-                             $(static_libraries_libunibreak_src_files)
+                             $(static_libraries_libunibreak_src_files) \
+                             $(static_libraries_glyphy_src_files)
 
 endif # UBUNTU_PROFILE
 
@@ -120,7 +125,8 @@ adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_mobile_profile_src_files) \
                              $(adaptor_tizen_internal_src_files) \
                              $(adaptor_x11_tizen_internal_src_files) \
-                             $(static_libraries_libunibreak_src_files)
+                             $(static_libraries_libunibreak_src_files) \
+                             $(static_libraries_glyphy_src_files)
 
 endif
 
@@ -132,7 +138,8 @@ adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_mobile_profile_src_files) \
                              $(adaptor_tizen_internal_src_files) \
                              $(adaptor_x11_tizen_internal_src_files) \
-                             $(static_libraries_libunibreak_src_files)
+                             $(static_libraries_libunibreak_src_files) \
+                             $(static_libraries_glyphy_src_files)
 endif
 
 
@@ -143,7 +150,8 @@ adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_mobile_profile_src_files) \
                              $(adaptor_tizen_internal_src_files) \
                              $(adaptor_x11_tizen_internal_src_files) \
-                             $(static_libraries_libunibreak_src_files)
+                             $(static_libraries_libunibreak_src_files) \
+                             $(static_libraries_glyphy_src_files)
 endif
 
 
@@ -154,7 +162,8 @@ adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_tv_profile_src_files) \
                              $(adaptor_tizen_internal_src_files) \
                              $(adaptor_x11_tv_internal_src_files) \
-                             $(static_libraries_libunibreak_src_files)
+                             $(static_libraries_libunibreak_src_files) \
+                             $(static_libraries_glyphy_src_files)
 endif
 
 # Feedback Plugin

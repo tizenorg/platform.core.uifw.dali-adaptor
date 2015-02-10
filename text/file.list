@@ -6,6 +6,7 @@ text_abstraction_src_files = \
    $(text_src_dir)/dali/public-api/text-abstraction/font-list.cpp \
    $(text_src_dir)/dali/public-api/text-abstraction/font-metrics.cpp \
    $(text_src_dir)/dali/public-api/text-abstraction/glyph-info.cpp \
+   $(text_src_dir)/dali/public-api/text-abstraction/glyphy-blob.cpp \
    $(text_src_dir)/dali/public-api/text-abstraction/segmentation.cpp \
    $(text_src_dir)/dali/public-api/text-abstraction/shaping.cpp \
    $(text_src_dir)/dali/internal/text-abstraction/bidirectional-support-impl.cpp \
@@ -19,6 +20,7 @@ text_abstraction_header_files = \
    $(text_src_dir)/dali/public-api/text-abstraction/font-list.h \
    $(text_src_dir)/dali/public-api/text-abstraction/font-metrics.h \
    $(text_src_dir)/dali/public-api/text-abstraction/glyph-info.h \
+   $(text_src_dir)/dali/public-api/text-abstraction/glyphy-blob.h \
    $(text_src_dir)/dali/public-api/text-abstraction/script.h \
    $(text_src_dir)/dali/public-api/text-abstraction/segmentation.h \
    $(text_src_dir)/dali/public-api/text-abstraction/shaping.h \

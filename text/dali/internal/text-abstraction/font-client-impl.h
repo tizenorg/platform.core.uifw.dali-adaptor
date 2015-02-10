@@ -113,6 +113,11 @@ public:
    */
   BitmapImage CreateBitmap( FontId fontId, GlyphIndex glyphIndex );
 
+  /**
+   * @copydoc Dali::FontClient::CreateGlyphyBlob()
+   */
+  void CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, unsigned int requiredWidth, double tolerancePerEm, GlyphyBlob& blob );
+
 private:
 
   /**
