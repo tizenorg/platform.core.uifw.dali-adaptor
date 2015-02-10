@@ -27,6 +27,7 @@
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
 #include <fontconfig/fontconfig.h>
+#include <dali/internal/glyphy/glyphy.h>
 
 namespace Dali
 {
@@ -91,6 +92,8 @@ struct FontClient::Plugin
 
   void ConvertBitmap( BitmapImage& destBitmap, FT_Bitmap srcBitmap );
 
+  void CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, unsigned int requiredWidth, double tolerancePerEm, GlyphyBlob& blob );
+
 private:
 
   bool FindFont( const std::string& path, PointSize26Dot6 pointSize, FaceIndex faceIndex, FontId& found ) const;
@@ -103,6 +106,8 @@ private:
 
   unsigned int mDpiHorizontal;
   unsigned int mDpiVertical;
+
+  glyphy_arc_accumulator_t* mGlyphyAccumulator;
 };
 
 } // namespace Internal

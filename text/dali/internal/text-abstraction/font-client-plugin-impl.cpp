@@ -22,6 +22,7 @@
 #include <dali/public-api/common/vector-wrapper.h>
 #include <dali/public-api/text-abstraction/glyph-info.h>
 #include <dali/integration-api/debug.h>
+#include <dali/internal/glyphy/glyphy-helper.h>
 
 /**
  * Conversion from Fractional26.6 to float
@@ -61,12 +62,18 @@ FontClient::Plugin::Plugin( unsigned int horizontalDpi,
                             unsigned int verticalDpi )
 : mFreeTypeLibrary( NULL ),
   mDpiHorizontal( horizontalDpi ),
-  mDpiVertical( verticalDpi )
+  mDpiVertical( verticalDpi ),
+  mGlyphyAccumulator( NULL )
 {}
 
 FontClient::Plugin::~Plugin()
 {
   FT_Done_FreeType( mFreeTypeLibrary );
+
+  if( mGlyphyAccumulator )
+  {
+    glyphy_arc_accumulator_destroy( mGlyphyAccumulator );
+  }
 }
 
 void FontClient::Plugin::Initialize()
@@ -416,6 +423,22 @@ void FontClient::Plugin::ConvertBitmap( BitmapImage& destBitmap,
         memcpy( destBuffer, srcBitmap.buffer, srcBitmap.width*srcBitmap.rows );
       }
     }
+  }
+}
+
+void FontClient::Plugin::CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, unsigned int requiredWidth, double tolerancePerEm, GlyphyBlob& blob )
+{
+  if( fontId > 0 &&
+      fontId-1 < mFontCache.size() )
+  {
+    FT_Face ftFace = mFontCache[fontId-1].mFreeTypeFace;
+
+    if( !mGlyphyAccumulator )
+    {
+      mGlyphyAccumulator = glyphy_arc_accumulator_create();
+    }
+
+    GetGlyphyBlob( ftFace, glyphIndex, requiredWidth, mGlyphyAccumulator, tolerancePerEm, blob );
   }
 }
 
