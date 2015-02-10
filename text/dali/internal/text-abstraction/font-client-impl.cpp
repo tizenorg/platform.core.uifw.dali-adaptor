@@ -16,15 +16,17 @@
  */
 
 // CLASS  HEADER
-#include "font-client-impl.h"
+#include <dali/internal/text-abstraction/font-client-impl.h>
 
 // EXTERNAL INCLUDES
 #include <vector>
+#include <string.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
 #include <fontconfig/fontconfig.h>
 #include <dali/integration-api/debug.h>
+#include <dali/internal/glyphy/glyphy-helper.h>
 
 // INTERNAL INCLUDES
 #include <singleton-service-impl.h>
@@ -413,6 +415,19 @@ struct FontClient::Plugin
     }
   }
 
+  void CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, unsigned int requiredWidth, double tolerancePerEm, GlyphyBlob& blob )
+  {
+    encode_ft_glyph( font,
+                     glyph_index,
+		   TOLERANCE,
+		   buffer, ARRAY_LEN (buffer),
+		   &output_len,
+		   &glyph_info->nominal_w,
+		   &glyph_info->nominal_h,
+		   &glyph_info->extents,
+		   &glyph_info->advance);
+  }
+
 private:
 
   bool FindFont( const std::string& path, PointSize26Dot6 pointSize, FaceIndex faceIndex, FontId& found ) const
@@ -562,6 +577,13 @@ BitmapImage FontClient::CreateBitmap( FontId fontId, GlyphIndex glyphIndex )
   CreatePlugin();
 
   return mPlugin->CreateBitmap( fontId, glyphIndex );
+}
+
+void FontClient::CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, unsigned int requiredWidth, double tolerancePerEm, GlyphyBlob& blob )
+{
+  CreatePlugin();
+
+  return mPlugin->CreateGlyphyBlob( fontId, glyphIndex, requiredWidth, tolerancePerEm, blob );
 }
 
 void FontClient::CreatePlugin()
