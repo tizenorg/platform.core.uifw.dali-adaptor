@@ -19,7 +19,7 @@
  */
 
 // INTERNAL INCLUDES
-#include <base/interfaces/trigger-event-interface.h>
+#include <trigger-event-interface.h>
 
 // EXTERNAL INCLUDES
 #include <boost/function.hpp>

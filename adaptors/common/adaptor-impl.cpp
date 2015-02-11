@@ -385,10 +385,10 @@ void Adaptor::Start()
 
   ProcessCoreEvents(); // Ensure any startup messages are processed.
 
-  if ( !mFeedbackController )
+  //if ( !mFeedbackController )
   {
     // Start sound & haptic feedback
-    mFeedbackController = new FeedbackController( *mDaliFeedbackPlugin );
+    //mFeedbackController = new FeedbackController( *mDaliFeedbackPlugin );
   }
 
   for ( ObserverContainer::iterator iter = mObservers.begin(), endIter = mObservers.end(); iter != endIter; ++iter )

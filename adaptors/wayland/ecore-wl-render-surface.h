@@ -38,7 +38,7 @@ namespace Internal
 
 namespace Adaptor
 {
-class TriggerEvent;
+class TriggerEventInterface;
 
 namespace ECore
 {
@@ -94,15 +94,15 @@ public: // API
   WlDisplay* GetMainDisplay();
 
   /**
-   * Sets the render notification trigger to call when render thread is completed a frame
-   * @param renderNotification to use
-   */
-  void SetRenderNotification( TriggerEvent* renderNotification );
-
-  /**
    * Get the surface as an Ecore_X_drawable
    */
   virtual Ecore_Wl_Window* GetDrawable();
+
+  /**
+   * Sets the render notification trigger to call when render thread is completed a frame
+   * @param renderNotification to use
+   */
+  void SetRenderNotification( TriggerEventInterface* renderNotification );
 
 public: // from Dali::RenderSurface
 
@@ -218,7 +218,7 @@ protected: // Data
   PositionSize                mPosition;           ///< Position
   std::string                 mTitle;              ///< Title of window which shows from "xinfo -topvwins" command
   ColorDepth                  mColorDepth;         ///< Color depth of surface (32 bit or 24 bit)
-  TriggerEvent*               mRenderNotification; ///< Render notification trigger
+  TriggerEventInterface*      mRenderNotification; ///< Render notification trigger
 
   bool                        mOwnSurface;         ///< Whether we own the surface (responsible for deleting it)
   bool                        mOwnDisplay;         ///< Whether we own the display (responsible for deleting it)

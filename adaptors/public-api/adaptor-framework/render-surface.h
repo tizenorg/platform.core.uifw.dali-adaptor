@@ -43,6 +43,15 @@ typedef Dali::Rect<int> PositionSize;
  * The implementation of the factory method below should choose an appropriate
  * implementation of RenderSurface for the given platform
  */
+
+namespace Internal
+{
+  namespace Adaptor
+  {
+    class TriggerEventInterface;
+  }
+}
+
 class RenderSurface
 {
 public:
@@ -92,6 +101,12 @@ public:
    * @return The position and size
    */
   virtual PositionSize GetPositionSize() const = 0;
+
+  /**
+   * Sets the render notification trigger to call when render thread is completed a frame
+   * @param renderNotification to use
+   */
+  virtual void SetRenderNotification( Internal::Adaptor::TriggerEventInterface* renderNotification ) = 0;
 
 private:
 

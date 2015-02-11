@@ -61,7 +61,7 @@ WindowRenderSurface::WindowRenderSurface( Dali::PositionSize positionSize,
                                           Any display,
                                           const std::string& name,
                                           bool isTransparent)
-: RenderSurface( Dali::RenderSurface::WINDOW, positionSize, surface, display, name, isTransparent ),
+: EcoreXRenderSurface( Dali::RenderSurface::WINDOW, positionSize, surface, display, name, isTransparent ),
   mNeedToApproveDeiconify(false)
 {
   DALI_LOG_INFO( gRenderSurfaceLogFilter, Debug::Verbose, "Creating Window\n" );

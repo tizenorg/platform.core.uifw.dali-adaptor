@@ -47,7 +47,7 @@ namespace ECore
  * @todo change namespace to ECore_X11 as the class
  * is no longer pure X11.
  */
-class RenderSurface : public Internal::Adaptor::RenderSurface
+class DALI_IMPORT_API EcoreXRenderSurface : public Internal::Adaptor::RenderSurface
 {
 public:
   /**
@@ -59,19 +59,19 @@ public:
     * @param [in] name optional name of surface passed in
     * @param [in] isTransparent if it is true, surface has 32 bit color depth, otherwise, 24 bit
     */
-  RenderSurface( SurfaceType type,
-                 Dali::PositionSize positionSize,
-                 Any surface,
-                 Any display,
-                 const std::string& name,
-                 bool isTransparent = false);
+  EcoreXRenderSurface(SurfaceType type,
+                      Dali::PositionSize positionSize,
+                      Any surface,
+                      Any display,
+                      const std::string& name,
+                      bool isTransparent = false);
 
   /**
    * Destructor.
    * Will delete the display, if it has ownership.
    * Will delete the window/pixmap if it has owner ship
    */
-  virtual ~RenderSurface();
+  virtual ~EcoreXRenderSurface();
 
 protected:
   /**
@@ -93,15 +93,15 @@ public: // API
   XDisplay* GetMainDisplay();
 
   /**
-   * Sets the render notification trigger to call when render thread is completed a frame
-   * @param renderNotification to use
-   */
-  void SetRenderNotification( TriggerEvent* renderNotification );
-
-  /**
    * Get the surface as an Ecore_X_drawable
    */
   virtual Ecore_X_Drawable GetDrawable();
+
+  /**
+   * Sets the render notification trigger to call when render thread is completed a frame
+   * @param renderNotification to use
+   */
+  void SetRenderNotification( TriggerEventInterface* renderNotification );
 
 public: // from Dali::RenderSurface
 
@@ -217,7 +217,7 @@ protected: // Data
   PositionSize                mPosition;           ///< Position
   std::string                 mTitle;              ///< Title of window which shows from "xinfo -topvwins" command
   ColorDepth                  mColorDepth;         ///< Color depth of surface (32 bit or 24 bit)
-  TriggerEvent*               mRenderNotification; ///< Render notification trigger
+  TriggerEventInterface*      mRenderNotification; ///< Render notification trigger
 
   bool                        mOwnSurface;         ///< Whether we own the surface (responsible for deleting it)
   bool                        mOwnDisplay;         ///< Whether we own the display (responsible for deleting it)
