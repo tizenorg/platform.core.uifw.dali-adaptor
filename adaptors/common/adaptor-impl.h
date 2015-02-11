@@ -46,6 +46,8 @@
 namespace Dali
 {
 
+class RenderSurface;
+
 namespace Integration
 {
 class Core;
@@ -62,7 +64,6 @@ class EglFactory;
 class GestureManager;
 class GlImplementation;
 class GlSyncImplementation;
-class RenderSurface;
 class UpdateRenderController;
 class TriggerEvent;
 class CallbackManager;
@@ -73,6 +74,7 @@ class VSyncMonitor;
 class PerformanceInterface;
 class LifeCycleObserver;
 class ObjectProfiler;
+class DisplayConnection;
 
 /**
  * Implementation of the Adaptor class.
@@ -95,7 +97,7 @@ public:
    * @param[in]  baseLayout  The base layout that the application has been written for
    * @param[in]  configuration The context loss configuration ( to choose resource discard policy )
    */
-  static Dali::Adaptor* New( RenderSurface* surface,
+  static Dali::Adaptor* New( Dali::RenderSurface* surface,
                              const DeviceLayout& baseLayout,
                              Dali::Configuration::ContextLoss configuration );
 
@@ -327,7 +329,7 @@ public:  //AdaptorInternalServices
   /**
    * @copydoc Dali::Internal::Adaptor::AdaptorInternalServices::GetRenderSurfaceInterface()
    */
-  virtual RenderSurface* GetRenderSurfaceInterface();
+  virtual Dali::RenderSurface* GetRenderSurfaceInterface();
 
   /**
    * @copydoc Dali::Internal::Adaptor::AdaptorInternalServices::GetVSyncMonitorInterface()
@@ -496,7 +498,8 @@ private: // Data
   GlSyncImplementation*                 mGlSync;                      ///< GL Sync implementation
   EglFactory*                           mEglFactory;                  ///< EGL Factory
 
-  RenderSurface*                        mSurface;                     ///< Current surface
+  DisplayConnection*                    mDisplayConnection;           ///< Display connection
+  Dali::RenderSurface*                  mSurface;                     ///< Current surface
   SlpPlatform::SlpPlatformAbstraction*  mPlatformAbstraction;         ///< Platform abstraction
 
   EventHandler*                         mEventHandler;                ///< event handler
