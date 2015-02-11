@@ -32,14 +32,9 @@
 // INTERNAL INCLUDES
 #include <ecore-x-types.h>
 #include <trigger-event.h>
+#include <gl/egl-implementation.h>
 
 namespace Dali
-{
-
-namespace Internal
-{
-
-namespace Adaptor
 {
 
 #if defined(DEBUG_ENABLED)
@@ -49,12 +44,11 @@ extern Debug::Filter* gRenderSurfaceLogFilter;
 namespace ECore
 {
 
-PixmapRenderSurface::PixmapRenderSurface( Dali::PositionSize positionSize,
-                              Any surface,
-                              Any display,
-                              const std::string& name,
-                              bool isTransparent)
-: RenderSurface( Dali::RenderSurface::PIXMAP, positionSize, surface, display, name, isTransparent ),
+PixmapRenderSurface::PixmapRenderSurface(Dali::PositionSize positionSize,
+                                         Any surface,
+                                         const std::string& name,
+                                         bool isTransparent)
+: EcoreXRenderSurface( positionSize, surface, name, isTransparent ),
   mSyncMode(SYNC_MODE_NONE),
   mSyncReceived(false)
 {
@@ -77,31 +71,16 @@ Ecore_X_Drawable PixmapRenderSurface::GetDrawable()
   return (Ecore_X_Drawable)mX11Pixmap;
 }
 
-Dali::RenderSurface::SurfaceType PixmapRenderSurface::GetType()
-{
-  return Dali::RenderSurface::PIXMAP;
-}
-
 Any PixmapRenderSurface::GetSurface()
 {
   return Any( mX11Pixmap );
-}
-
-void PixmapRenderSurface::InitializeEgl( EglInterface& eglIf )
-{
-  DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
-
-  EglImplementation& eglImpl = static_cast<EglImplementation&>( eglIf );
-  eglImpl.InitializeGles( reinterpret_cast< EGLNativeDisplayType >( mMainDisplay ) );
-
-  eglImpl.ChooseConfig(false, mColorDepth);
 }
 
 void PixmapRenderSurface::CreateEglSurface( EglInterface& eglIf )
 {
   DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
-  EglImplementation& eglImpl = static_cast<EglImplementation&>( eglIf );
+  Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( eglIf );
 
   // create the EGL surface
   // need to cast to X handle as in 64bit system ECore handle is 32 bit whereas EGLnative and XWindow are 64 bit
@@ -113,22 +92,8 @@ void PixmapRenderSurface::DestroyEglSurface( EglInterface& eglIf )
 {
   DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
-  EglImplementation& eglImpl = static_cast<EglImplementation&>( eglIf );
+  Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( eglIf );
   eglImpl.DestroySurface();
-}
-
-bool PixmapRenderSurface::ReplaceEGLSurface( EglInterface& eglIf )
-{
-  DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
-
-  EglImplementation& eglImpl = static_cast<EglImplementation&>( eglIf );
-  eglImpl.InitializeGles( reinterpret_cast< EGLNativeDisplayType >( mMainDisplay ) );
-
-  // a new surface for the new pixmap
-  // need to cast to X handle as in 64bit system ECore handle is 32 bit whereas EGLnative and XWindow are 64 bit
-  XPixmap pixmap = static_cast< XPixmap>( mX11Pixmap );
-  return eglImpl.ReplaceSurfacePixmap( (EGLNativePixmapType)pixmap, // reinterpret_cast does not compile
-                                       reinterpret_cast< EGLNativeDisplayType >( mMainDisplay ) );
 }
 
 void PixmapRenderSurface::StartRender()
@@ -156,6 +121,8 @@ void PixmapRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstract
   }
   else
   {
+//TODO: enable it again
+#if 0
     // as a fallback, send damage event. This is needed until livebox is fixed to
     // stop using damage events for render
     Ecore_X_Drawable drawable = GetDrawable();
@@ -178,6 +145,7 @@ void PixmapRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstract
 
       XFlush( mMainDisplay );
     }
+#endif
   }
 
   AcquireLock( replacingSurface ? SYNC_MODE_NONE : SYNC_MODE_WAIT );
@@ -251,9 +219,5 @@ void PixmapRenderSurface::ReleaseLock()
 
 
 } // namespace ECore
-
-} // namespace Adaptor
-
-} // namespace Internal
 
 } // namespace Dali
