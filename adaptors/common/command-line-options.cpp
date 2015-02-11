@@ -16,7 +16,7 @@
  */
 
 // CLASS HEADER
-#include "command-line-options.h"
+#include <command-line-options.h>
 
 // EXTERNAL INCLUDES
 #include <getopt.h>

@@ -20,6 +20,7 @@
 
 // EXTERNAL INCLUDES
 #include <string>
+#include <dali/public-api/common/dali-common.h>
 
 namespace Dali
 {
@@ -48,7 +49,7 @@ namespace Adaptor
  *
  * When the above options are found, they are stripped from argv, and argc is updated appropriately.
  */
-struct CommandLineOptions
+struct DALI_IMPORT_API CommandLineOptions
 {
 public:
 

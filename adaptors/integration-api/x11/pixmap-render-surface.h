@@ -37,7 +37,7 @@ namespace ECore
 /**
  * Ecore X11 implementation of render surface.
  */
-class PixmapRenderSurface : public RenderSurface
+class DALI_IMPORT_API PixmapRenderSurface : public RenderSurface
 {
 public:
 

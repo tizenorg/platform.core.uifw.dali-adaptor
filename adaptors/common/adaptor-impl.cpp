@@ -16,7 +16,7 @@
  */
 
 // CLASS HEADER
-#include "adaptor-impl.h"
+#include <adaptor-impl.h>
 
 // EXTERNAL INCLUDES
 #include <boost/thread/tss.hpp>

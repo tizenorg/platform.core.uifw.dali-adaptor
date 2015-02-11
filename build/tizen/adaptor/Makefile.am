@@ -28,6 +28,10 @@ slp_platform_abstraction_src_dir = ../../../platform-abstractions/slp
 portable_platform_abstraction_src_dir = ../../../platform-abstractions/portable
 include ../../../platform-abstractions/slp/file.list
 
+# Integration
+adaptor_integration_api_dir = ../../../adaptors/integration-api
+include ../../../adaptors/integration-api/file.list
+
 # Internal Common
 adaptor_common_dir = ../../../adaptors/common
 include ../../../adaptors/common/file.list
@@ -176,15 +180,18 @@ libdali_adaptor_la_includes = \
                       -I../../../platform-abstractions/portable \
                       -I../../../platform-abstractions/ \
                       -I../../../adaptors/public-api \
+                      -I../../../adaptors/integration-api \
                       -I../../../adaptors/public-api/adaptor-framework \
                       -I../../../adaptors/common \
                       -I../../../adaptors/
 if WAYLAND
 libdali_adaptor_la_includes += \
-                      -I../../../adaptors/wayland
+                      -I../../../adaptors/wayland \
+                      -I../../../adaptors/integration-api/wayland
 else
 libdali_adaptor_la_includes += \
-                      -I../../../adaptors/x11
+                      -I../../../adaptors/x11 \
+                      -I../../../adaptors/integration-api/x11
 endif
 
 if UBUNTU_PROFILE
@@ -313,6 +320,17 @@ endif
 
 tizenadaptorpublicapidir = $(devincludepath)/dali/public-api
 tizenadaptorpublicapi_HEADERS = $(public_api_header_files)
+
+tizenadaptorintegrationapidir = $(devincludepath)/dali/integration-api/adaptors
+tizenadaptorintegrationapi_HEADERS = $(adaptor_integration_api_header_files)
+
+if WAYLAND
+tizenadaptorintegrationwaylandapidir = $(devincludepath)/dali/integration-api/adaptors
+tizenadaptorintegrationwaylandapi_HEADERS = $(adaptor_integration_api_wayland_header_files)
+else
+tizenadaptorintegrationx11apidir = $(devincludepath)/dali/integration-api/adaptors
+tizenadaptorintegrationx11api_HEADERS = $(adaptor_integration_api_x11_header_files)
+endif
 
 tizenadaptorframeworkpublicapidir = $(tizenadaptorpublicapidir)/adaptor-framework
 tizenadaptorframeworkpublicapi_HEADERS = $(public_api_adaptor_framework_header_files)
