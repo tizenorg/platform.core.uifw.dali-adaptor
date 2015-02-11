@@ -35,6 +35,30 @@ typedef std::string FontStyle;
 
 struct FontDescription
 {
+  FontDescription()
+  : path(),
+    family(),
+    style()
+  {}
+
+  ~FontDescription()
+  {}
+
+  FontDescription( const FontDescription& fontDescription )
+  : path( fontDescription.path ),
+    family( fontDescription.family ),
+    style( fontDescription.style )
+  {}
+
+  FontDescription& operator=( const FontDescription& fontDescription )
+  {
+    path = fontDescription.path;
+    family = fontDescription.family;
+    style = fontDescription.style;
+    
+    return *this;
+  }
+
   FontPath   path;
   FontFamily family;
   FontStyle  style;
