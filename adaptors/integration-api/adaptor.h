@@ -28,15 +28,15 @@
 // INTERNAL INCLUDES
 #include "window.h"
 #include "application-configuration.h"
-#include "tts-player.h"
 
-namespace Dali DALI_INTERNAL
+namespace Dali
 {
 
 struct DeviceLayout;
 class RenderSurface;
+class DisplayConnection;
 
-namespace Internal DALI_INTERNAL
+namespace Internal
 {
 namespace Adaptor
 {
@@ -102,7 +102,7 @@ class Adaptor;
  *
  * @see RenderSurface
  */
-class Adaptor
+class DALI_IMPORT_API Adaptor
 {
 public:
 
@@ -127,6 +127,25 @@ public:
    * @return a reference to the adaptor handle
    */
   static Adaptor& New( Window window, const DeviceLayout& baseLayout, Configuration::ContextLoss configuration );
+
+  /**
+   * @brief Create a new adaptor using render surface.
+   *
+   * @param[in] surface The surface to draw onto
+   * @note The default base layout DeviceLayout::DEFAULT_BASE_LAYOUT will be used.
+   * @return a reference to the adaptor handle
+   */
+  static Adaptor& New( const Dali::RenderSurface& surface );
+
+  /**
+   * @brief Create a new adaptor using render surface.
+   *
+   * @param[in] surface The surface to draw onto
+   * @param[in] baseLayout  The base layout that the application has been written for
+   * @param[in] configuration The context loss configuration.
+   * @return a reference to the adaptor handle
+   */
+  static Adaptor& New( const Dali::RenderSurface& surface, const DeviceLayout& baseLayout, Configuration::ContextLoss configuration = Configuration::APPLICATION_DOES_NOT_HANDLE_CONTEXT_LOSS);
 
   /**
    * @brief Virtual Destructor.
@@ -169,6 +188,12 @@ public:
    * @return true if added successfully, false otherwise
    */
   bool AddIdle( boost::function<void(void)> callBack );
+
+  /**
+   * Replaces the rendering surface
+   * @param[in] surface to use
+   */
+  void ReplaceSurface( Dali::RenderSurface& surface );
 
   /**
    * @brief Get the render surface the adaptor is using to render to.
@@ -240,6 +265,28 @@ public:
    * @param[in] distance The minimum pinch distance in pixels
    */
   void SetMinimumPinchDistance(float distance);
+
+  /**
+   * @brief Feed a touch point to the adaptor.
+   *
+   * @param[in] point touch point
+   * @param[in] timeStamp time value of event
+   */
+  void FeedTouchPoint( TouchPoint& point, int timeStamp );
+
+  /**
+   * @brief Feed a mouse wheel event to the adaptor.
+   *
+   * @param[in]  wheelEvent mouse wheel event
+   */
+  void FeedWheelEvent( MouseWheelEvent& wheelEvent );
+
+  /**
+   * @brief Feed a key event to the adaptor.
+   *
+   * @param[in] keyEvent The key event holding the key information.
+   */
+  void FeedKeyEvent( KeyEvent& keyEvent );
 
 public:  // Signals
 

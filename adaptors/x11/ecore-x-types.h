@@ -24,20 +24,10 @@
 namespace Dali
 {
 
-namespace Internal
-{
-
-namespace Adaptor
-{
-
 typedef ::Pixmap XPixmap;
 typedef ::Window XWindow;
 typedef ::Display XDisplay;
 typedef ::Screen XScreen;
-
-} // namespace Adaptor
-
-} // namespace Internal
 
 } // namespace Dali
 

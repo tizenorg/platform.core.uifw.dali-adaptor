@@ -20,10 +20,6 @@
 
 namespace Dali
 {
-namespace Internal
-{
-namespace Adaptor
-{
 
 /**
  * EglInterface provides an interface for managing EGL contexts
@@ -68,10 +64,6 @@ protected:
    */
   virtual ~EglInterface() {}
 };
-
-} // namespace Adaptor
-
-} // namespace Internal
 
 } // namespace Dali
 

@@ -19,22 +19,17 @@
  */
 
 // INTERNAL INCLUDES
-#include <base/interfaces/trigger-event-factory-interface.h>
+#include <trigger-event-factory-interface.h>
+#include <dali/public-api/common/dali-common.h>
 
 namespace Dali
-{
-
-namespace Internal
-{
-
-namespace Adaptor
 {
 
 /**
  * @brief Trigger interface factory class
  *
  */
-class TriggerEventFactory : public TriggerEventFactoryInterface
+class DALI_IMPORT_API TriggerEventFactory : public TriggerEventFactoryInterface
 {
 
 public:
@@ -65,10 +60,6 @@ public:
   virtual void DestroyTriggerEvent( TriggerEventInterface* triggerEventInterface );
 
 };
-
-} // namespace Internal
-
-} // namespace Adaptor
 
 } // namespace Dali
 

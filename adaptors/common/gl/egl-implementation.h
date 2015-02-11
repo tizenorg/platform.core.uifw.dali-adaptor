@@ -29,16 +29,18 @@
 
 namespace Dali
 {
-namespace Internal
-{
-namespace Adaptor
-{
+class DisplayConnection;
 
 enum ColorDepth
 {
   COLOR_DEPTH_24 = 24,
   COLOR_DEPTH_32 = 32
 };
+
+namespace Internal
+{
+namespace Adaptor
+{
 
 /**
  * EglImplementation class provides an EGL implementation.
@@ -58,7 +60,7 @@ public:
 
 public:
 
- /**
+  /**
    * (Called from  ECoreX::RenderSurface, not RenderThread, so not in i/f, hence, not virtual)
    * Initialize GL
    * @param display The display
