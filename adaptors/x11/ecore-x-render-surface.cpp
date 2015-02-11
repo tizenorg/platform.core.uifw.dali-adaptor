@@ -59,12 +59,12 @@ const unsigned int MILLISECONDS_PER_SECOND = 1000;
 
 } // unnamed namespace
 
-RenderSurface::RenderSurface( SurfaceType type,
-                              Dali::PositionSize positionSize,
-                              Any surface,
-                              Any display,
-                              const std::string& name,
-                              bool isTransparent)
+EcoreXRenderSurface::EcoreXRenderSurface(SurfaceType type,
+                                         Dali::PositionSize positionSize,
+                                         Any surface,
+                                         Any display,
+                                         const std::string& name,
+                                         bool isTransparent)
 : mMainDisplay(NULL),
   mType(type),
   mPosition(positionSize),
@@ -78,7 +78,7 @@ RenderSurface::RenderSurface( SurfaceType type,
   SetDisplay( display );
 }
 
-void RenderSurface::Init( Any surface )
+void EcoreXRenderSurface::Init( Any surface )
 {
   // see if there is a surface in Any surface
   unsigned int surfaceId  = GetSurfaceId( surface );
@@ -106,7 +106,7 @@ void RenderSurface::Init( Any surface )
 #ifdef DEBUG_ENABLED
   // prints out 'INFO: DALI: new RenderSurface, created display xx, used existing surface xx
   // we can not use LOG_INFO because the surface can be created before Dali Core is created.
-  printf(  "INFO: DALI: new RenderSurface, %s display %p, %s %s surface %X \n",
+  printf(  "INFO: DALI: new EcoreXRenderSurface, %s display %p, %s %s surface %X \n",
              mOwnDisplay?"created":"used existing",mMainDisplay,
              mOwnSurface?"created":"used existing",
              Dali::RenderSurface::PIXMAP==mType?" pixmap" :"window",
@@ -114,7 +114,7 @@ void RenderSurface::Init( Any surface )
 #endif
 }
 
-RenderSurface::~RenderSurface()
+EcoreXRenderSurface::~EcoreXRenderSurface()
 {
   // release the display connection if we use our own
   if( mOwnDisplay )
@@ -129,43 +129,43 @@ RenderSurface::~RenderSurface()
   }
 }
 
-Ecore_X_Window RenderSurface::GetXWindow()
+Ecore_X_Window EcoreXRenderSurface::GetXWindow()
 {
   return 0;
 }
 
-XDisplay* RenderSurface::GetMainDisplay()
+XDisplay* EcoreXRenderSurface::GetMainDisplay()
 {
   return mMainDisplay;
 }
 
-void RenderSurface::SetRenderNotification( TriggerEvent* renderNotification )
+void EcoreXRenderSurface::SetRenderNotification( TriggerEvent* renderNotification )
 {
   mRenderNotification = renderNotification;
 }
 
-Ecore_X_Drawable RenderSurface::GetDrawable()
+Ecore_X_Drawable EcoreXRenderSurface::GetDrawable()
 {
   return 0;
 }
 
-Any RenderSurface::GetDisplay()
+Any EcoreXRenderSurface::GetDisplay()
 {
   // this getter is used by main thread so we need to return the main thread version of the display
   return Any( ecore_x_display_get() );
 }
 
-PositionSize RenderSurface::GetPositionSize() const
+PositionSize EcoreXRenderSurface::GetPositionSize() const
 {
   return mPosition;
 }
 
-void RenderSurface::MoveResize( Dali::PositionSize positionSize )
+void EcoreXRenderSurface::MoveResize( Dali::PositionSize positionSize )
 {
   // nothing to do in base class
 }
 
-void RenderSurface::GetDpi( unsigned int& dpiHorizontal, unsigned int& dpiVertical ) const
+void EcoreXRenderSurface::GetDpi( unsigned int& dpiHorizontal, unsigned int& dpiVertical ) const
 {
   // calculate DPI
   float xres, yres;
@@ -178,11 +178,11 @@ void RenderSurface::GetDpi( unsigned int& dpiHorizontal, unsigned int& dpiVertic
   dpiVertical   = int(yres + 0.5f);
 }
 
-void RenderSurface::Map()
+void EcoreXRenderSurface::Map()
 {
 }
 
-void RenderSurface::TransferDisplayOwner( Internal::Adaptor::RenderSurface& newSurface )
+void EcoreXRenderSurface::TransferDisplayOwner( Internal::Adaptor::RenderSurface& newSurface )
 {
   // if we don't own the display return
   if( mOwnDisplay == false )
@@ -190,7 +190,7 @@ void RenderSurface::TransferDisplayOwner( Internal::Adaptor::RenderSurface& newS
     return;
   }
 
-  RenderSurface* other = dynamic_cast< RenderSurface* >( &newSurface );
+  EcoreXRenderSurface* other = dynamic_cast< EcoreXRenderSurface* >( &newSurface );
   if( other )
   {
     // if both surfaces share the same display, and this surface owns it,
@@ -203,7 +203,7 @@ void RenderSurface::TransferDisplayOwner( Internal::Adaptor::RenderSurface& newS
   }
 }
 
-void RenderSurface::ConsumeEvents()
+void EcoreXRenderSurface::ConsumeEvents()
 {
   // if the render surface has own display, check events so that we can flush the queue and avoid
   // any potential memory leaks in X
@@ -228,11 +228,11 @@ void RenderSurface::ConsumeEvents()
   }
 }
 
-void RenderSurface::SetViewMode( ViewMode )
+void EcoreXRenderSurface::SetViewMode( ViewMode )
 {
 }
 
-void RenderSurface::SetDisplay( Any display )
+void EcoreXRenderSurface::SetDisplay( Any display )
 {
   // the render surface can be passed either EFL e-core types, or x11 types
   // we use boost any to determine at run time which type
@@ -266,7 +266,7 @@ void RenderSurface::SetDisplay( Any display )
   }
 }
 
-unsigned int RenderSurface::GetSurfaceId( Any surface ) const
+unsigned int EcoreXRenderSurface::GetSurfaceId( Any surface ) const
 {
   unsigned int surfaceId = 0;
 

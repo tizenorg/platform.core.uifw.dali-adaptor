@@ -26,14 +26,15 @@
 #include <dali/public-api/signals/dali-signal.h>
 #include <dali/public-api/math/rect.h>
 #include <dali/public-api/events/touch-event.h>
+#include <render-surface.h>
 
-namespace Dali DALI_INTERNAL
+namespace Dali
 {
 
 struct DeviceLayout;
 class RenderSurface;
 
-namespace Internal DALI_INTERNAL
+namespace Internal
 {
 namespace Adaptor
 {
@@ -126,6 +127,25 @@ public:
   static Adaptor& New( Window window, const DeviceLayout& baseLayout, Configuration::ContextLoss configuration );
 
   /**
+   * @brief Create a new adaptor using render surface.
+   *
+   * @param[in] surface The surface to draw onto
+   * @note The default base layout DeviceLayout::DEFAULT_BASE_LAYOUT will be used.
+   * @return a reference to the adaptor handle
+   */
+  static Adaptor& New( const Dali::RenderSurface& surface );
+
+  /**
+   * @brief Create a new adaptor using render surface.
+   *
+   * @param[in] surface The surface to draw onto
+   * @param[in] baseLayout  The base layout that the application has been written for
+   * @param[in] configuration The context loss configuration.
+   * @return a reference to the adaptor handle
+   */
+  static Adaptor& New( const Dali::RenderSurface& surface, const DeviceLayout& baseLayout, Configuration::ContextLoss configuration = Configuration::APPLICATION_DOES_NOT_HANDLE_CONTEXT_LOSS);
+
+  /**
    * @brief Virtual Destructor.
    */
   virtual ~Adaptor();
@@ -166,6 +186,11 @@ public:
    * @return true if added successfully, false otherwise
    */
   bool AddIdle( boost::function<void(void)> callBack );
+
+  /**
+   *
+   */
+  void ReplaceSurface( Dali::RenderSurface& surface );
 
   /**
    * @brief Get the render surface the adaptor is using to render to.
@@ -237,6 +262,21 @@ public:
    * @param[in] distance The minimum pinch distance in pixels
    */
   void SetMinimumPinchDistance(float distance);
+
+  /**
+   *
+   */
+  void FeedTouchPoint( TouchPoint& point, int timeStamp );
+
+  /**
+   *
+   */
+  void FeedWheelEvent( MouseWheelEvent& wheelEvent );
+
+  /**
+   *
+   */
+  void FeedKeyEvent( KeyEvent& keyEvent );
 
 public:  // Signals
 

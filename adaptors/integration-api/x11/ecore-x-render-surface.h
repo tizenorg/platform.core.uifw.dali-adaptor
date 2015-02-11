@@ -47,7 +47,7 @@ namespace ECore
  * @todo change namespace to ECore_X11 as the class
  * is no longer pure X11.
  */
-class RenderSurface : public Internal::Adaptor::RenderSurface
+class DALI_IMPORT_API EcoreXRenderSurface : public Internal::Adaptor::RenderSurface
 {
 public:
   /**
@@ -59,19 +59,19 @@ public:
     * @param [in] name optional name of surface passed in
     * @param [in] isTransparent if it is true, surface has 32 bit color depth, otherwise, 24 bit
     */
-  RenderSurface( SurfaceType type,
-                 Dali::PositionSize positionSize,
-                 Any surface,
-                 Any display,
-                 const std::string& name,
-                 bool isTransparent = false);
+  EcoreXRenderSurface(SurfaceType type,
+                      Dali::PositionSize positionSize,
+                      Any surface,
+                      Any display,
+                      const std::string& name,
+                      bool isTransparent = false);
 
   /**
    * Destructor.
    * Will delete the display, if it has ownership.
    * Will delete the window/pixmap if it has owner ship
    */
-  virtual ~RenderSurface();
+  virtual ~EcoreXRenderSurface();
 
 protected:
   /**
