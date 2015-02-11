@@ -1,0 +1,2 @@
+adaptor_integration_api_header_files = \
+  $(adaptor_integration_api_dir)/adaptor-impl.h

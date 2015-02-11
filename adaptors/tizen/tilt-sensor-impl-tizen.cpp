@@ -20,11 +20,8 @@
 
 // EXTERNAL INCLUDES
 #include <cmath>
-#ifdef DALI_PROFILE_LITE
+//TODO : do not change here
 #include <sensor_internal.h>
-#else
-#include <sensor.h>
-#endif
 
 #include <dali/public-api/object/type-registry.h>
 #include <dali/integration-api/debug.h>

@@ -80,7 +80,7 @@ class ObjectProfiler;
 /**
  * Implementation of the Adaptor class.
  */
-class Adaptor : public Integration::RenderController,
+class DALI_IMPORT_API Adaptor : public Integration::RenderController,
                 public AdaptorInternalServices,
                 public CoreEventInterface,
                 public DamageObserver,
