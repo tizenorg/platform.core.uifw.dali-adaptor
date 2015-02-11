@@ -37,7 +37,7 @@ namespace ECore
 /**
  * Ecore X11 implementation of render surface.
  */
-class PixmapRenderSurface : public RenderSurface
+class PixmapRenderSurface : public EcoreXRenderSurface
 {
 public:
 
@@ -45,13 +45,11 @@ public:
     * Uses an X11 surface to render to.
     * @param [in] positionSize the position and size of the surface
     * @param [in] surface can be a X-window or X-pixmap (type must be unsigned int).
-    * @param [in] display connection to X-server if the surface is a X window or pixmap (type must be void * to X display struct)
     * @param [in] name optional name of surface passed in
     * @param [in] isTransparent if it is true, surface has 32 bit color depth, otherwise, 24 bit
     */
   PixmapRenderSurface( Dali::PositionSize positionSize,
                        Any surface,
-                       Any display,
                        const std::string& name,
                        bool isTransparent = false);
 
@@ -70,21 +68,11 @@ public: // API
 public: // from Dali::RenderSurface
 
   /**
-   * @copydoc Dali::RenderSurface::GetType()
-   */
-  virtual Dali::RenderSurface::SurfaceType GetType();
-
-  /**
    * @copydoc Dali::RenderSurface::GetSurface()
    */
   virtual Any GetSurface();
 
 public: // from Internal::Adaptor::RenderSurface
-
-  /**
-   * @copydoc Dali::Internal::Adaptor::RenderSurface::InitializeEgl()
-   */
-  virtual void InitializeEgl( EglInterface& egl );
 
   /**
    * @copydoc Dali::Internal::Adaptor::RenderSurface::CreateEglSurface()

@@ -224,8 +224,7 @@ void Window::Initialize(const PositionSize& windowPosition, const std::string& n
 {
   // create an Wayland window by default
   Any surface;
-  Any display;
-  mSurface = new ECore::WindowRenderSurface( windowPosition, surface, display, name, mIsTransparent );
+  mSurface = new ECore::WindowRenderSurface( windowPosition, surface, name, mIsTransparent );
   mOrientation = Orientation::New(this);
 
   // create event handler for Wayland window

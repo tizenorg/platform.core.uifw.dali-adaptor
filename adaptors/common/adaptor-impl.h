@@ -34,6 +34,7 @@
 #include <tts-player.h>
 #include <imf-manager.h>
 #include <device-layout.h>
+#include <display-connection.h>
 #include <clipboard.h>
 
 #include <slp-platform-abstraction.h>
@@ -48,6 +49,8 @@
 
 namespace Dali
 {
+
+class RenderSurface;
 
 namespace Integration
 {
@@ -65,7 +68,6 @@ class EglFactory;
 class GestureManager;
 class GlImplementation;
 class GlSyncImplementation;
-class RenderSurface;
 class UpdateRenderController;
 class TriggerEvent;
 class CallbackManager;
@@ -98,7 +100,7 @@ public:
    * @param[in]  baseLayout  The base layout that the application has been written for
    * @param[in]  configuration The context loss configuration ( to choose resource discard policy )
    */
-  static Dali::Adaptor* New( RenderSurface* surface,
+  static Dali::Adaptor* New( Dali::RenderSurface* surface,
                              const DeviceLayout& baseLayout,
                              Dali::Configuration::ContextLoss configuration );
 
@@ -330,7 +332,7 @@ public:  //AdaptorInternalServices
   /**
    * @copydoc Dali::Internal::Adaptor::AdaptorInternalServices::GetRenderSurfaceInterface()
    */
-  virtual RenderSurface* GetRenderSurfaceInterface();
+  virtual Dali::RenderSurface* GetRenderSurfaceInterface();
 
   /**
    * @copydoc Dali::Internal::Adaptor::AdaptorInternalServices::GetVSyncMonitorInterface()
@@ -499,7 +501,8 @@ private: // Data
   GlSyncImplementation*                 mGlSync;                      ///< GL Sync implementation
   EglFactory*                           mEglFactory;                  ///< EGL Factory
 
-  RenderSurface*                        mSurface;                     ///< Current surface
+  Dali::DisplayConnection               mDisplayConnection;           ///< Display connection
+  Dali::RenderSurface*                  mSurface;                     ///< Current surface
   SlpPlatform::SlpPlatformAbstraction*  mPlatformAbstraction;         ///< Platform abstraction
 
   EventHandler*                         mEventHandler;                ///< event handler

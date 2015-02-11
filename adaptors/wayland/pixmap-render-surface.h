@@ -37,7 +37,7 @@ namespace ECore
 /**
  * Ecore X11 implementation of render surface.
  */
-class PixmapRenderSurface : public RenderSurface
+class PixmapRenderSurface : public EcoreWlRenderSurface
 {
 public:
 
@@ -45,13 +45,11 @@ public:
     * Uses an Wayland surface to render to.
     * @param [in] positionSize the position and size of the surface
     * @param [in] surface can be a Wayland-window (type must be unsigned int).
-    * @param [in] display connection to Wayland-server if the surface is a X window or pixmap (type must be void * to X display struct)
     * @param [in] name optional name of surface passed in
     * @param [in] isTransparent if it is true, surface has 32 bit color depth, otherwise, 24 bit
     */
   PixmapRenderSurface( Dali::PositionSize positionSize,
                        Any surface,
-                       Any display,
                        const std::string& name,
                        bool isTransparent = false);
 
@@ -63,11 +61,6 @@ public:
 public: // API
 
 public: // from Dali::RenderSurface
-
-  /**
-   * @copydoc Dali::RenderSurface::GetType()
-   */
-  virtual Dali::RenderSurface::SurfaceType GetType();
 
   /**
    * @copydoc Dali::RenderSurface::GetSurface()
