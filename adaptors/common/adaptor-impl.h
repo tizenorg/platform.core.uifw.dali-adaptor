@@ -46,6 +46,8 @@
 namespace Dali
 {
 
+class RenderSurface;
+
 namespace Integration
 {
 class Core;
@@ -62,7 +64,6 @@ class EglFactory;
 class GestureManager;
 class GlImplementation;
 class GlSyncImplementation;
-class RenderSurface;
 class UpdateRenderController;
 class TriggerEvent;
 class CallbackManager;
@@ -73,6 +74,7 @@ class VSyncMonitor;
 class PerformanceInterface;
 class LifeCycleObserver;
 class ObjectProfiler;
+class DisplayConnection;
 
 /**
  * Implementation of the Adaptor class.
@@ -168,12 +170,12 @@ public: // AdaptorInternalServices implementation
   /**
    * @copydoc AdaptorInterface::ReplaceSurface()
    */
-  virtual void ReplaceSurface( Dali::RenderSurface& surface );
+  virtual void ReplaceSurface( RenderSurface& surface );
 
   /**
    * @copydoc Dali::Adaptor::GetSurface()
    */
-  virtual Dali::RenderSurface& GetSurface() const;
+  virtual RenderSurface& GetSurface() const;
 
   /**
    * @copydoc Dali::Adaptor::ReleaseSurfaceLock()
@@ -450,7 +452,7 @@ private:
    * Assigns the render surface to the adaptor
    *
    */
-  void SetSurface(Dali::RenderSurface *surface);
+  void SetSurface(RenderSurface *surface);
 
   /**
    * Sends an notification message from main loop idle handler
@@ -484,8 +486,8 @@ private: // Types
 
 private: // Data
 
-  AdaptorSignalType                       mResizedSignal;             ///< Resized signal.
-  AdaptorSignalType                       mLanguageChangedSignal;     ///< Language changed signal.
+  AdaptorSignalType                     mResizedSignal;               ///< Resized signal.
+  AdaptorSignalType                     mLanguageChangedSignal;       ///< Language changed signal.
 
   Dali::Adaptor&                        mAdaptor;                     ///< Reference to public adaptor instance.
   State                                 mState;                       ///< Current state of the adaptor
@@ -496,6 +498,7 @@ private: // Data
   GlSyncImplementation*                 mGlSync;                      ///< GL Sync implementation
   EglFactory*                           mEglFactory;                  ///< EGL Factory
 
+  DisplayConnection*                    mDisplayConnection;           ///< Display connection
   RenderSurface*                        mSurface;                     ///< Current surface
   SlpPlatform::SlpPlatformAbstraction*  mPlatformAbstraction;         ///< Platform abstraction
 
