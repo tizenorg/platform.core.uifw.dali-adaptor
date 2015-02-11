@@ -24,12 +24,6 @@
 namespace Dali
 {
 
-namespace Internal
-{
-
-namespace Adaptor
-{
-
 namespace ECore
 {
 
@@ -37,7 +31,7 @@ namespace ECore
  * @copydoc Dali::Internal::Adaptor::ECore::RenderSurface.
  * Window specialization.
  */
-class WindowRenderSurface : public RenderSurface
+class WindowRenderSurface : public EcoreXRenderSurface
 {
 public:
 
@@ -45,18 +39,16 @@ public:
     * Uses an X11 surface to render to.
     * @param [in] positionSize the position and size of the surface
     * @param [in] surface can be a X-window or X-pixmap (type must be unsigned int).
-    * @param [in] display connection to X-server if the surface is a X window or pixmap (type must be void * to X display struct)
     * @param [in] name optional name of surface passed in
     * @param [in] isTransparent if it is true, surface has 32 bit color depth, otherwise, 24 bit
     */
   WindowRenderSurface( Dali::PositionSize positionSize,
                        Any surface,
-                       Any display,
                        const std::string& name,
                        bool isTransparent = false );
 
   /**
-   * @copydoc Dali::Internal::Adaptor::ECore::RenderSurface::~RenderSurface
+   * @copydoc Dali::Internal::Adaptor::ECore::EcoreXRenderSurface::~EcoreXRenderSurface
    */
   virtual ~WindowRenderSurface();
 
@@ -76,11 +68,6 @@ public: // API
 public: // from Dali::RenderSurface
 
   /**
-   * @copydoc Dali::RenderSurface::GetType()
-   */
-  virtual Dali::RenderSurface::SurfaceType GetType();
-
-  /**
    * @copydoc Dali::RenderSurface::GetSurface()
    */
   virtual Any GetSurface();
@@ -91,11 +78,6 @@ public: // from Dali::RenderSurface
   virtual Ecore_X_Window GetXWindow();
 
 public:  // from Internal::Adaptor::RenderSurface
-
-  /**
-   * @copydoc Dali::Internal::Adaptor::RenderSurface::InitializeEgl()
-   */
-  virtual void InitializeEgl( EglInterface& egl );
 
   /**
    * @copydoc Dali::Internal::Adaptor::RenderSurface::CreateEglSurface()
@@ -160,7 +142,7 @@ protected:
   virtual void CreateXRenderable();
 
   /**
-   * @copydoc Dali::Internal::Adaptor::ECore::RenderSurface::UseExistingRenderable
+   * @copydoc Dali::Internal::Adaptor::ECore::EcoreXRenderSurface::UseExistingRenderable
    */
   virtual void UseExistingRenderable( unsigned int surfaceId );
 
@@ -172,10 +154,6 @@ private: // Data
 }; // class WindowRenderSurface
 
 } // namespace ECore
-
-} // namespace Adaptor
-
-} // namespace internal
 
 } // namespace Dali
 
