@@ -21,6 +21,8 @@
 namespace Dali
 {
 
+class DisplayConnection;
+
 namespace Internal
 {
 
@@ -45,7 +47,7 @@ public:
   /**
    * Constructor
    */
-  UpdateRenderController( AdaptorInternalServices& adaptorInterfaces, const EnvironmentOptions& environmentOptions );
+  UpdateRenderController( AdaptorInternalServices& adaptorInterfaces, Dali::DisplayConnection displayConnection, const EnvironmentOptions& environmentOptions );
 
   /**
    * Non virtual destructor. Not intended as base class.

@@ -27,6 +27,7 @@
 // INTERNAL INCLUDES
 #include <ecore-x-render-surface.h>
 #include <gl/gl-implementation.h>
+#include <display-connection.h>
 
 namespace Dali
 {
@@ -66,6 +67,18 @@ EglImplementation::EglImplementation()
 EglImplementation::~EglImplementation()
 {
   TerminateGles();
+}
+
+bool EglImplementation::InitializeGles( Dali::DisplayConnection displayConnection )
+{
+  Ecore_X_Display* display = Dali::AnyCast<Ecore_X_Display*>(displayConnection.GetDisplay());
+
+  InitializeGles( reinterpret_cast< EGLNativeDisplayType >( display ) );
+
+  //TODO: change constant to mColorDepth
+  ChooseConfig(false, COLOR_DEPTH_32/*mColorDepth*/);
+
+  return true;
 }
 
 bool EglImplementation::InitializeGles( EGLNativeDisplayType display, bool isOwnSurface )

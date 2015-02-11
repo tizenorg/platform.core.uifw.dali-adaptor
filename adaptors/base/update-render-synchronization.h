@@ -25,7 +25,7 @@
 
 // INTERNAL INCLUDES
 #include <base/interfaces/performance-interface.h>
-#include <base/interfaces/trigger-event-interface.h>
+#include <trigger-event-interface.h>
 #include <base/frame-time.h>
 #include <base/render-thread.h>
 

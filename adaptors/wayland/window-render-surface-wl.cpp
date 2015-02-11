@@ -75,17 +75,6 @@ Ecore_Wl_Window* WindowRenderSurface::GetDrawable()
   return mWlWindow;
 }
 
-Dali::RenderSurface::SurfaceType WindowRenderSurface::GetType()
-{
-  return Dali::RenderSurface::WINDOW;
-}
-
-Any WindowRenderSurface::GetSurface()
-{
-  // already an e-core type
-  return Any( mWlWindow );
-}
-
 Ecore_Wl_Window* WindowRenderSurface::GetWlWindow()
 {
   return mWlWindow;

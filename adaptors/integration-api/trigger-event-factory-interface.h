@@ -22,7 +22,7 @@
 #include <boost/function.hpp>
 
 // INTERNAL INCLUDES
-#include <base/interfaces/trigger-event-interface.h>
+#include <trigger-event-interface.h>
 
 namespace Dali
 {

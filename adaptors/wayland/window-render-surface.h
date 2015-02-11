@@ -77,16 +77,6 @@ public: // API
 public: // from Dali::RenderSurface
 
   /**
-   * @copydoc Dali::RenderSurface::GetType()
-   */
-  virtual Dali::RenderSurface::SurfaceType GetType();
-
-  /**
-   * @copydoc Dali::RenderSurface::GetSurface()
-   */
-  virtual Any GetSurface();
-
-  /**
    * @copydoc Dali::RenderSurface::GetDrawable()
    */
   virtual Ecore_Wl_Window* GetWlWindow();

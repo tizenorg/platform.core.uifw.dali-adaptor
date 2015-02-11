@@ -54,10 +54,9 @@
 #include <clipboard-impl.h>
 #include <vsync-monitor.h>
 #include <object-profiler.h>
+#include <display-connection.h>
 
 #include <slp-logging.h>
-
-
 
 namespace Dali
 {
@@ -112,8 +111,6 @@ bool GetFloatEnvironmentVariable( const char* variable, float& floatValue )
 Dali::Adaptor* Adaptor::New( RenderSurface *surface, const DeviceLayout& baseLayout,
                              Dali::Configuration::ContextLoss configuration )
 {
-  DALI_ASSERT_ALWAYS( surface->GetType() != Dali::RenderSurface::NO_SURFACE && "No surface for adaptor" );
-
   Dali::Adaptor* adaptor = new Dali::Adaptor;
   Adaptor* impl = new Adaptor( *adaptor, surface, baseLayout );
   adaptor->mImpl = impl;
@@ -264,7 +261,8 @@ void Adaptor::Initialize(Dali::Configuration::ContextLoss configuration)
 
   mVSyncMonitor = new VSyncMonitor;
 
-  mUpdateRenderController = new UpdateRenderController( *this, mEnvironmentOptions );
+  mDisplayConnection = Dali::DisplayConnection::New();
+  mUpdateRenderController = new UpdateRenderController( *this, mDisplayConnection, mEnvironmentOptions );
 
   mDaliFeedbackPlugin = new FeedbackPluginProxy( FeedbackPluginProxy::DEFAULT_OBJECT_NAME );
 
@@ -366,7 +364,7 @@ void Adaptor::Start()
   // set the DPI value for font rendering
   unsigned int dpiHor, dpiVer;
   dpiHor = dpiVer = 0;
-  mSurface->GetDpi(dpiHor, dpiVer);
+  mDisplayConnection.GetDpi(dpiHor, dpiVer);
 
   // tell core about the value
   mCore->SetDpi(dpiHor, dpiVer);
@@ -385,10 +383,10 @@ void Adaptor::Start()
 
   ProcessCoreEvents(); // Ensure any startup messages are processed.
 
-  if ( !mFeedbackController )
+  //if ( !mFeedbackController )
   {
     // Start sound & haptic feedback
-    mFeedbackController = new FeedbackController( *mDaliFeedbackPlugin );
+    //mFeedbackController = new FeedbackController( *mDaliFeedbackPlugin );
   }
 
   for ( ObserverContainer::iterator iter = mObservers.begin(), endIter = mObservers.end(); iter != endIter; ++iter )
@@ -523,6 +521,11 @@ bool Adaptor::MoveResize( const PositionSize& positionSize )
   }
 
   return true;
+}
+
+Dali::DisplayConnection Adaptor::GetDisplayConnection()
+{
+  return mDisplayConnection;
 }
 
 void Adaptor::SurfaceResized( const PositionSize& positionSize )

@@ -46,6 +46,21 @@ Adaptor& Adaptor::New( Window window, const DeviceLayout& baseLayout, Configurat
   return *adaptor;
 }
 
+Adaptor& Adaptor::New( const Dali::RenderSurface& surface )
+{
+  return New( surface, DeviceLayout::DEFAULT_BASE_LAYOUT, Configuration::APPLICATION_DOES_NOT_HANDLE_CONTEXT_LOSS );
+}
+
+Adaptor& Adaptor::New( const Dali::RenderSurface& surface, const DeviceLayout& baseLayout, Configuration::ContextLoss configuration )
+{
+  Dali::RenderSurface* pSurface = const_cast<Dali::RenderSurface *>(&surface);
+  Internal::Adaptor::RenderSurface* pSurfaceImpl = dynamic_cast<Internal::Adaptor::RenderSurface *>(pSurface);
+  DALI_ASSERT_ALWAYS(pSurfaceImpl && "failed to get surfaceImpl pointer");
+
+  Adaptor* adaptor = Internal::Adaptor::Adaptor::New( pSurfaceImpl, baseLayout, configuration );
+  return *adaptor;
+}
+
 Adaptor::~Adaptor()
 {
   delete mImpl;
@@ -74,6 +89,16 @@ void Adaptor::Stop()
 bool Adaptor::AddIdle( boost::function<void(void)> callBack )
 {
   return mImpl->AddIdle(callBack);
+}
+
+DisplayConnection Adaptor::GetDisplayConnection()
+{
+  return mImpl->GetDisplayConnection();
+}
+
+void Adaptor::ReplaceSurface( Dali::RenderSurface& surface )
+{
+  mImpl->ReplaceSurface(surface);
 }
 
 Adaptor::AdaptorSignalType& Adaptor::ResizedSignal()
@@ -124,6 +149,26 @@ void Adaptor::NotifyLanguageChanged()
 void Adaptor::SetMinimumPinchDistance(float distance)
 {
   mImpl->SetMinimumPinchDistance(distance);
+}
+
+void Adaptor::FeedTouchPoint( TouchPoint& point, int timeStamp )
+{
+  mImpl->FeedTouchPoint(point, timeStamp);
+}
+
+void Adaptor::FeedWheelEvent( MouseWheelEvent& wheelEvent )
+{
+  mImpl->FeedWheelEvent(wheelEvent);
+}
+
+void Adaptor::FeedKeyEvent( KeyEvent& keyEvent )
+{
+  mImpl->FeedKeyEvent(keyEvent);
+}
+
+void Adaptor::RenderSync()
+{
+  //TODO : implement
 }
 
 Adaptor::Adaptor()

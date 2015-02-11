@@ -1,5 +1,5 @@
-#ifndef __DALI_INTERNAL_ADAPTOR_MOBILE_RENDER_SURFACE_FACTORY_H__
-#define __DALI_INTERNAL_ADAPTOR_MOBILE_RENDER_SURFACE_FACTORY_H__
+#ifndef __DALI_INTERNAL_ADAPTOR_OFFSCREEN_RENDER_SURFACE_FACTORY_H__
+#define __DALI_INTERNAL_ADAPTOR_OFFSCREEN_RENDER_SURFACE_FACTORY_H__
 
 /*
  * Copyright (c) 2014 Samsung Electronics Co., Ltd.
@@ -19,16 +19,16 @@
  */
 
 // EXTERNAL INCLUDES
-#include <boost/any.hpp>
 #include <string>
-#include <dali/public-api/math/rect.h>
+#include <dali/public-api/object/any.h>
 #include <dali/public-api/common/dali-common.h>
 
 // INTERNAL INCLUDES
-#include <native-buffer-pool.h>
 
 namespace Dali
 {
+
+class RenderSurface;
 
 namespace Internal
 {
@@ -38,8 +38,6 @@ namespace Adaptor
 
 namespace ECore
 {
-
-class RenderSurface;
 
 /**
  * Surface factory function for pixmap
@@ -52,12 +50,11 @@ class RenderSurface;
  * @param [in] name Name of surface passed in
  * @param [in] isTransparent Whether the surface has an alpha channel
  */
-RenderSurface* CreatePixmapSurface(
-  PositionSize       positionSize,
-  Any         surface,
-  Any         display,
-  const std::string& name,
-  bool               isTransparent );
+Dali::RenderSurface* CreatePixmapSurface(PositionSize       positionSize,
+                                         Any                surface,
+                                         Any                display,
+                                         const std::string& name,
+                                         bool               isTransparent);
 
 } // namespace ECoreX
 
@@ -67,4 +64,4 @@ RenderSurface* CreatePixmapSurface(
 
 } // namespace Dali
 
-#endif //  __DALI_INTERNAL_ADAPTOR_MOBILE_RENDER_SURFACE_FACTORY_H__
+#endif //  __DALI_INTERNAL_ADAPTOR_OFFSCREEN_RENDER_SURFACE_FACTORY_H__

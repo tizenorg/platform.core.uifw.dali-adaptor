@@ -37,7 +37,7 @@ namespace ECore
 /**
  * Ecore X11 implementation of render surface.
  */
-class PixmapRenderSurface : public RenderSurface
+class PixmapRenderSurface : public EcoreXRenderSurface
 {
 public:
 
@@ -70,21 +70,11 @@ public: // API
 public: // from Dali::RenderSurface
 
   /**
-   * @copydoc Dali::RenderSurface::GetType()
-   */
-  virtual Dali::RenderSurface::SurfaceType GetType();
-
-  /**
    * @copydoc Dali::RenderSurface::GetSurface()
    */
   virtual Any GetSurface();
 
 public: // from Internal::Adaptor::RenderSurface
-
-  /**
-   * @copydoc Dali::Internal::Adaptor::RenderSurface::InitializeEgl()
-   */
-  virtual void InitializeEgl( EglInterface& egl );
 
   /**
    * @copydoc Dali::Internal::Adaptor::RenderSurface::CreateEglSurface()
