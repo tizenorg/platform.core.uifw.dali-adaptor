@@ -23,6 +23,7 @@
 #include <dali/public-api/common/stage.h>
 #include <dali/public-api/object/ref-object.h>
 #include <dali/public-api/object/base-object.h>
+#include <dali/public-api/object/singleton-service.h>
 #include <dali/public-api/object/type-registry.h>
 
 using std::string;
@@ -40,7 +41,6 @@ ObjectProfiler::ObjectProfiler()
 {
   // This class must be created after the Stage; this means it doesn't count the initial objects
   // that are created by the stage (base layer, default camera actor)
-  mObjectRegistry = Dali::Stage::GetCurrent().GetObjectRegistry();
 
   char* profile = getenv("PROFILE_DALI_OBJECTS");
   if( profile != NULL )
@@ -54,8 +54,9 @@ ObjectProfiler::ObjectProfiler()
       mTimer.Start();
     }
 
-    mObjectRegistry.ObjectCreatedSignal().Connect( this, &ObjectProfiler::OnObjectCreated );
-    mObjectRegistry.ObjectDestroyedSignal().Connect( this, &ObjectProfiler::OnObjectDestroyed );
+    Dali::SingletonService service( Dali::SingletonService::Get() );
+    service.ObjectCreatedSignal().Connect( this, &ObjectProfiler::OnObjectCreated );
+    service.ObjectDestroyedSignal().Connect( this, &ObjectProfiler::OnObjectDestroyed );
   }
 }
 

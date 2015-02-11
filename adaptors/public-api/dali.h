@@ -45,7 +45,6 @@
 #include <dali/public-api/adaptor-framework/performance-logger.h>
 #include <dali/public-api/adaptor-framework/pixmap-image.h>
 #include <dali/public-api/adaptor-framework/render-surface.h>
-#include <dali/public-api/adaptor-framework/singleton-service.h>
 #include <dali/public-api/adaptor-framework/sound-player.h>
 #include <dali/public-api/adaptor-framework/style-change.h>
 #include <dali/public-api/adaptor-framework/style-monitor.h>

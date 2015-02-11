@@ -28,7 +28,6 @@
 
 // INTERNAL INCLUDES
 #include <application.h>
-#include <singleton-service.h>
 
 #include <framework.h>
 #include <window-impl.h>
@@ -264,7 +263,6 @@ private:
   Dali::Configuration::ContextLoss      mContextLossConfiguration;
   CommandLineOptions*                   mCommandLineOptions;
 
-  Dali::SingletonService                mSingletonService;
   Dali::Adaptor*                        mAdaptor;
   Dali::Window                          mWindow;
   Dali::Application::WINDOW_MODE        mWindowMode;

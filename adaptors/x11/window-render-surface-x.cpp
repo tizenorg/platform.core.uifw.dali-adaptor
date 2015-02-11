@@ -287,6 +287,8 @@ void WindowRenderSurface::CreateXRenderable()
                            0,                                // window_group
                            0 );                              // is_urgent
 
+  ecore_x_icccm_protocol_set(mX11Window, ECORE_X_WM_PROTOCOL_DELETE_REQUEST, 1);
+
   // we SHOULD guarantee the x11 window was created in x server.
   ecore_x_sync();
 }

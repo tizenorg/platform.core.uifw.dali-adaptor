@@ -20,8 +20,10 @@
 // CLASS HEADER
 #include <physical-keyboard-impl.h>
 
+// EXTERNAL INCLUDES
+#include <dali/public-api/object/singleton-service.h>
+
 // INTERNAL INCLUDES
-#include <singleton-service-impl.h>
 
 namespace Dali
 {
@@ -36,7 +38,7 @@ Dali::PhysicalKeyboard PhysicalKeyboard::New()
 {
   Dali::PhysicalKeyboard keyboardHandle;
 
-  Dali::SingletonService service( SingletonService::Get() );
+  Dali::SingletonService service( Dali::SingletonService::Get() );
   if ( service )
   {
     keyboardHandle = Dali::PhysicalKeyboard( new PhysicalKeyboard() );
@@ -50,7 +52,7 @@ Dali::PhysicalKeyboard PhysicalKeyboard::Get()
 {
   Dali::PhysicalKeyboard keyboardHandle;
 
-  Dali::SingletonService service = SingletonService::Get();
+  Dali::SingletonService service = Dali::SingletonService::Get();
   if ( service )
   {
     BaseHandle handle = service.GetSingleton( typeid( Dali::PhysicalKeyboard ) );

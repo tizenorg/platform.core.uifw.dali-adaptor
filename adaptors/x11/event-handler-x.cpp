@@ -232,11 +232,14 @@ struct EventHandler::Impl
       mEcoreEventHandler.push_back( ecore_event_handler_add( ECORE_X_EVENT_SELECTION_CLEAR, EcoreEventSelectionClear, handler ) );
       mEcoreEventHandler.push_back( ecore_event_handler_add( ECORE_X_EVENT_SELECTION_NOTIFY, EcoreEventSelectionNotify, handler ) );
 
+      mEcoreEventHandler.push_back( ecore_event_handler_add(ECORE_X_EVENT_WINDOW_DELETE_REQUEST, EcoreEventSignalExit,          handler) );
+
 #ifndef DALI_PROFILE_UBUNTU
       // Register Vconf notify - font name, font size and style
       vconf_notify_key_changed( DALI_VCONFKEY_SETAPPL_ACCESSIBILITY_FONT_NAME, VconfNotifyFontNameChanged, handler );
       vconf_notify_key_changed( VCONFKEY_SETAPPL_ACCESSIBILITY_FONT_SIZE, VconfNotifyFontSizeChanged, handler );
 #endif // DALI_PROFILE_UBUNTU
+
     }
   }
 
@@ -1046,6 +1049,12 @@ struct EventHandler::Impl
         }
       }
     }
+    return ECORE_CALLBACK_PASS_ON;
+  }
+
+  static Eina_Bool EcoreEventSignalExit( void* data, int type, void* event )
+  {
+    ecore_main_loop_quit();
     return ECORE_CALLBACK_PASS_ON;
   }
 

@@ -53,12 +53,12 @@ int UtcDaliSingletonServiceGet(void)
 {
   // Attempt to retrieve SingletonService before creating application
   SingletonService singletonService;
-  singletonService = SingletonService::Get();
+  singletonService = Dali::SingletonService::Get();
   DALI_TEST_CHECK( !singletonService );
 
   // Create Application class, should be able to retrieve SingletonService now
   Application application = Application::New();
-  singletonService = SingletonService::Get();
+  singletonService = Dali::SingletonService::Get();
   DALI_TEST_CHECK( singletonService );
 
   END_TEST;
@@ -67,7 +67,7 @@ int UtcDaliSingletonServiceGet(void)
 int UtcDaliSingletonServiceRegisterAndGetSingleton(void)
 {
   Application application = Application::New();
-  SingletonService singletonService( SingletonService::Get() );
+  SingletonService singletonService( Dali::SingletonService::Get() );
 
   // Attempt to register an empty handle
   TestHandle handle;

@@ -22,11 +22,11 @@
 #include <Ecore.h>
 #include <Ecore_Wayland.h>
 #include <dali/public-api/dali-core.h>
+#include <dali/public-api/object/singleton-service.h>
 #include <dali/integration-api/debug.h>
 
 // INTERNAL INCLUDES
 #include <dali/public-api/object/any.h>
-#include <singleton-service-impl.h>
 
 namespace //unnamed namespace
 {
@@ -73,7 +73,7 @@ Dali::Clipboard Clipboard::Get()
 {
   Dali::Clipboard clipboard;
 
-  Dali::SingletonService service( SingletonService::Get() );
+  Dali::SingletonService service( Dali::SingletonService::Get() );
   if ( service )
   {
     // Check whether the singleton is already created
