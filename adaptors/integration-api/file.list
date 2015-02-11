@@ -1,0 +1,13 @@
+adaptor_integration_api_header_files = \
+  $(adaptor_integration_api_dir)/adaptor-impl.h \
+  $(adaptor_integration_api_dir)/command-line-options.h \
+  $(adaptor_integration_api_dir)/trigger-event.h \
+  $(adaptor_integration_api_dir)/render-surface-impl.h
+
+adaptor_integration_api_x11_header_files = \
+  $(adaptor_integration_api_dir)/x11/ecore-x-render-surface.h \
+  $(adaptor_integration_api_dir)/x11/pixmap-render-surface.h
+
+adaptor_integration_api_wayland_header_files = \
+  $(adaptor_integration_api_dir)/wayland/ecore-wl-render-surface.h \
+  $(adaptor_integration_api_dir)/wayland/pixmap-render-surface.h

@@ -1,5 +1,5 @@
-#ifndef __DALI_INTERNAL_ECORE_X_RENDER_SURFACE_H__
-#define __DALI_INTERNAL_ECORE_X_RENDER_SURFACE_H__
+#ifndef __DALI_INTERNAL_ECORE_WL_RENDER_SURFACE_H__
+#define __DALI_INTERNAL_ECORE_WL_RENDER_SURFACE_H__
 
 /*
  * Copyright (c) 2014 Samsung Electronics Co., Ltd.
@@ -21,12 +21,13 @@
 // EXTERNAL INCLUDES
 #include <string>
 #include <boost/thread.hpp>
-#include <Ecore_X.h>
+#include <Ecore.h>
+#include <Ecore_Wayland.h>
 #include <dali/public-api/common/dali-common.h>
 
 // INTERNAL INCLUDES
 #include <render-surface-impl.h>
-#include <ecore-x-types.h>
+#include <ecore-wl-types.h>
 #include <gl/egl-implementation.h>
 
 namespace Dali
@@ -43,15 +44,15 @@ namespace ECore
 {
 
 /**
- * Ecore X11 implementation of render surface.
- * @todo change namespace to ECore_X11 as the class
- * is no longer pure X11.
+ * Ecore Wayland implementation of render surface.
+ * @todo change namespace to ECore_Wayland as the class
+ * is no longer pure Wayland.
  */
-class RenderSurface : public Internal::Adaptor::RenderSurface
+class DALI_IMPORT_API RenderSurface : public Internal::Adaptor::RenderSurface
 {
 public:
   /**
-    * Uses an X11 surface to render to.
+    * Uses an Wayland surface to render to.
     * @param [in] type the type of surface passed in
     * @param [in] positionSize the position and size of the surface
     * @param [in] surface can be a X-window or X-pixmap (type must be unsigned int).
@@ -85,12 +86,12 @@ public: // API
   /**
    * @return the Ecore X window handle
    */
-  Ecore_X_Window GetXWindow();
+  Ecore_Wl_Window* GetWlWindow();
 
   /**
    * @return the Main X display
    */
-  XDisplay* GetMainDisplay();
+  WlDisplay* GetMainDisplay();
 
   /**
    * Sets the render notification trigger to call when render thread is completed a frame
@@ -101,7 +102,7 @@ public: // API
   /**
    * Get the surface as an Ecore_X_drawable
    */
-  virtual Ecore_X_Drawable GetDrawable();
+  virtual Ecore_Wl_Window* GetDrawable();
 
 public: // from Dali::RenderSurface
 
@@ -202,7 +203,7 @@ protected:
   /**
    * Create XRenderable
    */
-  virtual void CreateXRenderable() = 0;
+  virtual void CreateWlRenderable() = 0;
 
   /**
    * Use an existing render surface
@@ -212,7 +213,7 @@ protected:
 
 protected: // Data
 
-  XDisplay*                   mMainDisplay;        ///< X-connection for rendering
+  WlDisplay*                  mMainDisplay;        ///< Wayland-connection for rendering
   SurfaceType                 mType;               ///< type of renderable
   PositionSize                mPosition;           ///< Position
   std::string                 mTitle;              ///< Title of window which shows from "xinfo -topvwins" command
@@ -231,4 +232,4 @@ protected: // Data
 
 } // namespace Dali
 
-#endif // __DALI_INTERNAL_ECORE_X_RENDER_SURFACE_H__
+#endif // __DALI_INTERNAL_ECORE_WL_RENDER_SURFACE_H__

@@ -24,7 +24,7 @@
 
 // INTERNAL INCLUDES
 #include <command-line-options.h>
-#include <common/adaptor-impl.h>
+#include <adaptor-impl.h>
 #include <singleton-service-impl.h>
 #include <lifecycle-controller-impl.h>
 
