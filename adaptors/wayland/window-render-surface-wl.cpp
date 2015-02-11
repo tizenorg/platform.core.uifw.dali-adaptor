@@ -51,10 +51,9 @@ const int MINIMUM_DIMENSION_CHANGE( 1 ); ///< Minimum change for window to be co
 
 WindowRenderSurface::WindowRenderSurface( Dali::PositionSize positionSize,
                                           Any surface,
-                                          Any display,
                                           const std::string& name,
                                           bool isTransparent)
-: RenderSurface( Dali::RenderSurface::WINDOW, positionSize, surface, display, name, isTransparent ),
+: RenderSurface( Dali::RenderSurface::WINDOW, positionSize, surface, name, isTransparent ),
   mNeedToApproveDeiconify(false)
 {
   DALI_LOG_INFO( gRenderSurfaceLogFilter, Debug::Verbose, "Creating Window\n" );
@@ -73,17 +72,6 @@ Ecore_Wl_Window* WindowRenderSurface::GetDrawable()
 {
   // already an e-core type
   return mWlWindow;
-}
-
-Dali::RenderSurface::SurfaceType WindowRenderSurface::GetType()
-{
-  return Dali::RenderSurface::WINDOW;
-}
-
-Any WindowRenderSurface::GetSurface()
-{
-  // already an e-core type
-  return Any( mWlWindow );
 }
 
 Ecore_Wl_Window* WindowRenderSurface::GetWlWindow()

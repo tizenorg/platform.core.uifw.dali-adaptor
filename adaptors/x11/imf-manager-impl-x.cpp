@@ -157,15 +157,16 @@ Dali::ImfManager ImfManager::Get()
     {
       // Create instance and register singleton only if the adaptor is available
 
-      Adaptor& adaptorImpl( Adaptor::GetImplementation( Adaptor::Get() ) );
+      //Adaptor& adaptorImpl( Adaptor::GetImplementation( Adaptor::Get() ) );
 
       // The Ecore_X_Window needs to use the ImfManager.
       // Only when the render surface is window, we can get the Ecore_X_Window.
       Ecore_X_Window ecoreXwin( 0 );
-      Dali::RenderSurface& surface( adaptorImpl.GetSurface() );
-      if( surface.GetType() == Dali::RenderSurface::WINDOW )
+      //Dali::RenderSurface& surface( adaptorImpl.GetSurface() );
+      //if( surface.GetType() == Dali::RenderSurface::WINDOW )
       {
-        ecoreXwin = AnyCast< Ecore_X_Window >( adaptorImpl.GetSurface().GetSurface() );
+        //TODO: find alternative way
+        //ecoreXwin = AnyCast< Ecore_X_Window >( adaptorImpl.GetSurface().GetSurface() );
       }
 
       // If we fail to get Ecore_X_Window, we can't use the ImfManager correctly.
