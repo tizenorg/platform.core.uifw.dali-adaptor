@@ -43,6 +43,15 @@ typedef Dali::Rect<int> PositionSize;
  * The implementation of the factory method below should choose an appropriate
  * implementation of RenderSurface for the given platform
  */
+
+namespace Internal
+{
+  namespace Adaptor
+  {
+    class TriggerEventInterface;
+  }
+}
+
 class RenderSurface
 {
 public:
@@ -55,6 +64,21 @@ public:
     PIXMAP,         ///< Pixmap
     WINDOW,         ///< Window
     NATIVE_BUFFER   ///< Native Buffer
+  };
+
+  /**
+   * @brief When application uses pixmap surface, it can select rendering mode.
+   *
+   * RENDER_SYNC : application should call RenderSync() after posting the offscreen to onscreen
+   * RENDER_#FPS : the maximum performance will be limited designated number of frame
+   */
+  enum RenderMode
+  {
+    RENDER_DEFAULT = -1,
+    RENDER_SYNC = 0,
+    RENDER_24FPS = 24,
+    RENDER_30FPS = 30,
+    RENDER_60FPS = 60
   };
 
   /**
@@ -92,6 +116,17 @@ public:
    * @return The position and size
    */
   virtual PositionSize GetPositionSize() const = 0;
+
+  /**
+   * Sets the render notification trigger to call when render thread is completed a frame
+   * @param renderNotification to use
+   */
+  virtual void SetRenderNotification( Internal::Adaptor::TriggerEventInterface* renderNotification ) = 0;
+
+  /**
+   * @brief Set frame update rate for pixmap surface type
+   */
+  virtual void SetRenderMode(RenderMode mode) = 0;
 
 private:
 

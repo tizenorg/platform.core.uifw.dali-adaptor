@@ -25,10 +25,11 @@
 #include <dali/public-api/common/dali-common.h>
 
 // INTERNAL INCLUDES
-#include <native-buffer-pool.h>
 
 namespace Dali
 {
+
+class RenderSurface;
 
 namespace Internal
 {
@@ -38,8 +39,6 @@ namespace Adaptor
 
 namespace ECore
 {
-
-class RenderSurface;
 
 /**
  * Surface factory function for pixmap
@@ -52,12 +51,11 @@ class RenderSurface;
  * @param [in] name Name of surface passed in
  * @param [in] isTransparent Whether the surface has an alpha channel
  */
-RenderSurface* CreatePixmapSurface(
-  PositionSize       positionSize,
-  Any         surface,
-  Any         display,
-  const std::string& name,
-  bool               isTransparent );
+Dali::RenderSurface* CreatePixmapSurface(PositionSize       positionSize,
+                                         Any                surface,
+                                         Any                display,
+                                         const std::string& name,
+                                         bool               isTransparent);
 
 } // namespace ECoreX
 
