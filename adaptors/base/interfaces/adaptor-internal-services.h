@@ -24,11 +24,11 @@
 
 // INTERNAL INCLUDES
 #include <base/interfaces/egl-factory-interface.h>
-#include <base/interfaces/trigger-event-interface.h>
+#include <trigger-event-interface.h>
 #include <base/interfaces/performance-interface.h>
 #include <base/interfaces/vsync-monitor-interface.h>
 #include <base/interfaces/kernel-trace-interface.h>
-#include <render-surface-impl.h> // @todo move to base/interfaces
+#include <render-surface.h>
 
 
 namespace Dali
@@ -79,7 +79,7 @@ public:
   /**
    * @return render surface
    */
-  virtual RenderSurface* GetRenderSurfaceInterface()  = 0;
+  virtual Dali::RenderSurface* GetRenderSurfaceInterface()  = 0;
 
   /**
    * @return vsync monitor interface

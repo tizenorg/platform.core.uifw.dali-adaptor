@@ -21,6 +21,9 @@
 namespace Dali
 {
 
+class RenderSurface;
+class DisplayConnection;
+
 namespace Internal
 {
 
@@ -31,7 +34,6 @@ class UpdateThread;
 class RenderThread;
 class VSyncNotifier;
 class UpdateRenderSynchronization;
-class RenderSurface;
 class AdaptorInternalServices;
 class EnvironmentOptions;
 
@@ -45,7 +47,7 @@ public:
   /**
    * Constructor
    */
-  UpdateRenderController( AdaptorInternalServices& adaptorInterfaces, const EnvironmentOptions& environmentOptions );
+  UpdateRenderController( AdaptorInternalServices& adaptorInterfaces, Dali::DisplayConnection displayConnection, const EnvironmentOptions& environmentOptions );
 
   /**
    * Non virtual destructor. Not intended as base class.

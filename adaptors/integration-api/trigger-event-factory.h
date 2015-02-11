@@ -19,7 +19,8 @@
  */
 
 // INTERNAL INCLUDES
-#include <base/interfaces/trigger-event-factory-interface.h>
+#include <trigger-event-factory-interface.h>
+#include <dali/public-api/common/dali-common.h>
 
 namespace Dali
 {
@@ -34,7 +35,7 @@ namespace Adaptor
  * @brief Trigger interface factory class
  *
  */
-class TriggerEventFactory : public TriggerEventFactoryInterface
+class DALI_IMPORT_API TriggerEventFactory : public TriggerEventFactoryInterface
 {
 
 public:

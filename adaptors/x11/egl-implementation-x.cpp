@@ -27,6 +27,7 @@
 // INTERNAL INCLUDES
 #include <ecore-x-render-surface.h>
 #include <gl/gl-implementation.h>
+#include <display-connection.h>
 
 namespace Dali
 {
