@@ -37,7 +37,7 @@ DALI_EXPORT_API RenderSurface* CreatePixmapSurface(
   const std::string& name,
   bool               isTransparent )
 {
-  return new PixmapRenderSurface( positionSize, surface, display, name, isTransparent );
+  return new Dali::Ecore::PixmapRenderSurface( positionSize, surface, display, name, isTransparent );
 }
 
 } // namespace ECoreX
