@@ -36,8 +36,7 @@
 
 #include <callback-manager.h>
 #include <trigger-event.h>
-#include <window-render-surface.h>
-#include <render-surface-impl.h>
+#include <render-surface.h>
 #include <tts-player-impl.h>
 #include <accessibility-manager-impl.h>
 #include <timer-impl.h>
@@ -54,10 +53,9 @@
 #include <clipboard-impl.h>
 #include <vsync-monitor.h>
 #include <object-profiler.h>
+#include <display-connection-impl.h>
 
 #include <slp-logging.h>
-
-
 
 namespace Dali
 {
@@ -112,8 +110,6 @@ bool GetFloatEnvironmentVariable( const char* variable, float& floatValue )
 Dali::Adaptor* Adaptor::New( RenderSurface *surface, const DeviceLayout& baseLayout,
                              Dali::Configuration::ContextLoss configuration )
 {
-  DALI_ASSERT_ALWAYS( surface->GetType() != Dali::RenderSurface::NO_SURFACE && "No surface for adaptor" );
-
   Dali::Adaptor* adaptor = new Dali::Adaptor;
   Adaptor* impl = new Adaptor( *adaptor, surface, baseLayout );
   adaptor->mImpl = impl;
@@ -264,7 +260,8 @@ void Adaptor::Initialize(Dali::Configuration::ContextLoss configuration)
 
   mVSyncMonitor = new VSyncMonitor;
 
-  mUpdateRenderController = new UpdateRenderController( *this, mEnvironmentOptions );
+  mDisplayConnection = DisplayConnection::New();
+  mUpdateRenderController = new UpdateRenderController( *this, *mDisplayConnection, mEnvironmentOptions );
 
   mDaliFeedbackPlugin = new FeedbackPluginProxy( FeedbackPluginProxy::DEFAULT_OBJECT_NAME );
 
@@ -317,6 +314,7 @@ Adaptor::~Adaptor()
   }
 
   delete mUpdateRenderController; // this will shutdown render thread, which will call Core::ContextDestroyed before exit
+  delete mDisplayConnection;
   delete mVSyncMonitor;
   delete mEventHandler;
   delete mObjectProfiler;
@@ -366,7 +364,7 @@ void Adaptor::Start()
   // set the DPI value for font rendering
   unsigned int dpiHor, dpiVer;
   dpiHor = dpiVer = 0;
-  mSurface->GetDpi(dpiHor, dpiVer);
+  mDisplayConnection->GetDpi(dpiHor, dpiVer);
 
   // tell core about the value
   mCore->SetDpi(dpiHor, dpiVer);
@@ -540,22 +538,14 @@ void Adaptor::SurfaceResized( const PositionSize& positionSize )
   }
 }
 
-void Adaptor::ReplaceSurface( Dali::RenderSurface& surface )
+void Adaptor::ReplaceSurface( RenderSurface& surface )
 {
-  // adaptor implementation needs the implementation of
-  RenderSurface* internalSurface = dynamic_cast<Internal::Adaptor::RenderSurface*>( &surface );
-  DALI_ASSERT_ALWAYS( internalSurface && "Incorrect surface" );
+  surface.Map();
+  // @todo Restart event handler with new surface
 
-  ECore::WindowRenderSurface* windowSurface = dynamic_cast<Internal::Adaptor::ECore::WindowRenderSurface*>( &surface);
-  if( windowSurface != NULL )
-  {
-    windowSurface->Map();
-    // @todo Restart event handler with new surface
-  }
+  mSurface = &surface;
 
-  mSurface = internalSurface;
-
-  SurfaceSizeChanged( internalSurface->GetPositionSize() );
+  SurfaceSizeChanged(mSurface->GetPositionSize());
 
   // flush the event queue to give update and render threads chance
   // to start processing messages for new camera setup etc as soon as possible
@@ -564,7 +554,7 @@ void Adaptor::ReplaceSurface( Dali::RenderSurface& surface )
   mCore->GetContextNotifier()->NotifyContextLost(); // Inform stage
 
   // this method blocks until the render thread has completed the replace.
-  mUpdateRenderController->ReplaceSurface(internalSurface);
+  mUpdateRenderController->ReplaceSurface(mSurface);
 
   // Inform core, so that texture resources can be reloaded
   mCore->RecoverFromContextLoss();
@@ -572,7 +562,7 @@ void Adaptor::ReplaceSurface( Dali::RenderSurface& surface )
   mCore->GetContextNotifier()->NotifyContextRegained(); // Inform stage
 }
 
-Dali::RenderSurface& Adaptor::GetSurface() const
+RenderSurface& Adaptor::GetSurface() const
 {
   return *mSurface;
 }
@@ -682,14 +672,17 @@ TriggerEventInterface& Adaptor::GetTriggerEventInterface()
 {
   return *mNotificationTrigger;
 }
+
 TriggerEventFactoryInterface& Adaptor::GetTriggerEventFactoryInterface()
 {
   return mTriggerEventFactory;
 }
+
 RenderSurface* Adaptor::GetRenderSurfaceInterface()
 {
   return mSurface;
 }
+
 VSyncMonitorInterface* Adaptor::GetVSyncMonitorInterface()
 {
   return mVSyncMonitor;

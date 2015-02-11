@@ -25,7 +25,7 @@
 #include <base/interfaces/adaptor-internal-services.h>
 #include <base/update-render-synchronization.h>
 #include <base/environment-options.h>
-
+#include <display-connection-impl.h>
 
 namespace Dali
 {
@@ -42,7 +42,6 @@ namespace
 Integration::Log::Filter* gRenderLogFilter = Integration::Log::Filter::New(Debug::NoLogging, false, "LOG_RENDER_THREAD");
 #endif
 }
-
 
 RenderRequest::RenderRequest(RenderRequest::Request type)
 : mRequestType(type)
@@ -84,6 +83,7 @@ bool ReplaceSurfaceRequest::GetReplaceCompleted()
 
 RenderThread::RenderThread( UpdateRenderSynchronization& sync,
                             AdaptorInternalServices& adaptorInterfaces,
+                            DisplayConnection& displayConnection,
                             const EnvironmentOptions& environmentOptions )
 : mUpdateRenderSync( sync ),
   mCore( adaptorInterfaces.GetCore() ),
@@ -91,6 +91,7 @@ RenderThread::RenderThread( UpdateRenderSynchronization& sync,
   mEglFactory( &adaptorInterfaces.GetEGLFactoryInterface()),
   mEGL( NULL ),
   mThread( NULL ),
+  mDisplayConnection( displayConnection ),
   mEnvironmentOptions( environmentOptions ),
   mSurfaceReplaced(false)
 {
@@ -164,8 +165,8 @@ bool RenderThread::Run()
 
     DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run. 2 - Process requests\n");
 
-    // Consume any pending events
-    ConsumeEvents();
+    // Consume any pending events to avoid memory leaks
+    mDisplayConnection.ConsumeEvents();
 
     bool processRequests = true;
     bool requestProcessed = false;
@@ -227,29 +228,22 @@ void RenderThread::InitializeEgl()
   DALI_ASSERT_ALWAYS( mSurface && "NULL surface" );
 
   // initialize egl & OpenGL
-  mSurface->InitializeEgl( *mEGL );
+  mDisplayConnection.InitializeEgl( *mEGL );
 
   // create the OpenGL context
   mEGL->CreateContext();
 
   // create the OpenGL surface
-  mSurface->CreateEglSurface( *mEGL );
+  mSurface->CreateEglSurface(*mEGL);
 
   // Make it current
   mEGL->MakeContextCurrent();
 
   // set the initial sync mode
 
-
   // tell core it has a context
   mCore.ContextCreated();
 
-}
-
-void RenderThread::ConsumeEvents()
-{
-  // tell surface to consume any events to avoid memory leaks
-  mSurface->ConsumeEvents();
 }
 
 bool RenderThread::ProcessRequest( RenderRequest* request )
@@ -280,9 +274,9 @@ void RenderThread::ReplaceSurface( RenderSurface* newSurface )
   // we need to delete the egl surface and renderable (pixmap / window)
   // Then create a new pixmap/window and new egl surface
   // If the new surface has a different display connection, then the context will be lost
-  DALI_ASSERT_ALWAYS( newSurface && "NULL surface" );
+  DALI_ASSERT_ALWAYS(newSurface && "NULL surface");
 
-  bool contextLost = newSurface->ReplaceEGLSurface( *mEGL );
+  bool contextLost = mDisplayConnection.ReplaceEGL(*mEGL, newSurface);
 
   if( contextLost )
   {
@@ -290,11 +284,6 @@ void RenderThread::ReplaceSurface( RenderSurface* newSurface )
     mCore.ContextDestroyed();
     mCore.ContextCreated();
   }
-
-  // if both new and old surface are using the same display, and the display
-  // connection was created by Dali, then transfer
-  // display owner ship to the new surface.
-  mSurface->TransferDisplayOwner( *newSurface );
 
   // use the new surface from now on
   mSurface = newSurface;
