@@ -25,26 +25,15 @@
 namespace Dali
 {
 
-namespace Internal
-{
-
-namespace Adaptor
-{
-
 TriggerEventInterface* TriggerEventFactory::CreateTriggerEvent(  boost::function<void()> functor,  TriggerEventInterface::Options options )
 {
-  return new TriggerEvent( functor, options );
+  return new Internal::Adaptor::TriggerEvent( functor, options );
 }
 
 void TriggerEventFactory::DestroyTriggerEvent( TriggerEventInterface* triggerEventInterface )
 {
-  TriggerEvent* triggerEvent( static_cast< TriggerEvent* >( triggerEventInterface) );
+  Internal::Adaptor::TriggerEvent* triggerEvent( static_cast< Internal::Adaptor::TriggerEvent* >(triggerEventInterface) );
   delete triggerEvent;
 }
-
-
-} // namespace Internal
-
-} // namespace Adaptor
 
 } // namespace Dali

@@ -1,3 +1,6 @@
+#ifndef __DALI_INTERNAL_X11_TYPES_H__
+#define __DALI_INTERNAL_X11_TYPES_H__
+
 /*
  * Copyright (c) 2014 Samsung Electronics Co., Ltd.
  *
@@ -15,38 +18,17 @@
  *
  */
 
-// INTERNAL INCLUDES
-#include <pixmap-render-surface.h>
+// EXTERNAL INCLUDES
+#include <X11/Xlib.h>
 
 namespace Dali
 {
 
-namespace Internal
-{
-
-namespace Adaptor
-{
-
-namespace ECore
-{
-
-DALI_EXPORT_API RenderSurface* CreatePixmapSurface(
-  PositionSize       positionSize,
-  Any                surface,
-  Any                display,
-  const std::string& name,
-  bool               isTransparent )
-{
-  return new PixmapRenderSurface( positionSize, surface, display, name, isTransparent );
-}
-
-} // namespace ECoreX
-
-} // namespace Adaptor
-
-} // namespace Internal
+typedef ::Pixmap XPixmap;
+typedef ::Window XWindow;
+typedef ::Display XDisplay;
+typedef ::Screen XScreen;
 
 } // namespace Dali
 
-
-
+#endif /* __DALI_INTERNAL_X11_TYPES_H__ */

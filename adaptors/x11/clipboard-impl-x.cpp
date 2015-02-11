@@ -65,15 +65,16 @@ BaseHandle Create()
     Dali::SingletonService service( SingletonService::Get() );
     if ( service )
     {
-      Adaptor& adaptorImpl( Adaptor::GetImplementation( Adaptor::Get() ) );
+      //Adaptor& adaptorImpl( Adaptor::GetImplementation( Adaptor::Get() ) );
 
       // The Ecore_X_Window needs to use the Clipboard.
       // Only when the render surface is window, we can get the Ecore_X_Window.
       Ecore_X_Window ecoreXwin( 0 );
-      Dali::RenderSurface& surface( adaptorImpl.GetSurface() );
-      if( surface.GetType() == Dali::RenderSurface::WINDOW )
+      //Dali::RenderSurface& surface( adaptorImpl.GetSurface() );
+      //if( surface.GetType() == Dali::RenderSurface::WINDOW )
       {
-        ecoreXwin = AnyCast< Ecore_X_Window >( adaptorImpl.GetSurface().GetSurface() );
+        //TODO: find alternative way
+        //ecoreXwin = AnyCast< Ecore_X_Window >( adaptorImpl.GetSurface().GetSurface() );
       }
 
       // If we fail to get Ecore_X_Window, we can't use the Clipboard correctly.
