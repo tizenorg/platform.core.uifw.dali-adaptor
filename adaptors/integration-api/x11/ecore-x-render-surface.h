@@ -1,5 +1,5 @@
-#ifndef __DALI_INTERNAL_ECORE_WL_RENDER_SURFACE_H__
-#define __DALI_INTERNAL_ECORE_WL_RENDER_SURFACE_H__
+#ifndef __DALI_INTERNAL_ECORE_X_RENDER_SURFACE_H__
+#define __DALI_INTERNAL_ECORE_X_RENDER_SURFACE_H__
 
 /*
  * Copyright (c) 2014 Samsung Electronics Co., Ltd.
@@ -21,12 +21,13 @@
 // EXTERNAL INCLUDES
 #include <string>
 #include <boost/thread.hpp>
-#include <Ecore_Wayland.h>
+#include <Ecore_X.h>
 #include <dali/public-api/common/dali-common.h>
 
 // INTERNAL INCLUDES
 #include <render-surface.h>
-#include <ecore-wl-types.h>
+#include <ecore-x-types.h>
+#include <egl-interface.h>
 
 namespace Dali
 {
@@ -37,31 +38,31 @@ namespace ECore
 {
 
 /**
- * Ecore Wayland implementation of render surface.
- * @todo change namespace to ECore_Wayland as the class
- * is no longer pure Wayland.
+ * Ecore X11 implementation of render surface.
+ * @todo change namespace to ECore_X11 as the class
+ * is no longer pure X11.
  */
-class DALI_IMPORT_API EcoreWlRenderSurface : public Dali::RenderSurface
+class DALI_IMPORT_API EcoreXRenderSurface : public Dali::RenderSurface
 {
 public:
   /**
-    * Uses an Wayland surface to render to.
+    * Uses an X11 surface to render to.
     * @param [in] positionSize the position and size of the surface
     * @param [in] surface can be a X-window or X-pixmap (type must be unsigned int).
     * @param [in] name optional name of surface passed in
     * @param [in] isTransparent if it is true, surface has 32 bit color depth, otherwise, 24 bit
     */
-  EcoreWlRenderSurface(Dali::PositionSize positionSize,
-                       Any surface,
-                       const std::string& name,
-                       bool isTransparent = false);
+  EcoreXRenderSurface(Dali::PositionSize positionSize,
+                      Any surface,
+                      const std::string& name,
+                      bool isTransparent = false);
 
   /**
    * Destructor.
    * Will delete the display, if it has ownership.
    * Will delete the window/pixmap if it has owner ship
    */
-  virtual ~EcoreWlRenderSurface();
+  virtual ~EcoreXRenderSurface();
 
 protected:
   /**
@@ -73,16 +74,30 @@ protected:
 public: // API
 
   /**
+   * @brief Sets the render notification trigger to call when render thread is completed a frame
+   *
+   * @param renderNotification to use
+   */
+  void SetRenderNotification(TriggerEventInterface* renderNotification);
+
+  /**
    * @brief Get window handle
    *
    * @return the Ecore X window handle
    */
-  Ecore_Wl_Window* GetWlWindow();
+  Ecore_X_Window GetXWindow();
 
   /**
-   * Get the surface as an Ecore_Wl_Window
+   * Get the surface as an Ecore_X_drawable
    */
-  virtual Ecore_Wl_Window* GetDrawable();
+  virtual Ecore_X_Drawable GetDrawable();
+
+  /**
+   * @brief Get the render surface the adaptor is using to render to.
+   *
+   * @return reference to current render surface (eg, pixmap / window)
+   */
+  virtual Any GetSurface() = 0;
 
 public: // from Dali::RenderSurface
 
@@ -134,7 +149,7 @@ public: // from Dali::RenderSurface
   /**
    * @copydoc Dali::RenderSurface::PostRender()
    */
-  virtual void PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, unsigned int timeDelta, bool replacingSurface ) = 0;
+  virtual void PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, DisplayConnection* displayConnection, unsigned int deltaTime, bool replacingSurface ) = 0;
 
   /**
    * @copydoc Dali::RenderSurface::ReleaseLock()
@@ -155,7 +170,7 @@ protected:
   /**
    * Create XRenderable
    */
-  virtual void CreateWlRenderable() = 0;
+  virtual void CreateXRenderable() = 0;
 
   /**
    * Use an existing render surface
@@ -165,15 +180,15 @@ protected:
 
 protected: // Data
 
+  bool                        mOwnSurface;         ///< Whether we own the surface (responsible for deleting it)
+  ColorDepth                  mColorDepth;         ///< Color depth of surface (32 bit or 24 bit)
+  TriggerEventInterface*      mRenderNotification; ///< Render notification trigger
   PositionSize                mPosition;           ///< Position
   std::string                 mTitle;              ///< Title of window which shows from "xinfo -topvwins" command
-  ColorDepth                  mColorDepth;         ///< Color depth of surface (32 bit or 24 bit)
-
-  bool                        mOwnSurface;         ///< Whether we own the surface (responsible for deleting it)
 };
 
 } // namespace ECore
 
 } // namespace Dali
 
-#endif // __DALI_INTERNAL_ECORE_WL_RENDER_SURFACE_H__
+#endif // __DALI_INTERNAL_ECORE_X_RENDER_SURFACE_H__
