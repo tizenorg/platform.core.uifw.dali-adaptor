@@ -130,14 +130,14 @@ WlDisplay* RenderSurface::GetMainDisplay()
   return mMainDisplay;
 }
 
-void RenderSurface::SetRenderNotification( TriggerEvent* renderNotification )
-{
-  mRenderNotification = renderNotification;
-}
-
 Ecore_Wl_Window* RenderSurface::GetDrawable()
 {
   return 0;
+}
+
+void RenderSurface::SetRenderNotification( TriggerEventInterface* renderNotification )
+{
+  mRenderNotification = renderNotification;
 }
 
 Any RenderSurface::GetDisplay()
