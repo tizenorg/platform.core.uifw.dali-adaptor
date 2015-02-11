@@ -20,10 +20,12 @@
 
 namespace Dali
 {
-namespace Internal
+
+enum ColorDepth
 {
-namespace Adaptor
-{
+  COLOR_DEPTH_24 = 24,
+  COLOR_DEPTH_32 = 32
+};
 
 /**
  * EglInterface provides an interface for managing EGL contexts
@@ -68,10 +70,6 @@ protected:
    */
   virtual ~EglInterface() {}
 };
-
-} // namespace Adaptor
-
-} // namespace Internal
 
 } // namespace Dali
 
