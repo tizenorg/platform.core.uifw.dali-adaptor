@@ -22,15 +22,9 @@
 #include <dali/public-api/signals/callback.h>
 
 // INTERNAL INCLUDES
-#include <base/interfaces/trigger-event-interface.h>
+#include <trigger-event-interface.h>
 
 namespace Dali
-{
-
-namespace Internal
-{
-
-namespace Adaptor
 {
 
 /**
@@ -82,11 +76,6 @@ private:
   TriggerEventFactoryInterface& operator=( const TriggerEventFactoryInterface& );
 
 };
-
-
-} // namespace Internal
-
-} // namespace Adaptor
 
 } // namespace Dali
 
