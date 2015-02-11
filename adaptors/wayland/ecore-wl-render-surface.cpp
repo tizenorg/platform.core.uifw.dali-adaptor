@@ -130,14 +130,19 @@ WlDisplay* RenderSurface::GetMainDisplay()
   return mMainDisplay;
 }
 
-void RenderSurface::SetRenderNotification( TriggerEvent* renderNotification )
+Ecore_Wl_Window* RenderSurface::GetDrawable()
+{
+  return 0;
+}
+
+void RenderSurface::SetRenderNotification( TriggerEventInterface* renderNotification )
 {
   mRenderNotification = renderNotification;
 }
 
-Ecore_Wl_Window* RenderSurface::GetDrawable()
+void RenderSurface::SetRenderMode(RenderMode mode)
 {
-  return 0;
+  //TODO: implement
 }
 
 Any RenderSurface::GetDisplay()

@@ -54,7 +54,7 @@ PixmapRenderSurface::PixmapRenderSurface( Dali::PositionSize positionSize,
                               Any display,
                               const std::string& name,
                               bool isTransparent)
-: RenderSurface( Dali::RenderSurface::PIXMAP, positionSize, surface, display, name, isTransparent ),
+: EcoreXRenderSurface( Dali::RenderSurface::PIXMAP, positionSize, surface, display, name, isTransparent ),
   mSyncMode(SYNC_MODE_NONE),
   mSyncReceived(false)
 {

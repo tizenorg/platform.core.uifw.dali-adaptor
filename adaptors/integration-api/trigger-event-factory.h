@@ -19,7 +19,7 @@
  */
 
 // INTERNAL INCLUDES
-#include <base/interfaces/trigger-event-factory-interface.h>
+#include <trigger-event-factory-interface.h>
 
 namespace Dali
 {
