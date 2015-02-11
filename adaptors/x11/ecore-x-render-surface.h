@@ -47,31 +47,27 @@ namespace ECore
  * @todo change namespace to ECore_X11 as the class
  * is no longer pure X11.
  */
-class RenderSurface : public Internal::Adaptor::RenderSurface
+class DALI_IMPORT_API EcoreXRenderSurface : public Internal::Adaptor::RenderSurface
 {
 public:
   /**
     * Uses an X11 surface to render to.
-    * @param [in] type the type of surface passed in
     * @param [in] positionSize the position and size of the surface
     * @param [in] surface can be a X-window or X-pixmap (type must be unsigned int).
-    * @param [in] display connection to X-server if the surface is a X window or pixmap (type must be void * to X display struct)
     * @param [in] name optional name of surface passed in
     * @param [in] isTransparent if it is true, surface has 32 bit color depth, otherwise, 24 bit
     */
-  RenderSurface( SurfaceType type,
-                 Dali::PositionSize positionSize,
-                 Any surface,
-                 Any display,
-                 const std::string& name,
-                 bool isTransparent = false);
+  EcoreXRenderSurface(Dali::PositionSize positionSize,
+                      Any surface,
+                      const std::string& name,
+                      bool isTransparent = false);
 
   /**
    * Destructor.
    * Will delete the display, if it has ownership.
    * Will delete the window/pixmap if it has owner ship
    */
-  virtual ~RenderSurface();
+  virtual ~EcoreXRenderSurface();
 
 protected:
   /**
@@ -88,17 +84,6 @@ public: // API
   Ecore_X_Window GetXWindow();
 
   /**
-   * @return the Main X display
-   */
-  XDisplay* GetMainDisplay();
-
-  /**
-   * Sets the render notification trigger to call when render thread is completed a frame
-   * @param renderNotification to use
-   */
-  void SetRenderNotification( TriggerEvent* renderNotification );
-
-  /**
    * Get the surface as an Ecore_X_drawable
    */
   virtual Ecore_X_Drawable GetDrawable();
@@ -106,19 +91,9 @@ public: // API
 public: // from Dali::RenderSurface
 
   /**
-   * @copydoc Dali::RenderSurface::GetType()
-   */
-  virtual Dali::RenderSurface::SurfaceType GetType() = 0;
-
-  /**
    * @copydoc Dali::RenderSurface::GetSurface()
    */
   virtual Any GetSurface() = 0;
-
-  /**
-   * @copydoc Dali::RenderSurface::GetDisplay()
-   */
-  virtual Any GetDisplay();
 
   /**
    * @copydoc Dali::RenderSurface::GetPositionSize()
@@ -148,29 +123,14 @@ public:  // from Internal::Adaptor::RenderSurface
   virtual void MoveResize( Dali::PositionSize positionSize);
 
   /**
-   * @copydoc Dali::Internal::Adaptor::RenderSurface::GetDpi()
-   */
-  virtual void GetDpi( unsigned int& dpiHorizontal, unsigned int& dpiVertical ) const;
-
-  /**
    * @copydoc Dali::Internal::Adaptor::RenderSurface::Map()
    */
   virtual void Map();
 
   /**
-   * @copydoc Dali::Internal::Adaptor::RenderSurface::TransferDisplayOwner()
-   */
-  virtual void TransferDisplayOwner( Internal::Adaptor::RenderSurface& newSurface );
-
-  /**
-   * @copydoc Dali::Internal::Adaptor::RenderSurface::ConsumeEvents()
-   */
-  virtual void ConsumeEvents();
-
-  /**
    * @copydoc Dali::Internal::Adaptor::RenderSurface::SetViewMode()
    */
-  void SetViewMode( ViewMode );
+  void SetViewMode( ViewMode viewMode );
 
   /**
    * @copydoc Dali::Internal::Adaptor::RenderSurface::PreRender()
@@ -212,15 +172,12 @@ protected:
 
 protected: // Data
 
-  XDisplay*                   mMainDisplay;        ///< X-connection for rendering
-  SurfaceType                 mType;               ///< type of renderable
   PositionSize                mPosition;           ///< Position
   std::string                 mTitle;              ///< Title of window which shows from "xinfo -topvwins" command
   ColorDepth                  mColorDepth;         ///< Color depth of surface (32 bit or 24 bit)
   TriggerEvent*               mRenderNotification; ///< Render notification trigger
 
   bool                        mOwnSurface;         ///< Whether we own the surface (responsible for deleting it)
-  bool                        mOwnDisplay;         ///< Whether we own the display (responsible for deleting it)
 };
 
 } // namespace ECore

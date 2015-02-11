@@ -34,6 +34,7 @@
 #include <tts-player.h>
 #include <imf-manager.h>
 #include <device-layout.h>
+#include <display-connection.h>
 #include <clipboard.h>
 
 #include <slp-platform-abstraction.h>
@@ -499,6 +500,7 @@ private: // Data
   GlSyncImplementation*                 mGlSync;                      ///< GL Sync implementation
   EglFactory*                           mEglFactory;                  ///< EGL Factory
 
+  Dali::DisplayConnection               mDisplayConnection;           ///< Display connection
   RenderSurface*                        mSurface;                     ///< Current surface
   SlpPlatform::SlpPlatformAbstraction*  mPlatformAbstraction;         ///< Platform abstraction
 

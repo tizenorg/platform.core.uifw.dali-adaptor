@@ -24,7 +24,7 @@
 // INTERNAL INCLUDES
 #include <base/interfaces/egl-interface.h>
 #include <render-surface-impl.h> // needed for Dali::Internal::Adaptor::RenderSurface
-
+#include <display-connection.h>
 
 namespace Dali
 {
@@ -118,10 +118,10 @@ public:
    * @param[in] sync update-render synchronization object
    * @param[in] adaptorInterfaces base adaptor interface
    * @param[in] environmentOptions environment options
-
    */
   RenderThread( UpdateRenderSynchronization& sync,
                 AdaptorInternalServices& adaptorInterfaces,
+                Dali::DisplayConnection displayConnection,
                 const EnvironmentOptions& environmentOptions );
 
   /**
@@ -160,12 +160,6 @@ private: // Render thread side helpers
    * Called from render thread
    */
   void InitializeEgl();
-
-  /**
-   * Check if display has events
-   * Called from render thread
-   */
-  void ConsumeEvents();
 
   /**
    * Check if main thread made any requests, e.g. ReplaceSurface
@@ -210,6 +204,7 @@ private: // Data
   EglFactoryInterface*          mEglFactory;             ///< Factory class to create EGL implementation
   EglInterface*                 mEGL;                    ///< Interface to EGL implementation
   boost::thread*                mThread;                 ///< render thread
+  Dali::DisplayConnection       mDisplayConnection;      ///< Display connection
   RenderSurface*                mSurface;                ///< Current surface
   const EnvironmentOptions&     mEnvironmentOptions;     ///< Environment options
   bool                          mSurfaceReplaced;        ///< True when new surface has been initialzed.
