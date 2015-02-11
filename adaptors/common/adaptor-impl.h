@@ -34,6 +34,7 @@
 #include <tts-player.h>
 #include <imf-manager.h>
 #include <device-layout.h>
+#include <display-connection.h>
 #include <clipboard.h>
 
 #include <slp-platform-abstraction.h>
@@ -162,6 +163,12 @@ public: // AdaptorInternalServices implementation
    * @copydoc AdaptorInterface::MoveResize()
    */
   virtual bool MoveResize( const PositionSize& positionSize );
+
+  /**
+   * @brief Get handle of display connnection
+   * @return handle handle of display connection
+   */
+  Dali::DisplayConnection GetDisplayConnection();
 
   /**
    * @copydoc AdaptorInterface::SurfaceResized()
@@ -499,6 +506,7 @@ private: // Data
   GlSyncImplementation*                 mGlSync;                      ///< GL Sync implementation
   EglFactory*                           mEglFactory;                  ///< EGL Factory
 
+  Dali::DisplayConnection               mDisplayConnection;           ///< Display connection
   RenderSurface*                        mSurface;                     ///< Current surface
   SlpPlatform::SlpPlatformAbstraction*  mPlatformAbstraction;         ///< Platform abstraction
 

@@ -62,12 +62,6 @@ public:
 public: // API
 
   /**
-   * Initialize EGL, RenderSurface should create egl display and initialize
-   * @param egl implementation to use for the creation
-   */
-  virtual void InitializeEgl( EglInterface& egl ) = 0;
-
-  /**
    * Creates EGL Surface
    * @param egl implementation to use for the creation
    */
@@ -93,27 +87,9 @@ public: // API
   virtual void MoveResize( Dali::PositionSize positionSize ) = 0;
 
   /**
-   * Get DPI
-   * @param dpiHorizontal set to the horizontal dpi
-   * @param dpiVertical set to the vertical dpi
-   */
-  virtual void GetDpi( unsigned int& dpiHorizontal, unsigned int& dpiVertical ) const = 0;
-
-  /**
    * Call to map the surface (only works if surface is a window)
    */
   virtual void Map() = 0;
-
-  /**
-   * Transfers the ownership of a display
-   * @param newSurface to transfer
-   */
-  virtual void TransferDisplayOwner( Internal::Adaptor::RenderSurface& newSurface ) = 0;
-
-  /**
-   *  Consumes any possible events on the queue so that there is no leaking between frames
-   */
-  virtual void ConsumeEvents() = 0;
 
   /**
    * Set the stereoscopic 3D view mode

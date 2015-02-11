@@ -37,7 +37,7 @@ namespace ECore
 /**
  * Ecore X11 implementation of render surface.
  */
-class PixmapRenderSurface : public RenderSurface
+class PixmapRenderSurface : public EcoreWlRenderSurface
 {
 public:
 
@@ -63,11 +63,6 @@ public:
 public: // API
 
 public: // from Dali::RenderSurface
-
-  /**
-   * @copydoc Dali::RenderSurface::GetType()
-   */
-  virtual Dali::RenderSurface::SurfaceType GetType();
 
   /**
    * @copydoc Dali::RenderSurface::GetSurface()

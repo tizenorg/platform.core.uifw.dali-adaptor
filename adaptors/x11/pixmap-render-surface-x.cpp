@@ -54,7 +54,7 @@ PixmapRenderSurface::PixmapRenderSurface( Dali::PositionSize positionSize,
                               Any display,
                               const std::string& name,
                               bool isTransparent)
-: RenderSurface( Dali::RenderSurface::PIXMAP, positionSize, surface, display, name, isTransparent ),
+: EcoreXRenderSurface( positionSize, surface, display, name, isTransparent ),
   mSyncMode(SYNC_MODE_NONE),
   mSyncReceived(false)
 {
@@ -77,24 +77,9 @@ Ecore_X_Drawable PixmapRenderSurface::GetDrawable()
   return (Ecore_X_Drawable)mX11Pixmap;
 }
 
-Dali::RenderSurface::SurfaceType PixmapRenderSurface::GetType()
-{
-  return Dali::RenderSurface::PIXMAP;
-}
-
 Any PixmapRenderSurface::GetSurface()
 {
   return Any( mX11Pixmap );
-}
-
-void PixmapRenderSurface::InitializeEgl( EglInterface& eglIf )
-{
-  DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
-
-  EglImplementation& eglImpl = static_cast<EglImplementation&>( eglIf );
-  eglImpl.InitializeGles( reinterpret_cast< EGLNativeDisplayType >( mMainDisplay ) );
-
-  eglImpl.ChooseConfig(false, mColorDepth);
 }
 
 void PixmapRenderSurface::CreateEglSurface( EglInterface& eglIf )
@@ -119,6 +104,8 @@ void PixmapRenderSurface::DestroyEglSurface( EglInterface& eglIf )
 
 bool PixmapRenderSurface::ReplaceEGLSurface( EglInterface& eglIf )
 {
+//TODO: enable it again
+#if 0
   DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
   EglImplementation& eglImpl = static_cast<EglImplementation&>( eglIf );
@@ -129,6 +116,9 @@ bool PixmapRenderSurface::ReplaceEGLSurface( EglInterface& eglIf )
   XPixmap pixmap = static_cast< XPixmap>( mX11Pixmap );
   return eglImpl.ReplaceSurfacePixmap( (EGLNativePixmapType)pixmap, // reinterpret_cast does not compile
                                        reinterpret_cast< EGLNativeDisplayType >( mMainDisplay ) );
+#else
+  return true;
+#endif
 }
 
 void PixmapRenderSurface::StartRender()
@@ -156,6 +146,8 @@ void PixmapRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstract
   }
   else
   {
+//TODO: enable it again
+#if 0
     // as a fallback, send damage event. This is needed until livebox is fixed to
     // stop using damage events for render
     Ecore_X_Drawable drawable = GetDrawable();
@@ -178,6 +170,7 @@ void PixmapRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstract
 
       XFlush( mMainDisplay );
     }
+#endif
   }
 
   AcquireLock( replacingSurface ? SYNC_MODE_NONE : SYNC_MODE_WAIT );

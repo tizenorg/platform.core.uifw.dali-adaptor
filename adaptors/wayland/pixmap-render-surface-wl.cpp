@@ -62,24 +62,9 @@ PixmapRenderSurface::~PixmapRenderSurface()
   }
 }
 
-Dali::RenderSurface::SurfaceType PixmapRenderSurface::GetType()
-{
-  return Dali::RenderSurface::PIXMAP;
-}
-
 Any PixmapRenderSurface::GetSurface()
 {
   return Any( NULL );
-}
-
-void PixmapRenderSurface::InitializeEgl( EglInterface& eglIf )
-{
-  DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
-
-  EglImplementation& eglImpl = static_cast<EglImplementation&>( eglIf );
-  eglImpl.InitializeGles( reinterpret_cast< EGLNativeDisplayType >( mMainDisplay ) );
-
-  eglImpl.ChooseConfig(false, mColorDepth);
 }
 
 void PixmapRenderSurface::CreateEglSurface( EglInterface& eglIf )

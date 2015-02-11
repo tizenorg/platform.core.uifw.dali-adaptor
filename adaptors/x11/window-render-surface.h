@@ -37,7 +37,7 @@ namespace ECore
  * @copydoc Dali::Internal::Adaptor::ECore::RenderSurface.
  * Window specialization.
  */
-class WindowRenderSurface : public RenderSurface
+class WindowRenderSurface : public EcoreXRenderSurface
 {
 public:
 
@@ -56,7 +56,7 @@ public:
                        bool isTransparent = false );
 
   /**
-   * @copydoc Dali::Internal::Adaptor::ECore::RenderSurface::~RenderSurface
+   * @copydoc Dali::Internal::Adaptor::ECore::EcoreXRenderSurface::~EcoreXRenderSurface
    */
   virtual ~WindowRenderSurface();
 
@@ -76,11 +76,6 @@ public: // API
 public: // from Dali::RenderSurface
 
   /**
-   * @copydoc Dali::RenderSurface::GetType()
-   */
-  virtual Dali::RenderSurface::SurfaceType GetType();
-
-  /**
    * @copydoc Dali::RenderSurface::GetSurface()
    */
   virtual Any GetSurface();
@@ -91,11 +86,6 @@ public: // from Dali::RenderSurface
   virtual Ecore_X_Window GetXWindow();
 
 public:  // from Internal::Adaptor::RenderSurface
-
-  /**
-   * @copydoc Dali::Internal::Adaptor::RenderSurface::InitializeEgl()
-   */
-  virtual void InitializeEgl( EglInterface& egl );
 
   /**
    * @copydoc Dali::Internal::Adaptor::RenderSurface::CreateEglSurface()
@@ -160,7 +150,7 @@ protected:
   virtual void CreateXRenderable();
 
   /**
-   * @copydoc Dali::Internal::Adaptor::ECore::RenderSurface::UseExistingRenderable
+   * @copydoc Dali::Internal::Adaptor::ECore::EcoreXRenderSurface::UseExistingRenderable
    */
   virtual void UseExistingRenderable( unsigned int surfaceId );
 

@@ -26,6 +26,7 @@
 #include <base/interfaces/adaptor-internal-services.h>
 #include <base/environment-options.h>
 
+#include <display-connection.h>
 
 namespace Dali
 {
@@ -37,6 +38,7 @@ namespace Adaptor
 {
 
 UpdateRenderController::UpdateRenderController( AdaptorInternalServices& adaptorInterfaces,
+                                                Dali::DisplayConnection displayConnection,
                                                 const EnvironmentOptions& environmentOptions )
 : mAdaptorInterfaces( adaptorInterfaces ),
   mUpdateThread( NULL ),
@@ -49,7 +51,7 @@ UpdateRenderController::UpdateRenderController( AdaptorInternalServices& adaptor
 
   mUpdateThread = new UpdateThread( *mUpdateRenderSync, adaptorInterfaces, environmentOptions );
 
-  mRenderThread = new RenderThread( *mUpdateRenderSync, adaptorInterfaces, environmentOptions );
+  mRenderThread = new RenderThread( *mUpdateRenderSync, adaptorInterfaces, displayConnection, environmentOptions );
 
   mVSyncNotifier = new VSyncNotifier( *mUpdateRenderSync, adaptorInterfaces, environmentOptions );
 }

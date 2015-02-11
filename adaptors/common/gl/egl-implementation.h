@@ -29,6 +29,8 @@
 
 namespace Dali
 {
+class DisplayConnection;
+
 namespace Internal
 {
 namespace Adaptor
@@ -58,7 +60,12 @@ public:
 
 public:
 
- /**
+  /**
+   *
+   */
+  bool InitializeGles( Dali::DisplayConnection displayConnection );
+
+  /**
    * (Called from  ECoreX::RenderSurface, not RenderThread, so not in i/f, hence, not virtual)
    * Initialize GL
    * @param display The display

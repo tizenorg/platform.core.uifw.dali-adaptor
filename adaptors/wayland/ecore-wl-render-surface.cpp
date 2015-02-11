@@ -52,18 +52,16 @@ const unsigned int MILLISECONDS_PER_SECOND = 1000;
 
 } // unnamed namespace
 
-RenderSurface::RenderSurface( SurfaceType type,
-                              Dali::PositionSize positionSize,
-                              Any surface,
-                              Any display,
-                              const std::string& name,
-                              bool isTransparent)
+EcoreWlRenderSurface::EcoreWlRenderSurface(Dali::PositionSize positionSize,
+                                           Any surface,
+                                           Any display,
+                                           const std::string& name,
+                                           bool isTransparent)
 : mMainDisplay(NULL),
   mType(type),
   mPosition(positionSize),
   mTitle(name),
   mColorDepth(isTransparent ? COLOR_DEPTH_32 : COLOR_DEPTH_24),
-  mRenderNotification( NULL ),
   mOwnSurface(false),
   mOwnDisplay(false)
 {
@@ -71,7 +69,7 @@ RenderSurface::RenderSurface( SurfaceType type,
   SetDisplay( display );
 }
 
-void RenderSurface::Init( Any surface )
+void EcoreWlRenderSurface::Init( Any surface )
 {
   // see if there is a surface in Any surface
   unsigned int surfaceId  = GetSurfaceId( surface );
@@ -98,9 +96,9 @@ void RenderSurface::Init( Any surface )
   }
 
 #ifdef DEBUG_ENABLED
-  // prints out 'INFO: DALI: new RenderSurface, created display xx, used existing surface xx
+  // prints out 'INFO: DALI: new EcoreWlRenderSurface, created display xx, used existing surface xx
   // we can not use LOG_INFO because the surface can be created before Dali Core is created.
-  printf(  "INFO: DALI: new RenderSurface, %s display %p, %s %s surface %X \n",
+  printf(  "INFO: DALI: new EcoreWlRenderSurface, %s display %p, %s %s surface %X \n",
              mOwnDisplay?"created":"used existing",mMainDisplay,
              mOwnSurface?"created":"used existing",
              Dali::RenderSurface::PIXMAP==mType?" pixmap" :"window",
@@ -108,7 +106,7 @@ void RenderSurface::Init( Any surface )
 #endif
 }
 
-RenderSurface::~RenderSurface()
+EcoreWlRenderSurface::~EcoreWlRenderSurface()
 {
   // release the display connection if we use our own
   if( mOwnDisplay )
@@ -120,43 +118,38 @@ RenderSurface::~RenderSurface()
   }
 }
 
-Ecore_Wl_Window* RenderSurface::GetWlWindow()
+Ecore_Wl_Window* EcoreWlRenderSurface::GetWlWindow()
 {
   return 0;
 }
 
-WlDisplay* RenderSurface::GetMainDisplay()
+WlDisplay* EcoreWlRenderSurface::GetMainDisplay()
 {
   return mMainDisplay;
 }
 
-void RenderSurface::SetRenderNotification( TriggerEvent* renderNotification )
-{
-  mRenderNotification = renderNotification;
-}
-
-Ecore_Wl_Window* RenderSurface::GetDrawable()
+Ecore_Wl_Window* EcoreWlRenderSurface::GetDrawable()
 {
   return 0;
 }
 
-Any RenderSurface::GetDisplay()
+Any EcoreWlRenderSurface::GetDisplay()
 {
   // this getter is used by main thread so we need to return the main thread version of the display
   return Any( ecore_wl_display_get() );
 }
 
-PositionSize RenderSurface::GetPositionSize() const
+PositionSize EcoreWlRenderSurface::GetPositionSize() const
 {
   return mPosition;
 }
 
-void RenderSurface::MoveResize( Dali::PositionSize positionSize )
+void EcoreWlRenderSurface::MoveResize( Dali::PositionSize positionSize )
 {
   // nothing to do in base class
 }
 
-void RenderSurface::GetDpi( unsigned int& dpiHorizontal, unsigned int& dpiVertical ) const
+void EcoreWlRenderSurface::GetDpi( unsigned int& dpiHorizontal, unsigned int& dpiVertical ) const
 {
   // calculate DPI
   float xres, yres;
@@ -169,40 +162,19 @@ void RenderSurface::GetDpi( unsigned int& dpiHorizontal, unsigned int& dpiVertic
   dpiVertical   = int(yres + 0.5f);
 }
 
-void RenderSurface::Map()
+void EcoreWlRenderSurface::Map()
 {
 }
 
-void RenderSurface::TransferDisplayOwner( Internal::Adaptor::RenderSurface& newSurface )
-{
-  // if we don't own the display return
-  if( mOwnDisplay == false )
-  {
-    return;
-  }
-
-  RenderSurface* other = dynamic_cast< RenderSurface* >( &newSurface );
-  if( other )
-  {
-    // if both surfaces share the same display, and this surface owns it,
-    // then transfer the ownership to the new surface
-    if( other->mMainDisplay == mMainDisplay )
-    {
-      mOwnDisplay = false;
-      other->mOwnDisplay = true;
-    }
-  }
-}
-
-void RenderSurface::ConsumeEvents()
+void EcoreWlRenderSurface::ConsumeEvents()
 {
 }
 
-void RenderSurface::SetViewMode( ViewMode )
+void EcoreWlRenderSurface::SetViewMode( ViewMode )
 {
 }
 
-void RenderSurface::SetDisplay( Any display )
+void EcoreWlRenderSurface::SetDisplay( Any display )
 {
   // the render surface can be passed either EFL e-core types, or x11 types
   // we use boost any to determine at run time which type
@@ -220,7 +192,7 @@ void RenderSurface::SetDisplay( Any display )
   }
 }
 
-unsigned int RenderSurface::GetSurfaceId( Any surface ) const
+unsigned int EcoreWlRenderSurface::GetSurfaceId( Any surface ) const
 {
   unsigned int surfaceId = 0;
 

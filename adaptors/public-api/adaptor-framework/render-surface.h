@@ -43,19 +43,10 @@ typedef Dali::Rect<int> PositionSize;
  * The implementation of the factory method below should choose an appropriate
  * implementation of RenderSurface for the given platform
  */
+
 class RenderSurface
 {
 public:
-  /**
-   * @brief enumeration of surface types
-   */
-  enum SurfaceType
-  {
-    NO_SURFACE,     ///< not configured
-    PIXMAP,         ///< Pixmap
-    WINDOW,         ///< Window
-    NATIVE_BUFFER   ///< Native Buffer
-  };
 
   /**
    * @brief Constructor
@@ -68,24 +59,6 @@ public:
    * Inlined as this is a pure abstract interface
    */
   virtual ~RenderSurface() {}
-
-  /**
-   * @brief returns the surface type.
-   * @return the surface type
-   */
-  virtual SurfaceType GetType() = 0;
-
-  /**
-   * @brief Returns the window or pixmap surface.
-   * @return surface
-   */
-  virtual Any GetSurface() = 0;
-
-  /**
-   * @brief Returns the display.
-   * @return display
-   */
-  virtual Any GetDisplay() = 0;
 
   /**
    * @brief Return the size and position of the surface.
