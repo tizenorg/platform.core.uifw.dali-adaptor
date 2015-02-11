@@ -1,6 +1,3 @@
-#ifndef __DALI_INTERNAL_X11_TYPES_H__
-#define __DALI_INTERNAL_X11_TYPES_H__
-
 /*
  * Copyright (c) 2014 Samsung Electronics Co., Ltd.
  *
@@ -18,25 +15,27 @@
  *
  */
 
-// EXTERNAL INCLUDES
-#include <wayland-client.h>
+// INTERNAL INCLUDES
+#include <pixmap-render-surface.h>
 
 namespace Dali
 {
 
-namespace Internal
+namespace ECore
 {
 
-namespace Adaptor
+DALI_EXPORT_API PixmapRenderSurface* CreatePixmapSurface(
+                                     PositionSize       positionSize,
+                                     Any                surface,
+                                     const std::string& name,
+                                     bool               isTransparent)
 {
+  return new PixmapRenderSurface(positionSize, surface, name, isTransparent);
+}
 
-typedef ::wl_display WlDisplay;
-typedef ::wl_surface WlSurface;
-
-} // namespace Adaptor
-
-} // namespace Internal
+} // namespace ECoreX
 
 } // namespace Dali
 
-#endif /* __DALI_INTERNAL_X11_TYPES_H__ */
+
+

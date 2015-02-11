@@ -22,15 +22,9 @@
 #include <dali/public-api/signals/callback.h>
 
 // INTERNAL INCLUDES
-#include <base/interfaces/trigger-event-interface.h>
+#include <trigger-event-interface.h>
 
 namespace Dali
-{
-
-namespace Internal
-{
-
-namespace Adaptor
 {
 
 /**
@@ -45,6 +39,7 @@ public:
   /**
    * @brief Create a new concrete implementation of the event trigger interface.
    * @param callback called when interface->Trigger() is called
+   * @param options TriggerEventInterface option
    * @return pointer to a new trigger event
    * @note Ownership of callback should be taken over by deriving classes
    */
@@ -52,7 +47,7 @@ public:
                                                      TriggerEventInterface::Options options = TriggerEventInterface::NONE) = 0;
   /**
    * @brief destroy a trigger event
-   * @param trigger event to destroy
+   * @param triggerEventInterface event to destroy
    */
   virtual void DestroyTriggerEvent( TriggerEventInterface* triggerEventInterface ) = 0;
 
@@ -82,11 +77,6 @@ private:
   TriggerEventFactoryInterface& operator=( const TriggerEventFactoryInterface& );
 
 };
-
-
-} // namespace Internal
-
-} // namespace Adaptor
 
 } // namespace Dali
 
