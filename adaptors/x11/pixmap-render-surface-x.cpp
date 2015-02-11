@@ -16,7 +16,7 @@
  */
 
 // CLASS HEADER
-#include "pixmap-render-surface.h"
+#include <pixmap-render-surface.h>
 
 // EXTERNAL INCLUDES
 #include <X11/Xatom.h>

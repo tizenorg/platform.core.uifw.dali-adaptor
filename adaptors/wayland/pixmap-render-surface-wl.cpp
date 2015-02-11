@@ -16,7 +16,7 @@
  */
 
 // CLASS HEADER
-#include "pixmap-render-surface.h"
+#include <pixmap-render-surface.h>
 
 // EXTERNAL INCLUDES
 #include <dali/integration-api/gl-abstraction.h>

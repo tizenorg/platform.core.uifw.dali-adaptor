@@ -15,7 +15,7 @@
  *
  */
 
-#include "pixmap-render-surface.h"
+#include <pixmap-render-surface.h>
 
 namespace Dali
 {

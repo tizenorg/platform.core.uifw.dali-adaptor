@@ -115,6 +115,9 @@ public:
    */
   static Adaptor& New( Window window );
 
+
+  //static Adaptor& New( RenderSurface surface );
+
   /**
    * @brief Create a new adaptor using the window.
    *

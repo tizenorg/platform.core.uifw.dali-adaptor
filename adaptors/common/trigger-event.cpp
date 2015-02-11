@@ -16,7 +16,7 @@
  */
 
 // CLASS HEADER
-#include "trigger-event.h"
+#include <trigger-event.h>
 
 // EXTERNAL INCLUDES
 #include <sys/eventfd.h>
