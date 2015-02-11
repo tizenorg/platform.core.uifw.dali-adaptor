@@ -44,10 +44,9 @@ namespace ECore
 
 PixmapRenderSurface::PixmapRenderSurface( Dali::PositionSize positionSize,
                               Any surface,
-                              Any display,
                               const std::string& name,
                               bool isTransparent)
-: RenderSurface( Dali::RenderSurface::PIXMAP, positionSize, surface, display, name, isTransparent )
+: RenderSurface( Dali::RenderSurface::PIXMAP, positionSize, surface, name, isTransparent )
 {
   Init( surface );
 }
@@ -62,24 +61,9 @@ PixmapRenderSurface::~PixmapRenderSurface()
   }
 }
 
-Dali::RenderSurface::SurfaceType PixmapRenderSurface::GetType()
-{
-  return Dali::RenderSurface::PIXMAP;
-}
-
 Any PixmapRenderSurface::GetSurface()
 {
   return Any( NULL );
-}
-
-void PixmapRenderSurface::InitializeEgl( EglInterface& eglIf )
-{
-  DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
-
-  EglImplementation& eglImpl = static_cast<EglImplementation&>( eglIf );
-  eglImpl.InitializeGles( reinterpret_cast< EGLNativeDisplayType >( mMainDisplay ) );
-
-  eglImpl.ChooseConfig(false, mColorDepth);
 }
 
 void PixmapRenderSurface::CreateEglSurface( EglInterface& eglIf )
@@ -105,8 +89,7 @@ bool PixmapRenderSurface::ReplaceEGLSurface( EglInterface& eglIf )
 {
   DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
-  EglImplementation& eglImpl = static_cast<EglImplementation&>( eglIf );
-  eglImpl.InitializeGles( reinterpret_cast< EGLNativeDisplayType >( mMainDisplay ) );
+  //Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( egl );
 
   // a new surface for the new pixmap
   // need to cast to X handle as in 64bit system ECore handle is 32 bit whereas EGLnative and XWindow are 64 bit

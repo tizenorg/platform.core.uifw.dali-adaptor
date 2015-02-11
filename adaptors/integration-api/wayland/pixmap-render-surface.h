@@ -19,7 +19,7 @@
  */
 
 // INTERNAL INCLUDES
-#include <ecore-x-render-surface.h>
+#include <ecore-wl-render-surface.h>
 
 namespace Dali
 {
@@ -37,21 +37,19 @@ namespace ECore
 /**
  * Ecore X11 implementation of render surface.
  */
-class PixmapRenderSurface : public RenderSurface
+class PixmapRenderSurface : public EcoreWlRenderSurface
 {
 public:
 
   /**
-    * Uses an X11 surface to render to.
+    * Uses an Wayland surface to render to.
     * @param [in] positionSize the position and size of the surface
-    * @param [in] surface can be a X-window or X-pixmap (type must be unsigned int).
-    * @param [in] display connection to X-server if the surface is a X window or pixmap (type must be void * to X display struct)
+    * @param [in] surface can be a Wayland-window (type must be unsigned int).
     * @param [in] name optional name of surface passed in
     * @param [in] isTransparent if it is true, surface has 32 bit color depth, otherwise, 24 bit
     */
   PixmapRenderSurface( Dali::PositionSize positionSize,
                        Any surface,
-                       Any display,
                        const std::string& name,
                        bool isTransparent = false);
 
@@ -63,19 +61,9 @@ public:
 public: // API
 
   /**
-   * @copydoc Dali::Internal::Adaptor::ECore::RenderSurface::GetDrawable()
-   */
-  virtual Ecore_X_Drawable GetDrawable();
-
-public: // from Dali::RenderSurface
-
-  /**
-   * @copydoc Dali::RenderSurface::GetType()
-   */
-  virtual Dali::RenderSurface::SurfaceType GetType();
-
-  /**
-   * @copydoc Dali::RenderSurface::GetSurface()
+   * @brief GetSurface
+   *
+   * @return pixmap
    */
   virtual Any GetSurface();
 
@@ -128,17 +116,13 @@ private:
     SYNC_MODE_WAIT
   };
 
-  /**
-   * Set the sync mode.
-   * @param[in] syncMode The sync mode
-   */
   void SetSyncMode( SyncMode syncMode );
 
   /**
    * If sync mode is WAIT, then acquire a lock. This prevents render thread from
    * continuing until the pixmap has been drawn by the compositor.
    * It must be released for rendering to continue.
-   * @param[in] syncMode The sync mode
+   * @param[in] syncMode The current sync mode
    */
   void AcquireLock( SyncMode syncMode );
 
@@ -150,7 +134,7 @@ private:
   /**
    * Create XPixmap
    */
-  virtual void CreateXRenderable();
+  virtual void CreateWlRenderable();
 
   /**
    * @copydoc Dali::Internal::Adaptor::ECore::RenderSurface::UseExistingRenderable
@@ -159,11 +143,6 @@ private:
 
 private: // Data
 
-  Ecore_X_Pixmap   mX11Pixmap;    ///< X-Pixmap
-  SyncMode         mSyncMode;     ///< Stores whether the post render should block waiting for compositor
-  boost::mutex                mSyncMutex;  ///< mutex to lock during waiting sync
-  boost::condition_variable   mSyncNotify; ///< condition to notify main thread that pixmap was flushed to onscreen
-  bool             mSyncReceived; ///< true, when a pixmap sync has occurred, (cleared after reading)
 };
 
 } // namespace ECore

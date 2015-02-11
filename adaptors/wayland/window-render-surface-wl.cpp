@@ -51,10 +51,9 @@ const int MINIMUM_DIMENSION_CHANGE( 1 ); ///< Minimum change for window to be co
 
 WindowRenderSurface::WindowRenderSurface( Dali::PositionSize positionSize,
                                           Any surface,
-                                          Any display,
                                           const std::string& name,
                                           bool isTransparent)
-: RenderSurface( Dali::RenderSurface::WINDOW, positionSize, surface, display, name, isTransparent ),
+: RenderSurface( Dali::RenderSurface::WINDOW, positionSize, surface, name, isTransparent ),
   mNeedToApproveDeiconify(false)
 {
   DALI_LOG_INFO( gRenderSurfaceLogFilter, Debug::Verbose, "Creating Window\n" );
@@ -73,17 +72,6 @@ Ecore_Wl_Window* WindowRenderSurface::GetDrawable()
 {
   // already an e-core type
   return mWlWindow;
-}
-
-Dali::RenderSurface::SurfaceType WindowRenderSurface::GetType()
-{
-  return Dali::RenderSurface::WINDOW;
-}
-
-Any WindowRenderSurface::GetSurface()
-{
-  // already an e-core type
-  return Any( mWlWindow );
 }
 
 Ecore_Wl_Window* WindowRenderSurface::GetWlWindow()
@@ -128,17 +116,16 @@ void WindowRenderSurface::DestroyEglSurface( EglInterface& eglIf )
   mEglWindow = NULL;
 }
 
-bool WindowRenderSurface::ReplaceEGLSurface( EglInterface& eglIf )
+bool WindowRenderSurface::ReplaceEGLSurface( EglInterface& egl )
 {
   DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
-  EglImplementation& egl = static_cast<EglImplementation&>( eglIf );
-  egl.InitializeGles( reinterpret_cast< EGLNativeDisplayType >( mMainDisplay ) );
-
   wl_egl_window_destroy(mEglWindow);
   mEglWindow = wl_egl_window_create(ecore_wl_window_surface_get(mWlWindow), mPosition.width, mPosition.height);
-  return egl.ReplaceSurfaceWindow( (EGLNativeWindowType)mEglWindow, // reinterpret_cast does not compile
-                                   reinterpret_cast< EGLNativeDisplayType >( mMainDisplay ) );
+
+  Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( egl );
+  return eglImpl.ReplaceSurfaceWindow( (EGLNativeWindowType)mEglWindow ); // reinterpret_cast does not compile
+
 }
 
 void WindowRenderSurface::MoveResize( Dali::PositionSize positionSize )
