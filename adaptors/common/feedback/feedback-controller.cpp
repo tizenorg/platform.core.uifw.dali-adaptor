@@ -24,7 +24,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <dali/integration-api/debug.h>
 #include <dali/public-api/common/stage.h>
-#include <dali/public-api/object/object-registry.h>
+#include <dali/public-api/object/base-object.h>
 
 // INTERNAL INCLUDES
 #include <feedback/feedback-ids.h>
@@ -146,9 +146,7 @@ FeedbackController::FeedbackController( FeedbackPluginProxy& plugin )
   string defaultTheme = LoadFile( DEFAULT_FEEDBACK_THEME_PATH );
   LoadTheme( defaultTheme );
 
-  Dali::ObjectRegistry registry = Dali::Stage::GetCurrent().GetObjectRegistry();
-
-  registry.ObjectCreatedSignal().Connect(   mConnections, &FeedbackController::ObjectCreatedCallback );
+  BaseObject::ObjectCreatedSignal().Connect(   mConnections, &FeedbackController::ObjectCreatedCallback );
 
   Dali::StyleMonitor styleMonitor( Dali::StyleMonitor::Get() );
   DALI_ASSERT_DEBUG( styleMonitor && "StyleMonitor not available" );

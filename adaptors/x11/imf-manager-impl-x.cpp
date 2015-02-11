@@ -22,13 +22,13 @@
 #include <boost/bind.hpp>
 #include <dali/public-api/events/key-event.h>
 #include <dali/public-api/object/type-registry.h>
+#include <dali/public-api/object/singleton-service.h>
 #include <adaptor.h>
 #include <dali/integration-api/debug.h>
 
 // INTERNAL INCLUDES
 #include <window-render-surface.h>
 #include <adaptor-impl.h>
-#include <singleton-service-impl.h>
 #include <virtual-keyboard-impl.h>
 
 namespace Dali
@@ -130,7 +130,7 @@ bool ImfManager::IsAvailable()
 {
   bool available( false );
 
-  Dali::SingletonService service( SingletonService::Get() );
+  Dali::SingletonService service( Dali::SingletonService::Get() );
   if ( service )
   {
     available = service.GetSingleton( typeid( Dali::ImfManager ) );
@@ -143,7 +143,7 @@ Dali::ImfManager ImfManager::Get()
 {
   Dali::ImfManager manager;
 
-  Dali::SingletonService service( SingletonService::Get() );
+  Dali::SingletonService service( Dali::SingletonService::Get() );
   if ( service )
   {
     // Check whether the singleton is already created

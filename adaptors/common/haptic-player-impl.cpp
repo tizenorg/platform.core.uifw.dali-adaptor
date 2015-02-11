@@ -20,9 +20,9 @@
 
 // EXTERNAL INCLUDES
 #include <dali/public-api/object/type-registry.h>
+#include <dali/public-api/object/singleton-service.h>
 
 // INTERNAL INCLUDES
-#include <singleton-service-impl.h>
 
 namespace Dali
 {
@@ -56,7 +56,7 @@ Dali::HapticPlayer HapticPlayer::Get()
 {
   Dali::HapticPlayer player;
 
-  Dali::SingletonService service( SingletonService::Get() );
+  Dali::SingletonService service( Dali::SingletonService::Get() );
   if ( service )
   {
     // Check whether the singleton is already created

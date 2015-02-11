@@ -21,13 +21,13 @@
 // EXTERNAL INCLUDES
 #include <Ecore_X.h>
 #include <dali/public-api/dali-core.h>
+#include <dali/public-api/object/singleton-service.h>
 #include <dali/integration-api/debug.h>
 
 // INTERNAL INCLUDES
 #include <dali/public-api/object/any.h>
 #include <adaptor-impl.h>
 #include <ecore-x-window-interface.h>
-#include <singleton-service-impl.h>
 
 namespace //unnamed namespace
 {
@@ -62,7 +62,7 @@ BaseHandle Create()
 
   if ( !handle && Adaptor::IsAvailable() )
   {
-    Dali::SingletonService service( SingletonService::Get() );
+    Dali::SingletonService service( Dali::SingletonService::Get() );
     if ( service )
     {
       Adaptor& adaptorImpl( Adaptor::GetImplementation( Adaptor::Get() ) );
@@ -104,7 +104,7 @@ Dali::Clipboard Clipboard::Get()
 {
   Dali::Clipboard clipboard;
 
-  Dali::SingletonService service( SingletonService::Get() );
+  Dali::SingletonService service( Dali::SingletonService::Get() );
   if ( service )
   {
     // Check whether the singleton is already created

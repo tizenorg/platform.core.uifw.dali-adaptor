@@ -27,10 +27,10 @@
 #endif
 
 #include <dali/public-api/object/type-registry.h>
+#include <dali/public-api/object/singleton-service.h>
 #include <dali/integration-api/debug.h>
 
 // INTERNAL INCLUDES
-#include <singleton-service-impl.h>
 
 #ifdef __arm__
 #define SENSOR_ENABLED
@@ -77,7 +77,7 @@ Dali::TiltSensor TiltSensor::Get()
 {
   Dali::TiltSensor sensor;
 
-  Dali::SingletonService service( SingletonService::Get() );
+  Dali::SingletonService service( Dali::SingletonService::Get() );
   if ( service )
   {
     // Check whether the keyboard focus manager is already created

@@ -22,13 +22,13 @@
 #include <vconf.h>
 
 #include <dali/public-api/dali-core.h>
+#include <dali/public-api/object/singleton-service.h>
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/events/touch-event-integ.h>
 #include <dali/integration-api/events/hover-event-integ.h>
 #include <dali/integration-api/events/gesture-requests.h>
 
 // INTERNAL INCLUDES
-#include <singleton-service-impl.h>
 #include <system-settings.h>
 
 namespace Dali
@@ -70,7 +70,7 @@ BaseHandle Create()
 
   if ( !handle )
   {
-    Dali::SingletonService service( SingletonService::Get() );
+    Dali::SingletonService service( Dali::SingletonService::Get() );
     if ( service )
     {
       Dali::AccessibilityManager manager = Dali::AccessibilityManager( new AccessibilityManager() );
@@ -89,7 +89,7 @@ Dali::AccessibilityManager AccessibilityManager::Get()
 {
   Dali::AccessibilityManager manager;
 
-  Dali::SingletonService service( SingletonService::Get() );
+  Dali::SingletonService service( Dali::SingletonService::Get() );
   if ( service )
   {
     // Check whether the singleton is already created

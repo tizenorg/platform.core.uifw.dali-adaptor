@@ -20,9 +20,9 @@
 
 // EXTERNAL INCLUDES
 #include <dali/public-api/dali-core.h>
+#include <dali/public-api/object/singleton-service.h>
 
 // INTERNAL INCLUDES
-#include <singleton-service-impl.h>
 
 namespace Dali
 {
@@ -41,7 +41,7 @@ BaseHandle Create()
 
   if ( !handle )
   {
-    Dali::SingletonService service( SingletonService::Get() );
+    Dali::SingletonService service( Dali::SingletonService::Get() );
     if ( service )
     {
       Dali::ClipboardEventNotifier notifier( ClipboardEventNotifier::New() );
@@ -67,7 +67,7 @@ Dali::ClipboardEventNotifier ClipboardEventNotifier::Get()
 {
   Dali::ClipboardEventNotifier notifier;
 
-  Dali::SingletonService service( SingletonService::Get() );
+  Dali::SingletonService service( Dali::SingletonService::Get() );
   if ( service )
   {
     // Check whether the singleton is already created

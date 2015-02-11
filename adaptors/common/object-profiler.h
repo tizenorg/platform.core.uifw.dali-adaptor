@@ -18,7 +18,6 @@
  *
  */
 
-#include <dali/public-api/object/object-registry.h>
 #include <dali/public-api/object/type-registry.h>
 #include <dali/public-api/common/map-wrapper.h>
 #include <dali/public-api/signals/connection-tracker.h>
@@ -82,7 +81,6 @@ private:
   typedef std::pair<BaseObject*, std::string> InstanceTypePair;
   typedef std::vector<InstanceTypePair> InstanceTypes;
 
-  Dali::ObjectRegistry    mObjectRegistry;
   Dali::Timer             mTimer;
   InstanceCountMap        mInstanceCountMap;
   InstanceTypes           mInstanceTypes;

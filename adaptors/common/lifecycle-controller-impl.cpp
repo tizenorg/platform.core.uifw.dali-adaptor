@@ -18,10 +18,12 @@
 // CLASS HEADER
 #include "lifecycle-controller-impl.h"
 
-// INTERNAL INCLUDES
+// EXTERNAL INCLUDES
+#include <dali/public-api/object/singleton-service.h>
 #include <dali/public-api/object/type-registry.h>
+
+// INTERNAL INCLUDES
 #include <adaptor-impl.h>
-#include <singleton-service-impl.h>
 
 namespace Dali
 {
@@ -41,7 +43,7 @@ BaseHandle Create()
 
   if ( !handle && Adaptor::IsAvailable() )
   {
-    Dali::SingletonService service( SingletonService::Get() );
+    Dali::SingletonService service( Dali::SingletonService::Get() );
     if ( service )
     {
       Dali::LifecycleController lifecycleController = Dali::LifecycleController( new LifecycleController() );
@@ -60,7 +62,7 @@ Dali::LifecycleController LifecycleController::Get()
 {
   Dali::LifecycleController lifecycleController;
 
-  Dali::SingletonService service( SingletonService::Get() );
+  Dali::SingletonService service( Dali::SingletonService::Get() );
   if ( service )
   {
     // Check whether the singleton is already created

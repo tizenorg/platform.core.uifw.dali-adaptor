@@ -40,7 +40,6 @@ ObjectProfiler::ObjectProfiler()
 {
   // This class must be created after the Stage; this means it doesn't count the initial objects
   // that are created by the stage (base layer, default camera actor)
-  mObjectRegistry = Dali::Stage::GetCurrent().GetObjectRegistry();
 
   char* profile = getenv("PROFILE_DALI_OBJECTS");
   if( profile != NULL )
@@ -54,8 +53,8 @@ ObjectProfiler::ObjectProfiler()
       mTimer.Start();
     }
 
-    mObjectRegistry.ObjectCreatedSignal().Connect( this, &ObjectProfiler::OnObjectCreated );
-    mObjectRegistry.ObjectDestroyedSignal().Connect( this, &ObjectProfiler::OnObjectDestroyed );
+    BaseObject::ObjectCreatedSignal().Connect( this, &ObjectProfiler::OnObjectCreated );
+    BaseObject::ObjectDestroyedSignal().Connect( this, &ObjectProfiler::OnObjectDestroyed );
   }
 }
 

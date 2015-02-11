@@ -20,12 +20,12 @@
 
 // EXTERNAL INCLUDES
 #include <dali/integration-api/debug.h>
+#include <dali/public-api/object/singleton-service.h>
 #include <style-monitor.h>
 
 // INTERNAL INCLUDES
 #include <command-line-options.h>
 #include <common/adaptor-impl.h>
-#include <singleton-service-impl.h>
 #include <lifecycle-controller-impl.h>
 
 namespace Dali
@@ -78,7 +78,6 @@ Application::Application( int* argc, char** argv[], const std::string& name, con
   mEventLoop( NULL ),
   mFramework( NULL ),
   mCommandLineOptions( NULL ),
-  mSingletonService( SingletonService::New() ),
   mAdaptor( NULL ),
   mWindow(),
   mWindowMode( windowMode ),
@@ -94,8 +93,6 @@ Application::Application( int* argc, char** argv[], const std::string& name, con
 
 Application::~Application()
 {
-  mSingletonService.UnregisterAll();
-
   delete mFramework;
   delete mCommandLineOptions;
   delete mAdaptor;
