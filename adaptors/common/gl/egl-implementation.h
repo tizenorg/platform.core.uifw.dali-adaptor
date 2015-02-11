@@ -25,20 +25,16 @@
 #include <dali/public-api/common/dali-vector.h>
 
 // INTERNAL INCLUDES
-#include <base/interfaces/egl-interface.h>
+#include <egl-interface.h>
 
 namespace Dali
 {
+class DisplayConnection;
+
 namespace Internal
 {
 namespace Adaptor
 {
-
-enum ColorDepth
-{
-  COLOR_DEPTH_24 = 24,
-  COLOR_DEPTH_32 = 32
-};
 
 /**
  * EglImplementation class provides an EGL implementation.
@@ -58,7 +54,7 @@ public:
 
 public:
 
- /**
+  /**
    * (Called from  ECoreX::RenderSurface, not RenderThread, so not in i/f, hence, not virtual)
    * Initialize GL
    * @param display The display
