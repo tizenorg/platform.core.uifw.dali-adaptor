@@ -33,11 +33,10 @@ namespace ECore
 DALI_EXPORT_API RenderSurface* CreatePixmapSurface(
   PositionSize       positionSize,
   Any                surface,
-  Any                display,
   const std::string& name,
   bool               isTransparent )
 {
-  return new PixmapRenderSurface( positionSize, surface, display, name, isTransparent );
+  return new Dali::ECore::PixmapRenderSurface( positionSize, surface, name, isTransparent );
 }
 
 } // namespace ECoreX
