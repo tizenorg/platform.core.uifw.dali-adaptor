@@ -362,7 +362,7 @@ void Adaptor::Start()
 
   // NOTE: dpi must be set before starting the render thread
   // use default or command line settings if not run on device
-#ifdef __arm__
+#ifndef DALI_PROFILE_UBUNTU
   // set the DPI value for font rendering
   unsigned int dpiHor, dpiVer;
   dpiHor = dpiVer = 0;

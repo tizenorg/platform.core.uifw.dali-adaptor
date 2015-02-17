@@ -104,7 +104,7 @@ Application::~Application()
 
 void Application::CreateWindow()
 {
-#ifndef __arm__
+#ifdef DALI_PROFILE_UBUNTU
    PositionSize windowPosition(0, 0, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
 #else
    PositionSize windowPosition(0, 0, 0, 0);  // this will use full screen
