@@ -63,7 +63,6 @@ void ResourceBitmapRequester::LoadResource( Integration::ResourceRequest& reques
     // Work out what thread to decode / load the image on:
     ResourceThreadBase* const localImageThread = mThreadImageLocal;
     ResourceThreadBase* const remoteImageThread = mThreadImageRemote;
-    ResourceThreadBase* const distanceFieldThread = mThreadDistanceField ;
     ResourceThreadBase* workerThread;
 
     // Work out if the resource is in memory, a file, or in a remote server:
@@ -87,13 +86,6 @@ void ResourceBitmapRequester::LoadResource( Integration::ResourceRequest& reques
         workerThread = localImageThread;
       }
     }
-
-    if( resType->imageAttributes.IsDistanceField() )
-    {
-      workerThread = distanceFieldThread;
-    }
-
-    // Dispatch the job to the right thread:
     workerThread->AddRequest( request, requestType );
   }
 }
