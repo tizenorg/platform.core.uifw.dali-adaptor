@@ -82,7 +82,7 @@ void ResourceBitmapRequester::LoadResource( Integration::ResourceRequest& reques
         workerThread = localImageThread;
       }
     }
-
+    
     // Dispatch the job to the right thread:
     workerThread->AddRequest( request, requestType );
   }
