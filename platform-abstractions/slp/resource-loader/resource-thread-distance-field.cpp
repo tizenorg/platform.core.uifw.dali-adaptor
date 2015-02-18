@@ -215,7 +215,7 @@ void ResourceThreadDistanceField::Load(const ResourceRequest& request)
                                     imageSize,
                                     destBitmap->GetBuffer(),
                                     imageSize,
-                                    attributes.GetFieldBorder(),
+                                    4, // Default field border
                                     imageSize,
                                     true );
           bitmap = destBitmap;
