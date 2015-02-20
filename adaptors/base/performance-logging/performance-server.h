@@ -19,12 +19,12 @@
  */
 
 // EXTERNAL INCLUDES
-#include <boost/thread/mutex.hpp>
 #include <dali/public-api/common/dali-vector.h>
+#include <dali/public-api/common/mutex.h>
 
 // INTERNAL INCLUDES
-#include <base/performance-logging/frame-time-stats.h>
 #include <base/interfaces/adaptor-internal-services.h>
+#include <base/performance-logging/frame-time-stats.h>
 #include <base/performance-logging/performance-marker.h>
 #include <base/performance-logging/statistics/stat-context-manager.h>
 
@@ -119,7 +119,7 @@ private:
   Integration::PlatformAbstraction& mPlatformAbstraction; ///< platform abstraction
   const EnvironmentOptions& mEnvironmentOptions;          ///< environment options
   KernelTraceInterface& mKernelTrace;                     ///< kernel trace interface
-  boost::mutex mDataMutex;                                ///< mutex
+  Mutex mDataMutex;                                       ///< mutex
   StatContextManager mStatContextManager;                 ///< Stat context manager
   unsigned int mStatisticsLogBitmask;                     ///< statistics log level
   unsigned int mPerformanceOutputBitmask;                 ///< performance marker output
