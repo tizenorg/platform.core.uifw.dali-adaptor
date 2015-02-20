@@ -104,7 +104,7 @@ void PerformanceServer::AddMarker( MarkerType markerType, ContextId contextId )
 
   // This is only called from main event thread, but may overlap with internal AddMarker calls
   // from other threads ( update, render etc).
-  boost::mutex::scoped_lock sharedDatalock( mDataMutex );
+  Mutex::ScopedLock sharedDatalock( mDataMutex );
 
   // Get the time stamp
   unsigned int seconds = 0;
@@ -136,7 +136,7 @@ void PerformanceServer::AddMarker( MarkerType markerType )
 
   // AddMarker can be called from multiple threads, to avoid problems
   // with updating contexts and the kernel trace, lock here.
-  boost::mutex::scoped_lock sharedDatalock( mDataMutex );
+  Mutex::ScopedLock sharedDatalock( mDataMutex );
 
   if( markerType == VSYNC )
   {

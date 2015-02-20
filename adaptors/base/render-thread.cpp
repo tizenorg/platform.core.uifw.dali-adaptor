@@ -183,7 +183,7 @@ bool RenderThread::Run()
       else
       {
         // Block until new surface... - cleared by ReplaceSurface code in UpdateRenderController
-        running = mUpdateRenderSync.RenderSyncWithRequest(request);
+        running = mUpdateRenderSync.RenderWaitForNewSurface(request);
       }
     }
 

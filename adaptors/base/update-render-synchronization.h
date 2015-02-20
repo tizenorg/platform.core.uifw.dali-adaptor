@@ -19,15 +19,11 @@
  */
 
 // INTERNAL INCLUDES
+#include <base/conditional-wait.h>
+#include <base/frame-time.h>
 #include <base/interfaces/performance-interface.h>
 #include <base/interfaces/trigger-event-interface.h>
-#include <base/frame-time.h>
 #include <base/render-thread.h>
-
-// EXTERNAL INCLUDES
-#include <stdint.h>
-#include <boost/thread.hpp>
-#include <boost/thread/condition_variable.hpp>
 
 namespace Dali
 {
@@ -155,11 +151,10 @@ public:
   bool UpdateTryToSleep();
 
   /**
-   * Block the render thread whilst waiting for requests e.g. providing a new
-   * surface.
+   * Block the render thread whilst waiting for a new surface
    * @param[in] request Pointer to set if there are any requests
    */
-  bool RenderSyncWithRequest(RenderRequest*& request );
+  bool RenderWaitForNewSurface( RenderRequest*& request );
 
   /**
    * Called by the render-thread to wait for a buffer to read from and then render.
@@ -179,7 +174,7 @@ public:
   void RenderFinished( bool updateRequired, bool requestProcessed );
 
   /**
-   * Called by the render/update threads to wait for a Synchronization
+   * Called by the update thread to wait for Vsync synchronization
    */
   void WaitSync();
 
@@ -261,27 +256,27 @@ private:
   volatile int mPaused;                               ///< The paused flag
   volatile int mUpdateRequested;                      ///< An update has been requested
   volatile int mAllowUpdateWhilePaused;               ///< whether to allow (one) update while paused
-  volatile int mVSyncSleep;                           ///< Set true when the VSync thread should sleep
+  volatile int mSleeping;                           ///< Set true when the VSync thread should sleep
   volatile unsigned int mSyncFrameNumber;            ///< Frame number of latest Sync
   volatile unsigned int mSyncSeconds;                ///< Timestamp (seconds) of latest Sync
   volatile unsigned int mSyncMicroseconds;           ///< Timestamp (microseconds) of latest Sync
 
-  boost::mutex mMutex;                                ///< This mutex must be locked before reading/writing mUpdateReadyCount
-  boost::condition_variable mUpdateFinishedCondition; ///< The render thread waits for this condition
-  boost::condition_variable mUpdateSleepCondition;    ///< The update thread waits for this condition when sleeping
-  boost::condition_variable mRenderFinishedCondition; ///< The update thread waits for this condition
-  boost::condition_variable mVSyncReceivedCondition;  ///< The render thread waits on this condition
-  boost::condition_variable mVSyncSleepCondition;     ///< The vsync thread waits for this condition
-  boost::condition_variable mPausedCondition;         ///< The controller waits for this condition while paused
-  boost::condition_variable mRenderRequestSleepCondition;   ///< The render thread waits for this condition
-  boost::condition_variable mRenderRequestFinishedCondition;///< The controller waits for this condition
+  ConditionalWait mUpdateFinishedCondition;           ///< The render thread waits for this condition
+  ConditionalWait mRenderFinishedCondition;           ///< The update thread waits for this condition
+  ConditionalWait mVSyncReceivedCondition;            ///< The render thread waits on this condition
+
+  ConditionalWait mSleepCondition;                    ///< The state machine is in sleep state
+  ConditionalWait mPausedCondition;                   ///< The controller waits for this condition while paused
+
+  ConditionalWait mRenderWaitForSurface;              ///< The render thread waits for this condition
+  ConditionalWait mRenderRequestFinishedCondition;    ///< The controller waits for this condition
 
   FrameTime mFrameTime;                               ///< Frame timer predicts next vsync time
   TriggerEventInterface& mNotificationTrigger;        ///< Reference to notification event trigger
   PerformanceInterface* mPerformanceInterface;        ///< The performance logging interface
 
-  ReplaceSurfaceRequest mReplaceSurfaceRequest; ///< Holder for a replace surface request
-  bool mReplaceSurfaceRequested; ///< True if there is a new replace surface request
+  ReplaceSurfaceRequest mReplaceSurfaceRequest;       ///< Holder for a replace surface request
+  bool mReplaceSurfaceRequested;                      ///< True if there is a new replace surface request
 
 }; // class UpdateRenderSynchronization
 

@@ -49,7 +49,7 @@ UpdateRenderSynchronization::UpdateRenderSynchronization( AdaptorInternalService
   mPaused( false ),
   mUpdateRequested( false ),
   mAllowUpdateWhilePaused( false ),
-  mVSyncSleep( false ),
+  mSleeping( false ),
   mSyncFrameNumber( 0u ),
   mSyncSeconds( 0u ),
   mSyncMicroseconds( 0u ),
@@ -83,11 +83,11 @@ void UpdateRenderSynchronization::Stop()
 
   // Notify all condition variables, so if threads are waiting
   // they can break out, and check the running status.
-  mUpdateFinishedCondition.notify_one();
-  mRenderFinishedCondition.notify_one();
-  mVSyncSleepCondition.notify_one();
-  mVSyncReceivedCondition.notify_one();
-  mRenderRequestSleepCondition.notify_one();
+  mUpdateFinishedCondition.Notify();
+  mRenderFinishedCondition.Notify();
+  mSleepCondition.Notify();
+  mVSyncReceivedCondition.Notify();
+  mRenderWaitForSurface.Notify();
 
   mFrameTime.Suspend();
 }
@@ -108,10 +108,12 @@ void UpdateRenderSynchronization::ResumeFrameTime()
 void UpdateRenderSynchronization::Resume()
 {
   mPaused = false;
-  mVSyncSleep = false;
+  mSleeping = false;
 
-  mPausedCondition.notify_one();
-  mVSyncSleepCondition.notify_one();
+  // Wake if sleeping
+  mSleepCondition.Notify();
+  // stay paused but notify the pause condition
+  mPausedCondition.Notify();
 
   AddPerformanceMarker( PerformanceInterface::RESUME);
 }
@@ -120,24 +122,19 @@ void UpdateRenderSynchronization::UpdateRequested()
 {
   mUpdateRequested = true;
 
-  // Wake update thread if sleeping
-  mUpdateSleepCondition.notify_one();
+  // Wake if sleeping
+  mSleepCondition.Notify();
+  // if paused, do nothing
 }
 
 void UpdateRenderSynchronization::UpdateWhilePaused()
 {
-  {
-    boost::unique_lock< boost::mutex > lock( mMutex );
+  mAllowUpdateWhilePaused = true;
 
-    mAllowUpdateWhilePaused = true;
-  }
-
-  // wake vsync if sleeping
-  mVSyncSleepCondition.notify_one();
-  // Wake update if sleeping
-  mUpdateSleepCondition.notify_one();
+  // Wake if sleeping
+  mSleepCondition.Notify();
   // stay paused but notify the pause condition
-  mPausedCondition.notify_one();
+  mPausedCondition.Notify();
 }
 
 bool UpdateRenderSynchronization::ReplaceSurface( RenderSurface* newSurface )
@@ -147,12 +144,10 @@ bool UpdateRenderSynchronization::ReplaceSurface( RenderSurface* newSurface )
   UpdateRequested();
   UpdateWhilePaused();
   {
-    boost::unique_lock< boost::mutex > lock( mMutex );
-
     mReplaceSurfaceRequest.SetSurface(newSurface);
     mReplaceSurfaceRequested = true;
 
-    mRenderRequestFinishedCondition.wait(lock); // wait unlocks the mutex on entry, and locks again on exit.
+    mRenderRequestFinishedCondition.Wait(); // wait unlocks the mutex on entry, and locks again on exit.
 
     mReplaceSurfaceRequested = false;
     result = mReplaceSurfaceRequest.GetReplaceCompleted();
@@ -168,16 +163,14 @@ bool UpdateRenderSynchronization::NewSurface( RenderSurface* newSurface )
   UpdateRequested();
   UpdateWhilePaused();
   {
-    boost::unique_lock< boost::mutex > lock( mMutex );
-
     mReplaceSurfaceRequest.SetSurface(newSurface);
     mReplaceSurfaceRequested = true;
 
-    // Unlock the render thread sleeping on requests
-    mRenderRequestSleepCondition.notify_one();
+    // Unblock the render thread if its waiting for new surface
+    mRenderWaitForSurface.Notify();
 
-    // Lock event thread until request has been processed
-    mRenderRequestFinishedCondition.wait(lock);// wait unlocks the mutex on entry, and locks again on exit.
+    // Lock event thread until request has been processed by render
+    mRenderRequestFinishedCondition.Wait();// wait unlocks the mutex on entry, and locks again on exit.
 
     mReplaceSurfaceRequested = false;
     result = mReplaceSurfaceRequest.GetReplaceCompleted();
@@ -194,13 +187,10 @@ void UpdateRenderSynchronization::UpdateReadyToRun()
   // atomic check first to avoid mutex lock in 99.99% of cases
   if( mPaused )
   {
-    boost::unique_lock< boost::mutex > lock( mMutex );
-
     // wait while paused
-    while( mPaused && !mAllowUpdateWhilePaused )
+    if( !mAllowUpdateWhilePaused )
     {
-      // this will automatically unlock mMutex
-      mPausedCondition.wait( lock );
+      mPausedCondition.Wait();
 
       wokenFromPause = true;
     }
@@ -226,21 +216,17 @@ bool UpdateRenderSynchronization::UpdateSyncWithRender( bool notifyEvent, bool& 
     mNotificationTrigger.Trigger();
   }
 
-  boost::unique_lock< boost::mutex > lock( mMutex );
-
   // Another frame was prepared for rendering; increment counter
   ++mUpdateReadyCount;
   DALI_ASSERT_DEBUG( mUpdateReadyCount <= mMaximumUpdateCount );
 
   // Notify the render-thread that an update has completed
-  mUpdateFinishedCondition.notify_one();
+  mUpdateFinishedCondition.Notify();
 
   // The update-thread must wait until a frame has been rendered, when mMaximumUpdateCount is reached
-  while( mRunning && ( mMaximumUpdateCount == mUpdateReadyCount ) )
+  if( mRunning && ( mMaximumUpdateCount == mUpdateReadyCount ) )
   {
-    // Wait will atomically add the thread to the set of threads waiting on
-    // the condition variable mRenderFinishedCondition and unlock the mutex.
-    mRenderFinishedCondition.wait( lock );
+    mRenderFinishedCondition.Wait();
   }
 
   renderNeedsUpdate = mUpdateRequired;
@@ -251,14 +237,10 @@ bool UpdateRenderSynchronization::UpdateSyncWithRender( bool notifyEvent, bool& 
 
 void UpdateRenderSynchronization::UpdateWaitForAllRenderingToFinish()
 {
-  boost::unique_lock< boost::mutex > lock( mMutex );
-
   // Wait for all of the prepared frames to be rendered
-  while ( mRunning && ( 0u != mUpdateReadyCount ) && !mUpdateRequested )
+  if( mRunning && ( 0u != mUpdateReadyCount ) && !mUpdateRequested )
   {
-    // Wait will atomically add the thread to the set of threads waiting on
-    // the condition variable mRenderFinishedCondition and unlock the mutex.
-    mRenderFinishedCondition.wait( lock );
+    mRenderFinishedCondition.Wait();
   }
 }
 
@@ -270,34 +252,28 @@ bool UpdateRenderSynchronization::UpdateTryToSleep()
     UpdateWaitForAllRenderingToFinish();
   }
 
-  boost::mutex sleepMutex;
-  boost::unique_lock< boost::mutex > lock( sleepMutex );
-
-  while( mRunning && !mUpdateRequired && !mUpdateRequested )
+  if( mRunning && !mUpdateRequired && !mUpdateRequested )
   {
     //
     // Going to sleep
     //
 
-    // 1. put VSync thread to sleep.
-    mVSyncSleep = true;
+    // 1. put threads to sleep.
+    mSleeping = true;
 
     // 2. inform frame time
     mFrameTime.Sleep();
 
-    // 3. block thread and wait for wakeup event
-    mUpdateSleepCondition.wait( lock );
+    // 3. block thread and wait
+    mSleepCondition.Wait();
 
     //
     // Woken up
     //
+    mSleeping = false;
 
     // 1. inform frame timer
     mFrameTime.WakeUp();
-
-    // 2. wake VSync thread.
-    mVSyncSleep = false;
-    mVSyncSleepCondition.notify_one();
   }
 
   mUpdateRequested = false;
@@ -305,12 +281,10 @@ bool UpdateRenderSynchronization::UpdateTryToSleep()
   return mRunning;
 }
 
-bool UpdateRenderSynchronization::RenderSyncWithRequest(RenderRequest*& requestPtr)
+bool UpdateRenderSynchronization::RenderWaitForNewSurface(RenderRequest*& requestPtr)
 {
-  boost::unique_lock< boost::mutex > lock( mMutex );
-
-  // Wait for a replace surface request
-  mRenderRequestSleepCondition.wait(lock);
+  // block here until new surface is available
+  mRenderWaitForSurface.Wait();
 
   // write any new requests
   if( mReplaceSurfaceRequested )
@@ -323,14 +297,10 @@ bool UpdateRenderSynchronization::RenderSyncWithRequest(RenderRequest*& requestP
 
 bool UpdateRenderSynchronization::RenderSyncWithUpdate(RenderRequest*& requestPtr)
 {
-  boost::unique_lock< boost::mutex > lock( mMutex );
-
   // Wait for update to produce a buffer, or for the mRunning state to change
-  while ( mRunning && ( 0u == mUpdateReadyCount ) )
+  if( mRunning && ( 0u == mUpdateReadyCount ) )
   {
-    // Wait will atomically add the thread to the set of threads waiting on
-    // the condition variable mUpdateFinishedCondition and unlock the mutex.
-    mUpdateFinishedCondition.wait( lock );
+    mUpdateFinishedCondition.Wait();
   }
 
   if( mRunning )
@@ -352,8 +322,6 @@ bool UpdateRenderSynchronization::RenderSyncWithUpdate(RenderRequest*& requestPt
 void UpdateRenderSynchronization::RenderFinished( bool updateRequired, bool requestProcessed )
 {
   {
-    boost::unique_lock< boost::mutex > lock( mMutex );
-
     // Set the flag to say if update needs to run again.
     mUpdateRequired = updateRequired;
 
@@ -363,12 +331,12 @@ void UpdateRenderSynchronization::RenderFinished( bool updateRequired, bool requ
   }
 
   // Notify the update-thread that a render has completed
-  mRenderFinishedCondition.notify_one();
+  mRenderFinishedCondition.Notify();
 
   if( requestProcessed )
   {
     // Notify the event thread that a request has completed
-    mRenderRequestFinishedCondition.notify_one();
+    mRenderRequestFinishedCondition.Notify();
   }
 
   AddPerformanceMarker( PerformanceInterface::RENDER_END );
@@ -377,18 +345,9 @@ void UpdateRenderSynchronization::RenderFinished( bool updateRequired, bool requ
 void UpdateRenderSynchronization::WaitSync()
 {
   // Block until the start of a new sync.
-  // If we're experiencing slowdown and are behind by more than a frame
-  // then we should wait for the next frame
-
-  unsigned int updateFrameNumber = mSyncFrameNumber;
-
-  boost::unique_lock< boost::mutex > lock( mMutex );
-
-  while ( mRunning && ( updateFrameNumber == mSyncFrameNumber ) )
+  if( mRunning )
   {
-    // Wait will atomically add the thread to the set of threads waiting on
-    // the condition variable mVSyncReceivedCondition and unlock the mutex.
-    mVSyncReceivedCondition.wait( lock );
+    mVSyncReceivedCondition.Wait();
   }
 
   // reset update while paused flag
@@ -409,23 +368,19 @@ bool UpdateRenderSynchronization::VSyncNotifierSyncWithUpdateAndRender( bool val
     mFrameTime.SetSyncTime( frameNumber );
   }
 
-  boost::unique_lock< boost::mutex > lock( mMutex );
-
   mSyncFrameNumber = frameNumber;
   mSyncSeconds = seconds;
   mSyncMicroseconds = microseconds;
 
-  mVSyncReceivedCondition.notify_all();
+  mVSyncReceivedCondition.Notify();
 
   AddPerformanceMarker( PerformanceInterface::VSYNC );
 
-  while( mRunning && // sleep on condition variable WHILE still running
-         !mAllowUpdateWhilePaused &&             // AND NOT allowing updates while paused
-         ( mVSyncSleep || mPaused ) )            // AND sleeping OR paused
+  if( mRunning && // sleep on condition variable WHILE still running
+      !mAllowUpdateWhilePaused &&             // AND NOT allowing updates while paused
+      ( mSleeping || mPaused ) )            // AND sleeping OR paused
   {
-    // Wait will atomically add the thread to the set of threads waiting on
-    // the condition variable mVSyncSleepCondition and unlock the mutex.
-    mVSyncSleepCondition.wait( lock );
+    mSleepCondition.Wait();
   }
 
   return mRunning;
@@ -441,8 +396,6 @@ uint64_t UpdateRenderSynchronization::GetTimeMicroseconds()
   uint64_t currentTime(0);
 
   {
-    boost::unique_lock< boost::mutex > lock( mMutex );
-
     currentTime = mSyncSeconds;
     currentTime *= MICROSECONDS_PER_SECOND;
     currentTime += mSyncMicroseconds;
