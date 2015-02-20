@@ -141,11 +141,6 @@ public:
    */
   void Stop();
 
-  /**
-   * Offscreen was posted to onscreen
-   */
-  void RenderSync();
-
 private: // Render thread side helpers
 
   /**
