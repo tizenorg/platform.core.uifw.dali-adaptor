@@ -779,6 +779,15 @@ public:
 
   /* OpenGL ES 3.0 */
 
+  /**
+   * @ToDo: Get rid of all of these #ifdefs,
+   *
+   * Have one of the following instead:
+   * 1. A gles 2 base class with empty implementations and gles 3 derived one which fills out the bodies.
+   *    * gles 2 class should log and or assert if gles 3 functions called.
+   * 2. Split the portion of the file below into its own file with two versions of that new file: one for gles 2 and one fore gles 3.
+   *    * A single ifdef here could pull in the right file or the build system could choose it by setting include paths based on a feature flag.
+   */
   void ReadBuffer(GLenum mode)
   {
 #if DALI_GLES_VERSION >= 30
