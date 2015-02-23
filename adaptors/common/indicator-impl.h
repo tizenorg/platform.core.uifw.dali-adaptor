@@ -19,7 +19,7 @@
  */
 
 // EXTERNAL INCLUDES
-#include <dali/public-api/images/bitmap-image.h>
+#include <dali/public-api/images/buffer-image.h>
 #include <dali/public-api/actors/image-actor.h>
 #include <dali/public-api/actors/mesh-actor.h>
 #include <dali/public-api/geometry/animatable-mesh.h>
