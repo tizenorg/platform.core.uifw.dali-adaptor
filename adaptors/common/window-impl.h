@@ -171,7 +171,6 @@ public:
    */
   void RotationDone( int orientation, int width, int height );
 
-
 private:
   /**
    * Private constructor.
@@ -287,6 +286,9 @@ private:
   OrientationPtr                               mOrientation;
   std::vector<Dali::Window::WindowOrientation> mAvailableOrientations;
   Dali::Window::WindowOrientation              mPreferredOrientation;
+
+  std::vector<std::string>         mSupportedEffects;
+  std::vector<std::string>         mAppliedEffects;
 
   // Signals
   IndicatorSignalType mIndicatorVisibilityChangedSignal;
