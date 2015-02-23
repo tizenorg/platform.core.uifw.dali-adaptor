@@ -334,6 +334,11 @@ tizenadaptorpublicapi_HEADERS = $(public_api_header_files)
 tizenadaptorframeworkpublicapidir = $(tizenadaptorpublicapidir)/adaptor-framework
 tizenadaptorframeworkpublicapi_HEADERS = $(public_api_adaptor_framework_header_files)
 
+# TIZEN
+if !UBUNTU_PROFILE
+tizenadaptorframeworkpublicapi_HEADERS += $(public_api_adaptor_tizen_framework_header_files)
+endif
+
 tizenadaptordaliheaderdir = $(devincludepath)/dali
 tizenadaptordaliheader_HEADERS = $(adaptor_dali_header_file)
 
