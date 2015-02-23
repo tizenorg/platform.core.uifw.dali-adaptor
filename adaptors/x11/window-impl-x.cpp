@@ -40,6 +40,21 @@ namespace
 const float INDICATOR_ANIMATION_DURATION( 0.18f ); // 180 milli seconds
 const float INDICATOR_SHOW_Y_POSITION( 0.0f );
 const float INDICATOR_HIDE_Y_POSITION( -52.0f );
+const char* EFFECT_ENABLE_POSTFIX = ":1";
+const char* EFFECT_DISABLE_POSTFIX = ":0";
+
+void Tokenize(const std::string& str, std::vector<std::string>& tokens, const std::string& delimiters = ",")
+{
+  std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+  std::string::size_type pos = str.find_first_of(delimiters, lastPos);
+
+  while (std::string::npos != pos || std::string::npos != lastPos)
+  {
+    tokens.push_back(str.substr(lastPos, pos - lastPos));
+    lastPos = str.find_first_not_of(delimiters, pos);
+    pos = str.find_first_of(delimiters, lastPos);
+  }
+}
 }
 
 namespace Dali
@@ -243,6 +258,24 @@ RenderSurface* Window::GetSurface()
 void Window::SetIndicatorStyle( Dali::Window::IndicatorStyle style )
 {
   mIndicatorStyle = style;
+}
+
+void Window::UpdateSupportedEffects()
+{
+  Ecore_X_Window root = ecore_x_window_root_first_get();
+  unsigned char* data = NULL;
+  int n = 0;
+  int res = ecore_x_window_prop_property_get(root, ECORE_X_ATOM_E_WINDOW_AUX_HINT_SUPPORTED_LIST,
+                                             ECORE_X_ATOM_STRING, 0, &data, &n);
+
+  if ((res == 8) && (n > 0))
+  {
+    std::stringstream ss;
+    ss << data;
+    Tokenize(ss.str(), mSupportedEffects);
+  }
+
+  free(data);
 }
 
 void Window::ShowIndicator( Dali::Window::IndicatorVisibleMode visibleMode )
@@ -700,6 +733,76 @@ void Window::SetPreferredOrientation(Dali::Window::WindowOrientation orientation
 Dali::Window::WindowOrientation Window::GetPreferredOrientation()
 {
   return mPreferredOrientation;
+}
+
+void Window::SetEffect( const std::string& effect )
+{
+  if ( mSupportedEffects.empty() )
+  {
+    // If the supported effect is empty then update the list of window effect from the platform.
+    UpdateSupportedEffects();
+  }
+
+  std::vector< std::string >::iterator iter = std::find( mSupportedEffects.begin(), mSupportedEffects.end(), effect );
+  DALI_ASSERT_ALWAYS( iter != mSupportedEffects.end() && "No available window effect." );
+
+  ECore::WindowRenderSurface* x11Window = dynamic_cast< ECore::WindowRenderSurface * >( mSurface );
+  if ( x11Window )
+  {
+    std::stringstream ss;
+    ss << mAppliedEffects.size() << ":" << effect << EFFECT_ENABLE_POSTFIX;
+
+    // Applied the window effect to the current window.
+    Ecore_X_Window ecoreWindow = x11Window->GetXWindow();
+    ecore_x_window_prop_property_set( ecoreWindow, ECORE_X_ATOM_E_WINDOW_AUX_HINT,
+                                      ECORE_X_ATOM_STRING, 8,
+                                      (void*)ss.str().c_str(), ss.str().size() + 1 );
+
+    // Update the applied window effects.
+    mAppliedEffects.push_back( effect );
+  }
+}
+
+void Window::RemoveEffect( const std::string& effect )
+{
+  if ( mAppliedEffects.empty() )
+  {
+    DALI_ASSERT_ALWAYS("No enabled effect on the window.");
+  }
+
+  std::vector< std::string >::iterator iter = std::find( mAppliedEffects.begin(), mAppliedEffects.end(), effect );
+  DALI_ASSERT_ALWAYS( iter != mAppliedEffects.end() && "This effect isn't enabled." );
+
+  ECore::WindowRenderSurface* x11Window = dynamic_cast< ECore::WindowRenderSurface * >( mSurface );
+  if ( x11Window )
+  {
+    std::stringstream ss;
+    ss << iter - mAppliedEffects.begin() << ":" << effect << EFFECT_DISABLE_POSTFIX;
+
+    // Remove the window effect from the current window.
+    Ecore_X_Window ecoreWindow = x11Window->GetXWindow();
+    ecore_x_window_prop_property_set( ecoreWindow, ECORE_X_ATOM_E_WINDOW_AUX_HINT,
+                                      ECORE_X_ATOM_STRING, 8,
+                                      (void*)ss.str().c_str(), ss.str().size() + 1 );
+
+    // Update the applied window effects.
+    mAppliedEffects.erase( iter );
+  }
+}
+
+void Window::GetSupportedEffects( std::vector< std::string >& effects )
+{
+  if ( mSupportedEffects.empty() )
+  {
+    UpdateSupportedEffects();
+  }
+
+  effects = mSupportedEffects;
+}
+
+void Window::GetAppliedEffects( std::vector< std::string >& effects )
+{
+  effects = mAppliedEffects;
 }
 
 void Window::RotationDone( int orientation, int width, int height )
