@@ -141,6 +141,26 @@ Any Window::GetNativeHandle() const
   return GetImplementation(*this).GetNativeHandle();
 }
 
+void Window::SetEffect( const std::string& effect )
+{
+  GetImplementation(*this).SetEffect( effect );
+}
+
+void Window::RemoveEffect( const std::string& effect )
+{
+  GetImplementation(*this).RemoveEffect( effect );
+}
+
+const Window::WindowEffectList& Window::GetSupportedEffects()
+{
+  return GetImplementation(*this).GetSupportedEffects();
+}
+
+const Window::WindowEffectList& Window::GetAppliedEffects()
+{
+  return GetImplementation(*this).GetAppliedEffects();
+}
+
 Window::Window( Internal::Adaptor::Window* window )
 : BaseHandle( window )
 {

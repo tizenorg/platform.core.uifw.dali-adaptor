@@ -52,6 +52,7 @@ class DALI_IMPORT_API Window : public BaseHandle
 {
 public:
   typedef Signal< void (bool) > IndicatorSignalType;
+  typedef std::vector< std::string > WindowEffectList;
 
 public:
 
@@ -241,8 +242,35 @@ public:
    * @brief Get the native handle of the window.
    * @return The native handle of the window or an empty handle.
    */
-
   Any GetNativeHandle() const;
+
+  /**
+   * @brief Set the supported window effect from the platform.
+   *
+   * The supported window effect can be combined.
+   * The enabled window effect will be shown when the application is launched, quit, shown and hiden.
+   *
+   * @param[in] effect is the name of one of the supported effects.
+   */
+  void SetEffect( const std::string& effect );
+
+  /**
+   * @brief Remove the enabled window effect.
+   * @param[in] effect is the name of one of the supported effects.
+   */
+  void RemoveEffect( const std::string& effect );
+
+  /**
+   * @brief Query the supported window effect from the platform.
+   * @return effects which return the effects supported by the platform.
+   */
+  const WindowEffectList& GetSupportedEffects();
+
+  /**
+   * @brief Query the applied window effects from the current window.
+   * @return effects which return the applied effects.
+   */
+  const WindowEffectList& GetAppliedEffects();
 
 public: // Signals
   /**
