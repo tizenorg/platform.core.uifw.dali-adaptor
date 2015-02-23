@@ -54,6 +54,7 @@
 #include <dali/public-api/adaptor-framework/tts-player.h>
 #include <dali/public-api/adaptor-framework/virtual-keyboard.h>
 #include <dali/public-api/adaptor-framework/window.h>
+#include <dali/public-api/adaptor-framework/window-extensions.h>
 
 #include <dali/public-api/dali-adaptor-version.h>
 
