@@ -64,5 +64,9 @@ public_api_adaptor_framework_header_files = \
   $(adaptor_public_api_dir)/adaptor-framework/virtual-keyboard.h \
   $(adaptor_public_api_dir)/adaptor-framework/window.h
 
+public_api_adaptor_tizen_framework_header_files = \
+  $(adaptor_public_api_dir)/adaptor-framework/tizen/window-extensions.h
+
+
 adaptor_dali_header_file = \
   $(adaptor_public_api_dir)/dali.h
