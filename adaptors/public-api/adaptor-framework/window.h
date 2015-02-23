@@ -241,8 +241,24 @@ public:
    * @brief Get the native handle of the window.
    * @return The native handle of the window or an empty handle.
    */
-
   Any GetNativeHandle() const;
+
+  /**
+   * @brief Set the window effect.
+   * @param[in] effect is the name of one of the supported effects.
+   */
+  void SetEffect(const std::string& effect);
+
+  /**
+   * @brief Remove the window effect.
+   * @param[in] effect is the name of one of the supported effects.
+   */
+  void RemoveEffect(const std::string& effect);
+
+  /**
+   * @brief Remove all window effects.
+   */
+  void RemoveAllEffects();
 
 public: // Signals
   /**
