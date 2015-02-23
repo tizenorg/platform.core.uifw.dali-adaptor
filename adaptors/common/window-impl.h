@@ -153,7 +153,7 @@ public:
   void SetPreferredOrientation(Dali::Window::WindowOrientation orientation);
 
   /**
-   * @copydoc Dali::Window::GetPreferredOrientation()
+   * @copydoc dali::window::getpreferredorientation()
    */
   Dali::Window::WindowOrientation GetPreferredOrientation();
 
@@ -166,6 +166,21 @@ public:
    * @copydoc Dali::Window::GetNativeHandle() const
    */
   Dali::Any GetNativeHandle() const;
+
+  /**
+   * @copydoc dali::window::seteffect()
+   */
+  void SetEffect(const std::string& effect);
+
+  /**
+   * @copydoc dali::window::removeeffect()
+   */
+  void RemoveEffect(const std::string& effect);
+
+  /**
+   * @copydoc dali::window::removealleffects()
+   */
+  void RemoveAllEffects();
 
   /**
    * Called from Orientation after the Change signal has been sent
@@ -211,6 +226,11 @@ private:
    * Set the indicator properties on the window
    */
   void SetIndicatorProperties( bool isShown, Dali::Window::WindowOrientation lastOrientation );
+
+  /**
+   * Update the supported effects from the window manager.
+   */
+  void UpdateSupportedEffects();
 
 private: // Indicator::Observer interface
 
@@ -288,6 +308,9 @@ private:
   OrientationPtr                               mOrientation;
   std::vector<Dali::Window::WindowOrientation> mAvailableOrientations;
   Dali::Window::WindowOrientation              mPreferredOrientation;
+
+  std::vector<std::string>         mSupportedEffects;
+  std::vector<std::string>         mEnabledEffects;
 
   // Signals
   IndicatorSignalType mIndicatorVisibilityChangedSignal;
