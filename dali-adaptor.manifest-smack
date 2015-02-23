@@ -1,0 +1,11 @@
+<manifest>
+        <assign>
+                <filesystem path="/usr/lib/*" label="_" />
+                <filesystem path="/opt/usr/share/dali" label="dali" type="r" />
+                <filesystem path="/opt/usr/share/dali/core" label="dali" type="r" />
+                <filesystem path="/opt/usr/share/dali/core/shaderbin" label="dali" type="r" />
+        </assign>
+        <request>
+                <domain name="dali"/>
+        </request>
+</manifest>

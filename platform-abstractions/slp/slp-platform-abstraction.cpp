@@ -21,6 +21,7 @@
 #include <vconf.h>
 #endif // DALI_PROFILE_UBUNTU
 #include <dirent.h>
+#include <app_common.h>
 
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/bitmap.h>
@@ -363,28 +364,40 @@ bool SlpPlatformAbstraction::ReadGlobalMetricsFromCache( const std::string& font
                                                          const std::string& fontStyle,
                                                          Integration::GlobalMetrics& globalMetrics )
 {
+#ifdef ENABLE_GLYPHCACHE
   return MetricsCache::ReadGlobal( fontFamily, fontStyle, globalMetrics );
+#else
+  return false;
+#endif
 }
 
 void SlpPlatformAbstraction::WriteGlobalMetricsToCache( const std::string& fontFamily,
                                                         const std::string& fontStyle,
                                                         const Integration::GlobalMetrics& globalMetrics )
 {
-  MetricsCache::WriteGlobal( fontFamily, fontStyle, globalMetrics);
+#ifdef ENABLE_GLYPHCACHE
+ MetricsCache::WriteGlobal( fontFamily, fontStyle, globalMetrics);
+#endif
 }
 
 bool SlpPlatformAbstraction::ReadMetricsFromCache( const std::string& fontFamily,
                                                    const std::string& fontStyle,
                                                    std::vector<Integration::GlyphMetrics>& glyphMetricsContainer )
 {
+#ifdef ENABLE_GLYPHCACHE
   return MetricsCache::Read( fontFamily, fontStyle, glyphMetricsContainer );
+#else
+  return false;
+#endif
 }
 
 void SlpPlatformAbstraction::WriteMetricsToCache( const std::string& fontFamily,
                                                   const std::string& fontStyle,
                                                   const Integration::GlyphSet& glyphSet )
 {
+#ifdef ENABLE_GLYPHCACHE
   MetricsCache::Write( fontFamily, fontStyle, glyphSet );
+#endif
 }
 
 void SlpPlatformAbstraction::GetFileNamesFromDirectory( const std::string& directoryName,
@@ -425,6 +438,31 @@ Integration::BitmapPtr SlpPlatformAbstraction::GetGlyphImage( const std::string&
   }
 
   return glyphImage;
+}
+
+bool SlpPlatformAbstraction::LoadShaderBinFile( const std::string& filename, std::vector< unsigned char >& buffer ) const
+{
+  bool result = false;
+
+  std::string path = DALI_SHADERBIN_DIR;
+  path += filename;
+  std::cout << "LoadShaderBinFile: path1: " << path << std::endl;
+
+  if (mResourceLoader)
+  {
+    result = mResourceLoader->LoadFile(path, buffer);
+  }
+
+  path = app_get_data_path();
+  path += filename;
+  std::cout << "LoadShaderBinFile: path2: " << path << std::endl;
+
+  if (mResourceLoader && result == false)
+  {
+    result = mResourceLoader->LoadFile(path, buffer);
+  }
+
+  return result;
 }
 
 }  // namespace SlpPlatform

@@ -16,6 +16,7 @@
  */
 
 #include <stdio.h>
+#include <app.h>
 
 #include "resource-thread-shader.h"
 #include <dali/integration-api/debug.h>
@@ -59,9 +60,13 @@ void ResourceThreadShader::Save(const ResourceRequest& request)
 
   bool result = false;
 
+  std::string path = app_get_data_path();
+  path += request.GetPath();
+  std::cout << "ResourceThreadShader::Save: path: " << path << std::endl;
+
   ShaderDataPtr shaderData( reinterpret_cast< ShaderData* >(request.GetResource().Get()) );
 
-  FILE *fp = fopen(request.GetPath().c_str(), "wb");
+  FILE *fp = fopen( path.c_str(), "wb" );
   if (fp != NULL)
   {
     fwrite( shaderData->GetBufferData(), shaderData->GetBufferSize(), 1, fp );

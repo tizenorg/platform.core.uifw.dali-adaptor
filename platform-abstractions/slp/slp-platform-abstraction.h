@@ -248,6 +248,11 @@ public: // PlatformAbstraction overrides
    */
   virtual Integration::BitmapPtr GetGlyphImage( const std::string& fontFamily, const std::string& fontStyle, float fontSize, uint32_t character ) const;
 
+  /**
+   * @copydoc PlatformAbstraction::LoadShaderBinFile()
+   */
+  virtual bool LoadShaderBinFile( const std::string& filename, std::vector< unsigned char >& buffer ) const;
+
 private:
   ResourceLoader* mResourceLoader;
   FT_Library mFreeTypeHandle;       ///< Freetype library
