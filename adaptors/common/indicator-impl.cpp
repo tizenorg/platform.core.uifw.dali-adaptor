@@ -28,7 +28,7 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include <dali/public-api/images/bitmap-image.h>
+#include <dali/public-api/images/buffer-image.h>
 #include <dali/public-api/images/native-image.h>
 #include <pixmap-image.h>
 #include <dali/public-api/actors/image-actor.h>
