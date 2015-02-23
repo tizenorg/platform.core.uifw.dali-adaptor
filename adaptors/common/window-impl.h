@@ -153,7 +153,7 @@ public:
   void SetPreferredOrientation(Dali::Window::WindowOrientation orientation);
 
   /**
-   * @copydoc Dali::Window::GetPreferredOrientation()
+   * @copydoc dali::window::getpreferredorientation()
    */
   Dali::Window::WindowOrientation GetPreferredOrientation();
 
@@ -166,6 +166,21 @@ public:
    * @copydoc Dali::Window::GetNativeHandle() const
    */
   Dali::Any GetNativeHandle() const;
+
+  /**
+   * @copydoc dali::window::seteffect()
+   */
+  void SetEffect(const std::string& effect);
+
+  /**
+   * @copydoc dali::window::removeeffect()
+   */
+  void RemoveEffect(const std::string& effect);
+
+  /**
+   * @copydoc dali::window::removealleffects()
+   */
+  void RemoveAllEffects();
 
   /**
    * Called from Orientation after the Change signal has been sent
