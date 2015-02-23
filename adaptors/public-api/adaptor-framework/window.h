@@ -241,8 +241,19 @@ public:
    * @brief Get the native handle of the window.
    * @return The native handle of the window or an empty handle.
    */
-
   Any GetNativeHandle() const;
+
+  /**
+   * @brief Set the supported window effect from the window manager. It can have one more effects.
+   * @param[in] effect is the name of one of the supported effects.
+   */
+  void SetEffect(const std::string& effect);
+
+  /**
+   * @brief Remove the enabled window effect.
+   * @param[in] effect is the name of one of the supported effects.
+   */
+  void RemoveEffect(const std::string& effect);
 
 public: // Signals
   /**
