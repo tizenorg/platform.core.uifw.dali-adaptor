@@ -272,6 +272,10 @@ endif
 
 if COMMON_PROFILE
 libdali_adaptor_la_CXXFLAGS += $(HAPTIC_CFLAGS)
+
+CFLAGS+= -D UNDER_TIZEN_2_3_CAPI
+CXXFLAGS+= -D UNDER_TIZEN_2_3_CAPI
+
 endif
 
 if MOBILE_PROFILE
@@ -285,6 +289,10 @@ libdali_adaptor_la_LIBADD += \
                       $(EFL_ASSIST_LIBS) \
                       $(NATIVE_BUFFER_LIBS) \
                       $(NATIVE_BUFFER_POOL_LIBS)
+
+CFLAGS+= -D UNDER_TIZEN_2_3_CAPI
+CXXFLAGS+= -D UNDER_TIZEN_2_3_CAPI
+
 endif
 
 if LITE_PROFILE
@@ -295,6 +303,10 @@ if WEARABLE_PROFILE
 libdali_adaptor_la_CXXFLAGS += \
                       $(HAPTIC_CFLAGS) \
                       $(EFL_ASSIST_CFLAGS)
+
+CFLAGS+= -D UNDER_TIZEN_2_3_CAPI
+CXXFLAGS+= -D UNDER_TIZEN_2_3_CAPI
+
 endif
 
 if TV_PROFILE
