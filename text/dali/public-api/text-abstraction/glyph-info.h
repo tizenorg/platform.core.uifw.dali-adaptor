@@ -31,7 +31,7 @@ namespace TextAbstraction
  * The information describing a glyph (font ID, index, metrics)
  * The metrics are in pixels.
  */
-struct GlyphInfo
+DALI_IMPORT_API struct GlyphInfo
 {
   /**
    * @brief Default constructor.

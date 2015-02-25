@@ -27,7 +27,7 @@ namespace TextAbstraction
 /**
  * The metrics for a Font expressed in pixels.
  */
-struct FontMetrics
+DALI_IMPORT_API struct FontMetrics
 {
   /**
    * @brief Default constructor.
