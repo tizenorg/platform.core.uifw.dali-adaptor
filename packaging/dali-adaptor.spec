@@ -14,27 +14,30 @@ Source0:    %{name}-%{version}.tar.gz
 %define dali_feedback_plugin 0
 %define dali_bullet_plugin 0
 %define dali_assimp_plugin 0
-%endif
+%define dali_over_tizen_2_2 0
 
-%if "%{profile}" == "tv"
+%elif "%{profile}" == "tv"
 %define dali_profile TV
 %define dali_feedback_plugin 0
 %define dali_bullet_plugin 0
 %define dali_assimp_plugin 0
-%endif
+%define dali_over_tizen_2_2 1
 
-%if "%{profile}" == "wearable"
+%elif "%{profile}" == "wearable"
 %define dali_profile WEARABLE
 %define dali_feedback_plugin 0
 %define dali_bullet_plugin 0
 %define dali_assimp_plugin 0
-%endif
+%define dali_over_tizen_2_2 0
 
-%if "%{profile}" == "common"
+%else
+## profile == common
 %define dali_profile COMMON
 %define dali_feedback_plugin 0
 %define dali_bullet_plugin 0
 %define dali_assimp_plugin 0
+%define dali_over_tizen_2_2 0
+
 %endif
 
 Requires(post): /sbin/ldconfig
@@ -160,6 +163,11 @@ CXXFLAGS+=" -D_ARCH_ARM_ -lgcc"
 CFLAGS+=" -DWAYLAND"
 CXXFLAGS+=" -DWAYLAND"
 configure_flags="--enable-wayland"
+%endif
+
+%if 0%{?dali_tizen_2_2}
+CFLAGS+=" -DTIZEN_OVER_SDK_2_2"
+CXXFLAGS+=" -DTIZEN_OVER_SDK_2_2"
 %endif
 
 libtoolize --force
