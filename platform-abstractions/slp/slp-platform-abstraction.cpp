@@ -67,7 +67,8 @@ const float FONT_SIZE_TABLE[5] =
 SlpPlatformAbstraction::SlpPlatformAbstraction()
 : mResourceLoader(new ResourceLoader),
   mDefaultFontSize(FONT_SIZE_TABLE[1]),
-  mDynamicsFactory(NULL)
+  mDynamicsFactory(NULL),
+  mDataStoragePath( "" )
 {
   int error = FT_Init_FreeType(&mFreeTypeHandle);
   DALI_ASSERT_ALWAYS( error == 0 && "Freetype initialization failed" );
@@ -204,7 +205,18 @@ void SlpPlatformAbstraction::SaveResource(const Integration::ResourceRequest& re
 {
   if (mResourceLoader)
   {
-    mResourceLoader->SaveResource(request);
+    if( request.GetType()->id == Integration::ResourceShader )
+    {
+      std::string path = mDataStoragePath;
+      path += request.GetPath();
+
+      Integration::ResourceRequest newRequest( request.GetId(), *request.GetType(), path, request.GetResource() );
+      mResourceLoader->SaveResource(newRequest);
+    }
+    else
+    {
+      mResourceLoader->SaveResource(request);
+    }
   }
 }
 
@@ -425,6 +437,39 @@ Integration::BitmapPtr SlpPlatformAbstraction::GetGlyphImage( const std::string&
   }
 
   return glyphImage;
+}
+
+bool SlpPlatformAbstraction::LoadShaderBinFile( const std::string& filename, std::vector< unsigned char >& buffer ) const
+{
+  bool result = false;
+
+  std::string path;
+
+  if( mResourceLoader )
+  {
+    path = DALI_SHADERBIN_DIR;
+    path += filename;
+    result = mResourceLoader->LoadFile( path, buffer );
+  }
+
+  if( mResourceLoader && result == false )
+  {
+    path = mDataStoragePath;
+    path += filename;
+    result = mResourceLoader->LoadFile( path, buffer );
+  }
+
+  return result;
+}
+
+void SlpPlatformAbstraction::SetDataStoragePath( const std::string& path )
+{
+  mDataStoragePath = path;
+}
+
+const std::string& SlpPlatformAbstraction::GetDataStoragePath()
+{
+  return mDataStoragePath;
 }
 
 }  // namespace SlpPlatform
