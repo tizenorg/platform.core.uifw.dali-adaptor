@@ -248,6 +248,23 @@ public: // PlatformAbstraction overrides
    */
   virtual Integration::BitmapPtr GetGlyphImage( const std::string& fontFamily, const std::string& fontStyle, float fontSize, uint32_t character ) const;
 
+  /**
+   * @copydoc PlatformAbstraction::LoadShaderBinFile()
+   */
+  virtual bool LoadShaderBinFile( const std::string& filename, std::vector< unsigned char >& buffer ) const;
+
+  /**
+   * Sets path for data/resource storage.
+   * @param[in] path data/resource storage path
+   */
+  void SetDataStoragePath( const std::string& path );
+
+  /**
+   * Gets path for data/resource storage.
+   * @return Path for data/resource storage
+   */
+  const std::string& GetDataStoragePath();
+
 private:
   ResourceLoader* mResourceLoader;
   FT_Library mFreeTypeHandle;       ///< Freetype library
@@ -256,6 +273,8 @@ private:
   float mDefaultFontSize;
   std::string mDefaultThemeFile;
   DynamicsFactory* mDynamicsFactory;
+
+  std::string mDataStoragePath;
 };
 
 }  // namespace SlpPlatform
