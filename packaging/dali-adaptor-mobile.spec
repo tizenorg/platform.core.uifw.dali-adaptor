@@ -232,7 +232,7 @@ exit 0
 ##############################
 
 %files
-%manifest dali-adaptor.manifest-mobile
+%manifest dali-adaptor.manifest-smack
 %defattr(-,root,root,-)
 %{_libdir}/libdali-adap*.so*
 %defattr(-,app,app,-)
