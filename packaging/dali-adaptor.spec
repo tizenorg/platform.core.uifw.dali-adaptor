@@ -134,7 +134,7 @@ Dynamics plugin to wrap the libBulletDynamics libraries
 %define dali_data_rw_dir         /usr/share/dali/
 %define dali_data_ro_dir         /usr/share/dali/
 %define user_font_cache_dir      %{dali_data_rw_dir}/glyphcache/
-%define user_shader_cache_dir    %{dali_data_rw_dir}/core/shaderbin/
+%define user_shader_cache_dir    %{dali_data_ro_dir}/core/shaderbin/
 %define font_preloaded_path      /usr/share/fonts/
 %define font_downloaded_path     /opt/share/fonts/
 %define font_application_path    /usr/share/app_fonts/
@@ -260,7 +260,7 @@ exit 0
 ##############################
 
 %files
-%manifest dali-adaptor.manifest
+%manifest dali-adaptor.manifest-smack
 %defattr(-,root,root,-)
 %{_libdir}/libdali-adap*.so*
 %defattr(-,app,app,-)
