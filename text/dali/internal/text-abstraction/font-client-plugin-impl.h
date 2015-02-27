@@ -87,13 +87,15 @@ struct FontClient::Plugin
                const FontPath& path,
                PointSize26Dot6 pointSize,
                FaceIndex face,
-               const FontMetrics& metrics );
+               const FontMetrics& metrics,
+               bool isColorBitmap = false );
 
     FT_Face mFreeTypeFace;      ///< The FreeType fance.
     FontPath mPath;             ///< The path to the font file name.
     PointSize26Dot6 mPointSize; ///< The font point size.
     FaceIndex mFaceIndex;       ///< The face index.
     FontMetrics mMetrics;       ///< The font metrics.
+    bool mIsColorBitmap;        ///< Font is color bitmap
   };
 
   /**
