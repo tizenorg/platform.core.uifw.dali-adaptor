@@ -85,7 +85,7 @@ struct Framework::Impl
    */
   static bool AppCreate(void *data)
   {
-    return static_cast<Framework*>(data)->SlpAppStatusHandler(APP_CREATE);
+    return static_cast<Framework*>(data)->AppStatusHandler(APP_CREATE, NULL);
   }
 
   /**
@@ -93,7 +93,7 @@ struct Framework::Impl
    */
   static void AppTerminate(void *data)
   {
-    static_cast<Framework*>(data)->SlpAppStatusHandler(APP_TERMINATE);
+    static_cast<Framework*>(data)->AppStatusHandler(APP_TERMINATE, NULL);
   }
 
   /**
@@ -101,7 +101,7 @@ struct Framework::Impl
    */
   static void AppPause(void *data)
   {
-    static_cast<Framework*>(data)->SlpAppStatusHandler(APP_PAUSE);
+    static_cast<Framework*>(data)->AppStatusHandler(APP_PAUSE, NULL);
   }
 
   /**
@@ -109,7 +109,7 @@ struct Framework::Impl
    */
   static void AppResume(void *data)
   {
-    static_cast<Framework*>(data)->SlpAppStatusHandler(APP_RESUME);
+    static_cast<Framework*>(data)->AppStatusHandler(APP_RESUME, NULL);
   }
 
   /**
@@ -117,7 +117,7 @@ struct Framework::Impl
    */
   static void AppLanguageChange(void* data)
   {
-    static_cast<Framework*>(data)->SlpAppStatusHandler(APP_LANGUAGE_CHANGE);
+    static_cast<Framework*>(data)->AppStatusHandler(APP_LANGUAGE_CHANGE, NULL);
   }
 
 };
@@ -211,7 +211,7 @@ void Framework::AbortCallback( )
   }
 }
 
-bool Framework::SlpAppStatusHandler(int type)
+bool Framework::AppStatusHandler(int type, void *bundleData)
 {
   switch (type)
   {
