@@ -52,8 +52,8 @@ struct CallbackData
   /**
    * Constructor
    */
-  CallbackData(CallbackManager::Callback callback, CallbackType type):
-     mCallback(callback),
+  CallbackData( CallbackBase* callback, CallbackType type )
+  :  mCallback(callback),
      mType(type),
      mIdler(NULL),
      mPriority(CallbackManager::DEFAULT_PRIORITY),
@@ -64,8 +64,16 @@ struct CallbackData
   {
   }
 
+  /**
+   * Destructor
+   */
+  ~CallbackData()
+  {
+    delete mCallback;
+  }
+
   // Data
-  CallbackManager::Callback       mCallback;      ///< call back
+  CallbackBase*                   mCallback;      ///< call back
   CallbackType                    mType;          ///< type of call back
 
     // Data for idle / default call backs
@@ -98,7 +106,7 @@ Eina_Bool IdleCallback(void *data)
   callbackData->mRemoveFromContainerFunction(callbackData);
 
   // run the function
-  callbackData->mCallback();
+  CallbackBase::Execute( *callbackData->mCallback );
 
   // remove the idle call back
   ecore_idler_del(callbackData->mIdler);
@@ -125,7 +133,7 @@ Eina_Bool EventHandler(void *data, int type, void *event)
   callbackData->mRemoveFromContainerFunction(callbackData);
 
   // run the call back
-  callbackData->mCallback();
+  CallbackBase::Execute( *callbackData->mCallback );
 
   Eina_Bool returnVal;
 
@@ -159,7 +167,7 @@ void AddStandardCallback(CallbackData *callbackData)
     // run the call back now, then delete it from the container
     if ( callbackData->mExecute )
     {
-      callbackData->mCallback();
+      CallbackBase::Execute( *callbackData->mCallback );
     }
     callbackData->mRemoveFromContainerFunction(callbackData);
     delete callbackData;
@@ -259,7 +267,7 @@ void EcoreCallbackManager::Stop()
   ecore_main_loop_thread_safe_call_sync(MainRemoveAllCallback, this);
 }
 
-bool EcoreCallbackManager::AddCallback(Callback callback, Priority priority)
+bool EcoreCallbackManager::AddCallback(CallbackBase* callback, Priority priority)
 {
   bool added(false);
 
@@ -288,7 +296,7 @@ bool EcoreCallbackManager::AddCallback(Callback callback, Priority priority)
   return added;
 }
 
-bool EcoreCallbackManager::AddEventCallback(Callback callback, int type, EventControl control)
+bool EcoreCallbackManager::AddEventCallback(CallbackBase* callback, int type, EventControl control)
 {
   bool added(false);
 
