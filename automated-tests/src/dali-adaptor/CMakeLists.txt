@@ -5,6 +5,7 @@ SET(RPM_NAME "core-${PKG_NAME}-tests")
 
 SET(CAPI_LIB "dali-adaptor")
 SET(TC_SOURCES
+    utc-Dali-Application.cpp
     utc-Dali-Key.cpp
     utc-Dali-SingletonService.cpp
     utc-Dali-Timer.cpp
