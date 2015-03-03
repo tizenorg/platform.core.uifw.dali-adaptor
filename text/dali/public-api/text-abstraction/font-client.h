@@ -187,6 +187,30 @@ public:
                     PointSize26Dot6 pointSize = DEFAULT_POINT_SIZE,
                     FaceIndex faceIndex = 0 );
 
+  /**
+   * @brief Retrieve the unique identifier for a Fixed Size font
+   *
+   * @param[in] path The path to a font file.
+   * @param pointSize The point size in 26.6 fractional points,the default point size is 12*64.
+   * @param faceIndex The index of the font face (optional).
+   * @return A valud font ID, or zero if the font does not exists.
+   */
+  FontId GetFixedSizeFontId( const FontPath& path, PointSize26Dot6 pointSize = DEFAULT_POINT_SIZE, FaceIndex faceIndex = 0 );
+
+  /**
+   * @brief Retrieve the unique identifier for a Fixed Size font.
+   *
+   * @param[in] fontFamily The font family name.
+   * @param[in] fontStyle  The font style.
+   * @param[in] pointSize The point size in 26.6 fractional points; the default point size is 12*64.
+   * @param[in] faceIndex The index of the font face (optional).
+   * @return A valid font ID, or zero if the font does not exist.
+   */
+  FontId GetFixedSizeFontId( const FontFamily& fontFamily,
+                             const FontStyle& fontStyle,
+                             PointSize26Dot6 pointSize = DEFAULT_POINT_SIZE,
+                             FaceIndex faceIndex = 0 );
+
   ////////////////////////////////////////
   // Font metrics, glyphs and bitmaps.
   ////////////////////////////////////////

@@ -123,6 +123,13 @@ FontId FontClient::FindDefaultFont( Character charcode, PointSize26Dot6 pointSiz
   return mPlugin->FindDefaultFont( charcode, pointSize );
 }
 
+FontId FontClient::GetFixedSizeFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex )
+{
+  CreatePlugin();
+
+  return mPlugin->GetFixedSizeFontId( path, pointSize, faceIndex );
+}
+
 FontId FontClient::GetFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex )
 {
   CreatePlugin();
@@ -141,6 +148,19 @@ FontId FontClient::GetFontId( const FontFamily& fontFamily,
                              fontStyle,
                              pointSize,
                              faceIndex );
+}
+
+FontId FontClient::GetFixedSizeFontId( const FontFamily& fontFamily,
+                                       const FontStyle& fontStyle,
+                                       PointSize26Dot6 pointSize,
+                                       FaceIndex faceIndex )
+{
+  CreatePlugin();
+
+  return mPlugin->GetFixedSizeFontId( fontFamily,
+                                      fontStyle,
+                                      pointSize,
+                                      faceIndex );
 }
 
 void FontClient::GetFontMetrics( FontId fontId, FontMetrics& metrics )

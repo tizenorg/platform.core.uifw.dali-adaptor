@@ -92,6 +92,11 @@ public:
   FontId FindDefaultFont( Character charcode, PointSize26Dot6 pointSize );
 
   /**
+   * @copydoc Dali::FontClient::GetFixedSizeFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex )
+   */
+  FontId GetFixedSizeFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex );
+
+  /**
    * @copydoc Dali::FontClient::GetFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex )
    */
   FontId GetFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex );
@@ -104,6 +109,13 @@ public:
                     PointSize26Dot6 pointSize,
                     FaceIndex faceIndex );
 
+  /**
+   * @copydoc Dali::FontClient::GetFixedSizeFontId(const FontFamily& fontFamily, const FontStyle& fontStyle, PointSize26Dot6 pointSize, FaceIndex faceIndex )
+   */
+  FontId GetFixedSizeFontId( const FontFamily& fontFamily,
+                             const FontStyle& fontStyle,
+                             PointSize26Dot6 pointSize,
+                             FaceIndex faceIndex );
   /**
    * @copydoc Dali::FontClient::GetFontMetrics()
    */

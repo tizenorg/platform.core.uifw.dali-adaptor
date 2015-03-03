@@ -105,6 +105,22 @@ FontId FontClient::GetFontId( const FontFamily& fontFamily,
                                              faceIndex );
 }
 
+FontId FontClient::GetFixedSizeFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex )
+{
+  return GetImplementation(*this).GetFixedSizeFontId( path, pointSize, faceIndex );
+}
+
+FontId FontClient::GetFixedSizeFontId( const FontFamily& fontFamily,
+                                       const FontStyle& fontStyle,
+                                       PointSize26Dot6 pointSize,
+                                       FaceIndex faceIndex )
+{
+  return GetImplementation(*this).GetFixedSizeFontId( fontFamily,
+                                                      fontStyle,
+                                                      pointSize,
+                                                      faceIndex );
+}
+
 void FontClient::GetFontMetrics( FontId fontId, FontMetrics& metrics )
 {
   GetImplementation(*this).GetFontMetrics( fontId, metrics );
