@@ -105,6 +105,22 @@ FontId FontClient::GetFontId( const FontFamily& fontFamily,
                                              faceIndex );
 }
 
+FontId FontClient::GetFixedSizeFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex )
+{
+  return GetImplementation(*this).GetFixedSizeFontId( path, pointSize, faceIndex );
+}
+
+FontId FontClient::GetFixedSizeFontId( const FontFamily& fontFamily,
+                                       const FontStyle& fontStyle,
+                                       PointSize26Dot6 pointSize,
+                                       FaceIndex faceIndex )
+{
+  return GetImplementation(*this).GetFixedSizeFontId( fontFamily,
+                                                      fontStyle,
+                                                      pointSize,
+                                                      faceIndex );
+}
+
 void FontClient::GetFontMetrics( FontId fontId, FontMetrics& metrics )
 {
   GetImplementation(*this).GetFontMetrics( fontId, metrics );
@@ -123,6 +139,28 @@ bool FontClient::GetGlyphMetrics( GlyphInfo* array, uint32_t size, bool horizont
 BitmapImage FontClient::CreateBitmap( FontId fontId, GlyphIndex glyphIndex )
 {
   return GetImplementation(*this).CreateBitmap( fontId, glyphIndex );
+}
+
+bool FontClient::IsScalable( const FontPath& path )
+{
+  return GetImplementation(*this).IsScalable( path );;
+}
+
+bool FontClient::IsScalable( const FontFamily& fontFamily, const FontStyle& style )
+{
+  return GetImplementation(*this).IsScalable( fontFamily, style );
+}
+
+void FontClient::GetFixedSizes( const FontPath& path, Dali::Vector< PointSize26Dot6>& sizes )
+{
+  GetImplementation(*this).GetFixedSizes( path, sizes );
+}
+
+void FontClient::GetFixedSizes( const FontFamily& fontFamily,
+                                const FontStyle& style,
+                                Dali::Vector< PointSize26Dot6 >& sizes )
+{
+  GetImplementation(*this).GetFixedSizes( fontFamily, style, sizes );
 }
 
 FontClient::FontClient( Internal::FontClient* internal )

@@ -92,6 +92,11 @@ public:
   FontId FindDefaultFont( Character charcode, PointSize26Dot6 pointSize );
 
   /**
+   * @copydoc Dali::FontClient::GetFixedSizeFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex )
+   */
+  FontId GetFixedSizeFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex );
+
+  /**
    * @copydoc Dali::FontClient::GetFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex )
    */
   FontId GetFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex );
@@ -103,6 +108,36 @@ public:
                     const FontStyle& fontStyle,
                     PointSize26Dot6 pointSize,
                     FaceIndex faceIndex );
+
+  /**
+   * @copydoc Dali::FontClient::GetFixedSizeFontId(const FontFamily& fontFamily, const FontStyle& fontStyle, PointSize26Dot6 pointSize, FaceIndex faceIndex )
+   */
+  FontId GetFixedSizeFontId( const FontFamily& fontFamily,
+                             const FontStyle& fontStyle,
+                             PointSize26Dot6 pointSize,
+                             FaceIndex faceIndex );
+
+  /**
+   * @copydoc Dali::FontClient::IsScalable(const FontPath& path )
+   */
+  bool IsScalable( const FontPath& path );
+
+  /**
+   * @copydoc Dali::FontClient::IsScalable( const FontFamily& fontFamily, const FontStyle& fontStyle )
+   */
+  bool IsScalable( const FontFamily& fontFamily, const FontStyle& style );
+
+  /**
+   * @copydoc Dali::FontClient::GetFixedSizes( const FontPath& path, Dali::Vector< PointSize26Dot6>& sizes )
+   */
+  void GetFixedSizes( const FontPath& path, Dali::Vector< PointSize26Dot6>& sizes );
+
+  /**
+   * @copydoc Dali::FontClient::GetFixedSizes( const FontFamily& fontFamily, const FontStyle& fontStyle, Dali::Vector< PointSize26Dot6>& sizes )
+   */
+  void GetFixedSizes( const FontFamily& fontFamily,
+                      const FontStyle& style,
+                      Dali::Vector< PointSize26Dot6 >& sizes );
 
   /**
    * @copydoc Dali::FontClient::GetFontMetrics()

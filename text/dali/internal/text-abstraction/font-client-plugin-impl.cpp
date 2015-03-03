@@ -47,6 +47,8 @@ namespace TextAbstraction
 namespace Internal
 {
 
+const bool FONT_FIXED_SIZE_BITMAP( true );
+
 FontClient::Plugin::FontDescriptionCacheItem::FontDescriptionCacheItem( const FontFamily& fontFamily,
                                                                         const FontStyle& fontStyle,
                                                                         FontDescriptionId index )
@@ -67,12 +69,14 @@ FontClient::Plugin::CacheItem::CacheItem( FT_Face ftFace,
                                           const FontPath& path,
                                           PointSize26Dot6 pointSize,
                                           FaceIndex face,
-                                          const FontMetrics& metrics )
+                                          const FontMetrics& metrics,
+                                          bool isFixedSizeBitmap )
 : mFreeTypeFace( ftFace ),
   mPath( path ),
   mPointSize( pointSize ),
   mFaceIndex( face ),
-  mMetrics( metrics )
+  mMetrics( metrics ),
+  mIsFixedSizeBitmap( isFixedSizeBitmap )
 {}
 
 FontClient::Plugin::Plugin( unsigned int horizontalDpi,
@@ -275,6 +279,30 @@ FontId FontClient::Plugin::GetFontId( const FontPath& path,
   return id;
 }
 
+FontId FontClient::Plugin::GetFixedSizeFontId( const FontPath& path,
+                                               PointSize26Dot6 pointSize,
+                                               FaceIndex faceIndex,
+                                               bool cacheDescription )
+{
+  FontId id( 0 );
+
+  if( NULL != mFreeTypeLibrary )
+  {
+    FontId foundId(0);
+    if( FindFont( path, pointSize, faceIndex, foundId ) )
+    {
+      id = foundId;
+    }
+    else
+    {
+      id = CreateFixedSizeFont( path, pointSize, faceIndex, cacheDescription );
+    }
+  }
+
+  return id;
+}
+
+
 FontId FontClient::Plugin::GetFontId( const FontFamily& fontFamily,
                                       const FontStyle& fontStyle,
                                       PointSize26Dot6 pointSize,
@@ -306,44 +334,7 @@ FontId FontClient::Plugin::GetFontId( const FontFamily& fontFamily,
                           validatedFontId ) )
   {
     // Use font config to validate the font family name and font style.
-
-    // Create a font pattern.
-    FcPattern* fontFamilyPattern = CreateFontFamilyPattern( fontFamily,
-                                                            fontStyle );
-
-    FcResult result = FcResultMatch;
-
-    // match the pattern
-    FcPattern* match = FcFontMatch( NULL /* use default configure */, fontFamilyPattern, &result );
-
-    if( match )
-    {
-      // Get the path to the font file name.
-      FontDescription description;
-      GetFcString( match, FC_FILE, description.path );
-      GetFcString( match, FC_FAMILY, description.family );
-      GetFcString( match, FC_STYLE, description.style );
-
-      // Set the index to the vector of paths to font file names.
-      validatedFontId = mFontDescriptionCache.size();
-
-      // Add the path to the cache.
-      mFontDescriptionCache.push_back( description );
-
-      // Cache the index and the pair font family name, font style.
-      FontDescriptionCacheItem item( fontFamily, fontStyle, validatedFontId );
-      mValidatedFontCache.push_back( item );
-
-      // destroyed the matched pattern
-      FcPatternDestroy( match );
-    }
-    else
-    {
-      DALI_LOG_ERROR( "FontClient::Plugin::GetFontId failed for font %s %s\n", fontFamily.c_str(), fontStyle.c_str() );
-    }
-
-    // destroy the pattern
-    FcPatternDestroy( fontFamilyPattern );
+    ValidateFont( fontFamily, fontStyle, validatedFontId );
   }
 
   // Check if exists a pair 'validatedFontId, pointSize' in the cache.
@@ -366,6 +357,92 @@ FontId FontClient::Plugin::GetFontId( const FontFamily& fontFamily,
 
   return fontId;
 }
+
+FontId FontClient::Plugin::GetFixedSizeFontId( const FontFamily& fontFamily,
+                                               const FontStyle& fontStyle,
+                                               PointSize26Dot6 pointSize,
+                                               FaceIndex faceIndex )
+{
+
+  // The font id to be returned.
+  FontId fontId = 0u;
+
+  // Check first if the pair font family and style have been validated before.
+  FontDescriptionId validatedFontId = 0u;
+
+  if( !FindValidatedFont( fontFamily,
+                          fontStyle,
+                          validatedFontId ) )
+  {
+    // Use font config to validate the font family name and font style.
+    ValidateFont( fontFamily, fontStyle, validatedFontId );
+  }
+
+  // Check if exists a pair 'validatedFontId, pointSize' in the cache.
+  if( !FindFont( validatedFontId, pointSize, fontId ) )
+  {
+    // Retrieve the font file name path.
+    const FontDescription& description = *( mFontDescriptionCache.begin() + validatedFontId );
+
+    // Retrieve the font id. Do not cache the description as it has been already cached.
+    fontId = GetFixedSizeFontId( description.path,
+                                 pointSize,
+                                 faceIndex,
+                                 false );
+
+    // Cache the pair 'validatedFontId, pointSize' to improve the following queries.
+    mFontIdCache.push_back( FontIdCacheItem( validatedFontId,
+                                             pointSize,
+                                             fontId ) );
+  }
+
+  return fontId;
+}
+
+void FontClient::Plugin::ValidateFont( const FontFamily& fontFamily,
+                                       const FontStyle& fontStyle,
+                                       FontDescriptionId& validatedFontId )
+{
+  // Create a font pattern.
+  FcPattern* fontFamilyPattern = CreateFontFamilyPattern( fontFamily,
+                                                            fontStyle );
+
+  FcResult result = FcResultMatch;
+
+  // match the pattern
+  FcPattern* match = FcFontMatch( NULL /* use default configure */, fontFamilyPattern, &result );
+
+  if( match )
+  {
+    // Get the path to the font file name.
+    FontDescription description;
+    GetFcString( match, FC_FILE, description.path );
+    GetFcString( match, FC_FAMILY, description.family );
+    GetFcString( match, FC_STYLE, description.style );
+
+    // Set the index to the vector of paths to font file names.
+    validatedFontId = mFontDescriptionCache.size();
+
+    // Add the path to the cache.
+    mFontDescriptionCache.push_back( description );
+
+    // Cache the index and the pair font family name, font style.
+    FontDescriptionCacheItem item( fontFamily, fontStyle, validatedFontId );
+    mValidatedFontCache.push_back( item );
+
+    // destroyed the matched pattern
+    FcPatternDestroy( match );
+  }
+  else
+  {
+    DALI_LOG_ERROR( "FontClient::Plugin::ValidateFont failed for font %s %s\n", fontFamily.c_str(), fontStyle.c_str() );
+  }
+
+  // destroy the pattern
+  FcPatternDestroy( fontFamilyPattern );
+}
+
+
 
 void FontClient::Plugin::GetFontMetrics( FontId fontId,
                                          FontMetrics& metrics )
@@ -412,6 +489,29 @@ bool FontClient::Plugin::GetGlyphMetrics( GlyphInfo* array,
     {
       FT_Face ftFace = mFontCache[fontId-1].mFreeTypeFace;
 
+      // Check to see if we should be loading a Fixed Size bitmap?
+      if ( mFontCache[fontId-1].mIsFixedSizeBitmap )
+      {
+        int error = FT_Load_Glyph( ftFace, array[i].index, FT_LOAD_COLOR );
+        if ( FT_Err_Ok == error )
+        {
+          // TODO passing height for metrics, should store width, height and advance
+
+          float height = mFontCache[ fontId -1 ].mMetrics.height;
+          array[i].width = height;
+          array[i].height = height;
+          array[i].advance = height;
+          array[i].xBearing = 0.0f;
+          array[i].yBearing = 0.0f;
+          return success;
+        }
+        else
+        {
+          DALI_LOG_ERROR( "FreeType Bitmap Load_Glyph error %d\n", error );
+          return false;
+        }
+      }
+
       int error = FT_Load_Glyph( ftFace, array[i].index, FT_LOAD_DEFAULT );
 
       if( FT_Err_Ok == error )
@@ -455,7 +555,17 @@ BitmapImage FontClient::Plugin::CreateBitmap( FontId fontId,
   {
     FT_Face ftFace = mFontCache[fontId-1].mFreeTypeFace;
 
-    FT_Error error = FT_Load_Glyph( ftFace, glyphIndex, FT_LOAD_DEFAULT );
+    FT_Error error;
+
+    // Check to see if this is fixed size bitmap
+    if ( mFontCache[fontId-1].mIsFixedSizeBitmap )
+    {
+      error = FT_Load_Glyph( ftFace, glyphIndex, FT_LOAD_COLOR );
+    }
+    else
+    {
+      error = FT_Load_Glyph( ftFace, glyphIndex, FT_LOAD_DEFAULT );
+    }
     if( FT_Err_Ok == error )
     {
       FT_Glyph glyph;
@@ -467,26 +577,24 @@ BitmapImage FontClient::Plugin::CreateBitmap( FontId fontId,
         if( glyph->format != FT_GLYPH_FORMAT_BITMAP )
         {
           error = FT_Glyph_To_Bitmap( &glyph, FT_RENDER_MODE_NORMAL, 0, 1 );
+          if ( FT_Err_Ok == error )
+          {
+            FT_BitmapGlyph bitmapGlyph = (FT_BitmapGlyph)glyph;
+            ConvertBitmap( bitmap, bitmapGlyph->bitmap );
+          }
+          else
+          {
+            DALI_LOG_ERROR( "FT_Get_Glyph Failed with error: %d\n", error );
+          }
         }
         else
         {
-          DALI_LOG_ERROR( "FT_Glyph_To_Bitmap Failed with error: %d\n", error );
+          ConvertBitmap( bitmap, ftFace->glyph->bitmap );
         }
-      }
-      else
-      {
-        DALI_LOG_ERROR( "FT_Get_Glyph Failed with error: %d\n", error );
-      }
 
-      if( FT_Err_Ok == error )
-      {
-        // Access the underlying bitmap data
-        FT_BitmapGlyph bitmapGlyph = (FT_BitmapGlyph)glyph;
-        ConvertBitmap( bitmap, bitmapGlyph->bitmap );
+        // Created FT_Glyph object must be released with FT_Done_Glyph
+        FT_Done_Glyph( glyph );
       }
-
-      // Created FT_Glyph object must be released with FT_Done_Glyph
-      FT_Done_Glyph( glyph );
     }
     else
     {
@@ -605,6 +713,85 @@ bool FontClient::Plugin::GetFcString( const FcPattern* const pattern,
   return false;
 }
 
+FontId FontClient::Plugin::CreateFixedSizeFont( const FontPath& path,
+                                                PointSize26Dot6 pointSize,
+                                                FaceIndex faceIndex,
+                                                bool cacheDescription )
+{
+  FontId id( 0 );
+
+  // Create & cache new font face
+  FT_Face ftFace;
+  int error = FT_New_Face( mFreeTypeLibrary,
+                           path.c_str(),
+                           0,
+                           &ftFace );
+
+  if( FT_Err_Ok == error )
+  {
+    // Check that we have fixed size bitmaps
+    if ( ftFace->num_fixed_sizes && ftFace->available_sizes )
+    {
+      // Ensure this size is available
+      for ( int i = 0; i < ftFace->num_fixed_sizes; ++i )
+      {
+        if ( pointSize == ftFace->available_sizes[ i ].size )
+        {
+          // Tell Freetype to use this size
+          error = FT_Select_Size( ftFace, i );
+          if ( FT_Err_Ok != error )
+          {
+            DALI_LOG_ERROR( "FreeType Select_Size error: %d\n", error );
+          }
+          else
+          {
+            // Indicate that the font is a fixed sized bitmap
+            FontMetrics metrics( 0.0f,
+                                 0.0f,
+                                 static_cast< float >( ftFace->available_sizes[ i ].height ) );
+
+            mFontCache.push_back( CacheItem( ftFace, path, pointSize, faceIndex, metrics, FONT_FIXED_SIZE_BITMAP ) );
+            id = mFontCache.size();
+
+            if( cacheDescription )
+            {
+              FontDescription description;
+              description.path = path;
+              description.family = FontFamily( ftFace->family_name );
+              description.style = FontStyle( ftFace->style_name );
+
+              mFontDescriptionCache.push_back( description );
+            }
+            return id;
+          }
+        }
+      }
+
+      // Can't find this size
+      std::stringstream sizes;
+      for ( int i = 0; i < ftFace->num_fixed_sizes; ++i )
+      {
+        if ( i )
+        {
+          sizes << ", ";
+        }
+        sizes << ftFace->available_sizes[ i ].size;
+      }
+      DALI_LOG_ERROR( "FreeType Font: %s, does not contain Bitmaps of size: %d. Available sizes are: %s\n",
+                       path.c_str(), pointSize, sizes.str().c_str() );
+    }
+    else
+    {
+      DALI_LOG_ERROR( "FreeType Font: %s does not contain Bitmaps\n", path.c_str() );
+    }
+  }
+  else
+  {
+    DALI_LOG_ERROR( "FreeType New_Face error: %d for %s\n", error, path.c_str() );
+  }
+  return id;
+}
+
 FontId FontClient::Plugin::CreateFont( const FontPath& path,
                                        PointSize26Dot6 pointSize,
                                        FaceIndex faceIndex,
@@ -629,7 +816,6 @@ FontId FontClient::Plugin::CreateFont( const FontPath& path,
 
     if( FT_Err_Ok == error )
     {
-      id = mFontCache.size() + 1;
 
       FT_Size_Metrics& ftMetrics = ftFace->size->metrics;
 
@@ -638,6 +824,7 @@ FontId FontClient::Plugin::CreateFont( const FontPath& path,
                            static_cast< float >( ftMetrics.height    ) * FROM_266 );
 
       mFontCache.push_back( CacheItem( ftFace, path, pointSize, faceIndex, metrics ) );
+      id = mFontCache.size();
 
       if( cacheDescription )
       {
@@ -651,7 +838,7 @@ FontId FontClient::Plugin::CreateFont( const FontPath& path,
     }
     else
     {
-      DALI_LOG_ERROR( "FreeType Set_Char_Size error: %d for pointSize %d\n", pointSize );
+      DALI_LOG_ERROR( "FreeType Set_Char_Size error: %d for pointSize %d\n", error, pointSize );
     }
   }
   else
@@ -667,15 +854,35 @@ void FontClient::Plugin::ConvertBitmap( BitmapImage& destBitmap,
 {
   if( srcBitmap.width*srcBitmap.rows > 0 )
   {
-    // TODO - Support all pixel modes
-    if( FT_PIXEL_MODE_GRAY == srcBitmap.pixel_mode )
+    switch( srcBitmap.pixel_mode )
     {
-      if( srcBitmap.pitch == static_cast< int >( srcBitmap.width ) )
+      case FT_PIXEL_MODE_GRAY:
       {
-        destBitmap = BitmapImage::New( srcBitmap.width, srcBitmap.rows, Pixel::L8 );
+        if( srcBitmap.pitch == static_cast< int >( srcBitmap.width ) )
+        {
+          destBitmap = BitmapImage::New( srcBitmap.width, srcBitmap.rows, Pixel::L8 );
 
-        PixelBuffer* destBuffer = destBitmap.GetBuffer();
-        memcpy( destBuffer, srcBitmap.buffer, srcBitmap.width*srcBitmap.rows );
+          PixelBuffer* destBuffer = destBitmap.GetBuffer();
+          memcpy( destBuffer, srcBitmap.buffer, srcBitmap.width*srcBitmap.rows );
+        }
+        break;
+      }
+
+      case FT_PIXEL_MODE_BGRA:
+      {
+        if ( srcBitmap.pitch == static_cast< int >( srcBitmap.width << 2 ) )
+        {
+          destBitmap = BitmapImage::New( srcBitmap.width, srcBitmap.rows, Pixel::BGRA8888 );
+
+          PixelBuffer* destBuffer = destBitmap.GetBuffer();
+          memcpy( destBuffer, srcBitmap.buffer, srcBitmap.width*srcBitmap.rows*4 );
+        }
+        break;
+      }
+      default:
+      {
+        DALI_LOG_ERROR( "FontClient Unable to create Bitmap of this PixelType\n" );
+        break;
       }
     }
   }
@@ -753,6 +960,87 @@ bool FontClient::Plugin::FindFont( FontDescriptionId validatedFontId,
   }
 
   return false;
+}
+
+bool FontClient::Plugin::IsScalable( const FontPath& path )
+{
+  FT_Face ftFace;
+  int error = FT_New_Face( mFreeTypeLibrary,
+                           path.c_str(),
+                           0,
+                           &ftFace );
+  if( FT_Err_Ok != error )
+  {
+    DALI_LOG_ERROR( "FreeType Cannot check font: %s\n", path.c_str() );
+  }
+  return ( ftFace->num_fixed_sizes == 0 );
+}
+
+bool FontClient::Plugin::IsScalable( const FontFamily& fontFamily, const FontStyle& fontStyle )
+{
+  // Create a font pattern.
+  FcPattern* fontFamilyPattern = CreateFontFamilyPattern( fontFamily,
+                                                          fontStyle );
+
+  FcResult result = FcResultMatch;
+
+  // match the pattern
+  FcPattern* match = FcFontMatch( NULL /* use default configure */, fontFamilyPattern, &result );
+
+  if( match )
+  {
+    // Get the path to the font file name.
+    FontPath path;
+    GetFcString( match, FC_FILE, path );
+    return IsScalable( path );
+  }
+  DALI_LOG_ERROR( "FreeType Cannot check font: %s %s\n", fontFamily.c_str(), fontStyle.c_str() );
+  return true;
+}
+
+void FontClient::Plugin::GetFixedSizes( const FontPath& path, Dali::Vector< PointSize26Dot6 >& sizes )
+{
+  FT_Face ftFace;
+  int error = FT_New_Face( mFreeTypeLibrary,
+                           path.c_str(),
+                           0,
+                           &ftFace );
+  if( FT_Err_Ok != error )
+  {
+    DALI_LOG_ERROR( "FreeType Cannot check font: %s\n", path.c_str() );
+  }
+
+  // Fetch the number of fixed sizes available
+  if ( ftFace->num_fixed_sizes && ftFace->available_sizes )
+  {
+    for ( int i = 0; i < ftFace->num_fixed_sizes; ++i )
+    {
+      sizes.PushBack( ftFace->available_sizes[ i ].size );
+    }
+  }
+}
+
+void FontClient::Plugin::GetFixedSizes( const FontFamily& fontFamily,
+                                        const FontStyle& fontStyle,
+                                        Dali::Vector< PointSize26Dot6 >& sizes )
+{
+  // Create a font pattern.
+  FcPattern* fontFamilyPattern = CreateFontFamilyPattern( fontFamily,
+                                                          fontStyle );
+
+  FcResult result = FcResultMatch;
+
+  // match the pattern
+  FcPattern* match = FcFontMatch( NULL /* use default configure */, fontFamilyPattern, &result );
+
+  if( match )
+  {
+    // Get the path to the font file name.
+    FontPath path;
+    GetFcString( match, FC_FILE, path );
+    return GetFixedSizes( path, sizes );
+  }
+  DALI_LOG_ERROR( "FreeType Cannot check font: %s %s\n", fontFamily.c_str(), fontStyle.c_str() );
 }
 
 } // namespace Internal

@@ -87,13 +87,15 @@ struct FontClient::Plugin
                const FontPath& path,
                PointSize26Dot6 pointSize,
                FaceIndex face,
-               const FontMetrics& metrics );
+               const FontMetrics& metrics,
+               bool isFixedSizeBitmap = false );
 
-    FT_Face mFreeTypeFace;      ///< The FreeType fance.
+    FT_Face mFreeTypeFace;      ///< The FreeType face.
     FontPath mPath;             ///< The path to the font file name.
     PointSize26Dot6 mPointSize; ///< The font point size.
     FaceIndex mFaceIndex;       ///< The face index.
     FontMetrics mMetrics;       ///< The font metrics.
+    bool mIsFixedSizeBitmap;    ///< Font is fixed size bitmap.
   };
 
   /**
@@ -151,6 +153,13 @@ struct FontClient::Plugin
   FontId FindDefaultFont( Character charcode, PointSize26Dot6 pointSize );
 
   /**
+   * @see Dali::FontClient::GetFixedSizeFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex )
+   *
+   * @param[in] cacheDescription Whether to cache the font description.
+   */
+  FontId GetFixedSizeFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex, bool cacheDescription = true );
+
+  /**
    * @see Dali::FontClient::GetFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex )
    *
    * @param[in] cacheDescription Whether to cache the font description.
@@ -164,6 +173,36 @@ struct FontClient::Plugin
                     const FontStyle& fontStyle,
                     PointSize26Dot6 pointSize,
                     FaceIndex faceIndex );
+
+  /**
+   * @copydoc Dali::FontClient::GetFixedSizeFontId(const FontFamily& fontFamily, const FontStyle& fontStyle, PointSize26Dot6 pointSize, FaceIndex faceIndex )
+   */
+  FontId GetFixedSizeFontId( const FontFamily& fontFamily,
+                             const FontStyle& fontStyle,
+                             PointSize26Dot6 pointSize,
+                             FaceIndex faceIndex );
+
+  /**
+   * @copydoc Dali::FontClient::IsScalable(const FontPath& path )
+   */
+  bool IsScalable( const FontPath& path );
+
+  /**
+   * @copydoc Dali::FontClient::IsScalable( const FontFamily& fontFamily, const FontStyle& fontStyle )
+   */
+  bool IsScalable( const FontFamily& fontFamily, const FontStyle& fontStyle );
+
+  /**
+   * @copydoc Dali::FontClient::GetFixedSizes( const FontPath& path, Dali::Vector< PointSize26Dot6>& sizes )
+   */
+  void GetFixedSizes( const FontPath& path, Dali::Vector< PointSize26Dot6>& sizes );
+
+  /**
+   * @copydoc Dali::FontClient::GetFixedSizes( const FontFamily& fontFamily, const FontStyle& fontStyle, Dali::Vector< PointSize26Dot6>& sizes )
+   */
+  void GetFixedSizes( const FontFamily& fontFamily,
+                      const FontStyle& fontStyle,
+                      Dali::Vector< PointSize26Dot6 >& sizes );
 
   /**
    * @copydoc Dali::FontClient::GetFontMetrics()
@@ -236,6 +275,18 @@ private:
   FontId CreateFont( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex, bool cacheDescription );
 
   /**
+   * @brief Creates a fixed size font
+   *
+   * @param[in] path The path to the font file name.
+   * @param[in] pointSize The font point size( must be an available size ).
+   * @param[in] faceIndex A face index.
+   * @param[in] cacheDescription Whether to cache the font description.
+   *
+   * @return The font id.
+   */
+  FontId CreateFixedSizeFont( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex, bool cacheDescription );
+
+  /**
    *
    * @param[in] destBitmap
    * @param[in] srcBitmap
@@ -282,6 +333,17 @@ private:
   bool FindFont( FontDescriptionId validatedFontId,
                  PointSize26Dot6 pointSize,
                  FontId& fontId );
+
+  /**
+   * @brief Validate a font family and style
+   *
+   * @param[in] fontFamily Font Family to validate
+   * @param[in] fontStyle Font Style to validate
+   * @param[out] validatedFontId Result of validation
+   */
+  void ValidateFont( const FontFamily& fontFamily,
+                     const FontStyle& fontStyle,
+                     FontDescriptionId& validatedFontId );
 
   FT_Library mFreeTypeLibrary; ///< A handle to a FreeType library instance.
 

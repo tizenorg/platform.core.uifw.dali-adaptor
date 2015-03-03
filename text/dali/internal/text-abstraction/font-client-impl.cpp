@@ -123,6 +123,43 @@ FontId FontClient::FindDefaultFont( Character charcode, PointSize26Dot6 pointSiz
   return mPlugin->FindDefaultFont( charcode, pointSize );
 }
 
+FontId FontClient::GetFixedSizeFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex )
+{
+  CreatePlugin();
+
+  return mPlugin->GetFixedSizeFontId( path, pointSize, faceIndex );
+}
+
+bool FontClient::IsScalable( const FontPath& path )
+{
+  CreatePlugin();
+
+  return mPlugin->IsScalable( path );
+}
+
+bool FontClient::IsScalable( const FontFamily& fontFamily, const FontStyle& style )
+{
+  CreatePlugin();
+
+  return mPlugin->IsScalable( fontFamily, style );
+}
+
+void FontClient::GetFixedSizes( const FontPath& path, Dali::Vector< PointSize26Dot6>& sizes )
+{
+  CreatePlugin();
+
+  mPlugin->GetFixedSizes( path, sizes );
+}
+
+void FontClient::GetFixedSizes( const FontFamily& fontFamily,
+                                const FontStyle& style,
+                                Dali::Vector< PointSize26Dot6 >& sizes )
+{
+  CreatePlugin();
+
+  mPlugin->GetFixedSizes( fontFamily, style, sizes );
+}
+
 FontId FontClient::GetFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex )
 {
   CreatePlugin();
@@ -141,6 +178,19 @@ FontId FontClient::GetFontId( const FontFamily& fontFamily,
                              fontStyle,
                              pointSize,
                              faceIndex );
+}
+
+FontId FontClient::GetFixedSizeFontId( const FontFamily& fontFamily,
+                                       const FontStyle& fontStyle,
+                                       PointSize26Dot6 pointSize,
+                                       FaceIndex faceIndex )
+{
+  CreatePlugin();
+
+  return mPlugin->GetFixedSizeFontId( fontFamily,
+                                      fontStyle,
+                                      pointSize,
+                                      faceIndex );
 }
 
 void FontClient::GetFontMetrics( FontId fontId, FontMetrics& metrics )
