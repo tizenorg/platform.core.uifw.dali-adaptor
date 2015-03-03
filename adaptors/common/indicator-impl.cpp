@@ -97,58 +97,50 @@ const char* MESH_FRAGMENT_SHADER =
 "  gl_FragColor = vColor*uColor;\n"
 "}\n";
 
-// Copied from elm_win.h
-
-/**
- * Defines the type modes of indicator that can be shown
- * If the indicator can support several type of indicator,
- * you can use this enum value to deal with different type of indicator
- */
-typedef enum
-{
-   ELM_WIN_INDICATOR_TYPE_UNKNOWN, /**< Unknown indicator type mode */
-   ELM_WIN_INDICATOR_TYPE_1, /**< Type 0 the the indicator */
-   ELM_WIN_INDICATOR_TYPE_2, /**< Type 1 the indicator */
-} Elm_Win_Indicator_Type_Mode;
-
-// Copied from ecore_evas_extn.c
+// Copied from ecore_evas_extn_engine.h
 
 enum // opcodes
 {
-  OP_RESIZE,
-  OP_SHOW,
-  OP_HIDE,
-  OP_FOCUS,
-  OP_UNFOCUS,
-  OP_UPDATE,
-  OP_UPDATE_DONE,
-  OP_LOCK_FILE,
-  OP_SHM_REF,
-  OP_EV_MOUSE_IN,
-  OP_EV_MOUSE_OUT,
-  OP_EV_MOUSE_UP,
-  OP_EV_MOUSE_DOWN,
-  OP_EV_MOUSE_MOVE,
-  OP_EV_MOUSE_WHEEL,
-  OP_EV_MULTI_UP,
-  OP_EV_MULTI_DOWN,
-  OP_EV_MULTI_MOVE,
-  OP_EV_KEY_UP,
-  OP_EV_KEY_DOWN,
-  OP_EV_HOLD,
-  OP_MSG_PARENT,
-  OP_MSG,
-  OP_PIXMAP_REF
+   OP_RESIZE,
+   OP_SHOW,
+   OP_HIDE,
+   OP_FOCUS,
+   OP_UNFOCUS,
+   OP_UPDATE,
+   OP_UPDATE_DONE,
+   OP_SHM_REF0,
+   OP_SHM_REF1,
+   OP_SHM_REF2,
+   OP_PROFILE_CHANGE_REQUEST,
+   OP_PROFILE_CHANGE_DONE,
+   OP_EV_MOUSE_IN,
+   OP_EV_MOUSE_OUT,
+   OP_EV_MOUSE_UP,
+   OP_EV_MOUSE_DOWN,
+   OP_EV_MOUSE_MOVE,
+   OP_EV_MOUSE_WHEEL,
+   OP_EV_MULTI_UP,
+   OP_EV_MULTI_DOWN,
+   OP_EV_MULTI_MOVE,
+   OP_EV_KEY_UP,
+   OP_EV_KEY_DOWN,
+   OP_EV_HOLD,
+   OP_MSG_PARENT,
+   OP_MSG
 };
+
+// Copied from ecore_private.h
+
+const int SHARED_FILE_PATH_MAX( 4096 );
 
 // Copied from elm_conform.c
 
-const int MSG_DOMAIN_CONTROL_INDICATOR(0x10001);
-const int MSG_ID_INDICATOR_REPEAT_EVENT(0x10002);
-const int MSG_ID_INDICATOR_ROTATION(0x10003);
-const int MSG_ID_INDICATOR_OPACITY(0X1004);
-const int MSG_ID_INDICATOR_TYPE(0X1005);
-const int MSG_ID_INDICATOR_START_ANIMATION(0X10006);
+const int MSG_DOMAIN_CONTROL_INDICATOR( 0x10001 );
+const int MSG_ID_INDICATOR_REPEAT_EVENT( 0x10002 );
+const int MSG_ID_INDICATOR_ROTATION( 0x10003 );
+const int MSG_ID_INDICATOR_OPACITY( 0X1004 );
+const int MSG_ID_INDICATOR_TYPE( 0X1005 );
+const int MSG_ID_INDICATOR_START_ANIMATION( 0X10006 );
 
 struct IpcDataUpdate
 {
@@ -372,8 +364,6 @@ Indicator::Indicator( Adaptor* adaptor, Dali::Window::WindowOrientation orientat
   mState( DISCONNECTED ),
   mAdaptor(adaptor),
   mServerConnection( NULL ),
-  mLock( NULL ),
-  mSharedFile( NULL ),
   mObserver( observer ),
   mOrientation( orientation ),
   mRotation( 0 ),
@@ -381,7 +371,8 @@ Indicator::Indicator( Adaptor* adaptor, Dali::Window::WindowOrientation orientat
   mImageHeight( 0 ),
   mVisible( Dali::Window::INVISIBLE ),
   mIsShowing( true ),
-  mIsAnimationPlaying( false )
+  mIsAnimationPlaying( false ),
+  mCurrentSharedFile( 0 )
 {
   mIndicatorImageActor = Dali::ImageActor::New();
   mIndicatorImageActor.SetBlendFunc( Dali::BlendingFactor::ONE, Dali::BlendingFactor::ONE_MINUS_SRC_ALPHA,
@@ -479,7 +470,7 @@ void Indicator::Open( Dali::Window::WindowOrientation orientation )
 
 void Indicator::Close()
 {
-  DALI_LOG_TRACE_METHOD_FMT( gIndicatorLogFilter, "State: %s\n", STATE_DEBUG_STRING(mState) );
+  DALI_LOG_TRACE_METHOD_FMT( gIndicatorLogFilter, "State: %s", STATE_DEBUG_STRING(mState) );
 
   if( mState == CONNECTED )
   {
@@ -507,7 +498,7 @@ void Indicator::SetVisible( Dali::Window::IndicatorVisibleMode visibleMode, bool
     // If we were previously hidden, then we should update the image data before we display the indicator
     if ( mVisible == Dali::Window::INVISIBLE )
     {
-      UpdateImageData();
+      UpdateImageData( mCurrentSharedFile );
     }
     if ( visibleMode != Dali::Window::INVISIBLE )
     {
@@ -762,34 +753,10 @@ void Indicator::Disconnect()
 
   mState = DISCONNECTED;
 
-  delete mLock;
-  mLock = NULL;
-
-  delete mSharedFile;
-  mSharedFile = NULL;
-
   delete mServerConnection;
   mServerConnection = NULL;
-}
 
-void Indicator::NewLockFile( Ecore_Ipc_Event_Server_Data *epcEvent )
-{
-  DALI_LOG_TRACE_METHOD( gIndicatorLogFilter );
-
-  delete mLock;
-  mLock = NULL;
-
-  if ( (epcEvent->data) &&
-       (epcEvent->size > 0) &&
-       (((unsigned char *)epcEvent->data)[epcEvent->size - 1] == 0) )
-  {
-    const char* lockFile = static_cast< const char* >( epcEvent->data );
-    mLock = new Indicator::LockFile( lockFile );
-    if( mLock->RetrieveAndClearErrorStatus() )
-    {
-      DALI_LOG_ERROR( "### Indicator error: Cannot open lock file %s ###\n", lockFile );
-    }
-  }
+  ClearSharedFileInfo();
 }
 
 void Indicator::Resize( int width, int height )
@@ -809,9 +776,126 @@ void Indicator::Resize( int width, int height )
     mImageHeight = height;
 
     // We don't currently handle the pixel buffer size being changed. Create a new image instead
-    if( mSharedFile )
+    if( !mPixmap )
     {
       CreateNewImage();
+    }
+  }
+}
+
+void Indicator::SetLockFileInfo( Ecore_Ipc_Event_Server_Data *epcEvent )
+{
+  DALI_LOG_TRACE_METHOD( gIndicatorLogFilter );
+
+  // epcEvent->ref == w
+  // epcEvent->ref_to == h
+  // epcEvent->response == buffer num
+  // epcEvent->data = lockfile + nul byte
+
+  if( (epcEvent->ref > 0) && (epcEvent->ref_to > 0) )
+  {
+    int n = epcEvent->response;
+
+    if( n >= 0 && n < SHARED_FILE_NUM )
+    {
+      mCurrentSharedFile = n;
+
+      mSharedFileInfo[n].mImageWidth  = epcEvent->ref;
+      mSharedFileInfo[n].mImageHeight = epcEvent->ref_to;
+
+      delete mSharedFileInfo[n].mLockFileName;
+      mSharedFileInfo[n].mLockFileName = NULL;
+
+      mSharedFileInfo[n].mLockFileName = new char[ epcEvent->size ];
+      strncpy( mSharedFileInfo[n].mLockFileName, static_cast< char* >( epcEvent->data ), epcEvent->size );
+
+      DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "SetLockFileInfo: buffer num = %d, w = %d, h = %d, lock = %s\n",
+                     n, mSharedFileInfo[n].mImageWidth, mSharedFileInfo[n].mImageHeight, mSharedFileInfo[n].mLockFileName );
+    }
+  }
+}
+
+void Indicator::SetSharedImageInfo( Ecore_Ipc_Event_Server_Data *epcEvent )
+{
+  DALI_LOG_TRACE_METHOD( gIndicatorLogFilter );
+
+  // epcEvent->ref == shm id
+  // epcEvent->ref_to == shm num
+  // epcEvent->response == buffer num
+  // epcEvent->data = shm ref string + nul byte
+
+  if ( (epcEvent->data) &&
+       (epcEvent->size > 0) &&
+       (((unsigned char *)epcEvent->data)[epcEvent->size - 1] == 0) )
+  {
+    int n = epcEvent->response;
+
+    if( n >= 0 && n < SHARED_FILE_NUM )
+    {
+      mCurrentSharedFile = n;
+
+      delete mSharedFileInfo[n].mSharedFileName;
+      mSharedFileInfo[n].mSharedFileName = NULL;
+
+      mSharedFileInfo[n].mSharedFileName = new char[ epcEvent->size ];
+      strncpy( mSharedFileInfo[n].mSharedFileName, static_cast< char* >( epcEvent->data ), epcEvent->size );
+
+      mSharedFileInfo[n].mSharedFileID = epcEvent->ref;
+      mSharedFileInfo[n].mSharedFileNum = epcEvent->ref_to;
+
+      DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "SetSharedImageInfo: buffer num %d, shared file = %s, id = %d, num = %d\n",
+                     n, mSharedFileInfo[n].mSharedFileName, mSharedFileInfo[n].mSharedFileID, mSharedFileInfo[n].mSharedFileNum );
+    }
+  }
+}
+
+void Indicator::LoadSharedImage( Ecore_Ipc_Event_Server_Data *epcEvent )
+{
+  DALI_LOG_TRACE_METHOD( gIndicatorLogFilter );
+
+  // epcEvent->ref == alpha
+  // epcEvent->ref_to == sys
+  // epcEvent->response == buffer num
+
+  int n = epcEvent->response;
+
+  if( n >= 0 && n < SHARED_FILE_NUM )
+  {
+    mCurrentSharedFile = n;
+
+    delete mSharedFileInfo[n].mSharedFile;
+    mSharedFileInfo[n].mSharedFile = NULL;
+
+    delete mSharedFileInfo[n].mLock;
+    mSharedFileInfo[n].mLock = NULL;
+
+    char sharedFilename[SHARED_FILE_PATH_MAX];
+
+    snprintf( sharedFilename, sizeof( sharedFilename ), "/%s-%i.%i", mSharedFileInfo[n].mSharedFileName, mSharedFileInfo[n].mSharedFileID, mSharedFileInfo[n].mSharedFileNum );
+
+    DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "LoadSharedImage: file name = %s\n", sharedFilename );
+
+    mSharedFileInfo[n].mSharedFile = SharedFile::New( sharedFilename, mSharedFileInfo[n].mImageWidth * mSharedFileInfo[n].mImageWidth * 4, true );
+    if( mSharedFileInfo[n].mSharedFile != NULL )
+    {
+      mSharedFileInfo[n].mLock = new Indicator::LockFile( mSharedFileInfo[n].mLockFileName );
+      if( mSharedFileInfo[n].mLock->RetrieveAndClearErrorStatus() )
+      {
+        DALI_LOG_ERROR( "### Indicator error: Cannot open lock file %s ###\n", mSharedFileInfo[n].mLockFileName );
+      }
+
+      if( CheckVisibleState() )
+      {
+        // set default indicator type (enable the quick panel)
+        OnIndicatorTypeChanged( INDICATOR_TYPE_1 );
+      }
+      else
+      {
+        // set default indicator type (disable the quick panel)
+        OnIndicatorTypeChanged( INDICATOR_TYPE_2 );
+      }
+
+      SetVisible(mVisible, true);
     }
   }
 }
@@ -824,14 +908,11 @@ void Indicator::LoadPixmapImage( Ecore_Ipc_Event_Server_Data *epcEvent )
   // epcEvent->ref_to == h
   // epcEvent->response == alpha
   // epcEvent->data = pixmap id
+
   if( ( epcEvent->data ) &&
       (epcEvent->size >= (int)sizeof(PixmapId)) )
   {
-    if( mSharedFile != NULL )
-    {
-      delete mSharedFile;
-      mSharedFile = NULL;
-    }
+    ClearSharedFileInfo();
 
     if( (epcEvent->ref > 0) && (epcEvent->ref_to > 0) )
     {
@@ -857,63 +938,16 @@ void Indicator::LoadPixmapImage( Ecore_Ipc_Event_Server_Data *epcEvent )
   }
 }
 
-void Indicator::LoadSharedImage( Ecore_Ipc_Event_Server_Data *epcEvent )
+void Indicator::UpdateImageData( int bufferNum )
 {
-  DALI_LOG_TRACE_METHOD( gIndicatorLogFilter );
-
-  // epcEvent->ref == w
-  // epcEvent->ref_to == h
-  // epcEvent->response == alpha
-  // epcEvent->data = shm ref string + nul byte
-  if( ( epcEvent->data ) &&
-      ( ( unsigned char * ) epcEvent->data)[ epcEvent->size - 1 ] == 0 )
-  {
-    if( mSharedFile != NULL )
-    {
-      delete mSharedFile;
-      mSharedFile = NULL;
-    }
-
-    if( (epcEvent->ref > 0) && (epcEvent->ref_to > 0) )
-    {
-      mImageWidth  = epcEvent->ref;
-      mImageHeight = epcEvent->ref_to;
-
-      char* sharedFilename = static_cast<char*>(epcEvent->data);
-
-      mSharedFile = SharedFile::New( sharedFilename, mImageWidth * mImageWidth * 4, true );
-      if( mSharedFile != NULL )
-      {
-        CreateNewImage();
-        mEventActor.SetSize(mImageWidth, mImageHeight);
-
-        if( CheckVisibleState() )
-        {
-          // set default indicator type (enable the quick panel)
-          OnIndicatorTypeChanged( INDICATOR_TYPE_1 );
-        }
-        else
-        {
-          // set default indicator type (disable the quick panel)
-          OnIndicatorTypeChanged( INDICATOR_TYPE_2 );
-        }
-
-        SetVisible(mVisible, true);
-      }
-    }
-  }
-}
-
-void Indicator::UpdateImageData()
-{
-  DALI_LOG_TRACE_METHOD_FMT( gIndicatorLogFilter, "State: %s  mVisible: %s\n", STATE_DEBUG_STRING(mState), mVisible?"T":"F" );
+  DALI_LOG_TRACE_METHOD_FMT( gIndicatorLogFilter, "State: %s  mVisible: %s", STATE_DEBUG_STRING(mState), mVisible?"T":"F" );
 
   if( mState == CONNECTED && mVisible )
   {
     if(mPixmap == 0)
     {
       // in case of shm indicator (not pixmap), not sure we can skip it when mIsShowing is false
-      CopyToBuffer();
+      CopyToBuffer( bufferNum );
     }
     else
     {
@@ -925,21 +959,21 @@ void Indicator::UpdateImageData()
   }
 }
 
-bool Indicator::CopyToBuffer()
+bool Indicator::CopyToBuffer( int bufferNum )
 {
   bool success = false;
 
-  if( mLock )
+  if( mSharedFileInfo[bufferNum].mLock )
   {
-    Indicator::ScopedLock scopedLock(mLock);
-    if( mLock->RetrieveAndClearErrorStatus() )
+    Indicator::ScopedLock scopedLock(mSharedFileInfo[bufferNum].mLock);
+    if( mSharedFileInfo[bufferNum].mLock->RetrieveAndClearErrorStatus() )
     {
       // Do nothing here.
     }
     else if( scopedLock.IsLocked() )
     {
-      unsigned char *src = mSharedFile->GetAddress();
-      size_t size = mImageWidth * mImageHeight * 4;
+      unsigned char *src = mSharedFileInfo[bufferNum].mSharedFile->GetAddress();
+      size_t size = mSharedFileInfo[bufferNum].mImageWidth * mSharedFileInfo[bufferNum].mImageHeight * 4;
 
       if( mIndicatorBuffer->UpdatePixels( src, size ) )
       {
@@ -984,7 +1018,7 @@ void Indicator::SetBackground()
 
 void Indicator::CreateNewPixmapImage()
 {
-  DALI_LOG_TRACE_METHOD_FMT( gIndicatorLogFilter, "W:%d H:%d\n", mImageWidth, mImageHeight );
+  DALI_LOG_TRACE_METHOD_FMT( gIndicatorLogFilter, "W:%d H:%d", mImageWidth, mImageHeight );
   Dali::PixmapImagePtr pixmapImage = Dali::PixmapImage::New( mPixmap );
 
   if( pixmapImage )
@@ -1015,11 +1049,11 @@ void Indicator::CreateNewPixmapImage()
 
 void Indicator::CreateNewImage()
 {
-  DALI_LOG_TRACE_METHOD_FMT( gIndicatorLogFilter, "W:%d H:%d\n", mImageWidth, mImageHeight );
+  DALI_LOG_TRACE_METHOD_FMT( gIndicatorLogFilter, "W:%d H:%d", mImageWidth, mImageHeight );
   mIndicatorBuffer = new IndicatorBuffer( mAdaptor, mImageWidth, mImageHeight, Pixel::BGRA8888 );
   Dali::Image image = Dali::NativeImage::New( mIndicatorBuffer->GetNativeImage() );
 
-  if( CopyToBuffer() ) // Only create images if we have valid image buffer
+  if( CopyToBuffer( mCurrentSharedFile ) ) // Only create images if we have valid image buffer
   {
     mIndicatorImageActor.SetImage( image );
     mIndicatorImageActor.SetSize( mImageWidth, mImageHeight );
@@ -1069,24 +1103,33 @@ void Indicator::DataReceived( void* event )
       break;
 
     case OP_UPDATE_DONE:
-      DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "Indicator client received: OP_UPDATE_DONE\n" );
-      UpdateImageData();
+      DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "Indicator client received: OP_UPDATE_DONE [%d]\n", epcEvent->response );
+      // epcEvent->response == display buffer #
+      UpdateImageData( epcEvent->response );
       break;
 
-    case OP_LOCK_FILE:
-      DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "Indicator client received: OP_LOCK_FILE\n" );
-      NewLockFile( epcEvent );
+
+    case OP_SHM_REF0:
+      DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "Indicator client received: OP_SHM_REF0\n" );
+      SetSharedImageInfo( epcEvent );
       break;
 
-    case OP_SHM_REF:
-      DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "Indicator client received: OP_SHM_REF\n" );
+    case OP_SHM_REF1:
+      DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "Indicator client received: OP_SHM_REF1\n" );
+      SetLockFileInfo( epcEvent );
+      break;
+
+    case OP_SHM_REF2:
+      DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "Indicator client received: OP_SHM_REF2\n" );
       LoadSharedImage( epcEvent );
       break;
 
+#if 0
     case OP_PIXMAP_REF:
       DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "Indicator client received: OP_PIXMAP_REF\n" );
       LoadPixmapImage( epcEvent );
       break;
+#endif
 
     case OP_RESIZE:
       DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "Indicator client received: OP_RESIZE\n" );
@@ -1108,6 +1151,8 @@ void Indicator::DataReceived( void* event )
       msgData = epcEvent->data;
       msgDataSize = epcEvent->size;
 
+      DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "Indicator client received: OP_MSG_PARENT. msgDomain = %d\n", msgDomain );
+
       if( msgDomain == MSG_DOMAIN_CONTROL_INDICATOR )
       {
         switch( msgId )
@@ -1122,6 +1167,8 @@ void Indicator::DataReceived( void* event )
 
           case MSG_ID_INDICATOR_START_ANIMATION:
           {
+            DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "Indicator client received: MSG_ID_INDICATOR_START_ANIMATION\n" );
+
             if (msgDataSize != (int)sizeof(IpcIndicatorDataAnimation))
             {
               DALI_LOG_ERROR("Message data is incorrect");
@@ -1141,6 +1188,9 @@ void Indicator::DataReceived( void* event )
       }
       break;
     }
+  default:
+    DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "Indicator client received: %d\n", epcEvent->minor );
+    break;
   }
 }
 
@@ -1206,6 +1256,24 @@ void Indicator::ConstructBackgroundMesh()
                                                              GEOMETRY_TYPE_UNTEXTURED_MESH, // Using vertex color
                                                              Dali::ShaderEffect::HINT_BLENDING );
   mBackgroundActor.SetShaderEffect(shaderEffect);
+}
+
+void Indicator::ClearSharedFileInfo()
+{
+  for( int i = 0; i < SHARED_FILE_NUM; i++ )
+  {
+    delete mSharedFileInfo[i].mLock;
+    mSharedFileInfo[i].mLock = NULL;
+
+    delete mSharedFileInfo[i].mSharedFile;
+    mSharedFileInfo[i].mSharedFile = NULL;
+
+    delete mSharedFileInfo[i].mLockFileName;
+    mSharedFileInfo[i].mLockFileName = NULL;
+
+    delete mSharedFileInfo[i].mSharedFileName;
+    mSharedFileInfo[i].mSharedFileName = NULL;
+  }
 }
 
 /**
