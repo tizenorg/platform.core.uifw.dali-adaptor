@@ -19,9 +19,11 @@
  */
 
 // EXTERNAL INCLUDES
-#include <render-surface.h>
 #include <dali/public-api/common/dali-common.h>
 #include <dali/public-api/common/view-mode.h>
+
+// INTERNAL INCLUDES
+#include <render-surface.h>
 #include <base/interfaces/egl-interface.h>
 
 namespace Dali
@@ -128,9 +130,11 @@ public: // API
 
   /**
    * Invoked by render thread before Core::Render
+   * If the operation fails, then Core::Render should not be called until there is
+   * a surface to render onto.
    * @param[in] egl The Egl interface
    * @param[in] glAbstraction OpenGLES abstraction interface
-   * @return True if the operation is successful
+   * @return True if the operation is successful, False if the operation failed
    */
   virtual bool PreRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction ) = 0;
 

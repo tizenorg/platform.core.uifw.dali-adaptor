@@ -19,17 +19,19 @@
  */
 
 // INTERNAL INCLUDES
-#include <dali/public-api/object/base-handle.h>
 #include <dali/public-api/images/bitmap-image.h>
-#include <dali/public-api/text-abstraction/glyph-info.h>
+#include <dali/public-api/object/base-handle.h>
 #include <dali/public-api/text-abstraction/font-list.h>
-#include <dali/public-api/text-abstraction/font-metrics.h>
+#include <dali/public-api/text-abstraction/text-abstraction-definitions.h>
 
 namespace Dali
 {
 
 namespace TextAbstraction
 {
+
+struct FontMetrics;
+struct GlyphInfo;
 
 namespace Internal DALI_INTERNAL
 {
@@ -108,6 +110,22 @@ public:
    * @param[in] verticalDpi The vertical resolution in DPI.
    */
   void SetDpi( unsigned int horizontalDpi, unsigned int verticalDpi );
+
+  /**
+   * Set the default font family and its style that should be used by the font client.
+   *
+   * @param[in] fontFamilyName The default name of the font's family.
+   * @param[in] fontStyle The default font's style.
+   */
+  void SetDefaultFontFamily( const std::string& fontFamilyName,
+                             const std::string& fontStyle );
+
+  /**
+   * @brief Retrieve the list of default fonts supported by the system.
+   *
+   * @param[out] defaultFonts A list of default font paths, family & style strings.
+   */
+  void GetDefaultFonts( FontList& defaultFonts );
 
   /**
    * @brief Retrieve the list of fonts supported by the system.
