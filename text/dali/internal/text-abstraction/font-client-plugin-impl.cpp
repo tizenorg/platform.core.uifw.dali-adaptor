@@ -437,38 +437,41 @@ bool FontClient::Plugin::GetGlyphMetrics( GlyphInfo* array,
           array[i].height = height;
           array[i].advance = height;
           array[i].xBearing = 0.0f;
-          array[i].yBearing = 0.0f;
-          return success;
+          array[i].yBearing = height * 0.5f;
+          success = true;
         }
         else
         {
           DALI_LOG_ERROR( "FreeType Bitmap Load_Glyph error %d\n", error );
-          return false;
-        }
-      }
-
-      int error = FT_Load_Glyph( ftFace, array[i].index, FT_LOAD_DEFAULT );
-
-      if( FT_Err_Ok == error )
-      {
-        array[i].width  = static_cast< float >( ftFace->glyph->metrics.width ) * FROM_266;
-        array[i].height = static_cast< float >( ftFace->glyph->metrics.height ) * FROM_266 ;
-        if( horizontal )
-        {
-          array[i].xBearing = static_cast< float >( ftFace->glyph->metrics.horiBearingX ) * FROM_266;
-          array[i].yBearing = static_cast< float >( ftFace->glyph->metrics.horiBearingY ) * FROM_266;
-          array[i].advance  = static_cast< float >( ftFace->glyph->metrics.horiAdvance ) * FROM_266;
-        }
-        else
-        {
-          array[i].xBearing = static_cast< float >( ftFace->glyph->metrics.vertBearingX ) * FROM_266;
-          array[i].yBearing = static_cast< float >( ftFace->glyph->metrics.vertBearingY ) * FROM_266;
-          array[i].advance  = static_cast< float >( ftFace->glyph->metrics.vertAdvance ) * FROM_266;
+          success = false;
         }
       }
       else
       {
-        success = false;
+
+        int error = FT_Load_Glyph( ftFace, array[i].index, FT_LOAD_DEFAULT );
+
+        if( FT_Err_Ok == error )
+        {
+          array[i].width  = static_cast< float >( ftFace->glyph->metrics.width ) * FROM_266;
+          array[i].height = static_cast< float >( ftFace->glyph->metrics.height ) * FROM_266 ;
+          if( horizontal )
+          {
+            array[i].xBearing = static_cast< float >( ftFace->glyph->metrics.horiBearingX ) * FROM_266;
+            array[i].yBearing = static_cast< float >( ftFace->glyph->metrics.horiBearingY ) * FROM_266;
+            array[i].advance  = static_cast< float >( ftFace->glyph->metrics.horiAdvance ) * FROM_266;
+          }
+          else
+          {
+            array[i].xBearing = static_cast< float >( ftFace->glyph->metrics.vertBearingX ) * FROM_266;
+            array[i].yBearing = static_cast< float >( ftFace->glyph->metrics.vertBearingY ) * FROM_266;
+            array[i].advance  = static_cast< float >( ftFace->glyph->metrics.vertAdvance ) * FROM_266;
+          }
+        }
+        else
+        {
+          success = false;
+        }
       }
     }
     else
