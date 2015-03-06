@@ -15,29 +15,30 @@ Source0:    %{name}-%{version}.tar.gz
 %define dali_bullet_plugin 0
 %define dali_assimp_plugin 0
 %define over_tizen_2_2 0
+%endif
 
-%else if "%{profile}" == "tv"
+%if "%{profile}" == "tv"
 %define dali_profile TV
 %define dali_feedback_plugin 0
 %define dali_bullet_plugin 0
 %define dali_assimp_plugin 0
 %define over_tizen_2_2 1
+%endif
 
-%else if "%{profile}" == "wearable"
+%if "%{profile}" == "wearable"
 %define dali_profile WEARABLE
 %define dali_feedback_plugin 0
 %define dali_bullet_plugin 0
 %define dali_assimp_plugin 0
 %define over_tizen_2_2 0
+%endif
 
-%else
-## profile == common
+%if "%{profile}" == "common"
 %define dali_profile COMMON
 %define dali_feedback_plugin 0
 %define dali_bullet_plugin 0
 %define dali_assimp_plugin 0
 %define over_tizen_2_2 0
-
 %endif
 
 Requires(post): /sbin/ldconfig
