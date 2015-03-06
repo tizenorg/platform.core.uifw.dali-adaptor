@@ -147,6 +147,17 @@ public: // PlatformAbstraction overrides
    */
   virtual Integration::DynamicsFactory* GetDynamicsFactory();
 
+  /**
+   * @copydoc PlatformAbstraction::LoadShaderBinFile()
+   */
+  virtual bool LoadShaderBinFile( const std::string& filename, std::vector< unsigned char >& buffer ) const;
+
+  /**
+   * Sets path for data/resource storage.
+   * @param[in] path data/resource storage path
+   */
+  void SetDataStoragePath( const std::string& path );
+
 private:
   ResourceLoader* mResourceLoader;
   DynamicsFactory* mDynamicsFactory;
