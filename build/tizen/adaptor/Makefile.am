@@ -147,6 +147,7 @@ adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
 endif
 
 
+
 # TV
 if TV_PROFILE
 
@@ -189,10 +190,10 @@ libdali_adaptor_la_includes = \
                       -I../../../platform-abstractions/slp/resource-loader \
                       -I../../../platform-abstractions/portable \
                       -I../../../platform-abstractions/ \
-                      -I../../../adaptors/ \
                       -I../../../adaptors/public-api \
                       -I../../../adaptors/public-api/adaptor-framework \
                       -I../../../adaptors/common \
+                      -I../../../adaptors/ \
                       -I../../../text \
                       -I../../../text/dali/internal/libunibreak
 
