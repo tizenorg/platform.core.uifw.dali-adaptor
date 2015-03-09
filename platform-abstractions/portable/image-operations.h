@@ -18,12 +18,13 @@
 #ifndef DALI_INTERNAL_PLATFORM_IMAGE_OPERATIONS_H_
 #define DALI_INTERNAL_PLATFORM_IMAGE_OPERATIONS_H_
 
+// EXTERNAL INCLUDES
+#include <stdint.h>
+#include <iosfwd>
+
 // INTERNAL INCLUDES
 #include <dali/integration-api/bitmap.h>
 #include <dali/public-api/images/image-attributes.h>
-
-// EXTERNAL INCLUDES
-#include <stdint.h>
 
 namespace Dali
 {
@@ -338,6 +339,70 @@ void PointSample1BPP( const unsigned char * inPixels,
                       unsigned int desiredWidth,
                       unsigned int desiredHeight );
 
+/**
+ * @brief Resample input image to output image using a bilinear filter.
+ *
+ * Each output pixel is formed of a weighted sum of a 2x2 block of four input
+ * pixels
+ * @note inPixels may not alias outPixels.
+ */
+void LinearSample( const unsigned char * __restrict__ inPixels,
+                   ImageDimensions inDimensions,
+                   Pixel::Format pixelFormat,
+                   unsigned char * __restrict__ outPixels,
+                   ImageDimensions outDimensions );
+
+/**
+ * @copydoc LinearSample
+ *
+ * Specialised for one byte per pixel formats.
+ */
+void LinearSample1BPP( const unsigned char * __restrict__ inPixels,
+                       ImageDimensions inputDimensions,
+                       unsigned char * __restrict__ outPixels,
+                       ImageDimensions desiredDimensions );
+
+/**
+ * @copydoc LinearSample
+ *
+ * Specialised for two byte per pixel formats.
+ */
+void LinearSample2BPP( const unsigned char * __restrict__ inPixels,
+                       ImageDimensions inputDimensions,
+                       unsigned char * __restrict__ outPixels,
+                       ImageDimensions desiredDimensions );
+
+/**
+ * @copydoc LinearSample
+ *
+ * Specialised for RGB565 16 bit pixel format.
+ */
+void LinearSampleRGB565( const unsigned char * __restrict__ inPixels,
+                       ImageDimensions inputDimensions,
+                       unsigned char * __restrict__ outPixels,
+                       ImageDimensions desiredDimensions );
+
+/**
+ * @copydoc LinearSample
+ *
+ * Specialised for three byte per pixel formats like RGB888.
+ */
+void LinearSample3BPP( const unsigned char * __restrict__ inPixels,
+                       ImageDimensions inputDimensions,
+                       unsigned char * __restrict__ outPixels,
+                       ImageDimensions desiredDimensions );
+
+/**
+ * @copydoc LinearSample
+ *
+ * Specialised for four byte per pixel formats like RGBA888.
+ * @note, If used on RGBA8888, the A component will be blended independently.
+ */
+void LinearSample4BPP( const unsigned char * __restrict__ inPixels,
+                       ImageDimensions inputDimensions,
+                       unsigned char * __restrict__ outPixels,
+                       ImageDimensions desiredDimensions );
+
 /**@}*/
 
 /**
@@ -433,6 +498,7 @@ void AverageScanlinesRGB565( const unsigned char * scanline1,
  * @param[in] a First component to average.
  * @param[in] b Second component to average.
  **/
+inline unsigned int AverageComponent( unsigned int a, unsigned int b ) __attribute__((pure, always_inline));
 inline unsigned int AverageComponent( unsigned int a, unsigned int b )
 {
   unsigned int avg = (a + b) >> 1u;
@@ -445,6 +511,7 @@ inline unsigned int AverageComponent( unsigned int a, unsigned int b )
  * @param[in] a First pixel to average.
  * @param[in] b Second pixel to average
  **/
+inline uint32_t AveragePixelRGBA8888( uint32_t a, uint32_t b ) __attribute__((pure, always_inline));
 inline uint32_t AveragePixelRGBA8888( uint32_t a, uint32_t b )
 {
   const unsigned int avg =
@@ -463,6 +530,7 @@ inline uint32_t AveragePixelRGBA8888( uint32_t a, uint32_t b )
  * @param b[in] Low 16 bits hold a color value as RGB565 to average with parameter a.
  * @return The average color of the two RGB565 pixels passed in, in the low 16 bits of the returned value.
  **/
+inline uint32_t AveragePixelRGB565( uint32_t a, uint32_t b ) __attribute__((pure, always_inline));
 inline uint32_t AveragePixelRGB565( uint32_t a, uint32_t b )
 {
   const unsigned int avg =
@@ -470,6 +538,45 @@ inline uint32_t AveragePixelRGB565( uint32_t a, uint32_t b )
     (AverageComponent( a & 0x7e0,  b & 0x7e0 )  & 0x7e0 ) +
     (AverageComponent( a & 0x1f,   b & 0x1f ) );
   return avg;
+}
+
+/** @return The weighted blend of two integers as a 16.16 fixed-point number, given a 0.16 fixed-point blending factor. */
+inline unsigned int WeightedBlendIntToFixed1616(unsigned int a, unsigned int b, unsigned int fractBlend ) __attribute__((pure, always_inline));
+inline unsigned int WeightedBlendIntToFixed1616(unsigned int a, unsigned int b, unsigned int fractBlend )
+{
+  DALI_ASSERT_DEBUG( fractBlend <= 65535u && "Factor should be in 0.16 fixed-point." );
+  const unsigned int weightedAFixed = a * (65535u - fractBlend);
+  const unsigned int weightedBFixed = b * fractBlend;
+  const unsigned blended = (weightedAFixed + weightedBFixed);
+  return blended;
+}
+
+/** @brief Blend two 16.16 inputs to give a 16.32 output. */
+inline uint64_t WeightedBlendFixed1616ToFixed1632(unsigned int a, unsigned int b, unsigned int fractBlend ) __attribute__((pure, always_inline));
+inline uint64_t WeightedBlendFixed1616ToFixed1632(unsigned int a, unsigned int b, unsigned int fractBlend )
+{
+  DALI_ASSERT_DEBUG( fractBlend <= 65535u && "Factor should be in 0.16 fixed-point." );
+  // Blend while promoting intermediates to 16.32 fixed point:
+  const uint64_t weightedAFixed = uint64_t(a) * (65535u - fractBlend);
+  const uint64_t weightedBFixed = uint64_t(b) * fractBlend;
+  const uint64_t blended = (weightedAFixed + weightedBFixed);
+  return blended;
+}
+
+/**
+ * @brief Blend 4 taps into one value using horizontal and vertical weights.
+ */
+inline unsigned int BilinearFilter1Component(unsigned int tl, unsigned int tr, unsigned int bl, unsigned int br, unsigned int fractBlendHorizontal, unsigned int fractBlendVertical ) __attribute__((pure, always_inline));
+inline unsigned int BilinearFilter1Component(unsigned int tl, unsigned int tr, unsigned int bl, unsigned int br, unsigned int fractBlendHorizontal, unsigned int fractBlendVertical )
+{
+  DALI_ASSERT_DEBUG( fractBlendHorizontal <= 65535u && "Factor should be in 0.16 fixed-point." );
+  DALI_ASSERT_DEBUG( fractBlendVertical   <= 65535u && "Factor should be in 0.16 fixed-point." );
+  //
+  const unsigned int topBlend = WeightedBlendIntToFixed1616( tl, tr, fractBlendHorizontal );
+  const unsigned int botBlend = WeightedBlendIntToFixed1616( bl, br, fractBlendHorizontal );
+  const uint64_t blended2x2 = WeightedBlendFixed1616ToFixed1632( topBlend, botBlend, fractBlendVertical );
+  const unsigned int rounded = (blended2x2 + (1u << 31u) ) >> 32u;
+  return rounded;
 }
 
 /**@}*/
