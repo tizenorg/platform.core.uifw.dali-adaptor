@@ -147,6 +147,11 @@ void FontClient::GetFixedSizes( const FontFamily& fontFamily,
   GetImplementation(*this).GetFixedSizes( fontFamily, style, sizes );
 }
 
+FontId FontClient::GetEmojiFont()
+{
+  return GetImplementation(*this).GetEmojiFont();
+}
+
 FontClient::FontClient( Internal::FontClient* internal )
 : BaseHandle( internal )
 {

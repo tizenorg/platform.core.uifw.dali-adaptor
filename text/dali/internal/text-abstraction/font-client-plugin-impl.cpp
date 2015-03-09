@@ -89,7 +89,8 @@ FontClient::Plugin::Plugin( unsigned int horizontalDpi,
   mFontCache(),
   mValidatedFontCache(),
   mFontDescriptionCache( 1u ),
-  mFontIdCache()
+  mFontIdCache(),
+  mEmojiFont( 0 )
 {
   int error = FT_Init_FreeType( &mFreeTypeLibrary );
   if( FT_Err_Ok != error )
@@ -438,37 +439,40 @@ bool FontClient::Plugin::GetGlyphMetrics( GlyphInfo* array,
           array[i].advance = height;
           array[i].xBearing = 0.0f;
           array[i].yBearing = 0.0f;
-          return success;
+          success = true;
         }
         else
         {
           DALI_LOG_ERROR( "FreeType Bitmap Load_Glyph error %d\n", error );
-          return false;
-        }
-      }
-
-      int error = FT_Load_Glyph( ftFace, array[i].index, FT_LOAD_DEFAULT );
-
-      if( FT_Err_Ok == error )
-      {
-        array[i].width  = static_cast< float >( ftFace->glyph->metrics.width ) * FROM_266;
-        array[i].height = static_cast< float >( ftFace->glyph->metrics.height ) * FROM_266 ;
-        if( horizontal )
-        {
-          array[i].xBearing = static_cast< float >( ftFace->glyph->metrics.horiBearingX ) * FROM_266;
-          array[i].yBearing = static_cast< float >( ftFace->glyph->metrics.horiBearingY ) * FROM_266;
-          array[i].advance  = static_cast< float >( ftFace->glyph->metrics.horiAdvance ) * FROM_266;
-        }
-        else
-        {
-          array[i].xBearing = static_cast< float >( ftFace->glyph->metrics.vertBearingX ) * FROM_266;
-          array[i].yBearing = static_cast< float >( ftFace->glyph->metrics.vertBearingY ) * FROM_266;
-          array[i].advance  = static_cast< float >( ftFace->glyph->metrics.vertAdvance ) * FROM_266;
+          success = false;
         }
       }
       else
       {
-        success = false;
+
+        int error = FT_Load_Glyph( ftFace, array[i].index, FT_LOAD_DEFAULT );
+
+        if( FT_Err_Ok == error )
+        {
+          array[i].width  = static_cast< float >( ftFace->glyph->metrics.width ) * FROM_266;
+          array[i].height = static_cast< float >( ftFace->glyph->metrics.height ) * FROM_266 ;
+          if( horizontal )
+          {
+            array[i].xBearing = static_cast< float >( ftFace->glyph->metrics.horiBearingX ) * FROM_266;
+            array[i].yBearing = static_cast< float >( ftFace->glyph->metrics.horiBearingY ) * FROM_266;
+            array[i].advance  = static_cast< float >( ftFace->glyph->metrics.horiAdvance ) * FROM_266;
+          }
+          else
+          {
+            array[i].xBearing = static_cast< float >( ftFace->glyph->metrics.vertBearingX ) * FROM_266;
+            array[i].yBearing = static_cast< float >( ftFace->glyph->metrics.vertBearingY ) * FROM_266;
+            array[i].advance  = static_cast< float >( ftFace->glyph->metrics.vertAdvance ) * FROM_266;
+          }
+        }
+        else
+        {
+          success = false;
+        }
       }
     }
     else
@@ -954,6 +958,15 @@ void FontClient::Plugin::GetFixedSizes( const FontFamily& fontFamily,
     return GetFixedSizes( path, sizes );
   }
   DALI_LOG_ERROR( "FreeType Cannot check font: %s %s\n", fontFamily.c_str(), fontStyle.c_str() );
+}
+
+FontId FontClient::Plugin::GetEmojiFont()
+{
+  if ( 0 == mEmojiFont )
+  {
+    mEmojiFont = GetFontId( "TizenColorEmoji", "Regular", 62*64, 0 );
+  }
+  return mEmojiFont;
 }
 
 } // namespace Internal
