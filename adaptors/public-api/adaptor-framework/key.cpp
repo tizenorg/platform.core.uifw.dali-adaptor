@@ -26,7 +26,7 @@ namespace Dali
 
 bool IsKey( const KeyEvent& keyEvent, KEY daliKey)
 {
-  return Internal::Adaptor::KeyLookup::IsKey( keyEvent, daliKey );
+  return keyEvent.keyCode == daliKey;
 }
 
 }

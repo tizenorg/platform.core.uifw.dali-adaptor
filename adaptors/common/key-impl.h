@@ -37,11 +37,6 @@ namespace KeyLookup
 {
 
 /**
- * @copydoc Dali::IsKey()
- */
-bool IsKey( const Dali::KeyEvent& keyEvent, Dali::KEY daliKey);
-
-/**
  * Check if a the given key name string is a button on the device itself.
  * @param keyName A pointer to the key name
  * @return true if the key is matched, false if not
