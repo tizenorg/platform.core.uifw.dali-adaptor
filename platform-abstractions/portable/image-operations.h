@@ -25,6 +25,36 @@
 // EXTERNAL INCLUDES
 #include <stdint.h>
 
+// Optimization macros:
+// Add these to the end of declarations of hot functions _sparingly_. E.g., for
+// leaf function with inner loops.
+
+#if defined(__GNUC__) && !defined(DEBUG_ENABLED)
+
+/**
+ * @brief Functions which are always inlined and need to be fast:
+ */
+#define DALI_FUNC_OPT_SPEED_INLINE __attribute__((always_inline, optimize("-O3")))
+
+/**
+ * @brief Functions which are always inlined and have no side-effects:
+ * @note Apply this cautiously: the compiler can throw away an entire call to your
+ * function if you declare it pure and its return value is not used.
+ */
+#define DALI_FUNC_OPT_SPEED_INLINE_PURE __attribute__((always_inline, pure, optimize("-O3")))
+
+/**
+ * @brief Functions which are not inlined but are hot and deserved max optimizations.
+ */
+#define DALI_FUNC_OPT_SPEED_OUTLINE __attribute__((hot, optimize("-O3")))
+
+#else
+// NOP them on unknown platforms:
+#define DALI_FUNC_OPT_SPEED_INLINE
+#define DALI_FUNC_OPT_SPEED_INLINE_PURE
+#define DALI_FUNC_OPT_SPEED_OUTLINE
+#endif
+
 namespace Dali
 {
 namespace Internal
@@ -218,7 +248,7 @@ void DownscaleInPlacePow2RGB888( unsigned char * pixels,
                                  unsigned int desiredHeight,
                                  BoxDimensionTest dimensionTest,
                                  unsigned int& outWidth,
-                                 unsigned int& outHeight );
+                                 unsigned int& outHeight ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**
  * @copydoc DownscaleInPlacePow2RGB888
@@ -230,7 +260,7 @@ void DownscaleInPlacePow2RGBA8888( unsigned char * pixels,
                                    unsigned int desiredHeight,
                                    BoxDimensionTest dimensionTest,
                                    unsigned int& outWidth,
-                                   unsigned int& outHeight );
+                                   unsigned int& outHeight ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**
  * @copydoc DownscaleInPlacePow2RGB888
@@ -244,7 +274,7 @@ void DownscaleInPlacePow2RGB565( unsigned char * pixels,
                                  unsigned int desiredHeight,
                                  BoxDimensionTest dimensionTest,
                                  unsigned int& outWidth,
-                                 unsigned int& outHeight );
+                                 unsigned int& outHeight ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**
  * @copydoc DownscaleInPlacePow2RGB888
@@ -258,7 +288,7 @@ void DownscaleInPlacePow2ComponentPair( unsigned char * pixels,
                                         unsigned int desiredHeight,
                                         BoxDimensionTest dimensionTest,
                                         unsigned int& outWidth,
-                                        unsigned int& outHeight );
+                                        unsigned int& outHeight ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**
  * @copydoc DownscaleInPlacePow2RGB888
@@ -272,7 +302,7 @@ void DownscaleInPlacePow2SingleBytePerPixel( unsigned char * pixels,
                                              unsigned int desiredHeight,
                                              BoxDimensionTest dimensionTest,
                                              unsigned int& outWidth,
-                                             unsigned int& outHeight );
+                                             unsigned int& outHeight ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**
  * @brief Rescales an input image into the exact output dimensions passed-in.
@@ -300,7 +330,7 @@ void PointSample4BPP( const unsigned char * inPixels,
                       unsigned int inputHeight,
                       unsigned char * outPixels,
                       unsigned int desiredWidth,
-                      unsigned int desiredHeight );
+                      unsigned int desiredHeight ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**
  * @copydoc PointSample
@@ -312,7 +342,7 @@ void PointSample3BPP( const unsigned char * inPixels,
                       unsigned int inputHeight,
                       unsigned char * outPixels,
                       unsigned int desiredWidth,
-                      unsigned int desiredHeight );
+                      unsigned int desiredHeight ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**
  * @copydoc PointSample
@@ -324,7 +354,7 @@ void PointSample2BPP( const unsigned char * inPixels,
                       unsigned int inputHeight,
                       unsigned char * outPixels,
                       unsigned int desiredWidth,
-                      unsigned int desiredHeight );
+                      unsigned int desiredHeight ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**
  * @copydoc PointSample
@@ -336,7 +366,14 @@ void PointSample1BPP( const unsigned char * inPixels,
                       unsigned int inputHeight,
                       unsigned char * outPixels,
                       unsigned int desiredWidth,
-                      unsigned int desiredHeight );
+                      unsigned int desiredHeight ) DALI_FUNC_OPT_SPEED_OUTLINE;
+
+void LinearSample1BPP( const unsigned char * inPixels,
+                      unsigned int inputWidth,
+                      unsigned int inputHeight,
+                      unsigned char * outPixels,
+                      unsigned int desiredWidth,
+                      unsigned int desiredHeight ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**@}*/
 
@@ -350,27 +387,27 @@ void PointSample1BPP( const unsigned char * inPixels,
  * @param[in,out] pixels The array of pixels to work on.
  * @param[i]      width  The number of pixels in the array passed-in.
  */
-void HalveScanlineInPlaceRGB888( unsigned char * pixels, unsigned int width );
+void HalveScanlineInPlaceRGB888( unsigned char * pixels, unsigned int width ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**
  * @copydoc HalveScanlineInPlaceRGB888
  */
-void HalveScanlineInPlaceRGBA8888( unsigned char * pixels, unsigned int width );
+void HalveScanlineInPlaceRGBA8888( unsigned char * pixels, unsigned int width ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**
  * @copydoc HalveScanlineInPlaceRGB888
  */
-void HalveScanlineInPlaceRGB565( unsigned char * pixels, unsigned int width );
+void HalveScanlineInPlaceRGB565( unsigned char * pixels, unsigned int width ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**
  * @copydoc HalveScanlineInPlaceRGB888
  */
-void HalveScanlineInPlace2Bytes( unsigned char * pixels, unsigned int width );
+void HalveScanlineInPlace2Bytes( unsigned char * pixels, unsigned int width ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**
  * @copydoc HalveScanlineInPlaceRGB888
  */
-void HalveScanlineInPlace1Byte( unsigned char * pixels, unsigned int width );
+void HalveScanlineInPlace1Byte( unsigned char * pixels, unsigned int width ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**
  * @brief Average pixels at corresponding offsets in two scanlines.
@@ -385,7 +422,7 @@ void AverageScanlines1( const unsigned char * scanline1,
                         const unsigned char * scanline2,
                         unsigned char* outputScanline,
                         /** Image width in pixels (1 byte == 1 pixel: e.g. lum8 or alpha8).*/
-                        unsigned int width );
+                        unsigned int width ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**
  * @copydoc AverageScanlines1
@@ -394,7 +431,7 @@ void AverageScanlines2( const unsigned char * scanline1,
                         const unsigned char * scanline2,
                         unsigned char* outputScanline,
                         /** Image width in pixels (2 bytes == 1 pixel: e.g. lum8alpha8).*/
-                        unsigned int width );
+                        unsigned int width ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**
  * @copydoc AverageScanlines1
@@ -403,7 +440,7 @@ void AverageScanlines3( const unsigned char * scanline1,
                         const unsigned char * scanline2,
                         unsigned char* outputScanline,
                         /** Image width in pixels (3 bytes == 1 pixel: e.g. RGB888).*/
-                        unsigned int width );
+                        unsigned int width ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**
  * @copydoc AverageScanlines1
@@ -411,7 +448,7 @@ void AverageScanlines3( const unsigned char * scanline1,
 void AverageScanlinesRGBA8888( const unsigned char * scanline1,
                                const unsigned char * scanline2,
                                unsigned char * outputScanline,
-                               unsigned int width );
+                               unsigned int width ) DALI_FUNC_OPT_SPEED_OUTLINE;
 
 /**
  * @copydoc AverageScanlines1
@@ -419,7 +456,7 @@ void AverageScanlinesRGBA8888( const unsigned char * scanline1,
 void AverageScanlinesRGB565( const unsigned char * scanline1,
                              const unsigned char * scanline2,
                              unsigned char* outputScanline,
-                             unsigned int width );
+                             unsigned int width ) DALI_FUNC_OPT_SPEED_OUTLINE;
 /**@}*/
 
 /**
@@ -470,6 +507,55 @@ inline uint32_t AveragePixelRGB565( uint32_t a, uint32_t b )
     (AverageComponent( a & 0x7e0,  b & 0x7e0 )  & 0x7e0 ) +
     (AverageComponent( a & 0x1f,   b & 0x1f ) );
   return avg;
+}
+
+/** @return The weighted blend of two integers as a 16.16 fixed-point number, given a 0.16 fixed-point blending factor. */
+inline unsigned int WeightedBlendIntToFixed1616(unsigned int a, unsigned int b, unsigned int fractBlend ) DALI_FUNC_OPT_SPEED_INLINE_PURE;
+inline unsigned int WeightedBlendIntToFixed1616(unsigned int a, unsigned int b, unsigned int fractBlend )
+{
+  DALI_ASSERT_DEBUG( fractBlend <= 65535u && "Factor should be in 0.16 fixed-point." );
+  const unsigned int weightedAFixed = a * (65535u - fractBlend);
+  const unsigned int weightedBFixed = b * fractBlend;
+  const unsigned blended = (weightedAFixed + weightedBFixed);
+  return blended;
+}
+
+/** @brief Blend two 16.16 inputs to give a 16.32 output. */
+inline uint64_t WeightedBlendFixed1616ToFixed1632(unsigned int a, unsigned int b, unsigned int fractBlend ) DALI_FUNC_OPT_SPEED_INLINE_PURE;
+inline uint64_t WeightedBlendFixed1616ToFixed1632(unsigned int a, unsigned int b, unsigned int fractBlend )
+{
+  DALI_ASSERT_DEBUG( fractBlend <= 65535u && "Factor should be in 0.16 fixed-point." );
+  // Blend while promoting intermediates to 16.32 fixed point:
+  const uint64_t weightedAFixed = uint64_t(a) * (65535u - fractBlend);
+  const uint64_t weightedBFixed = uint64_t(b) * fractBlend;
+  const uint64_t blended = (weightedAFixed + weightedBFixed);
+  return blended;
+}
+
+/** @return The weighted blend of two integers, given a 0.16 fixed-point blending factor.
+ * @note Currently this is unused */
+inline unsigned int WeightedBlend(unsigned int a, unsigned int b, unsigned int fractBlend ) DALI_FUNC_OPT_SPEED_INLINE_PURE;
+inline unsigned int WeightedBlend(unsigned int a, unsigned int b, unsigned int fractBlend )
+{
+  // Generate a 16.16 result, add 0.5 (to round to nearest int) and throw away the fractional bits:
+  const unsigned blended = (WeightedBlendIntToFixed1616( a, b, fractBlend ) + 32768u) >> 16u;
+  return blended;
+}
+
+/**
+ * @brief Blend 4 taps into one value using horizontal and vertical weights.
+ */
+inline unsigned int BilinearFilter1BPP(unsigned int tl, unsigned int tr, unsigned int bl, unsigned int br, unsigned int fractBlendHorizontal, unsigned int fractBlendVertical ) DALI_FUNC_OPT_SPEED_INLINE_PURE;
+inline unsigned int BilinearFilter1BPP(unsigned int tl, unsigned int tr, unsigned int bl, unsigned int br, unsigned int fractBlendHorizontal, unsigned int fractBlendVertical )
+{
+  DALI_ASSERT_DEBUG( fractBlendHorizontal <= 65535u && "Factor should be in 0.16 fixed-point." );
+  DALI_ASSERT_DEBUG( fractBlendVertical   <= 65535u && "Factor should be in 0.16 fixed-point." );
+  //
+  const unsigned int topBlend = WeightedBlendIntToFixed1616( tl, tr, fractBlendHorizontal );
+  const unsigned int botBlend = WeightedBlendIntToFixed1616( bl, br, fractBlendHorizontal );
+  const uint64_t blended2x2 = WeightedBlendFixed1616ToFixed1632( topBlend, botBlend, fractBlendVertical );
+  const unsigned int rounded = (blended2x2 + (1u << 31u) ) >> 32u;
+  return rounded;
 }
 
 /**@}*/
