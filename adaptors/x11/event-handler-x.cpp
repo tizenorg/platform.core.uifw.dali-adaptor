@@ -412,7 +412,7 @@ struct EventHandler::Impl
           keyString = keyEvent->string;
         }
 
-        KeyEvent keyEvent(keyName, keyString, keyCode, modifier, time, KeyEvent::Down);
+        KeyEvent keyEvent(keyString, keyCode, modifier, time, KeyEvent::Down);
         handler->SendEvent( keyEvent );
       }
     }
@@ -447,7 +447,6 @@ struct EventHandler::Impl
       {
         // We're consuming key up event so we have to pass to IMF so that it can parse it as well.
         Ecore_IMF_Event_Key_Up ecoreKeyUpEvent;
-        ecoreKeyUpEvent.keyname   = keyEvent->keyname;
         ecoreKeyUpEvent.key       = keyEvent->key;
         ecoreKeyUpEvent.string    = keyEvent->string;
         ecoreKeyUpEvent.compose   = keyEvent->compose;
@@ -466,7 +465,6 @@ struct EventHandler::Impl
     {
       if ( keyEvent->window == handler->mImpl->mWindow )
       {
-        std::string keyName( keyEvent->keyname );
         std::string keyString( "" );
         int keyCode = ecore_x_keysym_keycode_get(keyEvent->keyname);
         int modifier( keyEvent->modifiers );
@@ -478,7 +476,7 @@ struct EventHandler::Impl
           keyString = keyEvent->string;
         }
 
-        KeyEvent keyEvent(keyName, keyString, keyCode, modifier, time, KeyEvent::Up);
+        KeyEvent keyEvent(keyString, keyCode, modifier, time, KeyEvent::Up);
         handler->SendEvent( keyEvent );
 
       }
@@ -1182,8 +1180,11 @@ void EventHandler::SendEvent(KeyEvent& keyEvent)
   }
 
   // Create KeyEvent and send to Core.
-  Integration::KeyEvent event(keyEvent.keyPressedName, keyEvent.keyPressed, keyEvent.keyCode,
-  keyEvent.keyModifier, keyEvent.time, static_cast<Integration::KeyEvent::State>(keyEvent.state));
+  Integration::KeyEvent event( keyEvent.keyPressed,
+                               keyEvent.keyCode,
+                               keyEvent.keyModifier,
+                               keyEvent.time,
+                               static_cast<Integration::KeyEvent::State>(keyEvent.state) );
   mCoreEventInterface.QueueCoreEvent( event );
   mCoreEventInterface.ProcessCoreEvents();
 }
