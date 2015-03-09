@@ -201,6 +201,12 @@ BufferImage FontClient::CreateBitmap( FontId fontId, GlyphIndex glyphIndex )
   return mPlugin->CreateBitmap( fontId, glyphIndex );
 }
 
+FontId FontClient::GetEmojiFont()
+{
+  CreatePlugin();
+  return mPlugin->GetEmojiFont();
+}
+
 void FontClient::CreatePlugin()
 {
   if( !mPlugin )

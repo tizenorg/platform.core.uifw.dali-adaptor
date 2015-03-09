@@ -265,6 +265,12 @@ public:
    */
   BufferImage CreateBitmap( FontId fontId, GlyphIndex glyphIndex );
 
+  /**
+   * @brief Get the font being used from Emojis
+   * @return FontID for the Emoji Font
+   */
+  FontId GetEmojiFont();
+
 public: // Not intended for application developers
   /**
    * @brief This constructor is used by FontClient::Get().

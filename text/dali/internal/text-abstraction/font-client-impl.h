@@ -146,6 +146,11 @@ public:
    */
   BufferImage CreateBitmap( FontId fontId, GlyphIndex glyphIndex );
 
+  /**
+   * @copydoc Dali::FontClient::GetEmojiFont()
+   */
+  FontId GetEmojiFont();
+
 private:
 
   /**

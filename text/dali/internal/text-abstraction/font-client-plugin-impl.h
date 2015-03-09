@@ -209,6 +209,11 @@ struct FontClient::Plugin
    */
   BufferImage CreateBitmap( FontId fontId, GlyphIndex glyphIndex );
 
+  /**
+   * @copydoc Dali::FontClient::GetEmojiFont()
+   */
+  FontId GetEmojiFont();
+
 private:
 
   /**
@@ -342,6 +347,7 @@ private:
   std::vector<FontDescriptionCacheItem> mValidatedFontCache;   ///< Caches indices to the vector of font descriptions for a given 'font family name, font style'.
   FontList                              mFontDescriptionCache; ///< Caches font descriptions for the validated font family name and font style pairs.
   std::vector<FontIdCacheItem>          mFontIdCache;          ///< Caches font ids for the pairs of font point size and the index to the vector with font descriptions of the validated fonts.
+  FontId mEmojiFont;                                           ///< Caches the font used for Emojis
 };
 
 } // namespace Internal
