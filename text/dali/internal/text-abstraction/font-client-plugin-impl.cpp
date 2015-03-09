@@ -246,6 +246,17 @@ FontId FontClient::Plugin::FindDefaultFont( Character charcode,
 
     if( FcCharSetHasChar( charSet, charcode ) )
     {
+      Dali::Vector< PointSize26Dot6 > fixedSizes;
+      GetFixedSizes( description.family,
+                     description.style,
+                     fixedSizes );
+
+      if( 0 != fixedSizes.Count() )
+      {
+        // If the font is not scalable pick an available size
+        pointSize = fixedSizes[0];
+      }
+
       return GetFontId( description.family,
                         description.style,
                         pointSize,
