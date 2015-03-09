@@ -216,7 +216,7 @@ PointSize26Dot6 FontClient::Plugin::GetPointSize( FontId id )
 }
 
 FontId FontClient::Plugin::FindDefaultFont( Character charcode,
-                                            PointSize26Dot6 pointSize )
+                                            PointSize26Dot6 requestedSize )
 {
   // Create the list of default fonts if it has not been created.
   if( mDefaultFonts.empty() )
@@ -246,9 +246,29 @@ FontId FontClient::Plugin::FindDefaultFont( Character charcode,
 
     if( FcCharSetHasChar( charSet, charcode ) )
     {
+      Dali::Vector< PointSize26Dot6 > fixedSizes;
+      GetFixedSizes( description.family,
+                     description.style,
+                     fixedSizes );
+
+      if( 0 != fixedSizes.Count() )
+      {
+        // If the font is not scalable, pick the largest size >= requestedSize
+        PointSize26Dot6 size = fixedSizes[0];
+        for( unsigned int i=1; i<fixedSizes.Count(); ++i )
+        {
+          if( fixedSizes[i] <= requestedSize &&
+              fixedSizes[i] > size )
+          {
+            size = fixedSizes[i];
+          }
+        }
+        requestedSize = size;
+      }
+
       return GetFontId( description.family,
                         description.style,
-                        pointSize,
+                        requestedSize,
                         0u );
     }
   }
