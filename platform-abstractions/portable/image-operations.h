@@ -338,6 +338,13 @@ void PointSample1BPP( const unsigned char * inPixels,
                       unsigned int desiredWidth,
                       unsigned int desiredHeight );
 
+void LinearSample1BPP( const unsigned char * inPixels,
+                      unsigned int inputWidth,
+                      unsigned int inputHeight,
+                      unsigned char * outPixels,
+                      unsigned int desiredWidth,
+                      unsigned int desiredHeight );
+
 /**@}*/
 
 /**

@@ -20,6 +20,9 @@
 // EXTERNAL INCLUDES
 #include <cstring>
 #include <stddef.h>
+#if defined(DEBUG_ENABLED)
+#include <iostream>
+#endif
 #include <dali/integration-api/debug.h>
 
 // INTERNAL INCLUDES
@@ -470,17 +473,33 @@ Integration::BitmapPtr DownscaleBitmap( Integration::Bitmap& bitmap,
     const unsigned int filteredHeight = filteredDimensions.GetHeight();
 
     // Run a filter to scale down the bitmap if it needs it:
-    if( (filteredWidth < shrunkWidth || filteredHeight < shrunkHeight) &&
-        (filterMode == ImageAttributes::Nearest || filterMode == ImageAttributes::Linear ||
-         filterMode == ImageAttributes::BoxThenNearest || filterMode == ImageAttributes::BoxThenLinear) )
+    bool filtered = false;
+    if( filteredWidth < shrunkWidth || filteredHeight < shrunkHeight )
     {
-      ///@note If a linear filter is requested, we do our best with a point filter for now.
-      PointSample( bitmap.GetBuffer(), shrunkWidth, shrunkHeight, pixelFormat, bitmap.GetBuffer(), filteredWidth, filteredHeight );
-
-      outputBitmap =  MakeBitmap( bitmap.GetBuffer(), pixelFormat, filteredWidth, filteredHeight );
+      if( filterMode == ImageAttributes::Linear || filterMode == ImageAttributes::BoxThenLinear )
+      {
+        if( pixelFormat == Pixel::L8 || pixelFormat == Pixel::A8 )
+        {
+          LinearSample1BPP( bitmap.GetBuffer(), shrunkWidth, shrunkHeight, bitmap.GetBuffer(), filteredWidth, filteredHeight );
+        }
+        // Temp fallback until the point sampling works:
+        else
+        {
+          PointSample( bitmap.GetBuffer(), shrunkWidth, shrunkHeight, pixelFormat, bitmap.GetBuffer(), filteredWidth, filteredHeight );
+        }
+        outputBitmap =  MakeBitmap( bitmap.GetBuffer(), pixelFormat, filteredWidth, filteredHeight );
+        filtered = true;
+      }
+      else if( filterMode == ImageAttributes::Nearest || filterMode == ImageAttributes::BoxThenNearest )
+      {
+        ///@note If a linear filter is requested, we do our best with a point filter for now.
+        PointSample( bitmap.GetBuffer(), shrunkWidth, shrunkHeight, pixelFormat, bitmap.GetBuffer(), filteredWidth, filteredHeight );
+        outputBitmap =  MakeBitmap( bitmap.GetBuffer(), pixelFormat, filteredWidth, filteredHeight );
+        filtered = true;
+      }
     }
     // Copy out the 2^x downscaled, box-filtered pixels if no secondary filter (point or linear) was applied:
-    else if( shrunkWidth < bitmapWidth || shrunkHeight < bitmapHeight )
+    if( filtered == false && ( shrunkWidth < bitmapWidth || shrunkHeight < bitmapHeight ) )
     {
       outputBitmap = MakeBitmap( bitmap.GetBuffer(), pixelFormat, shrunkWidth, shrunkHeight );
     }
@@ -1077,6 +1096,89 @@ void PointSample( const unsigned char * inPixels,
   {
     DALI_LOG_INFO( gImageOpsLogFilter, Dali::Integration::Log::Verbose, "Bitmap was not point sampled: unsupported pixel format: %u.\n", unsigned(pixelFormat) );
   }
+}
+
+/*
+ * L8, A8
+ */
+#define PIXEL uint8_t
+
+void LinearSample1BPP( const unsigned char * inPixels,
+                       unsigned int inputWidth,
+                       unsigned int inputHeight,
+                       unsigned char * outPixels,
+                       unsigned int desiredWidth,
+                       unsigned int desiredHeight )
+{
+#if defined(DEBUG_ENABLED)
+  std::cerr << "LinearSample1BPP():\n";
+  std::cerr << "   in:  " << inputWidth << ", " << inputHeight << std::endl;
+  std::cerr << "   out: " << desiredWidth << ", " << desiredHeight << std::endl;
+#endif
+
+  DALI_ASSERT_DEBUG( ((desiredWidth <= inputWidth && desiredHeight <= inputHeight) ||
+        outPixels >= inPixels + inputWidth * inputHeight * sizeof(PIXEL) || outPixels <= inPixels - desiredWidth * desiredHeight * sizeof(PIXEL)) &&
+        "The input and output buffers must not overlap for an upscaling.");
+    DALI_ASSERT_DEBUG( ((uint64_t) inPixels)  % sizeof(PIXEL) == 0 && "Pixel pointers need to be aligned to the size of the pixels (E.g., 4 bytes for RGBA, 2 bytes for RGB565, ...)." );
+    DALI_ASSERT_DEBUG( ((uint64_t) outPixels) % sizeof(PIXEL) == 0 && "Pixel pointers need to be aligned to the size of the pixels (E.g., 4 bytes for RGBA, 2 bytes for RGB565, ...)." );
+
+    if( inputWidth < 1u || inputHeight < 1u || desiredWidth < 1u || desiredHeight < 1u )
+    {
+      return;
+    }
+    const PIXEL* const inAligned = reinterpret_cast<const PIXEL*>(inPixels);
+    PIXEL* const       outAligned = reinterpret_cast<PIXEL*>(outPixels);
+    const unsigned int deltaX = (inputWidth  << 16u) / desiredWidth;
+    const unsigned int deltaY = (inputHeight << 16u) / desiredHeight;
+
+    unsigned int inY = 0;
+    for( unsigned int outY = 0; outY < desiredHeight; ++outY )
+    {
+      // Round fixed point y coordinate to nearest integer:
+      const unsigned int integerY = (inY + (1u << 15u)) >> 16u;
+      const PIXEL* const inScanline = &inAligned[inputWidth * integerY];
+      PIXEL* const outScanline = &outAligned[desiredWidth * outY];
+
+      // Find the two scanlines to blend and the two weights:
+      const unsigned int integerY1 = inY >> 16u;
+      const unsigned int integerY2 = integerY1 >= inputHeight ? integerY1 : integerY1 + 1;
+//      const unsigned int inputYWeight1 = inY & 65535u;
+//      const unsigned int inputYWeight2 = 65535u - inputYWeight1;
+
+      const PIXEL* const inScanline1 = &inAligned[inputWidth * integerY1];
+      const PIXEL* const inScanline2 = &inAligned[inputWidth * integerY2];
+
+      DALI_ASSERT_DEBUG( integerY < inputHeight );
+      DALI_ASSERT_DEBUG( integerY1 < inputHeight );
+      DALI_ASSERT_DEBUG( integerY2 < inputHeight );
+
+      unsigned int inX = 0;
+      for( unsigned int outX = 0; outX < desiredWidth; ++outX )
+      {
+        // Round the fixed-point x coordinate to an integer:
+        const unsigned int integerX = (inX + (1u << 15u)) >> 16u;
+        const PIXEL* const inPixelAddress = &inScanline[integerX];
+        const PIXEL pixel = *inPixelAddress;
+
+        const unsigned int integerX1 = inX >> 16u;
+        const unsigned int integerX2 = integerX1 >= inputWidth ? integerX1 : integerX1 + 1;
+
+        const PIXEL pixel1 = inScanline1[integerX1];
+        const PIXEL pixel2 = inScanline2[integerX1];
+        const PIXEL pixel3 = inScanline1[integerX2];
+        const PIXEL pixel4 = inScanline2[integerX2];
+
+
+        outScanline[outX] = pixel;
+
+        outScanline[outX] = (pixel1 + pixel2 + pixel3 + pixel4) >> 2u;
+        //outScanline[outX] = (pixel1 + pixel2 ) * 1000;
+            ;
+
+        inX += deltaX;
+      }
+      inY += deltaY;
+    }
 }
 
 } /* namespace Platform */
