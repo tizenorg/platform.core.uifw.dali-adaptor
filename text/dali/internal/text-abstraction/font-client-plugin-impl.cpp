@@ -480,7 +480,7 @@ bool FontClient::Plugin::GetGlyphMetrics( GlyphInfo* array,
           array[i].height = mFontCache[ fontId -1 ].mFixedHeightPixels;
           array[i].advance = mFontCache[ fontId -1 ].mFixedWidthPixels;
           array[i].xBearing = 0.0f;
-          array[i].yBearing = mFontCache[ fontId -1 ].mFixedHeightPixels;
+          array[i].yBearing = mFontCache[ fontId -1 ].mFixedHeightPixels - GetGlyphDescenderForBitmap( fontId, array[i].index );
         }
         else
         {
@@ -488,29 +488,32 @@ bool FontClient::Plugin::GetGlyphMetrics( GlyphInfo* array,
           success = false;
         }
       }
-
-      int error = FT_Load_Glyph( ftFace, array[i].index, FT_LOAD_DEFAULT );
-
-      if( FT_Err_Ok == error )
+      else
       {
-        array[i].width  = static_cast< float >( ftFace->glyph->metrics.width ) * FROM_266;
-        array[i].height = static_cast< float >( ftFace->glyph->metrics.height ) * FROM_266 ;
-        if( horizontal )
+
+        int error = FT_Load_Glyph( ftFace, array[i].index, FT_LOAD_DEFAULT );
+
+        if( FT_Err_Ok == error )
         {
-          array[i].xBearing = static_cast< float >( ftFace->glyph->metrics.horiBearingX ) * FROM_266;
-          array[i].yBearing = static_cast< float >( ftFace->glyph->metrics.horiBearingY ) * FROM_266;
-          array[i].advance  = static_cast< float >( ftFace->glyph->metrics.horiAdvance ) * FROM_266;
+          array[i].width  = static_cast< float >( ftFace->glyph->metrics.width ) * FROM_266;
+          array[i].height = static_cast< float >( ftFace->glyph->metrics.height ) * FROM_266 ;
+          if( horizontal )
+          {
+            array[i].xBearing = static_cast< float >( ftFace->glyph->metrics.horiBearingX ) * FROM_266;
+            array[i].yBearing = static_cast< float >( ftFace->glyph->metrics.horiBearingY ) * FROM_266;
+            array[i].advance  = static_cast< float >( ftFace->glyph->metrics.horiAdvance ) * FROM_266;
+          }
+          else
+          {
+            array[i].xBearing = static_cast< float >( ftFace->glyph->metrics.vertBearingX ) * FROM_266;
+            array[i].yBearing = static_cast< float >( ftFace->glyph->metrics.vertBearingY ) * FROM_266;
+            array[i].advance  = static_cast< float >( ftFace->glyph->metrics.vertAdvance ) * FROM_266;
+          }
         }
         else
         {
-          array[i].xBearing = static_cast< float >( ftFace->glyph->metrics.vertBearingX ) * FROM_266;
-          array[i].yBearing = static_cast< float >( ftFace->glyph->metrics.vertBearingY ) * FROM_266;
-          array[i].advance  = static_cast< float >( ftFace->glyph->metrics.vertAdvance ) * FROM_266;
+          success = false;
         }
-      }
-      else
-      {
-        success = false;
       }
     }
     else
@@ -999,6 +1002,109 @@ void FontClient::Plugin::GetFixedSizes( const FontFamily& fontFamily,
     return GetFixedSizes( path, sizes );
   }
   DALI_LOG_ERROR( "FreeType Cannot check font: %s %s\n", fontFamily.c_str(), fontStyle.c_str() );
+}
+
+float FontClient::Plugin::GetGlyphDescenderForBitmap( FontId fontId, GlyphIndex glyphIndex )
+{
+  // Search bitmap base cache to see if there is an entry for this fontId
+  std::vector< GlyphDescenderCacheEntry >::iterator bbcIt = mGlyphDescenderCache.begin();
+  for ( ; bbcIt != mGlyphDescenderCache.end(); ++bbcIt )
+  {
+    if ( bbcIt->mFontId == fontId )
+    {
+      // Check for an entry for this glyph
+      Vector< GlyphDescenderEntry >::Iterator bbgIt = bbcIt->mGlyphDescenderList.Begin();
+      for ( ; bbgIt != bbcIt->mGlyphDescenderList.End(); ++ bbgIt )
+      {
+        if ( bbgIt->mGlyphIndex == glyphIndex )
+        {
+          return ( bbgIt->mGlyphDescender );
+        }
+      }
+    }
+  }
+
+  // Insert a new entry into the base cache
+  GlyphDescenderEntry entry;
+  entry.mGlyphIndex = glyphIndex;
+  entry.mGlyphDescender = 0.0f;
+
+  FT_Face ftFace = mFontCache[fontId-1].mFreeTypeFace;
+  if( FT_Err_Ok ==  FT_Load_Glyph( ftFace, glyphIndex, FT_LOAD_COLOR ) )
+  {
+    bool foundBase = false;
+    uint32_t width = ftFace->glyph->bitmap.width;
+    uint32_t height = ftFace->glyph->bitmap.rows;
+    uint32_t row = width * ( height - 1u );
+    switch ( ftFace->glyph->bitmap.pixel_mode )
+    {
+      case FT_PIXEL_MODE_GRAY:
+      {
+        unsigned char* buffer = ftFace->glyph->bitmap.buffer;
+        for ( uint32_t i = 0; i < height; ++i )
+        {
+          for ( uint32_t j = 0; j < width; ++j )
+          {
+            if ( buffer[ row + j ] )
+            {
+              foundBase = true;
+              break;
+            }
+          }
+          if ( foundBase )
+          {
+            break;
+          }
+          row -= width;
+          entry.mGlyphDescender++;
+        }
+        break;
+      }
+      case FT_PIXEL_MODE_BGRA:
+      {
+        // Scan the bitmap image for the base line of glyph
+        uint32_t* buffer = reinterpret_cast< uint32_t* >( ftFace->glyph->bitmap.buffer );
+        for ( uint32_t i = 0; i < height; ++i )
+        {
+          for ( uint32_t j = 0; j < width; ++j )
+          {
+            if ( buffer[ row + j ] & 255 )
+            {
+              foundBase = true;
+              break;
+            }
+          }
+          if ( foundBase )
+          {
+            break;
+          }
+          row -= width;
+          entry.mGlyphDescender++;
+        }
+        break;
+      }
+      default:
+      {
+        break;
+      }
+    }
+
+    bbcIt = mGlyphDescenderCache.begin();
+    for ( ; bbcIt != mGlyphDescenderCache.end(); ++bbcIt )
+    {
+      if ( bbcIt->mFontId == fontId )
+      {
+        bbcIt->mGlyphDescenderList.PushBack( entry );
+        return entry.mGlyphDescender;
+      }
+    }
+    // No record for this font, so create a new one
+    GlyphDescenderCacheEntry cacheEntry;
+    cacheEntry.mFontId = fontId;
+    cacheEntry.mGlyphDescenderList.PushBack( entry );
+    mGlyphDescenderCache.push_back( cacheEntry );
+  }
+  return entry.mGlyphDescender;
 }
 
 } // namespace Internal

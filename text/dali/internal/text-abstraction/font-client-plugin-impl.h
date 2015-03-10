@@ -108,6 +108,24 @@ struct FontClient::Plugin
   };
 
   /**
+   * @brief Contains the glyph descender of a fixed size glyph's bitmap
+   */
+  struct GlyphDescenderEntry
+  {
+    GlyphIndex mGlyphIndex;
+    float mGlyphDescender;
+  };
+
+  /**
+   * @brief Caches the glyph descenders of fixed size glyphs' bitmaps
+   */
+  struct GlyphDescenderCacheEntry
+  {
+    FontId mFontId;
+    Vector< GlyphDescenderEntry > mGlyphDescenderList;
+  };
+
+  /**
    * Constructor.
    *
    * Initializes the FreeType library.
@@ -339,6 +357,16 @@ private:
                      const FontStyle& fontStyle,
                      FontDescriptionId& validatedFontId );
 
+  /**
+   * @brief Determine the glyph descender to use for a bitmap image
+   *
+   * @param fontId The font Id containing the glyph
+   * @param glyphIndex The glyph index of the glyph
+   *
+   * @return Base to use to position bitmap
+   */
+  float GetGlyphDescenderForBitmap( FontId fontId, GlyphIndex glyphIndex );
+
   FT_Library mFreeTypeLibrary; ///< A handle to a FreeType library instance.
 
   unsigned int mDpiHorizontal; ///< Horizontal dpi.
@@ -347,10 +375,11 @@ private:
   FontList mSystemFonts;       ///< Cached system fonts.
   FontList mDefaultFonts;      ///< Cached default fonts.
 
-  std::vector<CacheItem>                mFontCache;            ///< Caches the FreeType face and font metrics of the triplet 'path to the font file name, font point size and face index'.
-  std::vector<FontDescriptionCacheItem> mValidatedFontCache;   ///< Caches indices to the vector of font descriptions for a given 'font family name, font style'.
-  FontList                              mFontDescriptionCache; ///< Caches font descriptions for the validated font family name and font style pairs.
-  std::vector<FontIdCacheItem>          mFontIdCache;          ///< Caches font ids for the pairs of font point size and the index to the vector with font descriptions of the validated fonts.
+  std::vector<CacheItem>                  mFontCache;            ///< Caches the FreeType face and font metrics of the triplet 'path to the font file name, font point size and face index'.
+  std::vector<FontDescriptionCacheItem>   mValidatedFontCache;   ///< Caches indices to the vector of font descriptions for a given 'font family name, font style'.
+  FontList                                mFontDescriptionCache; ///< Caches font descriptions for the validated font family name and font style pairs.
+  std::vector<FontIdCacheItem>            mFontIdCache;          ///< Caches font ids for the pairs of font point size and the index to the vector with font descriptions of the validated fonts.
+  std::vector< GlyphDescenderCacheEntry > mGlyphDescenderCache;  ///< Caches the base of fixed size glyph bitmaps
 };
 
 } // namespace Internal
