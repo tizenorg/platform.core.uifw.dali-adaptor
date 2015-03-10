@@ -108,6 +108,24 @@ struct FontClient::Plugin
   };
 
   /**
+   * @brief Contains the baseline position of a fixed size glyph's bitmap
+   */
+  struct BitmapBaseGlyphEntry
+  {
+    GlyphIndex mGlyphIndex;
+    float mBase;
+  };
+
+  /**
+   * @brief Caches the baseline positions of fixed size glyphs' bitmaps
+   */
+  struct BitmapBaseCacheEntry
+  {
+    FontId mFontId;
+    Vector< BitmapBaseGlyphEntry > mBaseList;
+  };
+
+  /**
    * Constructor.
    *
    * Initializes the FreeType library.
@@ -339,6 +357,16 @@ private:
                      const FontStyle& fontStyle,
                      FontDescriptionId& validatedFontId );
 
+  /**
+   * @brief Determine the baseline to use for a glyph bitmap image
+   *
+   * @param fontId The font Id containing the glyph
+   * @param glyphIndex The glyph index of the glyph
+   *
+   * @return Base to use to position bitmap
+   */
+  float GetBitmapBase( FontId fontId, GlyphIndex glyphIndex );
+
   FT_Library mFreeTypeLibrary; ///< A handle to a FreeType library instance.
 
   unsigned int mDpiHorizontal; ///< Horizontal dpi.
@@ -351,6 +379,7 @@ private:
   std::vector<FontDescriptionCacheItem> mValidatedFontCache;   ///< Caches indices to the vector of font descriptions for a given 'font family name, font style'.
   FontList                              mFontDescriptionCache; ///< Caches font descriptions for the validated font family name and font style pairs.
   std::vector<FontIdCacheItem>          mFontIdCache;          ///< Caches font ids for the pairs of font point size and the index to the vector with font descriptions of the validated fonts.
+  std::vector< BitmapBaseCacheEntry >   mBitmapBaseCache;      ///< Caches the base of fixed size glyph bitmaps
 };
 
 } // namespace Internal
