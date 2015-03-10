@@ -127,7 +127,7 @@ struct Shaping::Plugin
     /* Create a buffer for harfbuzz to use */
     hb_buffer_t* harfBuzzBuffer = hb_buffer_create();
 
-    const bool rtlDiection = ( ARABIC == script );
+    const bool rtlDiection = IsRightToLeftScript( script );
     hb_buffer_set_direction( harfBuzzBuffer,
                              rtlDiection ? HB_DIRECTION_RTL : HB_DIRECTION_LTR ); /* or LTR */
 

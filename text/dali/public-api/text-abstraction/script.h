@@ -79,6 +79,15 @@ const char* const ScriptName[] =
   "UNKNOWN"     ///< The script is unknown.
 };
 
+/**
+ * @brief Whether the script is a right to left script.
+ *
+ * @param[in] script The script.
+ *
+ * @return @e true if the script is right to left.
+ */
+bool IsRightToLeftScript( Script script );
+
 } // namespace TextAbstraction
 
 } // namespace Dali
