@@ -366,17 +366,19 @@ void Adaptor::Start()
 
   // NOTE: dpi must be set before starting the render thread
   // use default or command line settings if not run on device
-#ifdef __arm__
-  // set the DPI value for font rendering
-  unsigned int dpiHor, dpiVer;
-  dpiHor = dpiVer = 0;
-  mSurface->GetDpi(dpiHor, dpiVer);
+  if( mHDpi == 0 || mVDpi == 0 )
+  {
+    unsigned int dpiHor, dpiVer;
+    dpiHor = dpiVer = 0;
+    mSurface->GetDpi(dpiHor, dpiVer);
 
-  // tell core about the value
-  mCore->SetDpi(dpiHor, dpiVer);
-#else
-  mCore->SetDpi(mHDpi, mVDpi);
-#endif
+    // tell core about the value
+    mCore->SetDpi(dpiHor, dpiVer);
+  }
+  else
+  {
+    mCore->SetDpi(mHDpi, mVDpi);
+  }
 
   // Tell the core the size of the surface just before we start the render-thread
   PositionSize size = mSurface->GetPositionSize();
