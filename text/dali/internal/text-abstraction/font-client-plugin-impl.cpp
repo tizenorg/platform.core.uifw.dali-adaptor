@@ -241,8 +241,12 @@ PointSize26Dot6 FontClient::Plugin::GetPointSize( FontId id )
 }
 
 FontId FontClient::Plugin::FindDefaultFont( Character charcode,
-                                            PointSize26Dot6 requestedSize )
+                                            PointSize26Dot6 requestedSize,
+                                            bool preferColor )
 {
+  FontId fontId(0);
+  bool foundColor(false);
+
   // Create the list of default fonts if it has not been created.
   if( mDefaultFonts.empty() )
   {
@@ -253,8 +257,7 @@ FontId FontClient::Plugin::FindDefaultFont( Character charcode,
   // Traverse the list of default fonts.
   // Check for each default font if supports the character.
 
-  for( FontList::const_iterator it = mDefaultFonts.begin(),
-         endIt = mDefaultFonts.end();
+  for( FontList::const_iterator it = mDefaultFonts.begin(), endIt = mDefaultFonts.end();
        it != endIt;
        ++it )
   {
@@ -290,16 +293,22 @@ FontId FontClient::Plugin::FindDefaultFont( Character charcode,
           }
         }
         requestedSize = size;
+        foundColor = true;
       }
 
-      return GetFontId( description.family,
-                        description.style,
-                        requestedSize,
-                        0u );
+      fontId = GetFontId( description.family,
+                          description.style,
+                          requestedSize,
+                          0u );
+
+      if( fontId && ( !preferColor || foundColor ) )
+      {
+        break;
+      }
     }
   }
 
-  return 0u;
+  return fontId;
 }
 
 FontId FontClient::Plugin::GetFontId( const FontPath& path,
