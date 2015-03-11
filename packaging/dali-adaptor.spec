@@ -178,6 +178,11 @@ CFLAGS+=" -DOVER_TIZEN_SDK_2_2"
 CXXFLAGS+=" -DOVER_TIZEN_SDK_2_2"
 %endif
 
+%if 0%{?TIZEN_SDK_2_3}
+CFLAGS+=" -DTIZEN_SDK_2_3"
+CXXFLAGS+=" -DTIZEN_SDK_2_3"
+%endif
+
 libtoolize --force
 cd %{_builddir}/%{name}-%{version}/build/tizen && autoreconf --install
 cd %{_builddir}/%{name}-%{version}/build/tizen && CXXFLAGS=$CXXFLAGS LDFLAGS=$LDFLAGS DALI_DATA_RW_DIR="%{dali_data_rw_dir}" DALI_DATA_RO_DIR="%{dali_data_ro_dir}" FONT_PRELOADED_PATH="%{font_preloaded_path}" FONT_DOWNLOADED_PATH="%{font_downloaded_path}" FONT_APPLICATION_PATH="%{font_application_path}" FONT_CONFIGURATION_FILE="%{font_configuration_file}"

@@ -27,6 +27,10 @@
 // EXTERNAL INCLUDES
 #include <fontconfig/fontconfig.h>
 
+#ifndef TIZEN_SDK_2_3
+#define FREETYPE2_SUPPORT
+#endif
+
 /**
  * Conversion from Fractional26.6 to float
  */
@@ -470,6 +474,7 @@ bool FontClient::Plugin::GetGlyphMetrics( GlyphInfo* array,
     {
       FT_Face ftFace = mFontCache[fontId-1].mFreeTypeFace;
 
+#ifdef FREETYPE2_SUPPORT
       // Check to see if we should be loading a Fixed Size bitmap?
       if ( mFontCache[fontId-1].mIsFixedSizeBitmap )
       {
@@ -488,6 +493,7 @@ bool FontClient::Plugin::GetGlyphMetrics( GlyphInfo* array,
           success = false;
         }
       }
+#endif
 
       int error = FT_Load_Glyph( ftFace, array[i].index, FT_LOAD_DEFAULT );
 
@@ -534,12 +540,14 @@ BufferImage FontClient::Plugin::CreateBitmap( FontId fontId,
 
     FT_Error error;
 
+#ifdef FREETYPE2_SUPPORT
     // Check to see if this is fixed size bitmap
     if ( mFontCache[fontId-1].mIsFixedSizeBitmap )
     {
       error = FT_Load_Glyph( ftFace, glyphIndex, FT_LOAD_COLOR );
     }
     else
+#endif
     {
       error = FT_Load_Glyph( ftFace, glyphIndex, FT_LOAD_DEFAULT );
     }
@@ -712,7 +720,7 @@ FontId FontClient::Plugin::CreateFont( const FontPath& path,
       // Ensure this size is available
       for ( int i = 0; i < ftFace->num_fixed_sizes; ++i )
       {
-        if ( pointSize == ftFace->available_sizes[ i ].size )
+        if ( static_cast<FT_Pos>(pointSize) == ftFace->available_sizes[ i ].size )
         {
           // Tell Freetype to use this size
           error = FT_Select_Size( ftFace, i );
@@ -823,6 +831,7 @@ void FontClient::Plugin::ConvertBitmap( BufferImage& destBitmap,
         break;
       }
 
+#ifdef FREETYPE2_SUPPORT
       case FT_PIXEL_MODE_BGRA:
       {
         if ( srcBitmap.pitch == static_cast< int >( srcBitmap.width << 2 ) )
@@ -834,6 +843,8 @@ void FontClient::Plugin::ConvertBitmap( BufferImage& destBitmap,
         }
         break;
       }
+#endif
+
       default:
       {
         DALI_LOG_ERROR( "FontClient Unable to create Bitmap of this PixelType\n" );

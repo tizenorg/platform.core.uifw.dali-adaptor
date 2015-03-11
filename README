@@ -24,7 +24,7 @@ T.O.C.
 
  gbs build -A [TARGET_ARCH] --spec dali-adaptor-mobile.spec
 
- Alternatively for latest devices:
+ Alternatively for older 2.3 devices:
 
  gbs build -A [TARGET_ARCH] --spec dali-adaptor-mobile.spec --define "TIZEN_SDK_2_3 1"
 
