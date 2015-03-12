@@ -75,6 +75,11 @@ BuildRequires:  pkgconfig(glesv2)
 BuildRequires:  pkgconfig(egl)
 BuildRequires:  libcurl-devel
 
+
+%if 0%{?over_tizen_2_2}
+BuildRequires:  pkgconfig(capi-system-info)
+%endif
+
 %if %{with wayland}
 BuildRequires:  pkgconfig(ecore-wayland)
 BuildRequires:  pkgconfig(wayland-egl)
@@ -173,6 +178,7 @@ configure_flags="--enable-wayland"
 %if 0%{?over_tizen_2_2}
 CFLAGS+=" -DOVER_TIZEN_SDK_2_2"
 CXXFLAGS+=" -DOVER_TIZEN_SDK_2_2"
+configure_flags+= " --with-latest-tizen"
 %endif
 
 libtoolize --force
