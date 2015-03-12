@@ -266,6 +266,15 @@ Framework::Framework(Framework::Observer& observer, int *argc, char ***argv, con
   mAbortHandler( MakeCallback( this, &Framework::AbortCallback ) ),
   mImpl(NULL)
 {
+  bool featureFlag = true;
+  system_info_get_platform_bool( "tizen.org/feature/opengles.version.2_0", &featureFlag );
+
+  if( featureFlag == false )
+  {
+    set_last_result( TIZEN_ERROR_NOT_SUPPORTED );
+    DALI_ASSERT_ALWAYS( featureFlag && "Opengl es 2.0 feature is not supported." );
+  }
+
   InitThreads();
   mImpl = new Impl(this);
 }

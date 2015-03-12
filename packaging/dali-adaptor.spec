@@ -74,6 +74,7 @@ BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(glesv2)
 BuildRequires:  pkgconfig(egl)
 BuildRequires:  libcurl-devel
+BuildRequires:  pkgconfig(capi-system-info)
 
 %if %{with wayland}
 BuildRequires:  pkgconfig(ecore-wayland)
