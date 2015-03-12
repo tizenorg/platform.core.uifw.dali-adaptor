@@ -51,6 +51,10 @@ BuildRequires:  pkgconfig(opengl-es-20)
 BuildRequires:  pkgconfig(efl-assist)
 BuildRequires:  libcurl-devel
 
+%if 0%{?over_tizen_2_2}
+BuildRequires:  pkgconfig(capi-system-info)
+%endif
+
 %if 0%{?dali_assimp_plugin}
 BuildRequires:  pkgconfig(assimp)
 %endif
@@ -153,6 +157,9 @@ FONT_CONFIGURATION_FILE="%{font_configuration_file}" ; export FONT_CONFIGURATION
 %endif
 %if 0%{?dali_assimp_plugin}
            --enable-assimp \
+%endif
+%if 0%{?over_tizen_2_2}
+           --with-latest-tizen \
 %endif
            --libdir=%{_libdir}
 

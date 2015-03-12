@@ -131,6 +131,12 @@ AC_ARG_WITH([jpeg-turbo],
 
 AM_CONDITIONAL(TURBO_JPEG_IS_ON, test $with_jpeg_turbo = yes)
 
+AC_ARG_WITH([latest-tizen],
+            [AC_HELP_STRING([--with-latest-tizen],
+                            [Use tizen API over ver. 2.2])],
+            [with_latest_tizen=yes],
+            [with_latest_tizen=no])
+
 # Tizen Profile options
 AC_ARG_ENABLE([profile],
               [AC_HELP_STRING([--enable-profile=COMMON,MOBILE,LITE,WEARABLE,TV,UBUNTU],
@@ -171,7 +177,12 @@ PKG_CHECK_MODULES(SENSOR, sensor)
 PKG_CHECK_MODULES(TTS, tts)
 PKG_CHECK_MODULES(VCONF, vconf)
 PKG_CHECK_MODULES(CAPI_SYSTEM_SYSTEM_SETTINGS, capi-system-system-settings)
+
+if test "x$with_latest_tizen" = "yes"; then
+PKG_CHECK_MODULES(CAPI_SYSTEM_INFO, capi-system-info)
 fi
+
+fi # ubuntu profile test
 
 if test "x$enable_wayland" = "xyes"; then
 PKG_CHECK_MODULES(WAYLAND, [ecore-wayland egl wayland-egl wayland-client >= 1.2.0 xkbcommon],
