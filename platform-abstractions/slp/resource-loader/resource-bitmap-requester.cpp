@@ -71,7 +71,8 @@ void ResourceBitmapRequester::LoadResource( Integration::ResourceRequest& reques
     else
     {
       const std::string& resourcePath = request.GetPath();
-      if( resourcePath.length() > 7 && strncasecmp( resourcePath.c_str(), "http://", 7 ) == 0 )
+      if( strncasecmp( resourcePath.c_str(), "http://", 7 ) == 0 ||
+          strncasecmp( resourcePath.c_str(), "https://", 8 ) == 0 )
       {
         requestType = ResourceThreadBase::RequestDownload;
         workerThread = remoteImageThread;
