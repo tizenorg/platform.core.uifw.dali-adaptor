@@ -103,10 +103,13 @@ public: // Style Information
   std::string GetDefaultFontFamily() const;
 
   /**
-   * @brief Retrieves the default font size
+   * @brief Retrieves the default font size.
+   *
+   * This is an accessibility size, which is mapped to a UI Control specific point-size in stylesheets.
+   * For example zero is the smallest size, which could potentially map to TextLabel point-size 8.
    * @return The default font size.
    */
-  float GetDefaultFontSize() const;
+  unsigned int GetDefaultFontSize() const;
 
   /**
    * @brief Retrieves the user defined Theme.
