@@ -23,7 +23,11 @@ Source0:    %{name}-%{version}.tar.gz
 %define dali_feedback_plugin 0
 %define dali_bullet_plugin 0
 %define dali_assimp_plugin 0
+%if "%{tizen}" == "2.2.1" || "%{tizen}" == "2.2"
+%define over_tizen_2_2 0
+%else
 %define over_tizen_2_2 1
+%endif
 %define shaderbincache_flag ENABLE
 %endif
 
