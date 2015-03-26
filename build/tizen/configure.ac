@@ -45,6 +45,10 @@ PKG_CHECK_MODULES(XML, libxml-2.0)
 PKG_CHECK_MODULES(LIBEXIF, libexif)
 PKG_CHECK_MODULES(LIBDRM, libdrm)
 PKG_CHECK_MODULES(LIBCURL, libcurl)
+PKG_CHECK_MODULES(V8, v8 = 3.32.7, [ pkg_check_v8=yes ],  [ pkg_check_v8=no  ] )
+PKG_CHECK_MODULES(TTRACE,  ttrace, AC_DEFINE(ENABLE_TTRACE, 1, [ttrace available]),
+                  [ AC_MSG_NOTICE([Tizen Trace not avaiable]) ]
+                  )
 
 # Check for availability of BulletPhysics
 PKG_CHECK_EXISTS(bullet, [
