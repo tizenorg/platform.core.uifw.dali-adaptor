@@ -74,6 +74,7 @@ BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(glesv2)
 BuildRequires:  pkgconfig(egl)
 BuildRequires:  libcurl-devel
+BuildRequires:  pkgconfig(ttrace)
 
 
 %if 0%{?over_tizen_2_2}
