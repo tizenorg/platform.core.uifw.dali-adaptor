@@ -365,6 +365,12 @@ public:
    */
   Integration::BitmapPtr GetGlyphImage( FT_Library freeType, const std::string& fontFamily, const std::string& fontStyle, float fontSize, uint32_t character );
 
+  /**
+   * Closes font controller.
+   * If dali can use ecore main loop instead of appcore_efl_main(), it should be removed.
+   */
+  void CloseFontController();
+
 private:
 
   /**

@@ -259,6 +259,12 @@ public: // PlatformAbstraction overrides
    */
   void SetDataStoragePath( const std::string& path );
 
+  /**
+   * Closes font controller
+   * If dali can use ecore main loop instead of appcore_efl_main(), it should be removed.
+   */
+  void CloseFontController();
+
 private:
   ResourceLoader* mResourceLoader;
   DynamicsFactory* mDynamicsFactory;

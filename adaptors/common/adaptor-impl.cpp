@@ -504,6 +504,7 @@ void Adaptor::Stop()
 
     mCallbackManager->Stop();
 
+    mPlatformAbstraction->CloseFontController();
     mState = STOPPED;
   }
 }

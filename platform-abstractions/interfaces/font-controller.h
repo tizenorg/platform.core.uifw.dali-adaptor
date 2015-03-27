@@ -120,6 +120,12 @@ public:
    */
   virtual void SetDefaultFontFamily( const StyledFontFamily& styledFontFamily ) = 0;
 
+  /**
+   * Close font controller
+   * If dali can use ecore main loop instead of appcore_efl_main(), it should be removed.
+   */
+  virtual void Close() = 0;
+
 protected:
 
   /**

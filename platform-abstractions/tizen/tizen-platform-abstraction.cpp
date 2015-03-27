@@ -471,6 +471,14 @@ void TizenPlatformAbstraction::SetDataStoragePath( const std::string& path )
   mDataStoragePath = path;
 }
 
+void TizenPlatformAbstraction::CloseFontController()
+{
+  if( mResourceLoader )
+  {
+    mResourceLoader->CloseFontController();
+  }
+}
+
 }  // namespace TizenPlatform
 
 }  // namespace Dali

@@ -107,6 +107,11 @@ public:
    */
   virtual void SetDefaultFontFamily( const StyledFontFamily& styledFontFamily );
 
+  /*
+   * @copydoc Dali::Platform::FontController::Close()
+   */
+  void Close();
+
 private:
 
   /**

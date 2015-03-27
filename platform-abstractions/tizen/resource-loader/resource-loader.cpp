@@ -134,6 +134,11 @@ struct ResourceLoader::ResourceLoaderImpl
     delete mFontController;
   }
 
+  void CloseFontController()
+  {
+    mFontController->Close();
+  }
+
   void Pause()
   {
     // Pause all the request handlers:
@@ -872,6 +877,11 @@ const std::string& ResourceLoader::GetFontPath(const std::string& fontFamily, co
 {
   // At this point fontFamily and fontStyle must have been validated.
   return mImpl->mFontController->GetFontPath(std::make_pair(fontFamily,fontStyle));
+}
+
+void ResourceLoader::CloseFontController()
+{
+  mImpl->CloseFontController();
 }
 
 } // namespace TizenPlatform

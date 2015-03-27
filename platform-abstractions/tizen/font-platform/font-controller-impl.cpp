@@ -169,11 +169,7 @@ FontController::FontController()
 
 FontController::~FontController()
 {
-  // clear the font family cache
-  ClearFontFamilyCache();
-
-  // Clear the preferred font list.
-  ClearPreferredFontList();
+  Close();
 }
 
 const std::string& FontController::GetFontPath( const StyledFontFamily& styledFontFamily )
@@ -778,6 +774,17 @@ void FontController::ClearPreferredFontList()
     delete *it;
   }
   mPreferredFonts.Clear();
+}
+
+void FontController::Close()
+{
+    // clear the font family cache
+  ClearFontFamilyCache();
+
+  // Clear the preferred font list.
+  ClearPreferredFontList();
+
+  FcFini();
 }
 
 } // namespace TizenPlatform
