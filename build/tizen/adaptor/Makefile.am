@@ -252,6 +252,7 @@ libdali_adaptor_la_CXXFLAGS = \
                       $(TTS_CFLAGS) \
                       $(SENSOR_CFLAGS) \
                       $(LIBDRM_CFLAGS) \
+                      $(LIBTBM_CFLAGS) \
                       $(LIBEXIF_CFLAGS) \
                       $(LIBCURL_CFLAGS) \
                       $(ASSIMP_CFLAGS) \
@@ -272,6 +273,7 @@ libdali_adaptor_la_LIBADD = \
                       $(TTS_LIBS) \
                       $(SENSOR_LIBS) \
                       $(LIBDRM_LIBS) \
+                      $(LIBTBM_LIBS) \
                       $(LIBEXIF_LIBS) \
                       $(LIBCURL_LIBS) \
                       $(CAPI_SYSTEM_SYSTEM_SETTINGS_LIBS) \
