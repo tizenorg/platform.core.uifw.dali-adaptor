@@ -30,12 +30,12 @@ namespace Adaptor
 namespace ECore
 {
 
-DALI_EXPORT_API RenderSurface* CreatePixmapSurface(
-  PositionSize       positionSize,
-  Any                surface,
-  Any                display,
-  const std::string& name,
-  bool               isTransparent )
+DALI_EXPORT_API RenderSurface* CreateOffscreenSurface(
+                               PositionSize       positionSize,
+                               Any                surface,
+                               Any                display,
+                               const std::string& name,
+                               bool               isTransparent )
 {
   return NULL;
 }

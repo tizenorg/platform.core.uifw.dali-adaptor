@@ -16,7 +16,7 @@
  */
 
 // CLASS HEADER
-#include "pixmap-render-surface.h"
+#include "offscreen-render-surface.h"
 
 // EXTERNAL INCLUDES
 #include <X11/Xatom.h>
@@ -46,7 +46,7 @@ extern Debug::Filter* gRenderSurfaceLogFilter;
 namespace ECore
 {
 
-PixmapRenderSurface::PixmapRenderSurface(Dali::PositionSize positionSize,
+OffscreenRenderSurface::OffscreenRenderSurface(Dali::PositionSize positionSize,
                                          Any surface,
                                          const std::string& name,
                                          bool isTransparent)
@@ -57,7 +57,7 @@ PixmapRenderSurface::PixmapRenderSurface(Dali::PositionSize positionSize,
   Init( surface );
 }
 
-PixmapRenderSurface::~PixmapRenderSurface()
+OffscreenRenderSurface::~OffscreenRenderSurface()
 {
   // release the surface if we own one
   if( mOwnSurface )
@@ -68,17 +68,17 @@ PixmapRenderSurface::~PixmapRenderSurface()
   }
 }
 
-Ecore_X_Drawable PixmapRenderSurface::GetDrawable()
+Ecore_X_Drawable OffscreenRenderSurface::GetDrawable()
 {
   return (Ecore_X_Drawable) mX11Pixmap;
 }
 
-Any PixmapRenderSurface::GetSurface()
+Any OffscreenRenderSurface::GetSurface()
 {
   return Any( mX11Pixmap );
 }
 
-void PixmapRenderSurface::InitializeEgl( EglInterface& egl )
+void OffscreenRenderSurface::InitializeEgl( EglInterface& egl )
 {
   DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
@@ -87,7 +87,7 @@ void PixmapRenderSurface::InitializeEgl( EglInterface& egl )
   eglImpl.ChooseConfig(false, mColorDepth);
 }
 
-void PixmapRenderSurface::CreateEglSurface( EglInterface& egl )
+void OffscreenRenderSurface::CreateEglSurface( EglInterface& egl )
 {
   DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
@@ -99,7 +99,7 @@ void PixmapRenderSurface::CreateEglSurface( EglInterface& egl )
   eglImpl.CreateSurfacePixmap( (EGLNativePixmapType)pixmap, mColorDepth ); // reinterpret_cast does not compile
 }
 
-void PixmapRenderSurface::DestroyEglSurface( EglInterface& egl )
+void OffscreenRenderSurface::DestroyEglSurface( EglInterface& egl )
 {
   DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
@@ -107,7 +107,7 @@ void PixmapRenderSurface::DestroyEglSurface( EglInterface& egl )
   eglImpl.DestroySurface();
 }
 
-bool PixmapRenderSurface::ReplaceEGLSurface( EglInterface& egl )
+bool OffscreenRenderSurface::ReplaceEGLSurface( EglInterface& egl )
 {
   DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
@@ -120,18 +120,18 @@ bool PixmapRenderSurface::ReplaceEGLSurface( EglInterface& egl )
 
 }
 
-void PixmapRenderSurface::StartRender()
+void OffscreenRenderSurface::StartRender()
 {
   mSyncMode = SYNC_MODE_WAIT;
 }
 
-bool PixmapRenderSurface::PreRender( EglInterface&, Integration::GlAbstraction& )
+bool OffscreenRenderSurface::PreRender( EglInterface&, Integration::GlAbstraction& )
 {
   // nothing to do for pixmaps
   return true;
 }
 
-void PixmapRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, DisplayConnection* displayConnection, unsigned int deltaTime, bool replacingSurface )
+void OffscreenRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, DisplayConnection* displayConnection, unsigned int deltaTime, bool replacingSurface )
 {
   // flush gl instruction queue
   glAbstraction.Flush();
@@ -173,13 +173,13 @@ void PixmapRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstract
   AcquireLock( replacingSurface ? SYNC_MODE_NONE : SYNC_MODE_WAIT );
 }
 
-void PixmapRenderSurface::StopRender()
+void OffscreenRenderSurface::StopRender()
 {
   SetSyncMode(SYNC_MODE_NONE);
   ReleaseLock();
 }
 
-void PixmapRenderSurface::CreateXRenderable()
+void OffscreenRenderSurface::CreateXRenderable()
 {
   // check we're creating one with a valid size
   DALI_ASSERT_ALWAYS( mPosition.width > 0 && mPosition.height > 0 && "Pixmap size is invalid" );
@@ -204,17 +204,17 @@ void PixmapRenderSurface::CreateXRenderable()
   ecore_x_gc_free(gc);
 }
 
-void PixmapRenderSurface::UseExistingRenderable( unsigned int surfaceId )
+void OffscreenRenderSurface::UseExistingRenderable( unsigned int surfaceId )
 {
   mX11Pixmap = static_cast< Ecore_X_Pixmap >( surfaceId );
 }
 
-void PixmapRenderSurface::SetSyncMode( SyncMode syncMode )
+void OffscreenRenderSurface::SetSyncMode( SyncMode syncMode )
 {
   mSyncMode = syncMode;
 }
 
-void PixmapRenderSurface::AcquireLock( SyncMode syncMode )
+void OffscreenRenderSurface::AcquireLock( SyncMode syncMode )
 {
   boost::unique_lock< boost::mutex > lock( mSyncMutex );
 
@@ -228,7 +228,7 @@ void PixmapRenderSurface::AcquireLock( SyncMode syncMode )
   mSyncReceived = false;
 }
 
-void PixmapRenderSurface::ReleaseLock()
+void OffscreenRenderSurface::ReleaseLock()
 {
   {
     boost::unique_lock< boost::mutex > lock( mSyncMutex );

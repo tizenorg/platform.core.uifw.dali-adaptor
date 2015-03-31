@@ -1,5 +1,5 @@
-#ifndef __DALI_ECORE_X_PIXMAP_RENDER_SURFACE_H__
-#define __DALI_ECORE_X_PIXMAP_RENDER_SURFACE_H__
+#ifndef __DALI_ECORE_X_OFFSCREEN_RENDER_SURFACE_H__
+#define __DALI_ECORE_X_OFFSCREEN_RENDER_SURFACE_H__
 
 /*
  * Copyright (c) 2014 Samsung Electronics Co., Ltd.
@@ -30,7 +30,7 @@ namespace ECore
 /**
  * Ecore X11 implementation of render surface.
  */
-class PixmapRenderSurface : public EcoreWlRenderSurface
+class OffscreenRenderSurface : public EcoreWlRenderSurface
 {
 public:
 
@@ -41,15 +41,15 @@ public:
     * @param [in] name optional name of surface passed in
     * @param [in] isTransparent if it is true, surface has 32 bit color depth, otherwise, 24 bit
     */
-  PixmapRenderSurface( Dali::PositionSize positionSize,
-                       Any surface,
-                       const std::string& name,
-                       bool isTransparent = false);
+  OffscreenRenderSurface( Dali::PositionSize positionSize,
+                          Any surface,
+                          const std::string& name,
+                          bool isTransparent = false);
 
   /**
    * @copydoc Dali::RenderSurface::~RenderSurface
    */
-  virtual ~PixmapRenderSurface();
+  virtual ~OffscreenRenderSurface();
 
 public: // API
 
@@ -151,4 +151,4 @@ private: // Data
 
 } // namespace Dali
 
-#endif // __DALI_ECORE_X_PIXMAP_RENDER_SURFACE_H__
+#endif // __DALI_ECORE_X_OFFSCREEN_RENDER_SURFACE_H__
