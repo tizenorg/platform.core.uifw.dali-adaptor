@@ -10,7 +10,7 @@ _adaptor_x11_internal_src_files = \
   $(adaptor_x11_dir)/window-impl-x.cpp \
   $(adaptor_x11_dir)/event-handler-x.cpp \
   $(adaptor_x11_dir)/egl-implementation-x.cpp \
-  $(adaptor_x11_dir)/pixmap-render-surface-x.cpp \
+  $(adaptor_x11_dir)/offscreen-render-surface-x.cpp \
   $(adaptor_x11_dir)/ecore-x-render-surface.cpp \
   $(adaptor_x11_dir)/window-render-surface-x.cpp \
   $(adaptor_x11_dir)/ecore-x-window-interface.cpp

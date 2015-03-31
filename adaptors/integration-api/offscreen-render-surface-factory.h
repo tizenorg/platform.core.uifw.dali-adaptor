@@ -1,5 +1,5 @@
-#ifndef __DALI_INTEGRATION_PIXMAP_RENDER_SURFACE_FACTORY_H__
-#define __DALI_INTEGRATION_PIXMAP_RENDER_SURFACE_FACTORY_H__
+#ifndef __DALI_INTEGRATION_OFFSCREEN_RENDER_SURFACE_FACTORY_H__
+#define __DALI_INTEGRATION_OFFSCREEN_RENDER_SURFACE_FACTORY_H__
 
 /*
  * Copyright (c) 2014 Samsung Electronics Co., Ltd.
@@ -31,7 +31,7 @@ namespace Dali
 namespace ECore
 {
 
-class PixmapRenderSurface;
+class OffscreenRenderSurface;
 
 /**
  * Surface factory function for pixmap
@@ -42,13 +42,13 @@ class PixmapRenderSurface;
  * @param [in] name Name of surface passed in
  * @param [in] isTransparent Whether the surface has an alpha channel
  */
-PixmapRenderSurface* CreatePixmapSurface(PositionSize       positionSize,
-                                         Any                surface,
-                                         const std::string& name,
-                                         bool               isTransparent);
+OffscreenRenderSurface* CreateOffscreenSurface(PositionSize       positionSize,
+                                               Any                surface,
+                                               const std::string& name,
+                                               bool               isTransparent);
 
 } // namespace ECoreX
 
 } // namespace Dali
 
-#endif //  __DALI_INTEGRATION_PIXMAP_RENDER_SURFACE_FACTORY_H__
+#endif //  __DALI_INTEGRATION_OFFSCREEN_RENDER_SURFACE_FACTORY_H__
