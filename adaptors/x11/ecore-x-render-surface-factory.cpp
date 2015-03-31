@@ -16,7 +16,7 @@
  */
 
 // INTERNAL INCLUDES
-#include <pixmap-render-surface.h>
+#include <offscreen-render-surface.h>
 
 namespace Dali
 {
@@ -24,11 +24,11 @@ namespace Dali
 namespace ECore
 {
 
-DALI_EXPORT_API PixmapRenderSurface* CreatePixmapSurface(
-  PositionSize       positionSize,
-  Any                surface,
-  const std::string& name,
-  bool               isTransparent)
+DALI_EXPORT_API PixmapRenderSurface* CreateOffscreenSurface(
+                                     PositionSize       positionSize,
+                                     Any                surface,
+                                     const std::string& name,
+                                     bool               isTransparent)
 {
   return new PixmapRenderSurface(positionSize, surface, name, isTransparent);
 }
