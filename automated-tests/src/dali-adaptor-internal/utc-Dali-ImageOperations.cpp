@@ -353,15 +353,15 @@ void TestDownscaledBitmapHasRightDimensionsAndFormat(
     uint32_t expectedDimension,
     const char * const location )
 {
-  ImageAttributes attributes;
-  attributes.SetScalingMode( ImageAttributes::ShrinkToFit );
-  attributes.SetFilterMode( ImageAttributes::Box );
-  attributes.SetSize( targetDimension, targetDimension );
+  ImageDimensions desired( targetDimension, targetDimension );
+  ScalingMode scalingMode( ScalingMode::ShrinkToFit );
+  SamplingMode samplingMode( SamplingMode::Box );
 
   Integration::BitmapPtr sourceBitmap = Integration::Bitmap::New( Integration::Bitmap::BITMAP_2D_PACKED_PIXELS, ResourcePolicy::DISCARD );
   sourceBitmap->GetPackedPixelsProfile()->ReserveBuffer( format, sourceDimension, sourceDimension, sourceDimension, sourceDimension );
 
-  Integration::BitmapPtr downScaled = DownscaleBitmap( *sourceBitmap, ImageDimensions( targetDimension, targetDimension ), attributes.GetScalingMode(), attributes.GetFilterMode() );
+  Integration::BitmapPtr downScaled = DownscaleBitmap( *sourceBitmap, desired, scalingMode, samplingMode );
+
   DALI_TEST_EQUALS( downScaled->GetImageWidth(), expectedDimension, location );
   DALI_TEST_EQUALS( downScaled->GetImageHeight(), expectedDimension, location );
   DALI_TEST_EQUALS( downScaled->GetPixelFormat(), format, location );
