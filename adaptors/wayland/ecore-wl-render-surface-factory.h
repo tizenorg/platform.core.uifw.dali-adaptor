@@ -52,12 +52,12 @@ class RenderSurface;
  * @param [in] name Name of surface passed in
  * @param [in] isTransparent Whether the surface has an alpha channel
  */
-RenderSurface* CreatePixmapSurface(
-  PositionSize       positionSize,
-  Any         surface,
-  Any         display,
-  const std::string& name,
-  bool               isTransparent );
+RenderSurface* CreateOffscreenSurface(
+               PositionSize       positionSize,
+               Any                surface,
+               Any                display,
+               const std::string& name,
+               bool               isTransparent );
 
 } // namespace ECore
 

@@ -23,7 +23,7 @@
 #include <dali/integration-api/debug.h>
 
 // INTERNAL HEADERS
-#include <pixmap-render-surface.h>
+#include <offscreen-render-surface.h>
 
 namespace Dali
 {
