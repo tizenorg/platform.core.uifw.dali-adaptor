@@ -20,7 +20,9 @@
 // EXTERNAL INCLUDES
 #include <cstring>
 #include <stddef.h>
+#include <cmath>
 #include <dali/integration-api/debug.h>
+#include <dali/public-api/math/vector2.h>
 
 // INTERNAL INCLUDES
 
@@ -183,37 +185,37 @@ ImageDimensions CalculateDesiredDimensions( unsigned int bitmapWidth, unsigned i
 /**
  * @brief Converts a scaling mode to the definition of which dimensions matter when box filtering as a part of that mode.
  */
-BoxDimensionTest DimensionTestForScalingMode( ImageAttributes::ScalingMode scalingMode )
+BoxDimensionTest DimensionTestForScalingMode( FittingMode::Type fittingMode )
 {
   BoxDimensionTest dimensionTest;
   dimensionTest = BoxDimensionTestEither;
 
-  switch( scalingMode )
+  switch( fittingMode )
   {
     // Shrink to fit attempts to make one or zero dimensions smaller than the
     // desired dimensions and one or two dimensions exactly the same as the desired
     // ones, so as long as one dimension is larger than the desired size, box
     // filtering can continue even if the second dimension is smaller than the
     // desired dimensions:
-    case ImageAttributes::ShrinkToFit:
+    case FittingMode::ShrinkToFit:
     {
       dimensionTest = BoxDimensionTestEither;
       break;
     }
     // Scale to fill mode keeps both dimensions at least as large as desired:
-    case ImageAttributes::ScaleToFill:
+    case FittingMode::ScaleToFill:
     {
       dimensionTest = BoxDimensionTestBoth;
       break;
     }
     // Y dimension is irrelevant when downscaling in FitWidth mode:
-    case ImageAttributes::FitWidth:
+    case FittingMode::FitWidth:
     {
       dimensionTest = BoxDimensionTestX;
       break;
     }
     // X Dimension is ignored by definition in FitHeight mode:
-    case ImageAttributes::FitHeight:
+    case FittingMode::FitHeight:
     {
       dimensionTest = BoxDimensionTestY;
       break;
@@ -307,27 +309,27 @@ ImageDimensions FitForFitHeight( ImageDimensions target, ImageDimensions source 
  * @brief Generate the rectangle to use as the target of a pixel sampling pass
  * (e.g., nearest or linear).
  */
-ImageDimensions FitToScalingMode( ImageDimensions requestedSize, ImageDimensions sourceSize, ImageAttributes::ScalingMode scalingMode )
+ImageDimensions FitToScalingMode( ImageDimensions requestedSize, ImageDimensions sourceSize, FittingMode::Type fittingMode )
 {
   ImageDimensions fitDimensions;
-  switch( scalingMode )
+  switch( fittingMode )
   {
-    case ImageAttributes::ShrinkToFit:
+    case FittingMode::ShrinkToFit:
     {
       fitDimensions = FitForShrinkToFit( requestedSize, sourceSize );
       break;
     }
-    case ImageAttributes::ScaleToFill:
+    case FittingMode::ScaleToFill:
     {
       fitDimensions = FitForScaleToFill( requestedSize, sourceSize );
       break;
     }
-    case ImageAttributes::FitWidth:
+    case FittingMode::FitWidth:
     {
       fitDimensions = FitForFitWidth( requestedSize, sourceSize );
       break;
     }
-    case ImageAttributes::FitHeight:
+    case FittingMode::FitHeight:
     {
       fitDimensions = FitForFitHeight( requestedSize, sourceSize );
       break;
@@ -368,9 +370,9 @@ BitmapPtr MakeBitmap( const uint8_t * const pixels, Pixel::Format pixelFormat, u
 } // namespace - unnamed
 
 /**
- * @brief Implement ImageAttributes::ScaleTofill scaling mode cropping.
+ * @brief Implement ScaleTofill scaling mode cropping.
  *
- * Implement the cropping required for ImageAttributes::ScaleToFill mode,
+ * Implement the cropping required for ScaleToFill mode,
  * returning a new bitmap with the aspect ratio specified by the scaling mode.
  * This scaling mode selects the central portion of a source image so any spare
  * pixels off one of either the top or bottom edge need to be removed.
@@ -387,23 +389,21 @@ BitmapPtr MakeBitmap( const uint8_t * const pixels, Pixel::Format pixelFormat, u
  */
 Integration::BitmapPtr CropForScaleToFill( Integration::BitmapPtr bitmap, ImageDimensions desiredDimensions );
 
-BitmapPtr ApplyAttributesToBitmap( BitmapPtr bitmap, const ImageAttributes& requestedAttributes )
+BitmapPtr ApplyAttributesToBitmap( BitmapPtr bitmap, ImageDimensions dimensions, FittingMode::Type fittingMode, SamplingMode::Type samplingMode )
 {
-  ///@ToDo: Optimisation - If Scaling Mode is ScaletoFill, either do cropping here at the front of the pipe, or equivalently modify all scaling functions to take a source rectangle and have the first one to be applied, pull in a subset of source pixels to crop on the fly. That would make every scaling slightly slower but would save the memcpy()s at the end for ScaleToFill.
-
   if( bitmap )
   {
     // Calculate the desired box, accounting for a possible zero component:
-    const ImageDimensions desiredDimensions  = CalculateDesiredDimensions( bitmap->GetImageWidth(), bitmap->GetImageHeight(), requestedAttributes.GetWidth(), requestedAttributes.GetHeight() );
+    const ImageDimensions desiredDimensions  = CalculateDesiredDimensions( bitmap->GetImageWidth(), bitmap->GetImageHeight(), dimensions.GetWidth(), dimensions.GetHeight() );
 
     // If a different size than the raw one has been requested, resize the image
     // maximally using a repeated box filter without making it smaller than the
     // requested size in either dimension:
-    bitmap = DownscaleBitmap( *bitmap, desiredDimensions, requestedAttributes.GetScalingMode(), requestedAttributes.GetFilterMode() );
+    bitmap = DownscaleBitmap( *bitmap, desiredDimensions, fittingMode, samplingMode );
 
     // Cut the bitmap according to the desired width and height so that the
     // resulting bitmap has the same aspect ratio as the desired dimensions:
-    if( bitmap && bitmap->GetPackedPixelsProfile() && requestedAttributes.GetScalingMode() == ImageAttributes::ScaleToFill )
+    if( bitmap && bitmap->GetPackedPixelsProfile() && fittingMode == FittingMode::ScaleToFill )
     {
       bitmap = CropForScaleToFill( bitmap, desiredDimensions );
     }
@@ -491,8 +491,8 @@ BitmapPtr CropForScaleToFill( BitmapPtr bitmap, ImageDimensions desiredDimension
 
 Integration::BitmapPtr DownscaleBitmap( Integration::Bitmap& bitmap,
                                         ImageDimensions desired,
-                                        ImageAttributes::ScalingMode scalingMode,
-                                        ImageAttributes::FilterMode filterMode )
+                                        FittingMode::Type fittingMode,
+                                        SamplingMode::Type samplingMode )
 {
   // Source dimensions as loaded from resources (e.g. filesystem):
   const unsigned int bitmapWidth  = bitmap.GetImageWidth();
@@ -512,10 +512,10 @@ Integration::BitmapPtr DownscaleBitmap( Integration::Bitmap& bitmap,
 
     // Do the fast power of 2 iterated box filter to get to roughly the right side if the filter mode requests that:
     unsigned int shrunkWidth = -1, shrunkHeight = -1;
-    DownscaleInPlacePow2( bitmap.GetBuffer(), pixelFormat, bitmapWidth, bitmapHeight, desiredWidth, desiredHeight, scalingMode, filterMode, shrunkWidth, shrunkHeight );
+    DownscaleInPlacePow2( bitmap.GetBuffer(), pixelFormat, bitmapWidth, bitmapHeight, desiredWidth, desiredHeight, fittingMode, samplingMode, shrunkWidth, shrunkHeight );
 
     // Work out the dimensions of the downscaled bitmap, given the scaling mode and desired dimensions:
-    const ImageDimensions filteredDimensions = FitToScalingMode( ImageDimensions( desiredWidth, desiredHeight ), ImageDimensions( shrunkWidth, shrunkHeight ), scalingMode );
+    const ImageDimensions filteredDimensions = FitToScalingMode( ImageDimensions( desiredWidth, desiredHeight ), ImageDimensions( shrunkWidth, shrunkHeight ), fittingMode );
     const unsigned int filteredWidth = filteredDimensions.GetWidth();
     const unsigned int filteredHeight = filteredDimensions.GetHeight();
 
@@ -523,13 +523,13 @@ Integration::BitmapPtr DownscaleBitmap( Integration::Bitmap& bitmap,
     bool filtered = false;
     if( filteredWidth < shrunkWidth || filteredHeight < shrunkHeight )
     {
-      if( filterMode == ImageAttributes::Linear || filterMode == ImageAttributes::BoxThenLinear ||
-          filterMode == ImageAttributes::Nearest || filterMode == ImageAttributes::BoxThenNearest )
+      if( samplingMode == SamplingMode::Linear || samplingMode == SamplingMode::BoxThenLinear ||
+          samplingMode == SamplingMode::Nearest || samplingMode == SamplingMode::BoxThenNearest )
       {
         outputBitmap = MakeEmptyBitmap( pixelFormat, filteredWidth, filteredHeight );
         if( outputBitmap )
         {
-          if( filterMode == ImageAttributes::Linear || filterMode == ImageAttributes::BoxThenLinear )
+          if( samplingMode == SamplingMode::Linear || samplingMode == SamplingMode::BoxThenLinear )
           {
             LinearSample( bitmap.GetBuffer(), ImageDimensions(shrunkWidth, shrunkHeight), pixelFormat, outputBitmap->GetBuffer(), filteredDimensions );
           }
@@ -848,20 +848,20 @@ void DownscaleInPlacePow2( unsigned char * const pixels,
                            unsigned int inputHeight,
                            unsigned int desiredWidth,
                            unsigned int desiredHeight,
-                           ImageAttributes::ScalingMode scalingMode,
-                           ImageAttributes::FilterMode filterMode,
+                           FittingMode::Type fittingMode,
+                           SamplingMode::Type samplingMode,
                            unsigned& outWidth,
                            unsigned& outHeight )
 {
   outWidth = inputWidth;
   outHeight = inputHeight;
   // Perform power of 2 iterated 4:1 box filtering if the requested filter mode requires it:
-  if( filterMode == ImageAttributes::Box || filterMode == ImageAttributes::BoxThenNearest || filterMode == ImageAttributes::BoxThenLinear )
+  if( samplingMode == SamplingMode::Box || samplingMode == SamplingMode::BoxThenNearest || samplingMode == SamplingMode::BoxThenLinear )
   {
     // Check the pixel format is one that is supported:
     if( pixelFormat == Pixel::RGBA8888 || pixelFormat == Pixel::RGB888 || pixelFormat == Pixel::RGB565 || pixelFormat == Pixel::LA88 || pixelFormat == Pixel::L8 || pixelFormat == Pixel::A8 )
     {
-      const BoxDimensionTest dimensionTest = DimensionTestForScalingMode( scalingMode );
+      const BoxDimensionTest dimensionTest = DimensionTestForScalingMode( fittingMode );
 
       if( pixelFormat == Pixel::RGBA8888 )
       {
