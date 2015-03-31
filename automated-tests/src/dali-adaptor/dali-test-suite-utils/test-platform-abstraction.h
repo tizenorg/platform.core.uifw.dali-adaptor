@@ -97,14 +97,23 @@ public:
    */
   virtual void Resume();
 
-  virtual void GetClosestImageSize( const std::string& filename,
-                                    const ImageAttributes& attributes,
-                                    Vector2& closestSize);
+  /**
+   * @copydoc PlatformAbstraction::GetClosestImageSize()
+   */
+  virtual ImageDimensions GetClosestImageSize( const std::string& filename,
+                                                 ImageDimensions size,
+                                                 ScalingMode scalingMode,
+                                                 SamplingMode samplingMode,
+                                                 bool orientationCorrection );
 
-  virtual void GetClosestImageSize( Integration::ResourcePointer resourceBuffer,
-                                    const ImageAttributes& attributes,
-                                    Vector2& closestSize);
-
+  /**
+   * @copydoc PlatformAbstraction::GetClosestImageSize()
+   */
+  virtual ImageDimensions GetClosestImageSize( Integration::ResourcePointer resourceBuffer,
+                                               ImageDimensions size,
+                                               ScalingMode scalingMode,
+                                               SamplingMode samplingMode,
+                                               bool orientationCorrection );
   /**
    * @copydoc PlatformAbstraction::LoadResource()
    */

@@ -78,6 +78,7 @@ double GetTimeMilliseconds( Integration::PlatformAbstraction& abstraction )
 extern Integration::PlatformAbstraction * gAbstraction;
 
 /** A variety of ImageAttributes to reach different code paths that have embedded code paths. */
+typedef std::pair<ImageDimensions, std::pair<ScalingMode, std::pair<SamplingMode, bool> > > ImageAttributes;
 extern std::vector<ImageAttributes> gCancelAttributes;
 
 

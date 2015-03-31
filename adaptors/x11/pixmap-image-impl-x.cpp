@@ -23,6 +23,7 @@
 #include <X11/Xutil.h>
 #include <X11/Xlib.h>
 #include <dali/integration-api/debug.h>
+#include <dali/integration-api/bitmap.h>
 
 // INTERNAL INCLUDES
 #include <gl/egl-image-extensions.h>
