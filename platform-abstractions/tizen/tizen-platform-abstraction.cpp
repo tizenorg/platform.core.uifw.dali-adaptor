@@ -170,22 +170,23 @@ void TizenPlatformAbstraction::GetGlobalMetrics( const std::string& fontFamily, 
   }
 }
 
-void TizenPlatformAbstraction::GetClosestImageSize( const std::string& filename,
-                                                  const ImageAttributes& attributes,
-                                                  Vector2& closestSize )
+ImageDimensions TizenPlatformAbstraction::GetClosestImageSize( const std::string& filename,
+                                                               ImageDimensions size,
+                                                               ScalingMode scalingMode,
+                                                               SamplingMode samplingMode,
+                                                               bool orientationCorrection )
 {
-  closestSize = Vector2::ZERO;
-  ImageLoader::GetClosestImageSize(filename, attributes, closestSize );
+  return ImageLoader::GetClosestImageSize( filename, size, scalingMode, samplingMode, orientationCorrection );
 }
 
-void TizenPlatformAbstraction::GetClosestImageSize( Integration::ResourcePointer resourceBuffer,
-                                                  const ImageAttributes& attributes,
-                                                  Vector2& closestSize )
+ImageDimensions TizenPlatformAbstraction::GetClosestImageSize( Integration::ResourcePointer resourceBuffer,
+                                                               ImageDimensions size,
+                                                               ScalingMode scalingMode,
+                                                               SamplingMode samplingMode,
+                                                               bool orientationCorrection )
 {
-  closestSize = Vector2::ZERO;
-  ImageLoader::GetClosestImageSize(resourceBuffer, attributes, closestSize );
+  return ImageLoader::GetClosestImageSize( resourceBuffer, size, scalingMode, samplingMode, orientationCorrection );
 }
-
 
 void TizenPlatformAbstraction::LoadResource(const Integration::ResourceRequest& request)
 {
