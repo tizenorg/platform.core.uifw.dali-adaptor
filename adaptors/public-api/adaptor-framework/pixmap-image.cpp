@@ -90,6 +90,11 @@ bool PixmapImage::RequiresBlending() const
   return mImpl->RequiresBlending();
 }
 
+bool PixmapImage::IsYInverted() const
+{
+  return mImpl->IsYInverted();
+}
+
 PixmapImage::PixmapImage( unsigned int width, unsigned int height, ColorDepth depth, Any pixmap )
 {
    mImpl = Internal::Adaptor::PixmapImage::New( width, height, depth, pixmap );

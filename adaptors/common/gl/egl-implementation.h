@@ -164,6 +164,12 @@ public:
    */
   EGLContext GetContext() const;
 
+  /**
+   * Returns the EGL config
+   * @return the EGL config.
+   */
+  EGLConfig GetConfig() const;
+
 private:
 
   Vector<EGLint>       mContextAttribs;

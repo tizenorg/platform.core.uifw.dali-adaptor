@@ -153,6 +153,11 @@ private:   // native image
    */
   virtual bool RequiresBlending() const;
 
+  /**
+   * @copydoc Dali::NativeImageInterface::IsYInverted()
+   */
+  virtual bool IsYInverted() const;
+
 private:
 
   /**

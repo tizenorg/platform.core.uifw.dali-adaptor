@@ -33,6 +33,7 @@
 #include <EGL/eglext.h>
 
 #include <dali/integration-api/debug.h>
+#include <string.h>
 
 // INTERNAL INCLUDES
 #include <gl/egl-implementation.h>
@@ -59,7 +60,8 @@ namespace Adaptor
 EglImageExtensions::EglImageExtensions(EglImplementation* eglImpl)
 : mEglImplementation(eglImpl),
   mImageKHRInitialized(false),
-  mImageKHRInitializeFailed(false)
+  mImageKHRInitializeFailed(false),
+  mYInverted( -1 )
 {
   DALI_ASSERT_ALWAYS( eglImpl && "EGL Implementation not instantiated" );
 }
@@ -229,6 +231,23 @@ void EglImageExtensions::InitializeEglImageKHR()
   {
     mImageKHRInitializeFailed = true;
   }
+}
+
+bool EglImageExtensions::IsYInverted()
+{
+  if( mYInverted == -1 )
+  {
+    const char* extension = eglQueryString( mEglImplementation->GetDisplay(), EGL_EXTENSIONS );
+
+    if( strstr( extension, "EGL_NOK_texture_from_pixmap" ) )
+    {
+      eglGetConfigAttrib( mEglImplementation->GetDisplay(), mEglImplementation->GetConfig(), EGL_Y_INVERTED_NOK, &mYInverted );
+
+      DALI_LOG_INFO( Debug::Filter::gShader, Debug::General, "EGL_Y_INVERTED_NOK = %d\n", mYInverted );
+    }
+  }
+
+  return mYInverted;
 }
 
 } // namespace Adaptor

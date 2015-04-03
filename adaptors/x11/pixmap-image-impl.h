@@ -113,6 +113,14 @@ public:
     return mBlendingRequired;
   }
 
+  /**
+   * @copydoc Dali::PixmapImage::IsYInverted()
+   */
+  bool IsYInverted() const
+  {
+    return mYInverted;
+  }
+
 private:
 
   /**
@@ -158,7 +166,8 @@ private:
   unsigned int mHeight;                       ///< pixmap heights
   bool mOwnPixmap;                            ///< Whether we created pixmap or not
   Ecore_X_Pixmap mPixmap;                     ///< From Xlib
-  bool mBlendingRequired;                      ///< Whether blending is required
+  bool mBlendingRequired;                     ///< Whether blending is required
+  bool mYInverted;                            ///< Whether pixmap is y-inverted
   Dali::PixmapImage::ColorDepth mColorDepth;  ///< color depth of pixmap
   void* mEglImageKHR;                         ///< From EGL extension
   EglImageExtensions* mEglImageExtensions;    ///< The EGL Image Extensions

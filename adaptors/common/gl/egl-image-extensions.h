@@ -76,12 +76,19 @@ public:   // EGLImageKHR extension support
    */
   void InitializeEglImageKHR();
 
+  /**
+   * Query whether an image is y-inverted
+   * @return true if a pixmap is y-inverted, otherwise false
+   */
+  bool IsYInverted();
+
 private:
   EglImplementation* mEglImplementation;
 
   bool mImageKHRInitialized;             ///< Flag for whether extended KHR functions loaded
   bool mImageKHRInitializeFailed;        ///< Flag to avoid trying to reload extended KHR functions, if
                                          /// it fails the first time
+  int mYInverted;                        ///< Flag to whether a pixmap is y-inverted
 };
 
 } // namespace Adaptor

@@ -113,6 +113,11 @@ public:
     return mBlendingRequired;
   }
 
+  bool IsYInverted() const
+  {
+    return true;
+  }
+
 private:
 
   /**

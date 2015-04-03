@@ -105,6 +105,11 @@ public:
    */
   virtual bool RequiresBlending() const;
 
+  /**
+   * @copydoc Dali::NativeImageInterface::IsYInverted()
+   */
+  virtual bool IsYInverted() const;
+
 private:
   NativeBitmapBuffer( const NativeBitmapBuffer& );             ///< not defined
   NativeBitmapBuffer& operator =( const NativeBitmapBuffer& ); ///< not defined

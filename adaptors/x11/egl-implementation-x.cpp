@@ -495,6 +495,11 @@ EGLDisplay EglImplementation::GetContext() const
   return mEglContext;
 }
 
+EGLConfig EglImplementation::GetConfig() const
+{
+  return mEglConfig;
+}
+
 } // namespace Adaptor
 
 } // namespace Internal

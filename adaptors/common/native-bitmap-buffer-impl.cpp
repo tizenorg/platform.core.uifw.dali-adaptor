@@ -103,6 +103,11 @@ bool NativeBitmapBuffer::RequiresBlending() const
   return Pixel::HasAlpha( mPixelFormat );
 }
 
+bool NativeBitmapBuffer::IsYInverted() const
+{
+  return true;
+}
+
 } // namespace Adaptor
 
 } // namespace Internal

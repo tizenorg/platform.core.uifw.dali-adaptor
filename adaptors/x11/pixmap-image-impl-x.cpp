@@ -92,6 +92,7 @@ PixmapImage::PixmapImage( unsigned int width, unsigned int height, Dali::PixmapI
   mOwnPixmap( true ),
   mPixmap( 0 ),
   mBlendingRequired( false ),
+  mYInverted( true ),
   mColorDepth( depth ),
   mEglImageKHR( NULL ),
   mEglImageExtensions( NULL )
@@ -107,6 +108,8 @@ PixmapImage::PixmapImage( unsigned int width, unsigned int height, Dali::PixmapI
 
 void PixmapImage::Initialize()
 {
+  mYInverted = mEglImageExtensions->IsYInverted();
+
   // if pixmap has been created outside of X11 Image we can return
   if (mPixmap)
   {
@@ -183,20 +186,42 @@ bool PixmapImage::GetPixels(std::vector<unsigned char>& pixbuf, unsigned& width,
         pixbuf.resize(width*height*3);
         unsigned char* bufPtr = &pixbuf[0];
 
-        for(unsigned y = height-1; y < height; --y)
+        if( mYInverted )
         {
-          for(unsigned x = 0; x < width; ++x, bufPtr+=3)
+          for( unsigned y = height-1; y >= 0; --y )
           {
-            const unsigned pixel = XGetPixel(pXImage,x,y);
+            for( unsigned x = 0; x < width; ++x, bufPtr+=3 )
+            {
+              const unsigned pixel = XGetPixel(pXImage,x,y);
 
-            // store as RGB
-            const unsigned blue  =  pixel & 0xFFU;
-            const unsigned green = (pixel >> 8)  & 0xFFU;
-            const unsigned red   = (pixel >> 16) & 0xFFU;
+              // store as RGB
+              const unsigned blue  =  pixel & 0xFFU;
+              const unsigned green = (pixel >> 8)  & 0xFFU;
+              const unsigned red   = (pixel >> 16) & 0xFFU;
 
-            *bufPtr = red;
-            *(bufPtr+1) = green;
-            *(bufPtr+2) = blue;
+              *bufPtr = red;
+              *(bufPtr+1) = green;
+              *(bufPtr+2) = blue;
+            }
+          }
+        }
+        else
+        {
+          for( unsigned y = 0; y < height; ++y )
+          {
+            for( unsigned x = 0; x < width; ++x, bufPtr+=3 )
+            {
+              const unsigned pixel = XGetPixel(pXImage,x,y);
+
+              // store as RGB
+              const unsigned blue  =  pixel & 0xFFU;
+              const unsigned green = (pixel >> 8)  & 0xFFU;
+              const unsigned red   = (pixel >> 16) & 0xFFU;
+
+              *bufPtr = red;
+              *(bufPtr+1) = green;
+              *(bufPtr+2) = blue;
+            }
           }
         }
         success = true;
@@ -214,16 +239,33 @@ bool PixmapImage::GetPixels(std::vector<unsigned char>& pixbuf, unsigned& width,
           const size_t copy_count = width * 4;
           pixelFormat = Pixel::BGRA8888;
 
-          for(unsigned y = height-1; y < height; --y, bufPtr += width)
+          if( mYInverted )
           {
-            const char * const in = pXImage->data + xDataLineSkip * y;
+            for( unsigned y = height - 1; y >= 0; --y, bufPtr += width )
+            {
+              const char * const in = pXImage->data + xDataLineSkip * y;
 
-            // Copy a whole scanline at a time:
-            DALI_ASSERT_DEBUG( size_t( bufPtr ) >= size_t( &pixbuf[0] ));
-            DALI_ASSERT_DEBUG( reinterpret_cast<size_t>( bufPtr ) + copy_count <= reinterpret_cast<size_t>( &pixbuf[pixbuf.size()] ) );
-            DALI_ASSERT_DEBUG( in >= pXImage->data );
-            DALI_ASSERT_DEBUG( in + copy_count <= pXImage->data + xDataLineSkip * height );
-            __builtin_memcpy( bufPtr, in, copy_count );
+              // Copy a whole scanline at a time:
+              DALI_ASSERT_DEBUG( size_t( bufPtr ) >= size_t( &pixbuf[0] ));
+              DALI_ASSERT_DEBUG( reinterpret_cast<size_t>( bufPtr ) + copy_count <= reinterpret_cast<size_t>( &pixbuf[pixbuf.size()] ) );
+              DALI_ASSERT_DEBUG( in >= pXImage->data );
+              DALI_ASSERT_DEBUG( in + copy_count <= pXImage->data + xDataLineSkip * height );
+              __builtin_memcpy( bufPtr, in, copy_count );
+            }
+          }
+          else
+          {
+            for ( unsigned y = 0; y < height; ++y, bufPtr += width )
+            {
+              const char * const in = pXImage->data + xDataLineSkip * y;
+
+              // Copy a whole scanline at a time:
+              DALI_ASSERT_DEBUG( size_t( bufPtr ) >= size_t( &pixbuf[0] ));
+              DALI_ASSERT_DEBUG( reinterpret_cast<size_t>( bufPtr ) + copy_count <= reinterpret_cast<size_t>( &pixbuf[pixbuf.size()] ) );
+              DALI_ASSERT_DEBUG( in >= pXImage->data );
+              DALI_ASSERT_DEBUG( in + copy_count <= pXImage->data + xDataLineSkip * height );
+              __builtin_memcpy( bufPtr, in, copy_count );
+            }
           }
           success = true;
         }
