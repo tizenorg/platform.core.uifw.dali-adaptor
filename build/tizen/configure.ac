@@ -47,6 +47,8 @@ PKG_CHECK_MODULES(LIBDRM, libdrm)
 PKG_CHECK_MODULES(LIBCURL, libcurl)
 PKG_CHECK_MODULES(HARFBUZZ, harfbuzz)
 PKG_CHECK_MODULES(FRIBIDI, fribidi)
+PKG_CHECK_MODULES(FREETYPE, freetype >= 2.5, [ freetype_bitmap_support=yes ], [ freetype_bitmap_support=no ] )
+
 
 # Check for availability of BulletPhysics
 PKG_CHECK_EXISTS(bullet, [
@@ -255,6 +257,10 @@ if test "x$enable_feedback" = "xyes" || test "x$enable_bullet" = "xyes"; then
 AC_CONFIG_FILES([
  plugins/Makefile
 ])
+fi
+
+if test "x$freetype_bitmap_support" = "xyes"; then
+DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DFREETYPE_BITMAP_SUPPORT"
 fi
 
 AC_OUTPUT
