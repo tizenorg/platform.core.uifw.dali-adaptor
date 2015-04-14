@@ -53,6 +53,8 @@ struct DALI_IMPORT_API GlyphInfo
   float xBearing;   ///< The distance from the cursor position to the leftmost border of the glyph
   float yBearing;   ///< The distance from the baseline to the topmost border of the glyph
   float advance;    ///< The distance to move the cursor for this glyph
+  float xOffset;    ///< Horizontal offset. Some glyphs use the horizontal offset to modify the position.
+  float yOffset;    ///< Vertical offset. Some glyphs use the vertical offset to modify the position.
 };
 
 } // Dali

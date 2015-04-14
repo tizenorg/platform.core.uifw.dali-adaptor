@@ -27,22 +27,26 @@ namespace TextAbstraction
 GlyphInfo::GlyphInfo()
 : fontId( 0 ),
   index( 0 ),
-  width( 0 ),
-  height( 0 ),
-  xBearing( 0 ),
-  yBearing( 0 ),
-  advance( 0 )
+  width( 0.f ),
+  height( 0.f ),
+  xBearing( 0.f ),
+  yBearing( 0.f ),
+  advance( 0.f ),
+  xOffset( 0.f ),
+  yOffset( 0.f )
 {
 }
 
 GlyphInfo::GlyphInfo( FontId font, GlyphIndex i )
 : fontId( font ),
   index( i ),
-  width( 0 ),
-  height( 0 ),
-  xBearing( 0 ),
-  yBearing( 0 ),
-  advance( 0 )
+  width( 0.f ),
+  height( 0.f ),
+  xBearing( 0.f ),
+  yBearing( 0.f ),
+  advance( 0.f ),
+  xOffset( 0.f ),
+  yOffset( 0.f )
 {
 }
 
