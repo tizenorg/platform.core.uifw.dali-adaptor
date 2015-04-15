@@ -57,7 +57,8 @@ public:
   {
     UNKNOWN_COMMAND,
     SET_PROPERTY,
-    DUMP_SCENE
+    DUMP_SCENE,
+    ADD_JSON
   };
 
   AutomationCallback(  unsigned int clientId, ClientSendDataInterface& sendDataInterface )
@@ -79,6 +80,12 @@ public:
      mCommandId = DUMP_SCENE;
   }
 
+  void AssignAddJsonCommand( std::string json )
+  {
+     mCommandId = ADD_JSON;
+     mPropertyCommand = json;
+  }
+
   void RunCallback()
   {
     switch( mCommandId )
@@ -91,6 +98,11 @@ public:
       case DUMP_SCENE:
       {
         Automation::DumpScene( mClientId, &mSendDataInterface);
+        break;
+      }
+      case ADD_JSON:
+      {
+        Automation::AddJson( mPropertyCommand );
         break;
       }
       default:
@@ -239,6 +251,19 @@ void NetworkPerformanceClient::ProcessCommand( char* buffer, unsigned int buffer
       // this needs to be run on the main thread, use the trigger event....
       AutomationCallback* callback = new AutomationCallback( mClientId, mSendDataInterface );
       callback->AssignSetPropertyCommand( stringParam );
+
+      // create a trigger event that automatically deletes itself after the callback has run in the main thread
+      TriggerEventInterface *interface = mTriggerEventFactory.CreateTriggerEvent( callback, TriggerEventInterface::DELETE_AFTER_TRIGGER );
+
+      // asynchronous call, the call back will be run sometime later on the main thread
+      interface->Trigger();
+      break;
+    }
+    case PerformanceProtocol::ADD_JSON:
+    {
+      // this needs to be run on the main thread, use the trigger event....
+      AutomationCallback* callback = new AutomationCallback( mClientId, mSendDataInterface );
+      callback->AssignAddJsonCommand( stringParam );
 
       // create a trigger event that automatically deletes itself after the callback has run in the main thread
       TriggerEventInterface *interface = mTriggerEventFactory.CreateTriggerEvent( callback, TriggerEventInterface::DELETE_AFTER_TRIGGER );

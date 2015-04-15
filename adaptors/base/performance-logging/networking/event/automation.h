@@ -57,6 +57,7 @@ namespace Automation
  */
 void SetProperty( const std::string& message );
 
+void AddJson(const std::string& message);
 
 /**
  * @brief Dumps the actor tree to the client

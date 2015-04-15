@@ -25,6 +25,35 @@
 #include <stdio.h>
 #include <dali/public-api/dali-core.h>
 #include <dali/integration-api/debug.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <dlfcn.h>
+
+void (*builderFn)(int parent, const char* json) = NULL;
+void* handle = NULL;
+
+void lookupBuilderFunction()
+{
+    char *error;
+
+    handle = dlopen ("libdali-toolkit.so", RTLD_LAZY);
+    if (!handle) {
+        DALI_LOG_ERROR("unable to load toolkit\n");
+    }
+
+    builderFn = (void(*)(int, const char*))dlsym(handle, "builderFn");
+    if ((error = dlerror()) != NULL)  {
+        DALI_LOG_ERROR("unable to lookup builder function in toolkit, builder functionality not available\n");
+    }
+
+}
+
+void closeHandle()
+{
+    if (handle != NULL) {
+        dlclose(handle);
+    }
+}
 
 
 namespace  // un-named namespace
@@ -329,6 +358,16 @@ void DumpScene( unsigned int clientId, ClientSendDataInterface* sendData )
   std::string header( buf );
   json = buf + json;
   sendData->SendData( json.c_str(), json.length(), clientId );
+}
+
+void AddJson( const std::string& message )
+{
+  DALI_LOG_ERROR("Add Json message: %s\n", message.c_str());
+  lookupBuilderFunction();
+  if (builderFn!=NULL) {
+      (*builderFn)(1, "test");
+  }
+  closeHandle();
 }
 
 } // namespace Automation

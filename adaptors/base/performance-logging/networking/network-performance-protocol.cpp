@@ -66,6 +66,7 @@ CommandInfo CommandLookup[]=
   {  ENABLE_TIME_MARKER_BIT_MASK, "set_marker",         UNSIGNED_INT  },
   {  DUMP_SCENE_GRAPH           , "dump_scene"         ,NO_PARAMS     },
   {  SET_PROPERTIES             , "set_properties"     ,STRING        },
+  {  ADD_JSON			, "add_json"           ,STRING	      },
   {  UNKNOWN_COMMAND            , "unknown"            ,NO_PARAMS     }
 };
 const unsigned int CommandLookupLength = sizeof( CommandLookup ) /sizeof( CommandInfo );
