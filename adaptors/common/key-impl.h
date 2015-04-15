@@ -48,6 +48,13 @@ bool IsKey( const Dali::KeyEvent& keyEvent, Dali::KEY daliKey);
  */
 bool IsDeviceButton( const char* keyName );
 
+/**
+ * Get the key name from the dali key code.
+ * @param daliKeyCode The dali key code
+ * @return The key name
+ */
+const char* GetKeyName( int daliKeyCode );
+
 } // namespace KeyLookup
 
 } // namespace Adaptor

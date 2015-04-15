@@ -22,6 +22,10 @@
 #include <Ecore.h>
 #include <Ecore_X.h>
 
+#ifndef DALI_PROFILE_UBUNTU
+#include <utilX.h>
+#endif
+
 #include <dali/integration-api/core.h>
 #include <dali/integration-api/system-overlay.h>
 #include <dali/public-api/render-tasks/render-task.h>
@@ -34,6 +38,7 @@
 #include <window-visibility-observer.h>
 #include <orientation.h>
 #include <orientation-impl.h>
+#include <key-impl.h>
 
 namespace
 {
@@ -733,6 +738,54 @@ void Window::RotationDone( int orientation, int width, int height )
                                      ECORE_X_ATOM_CARDINAL, 32, &angles, 2 );
 #endif // DALI_PROFILE_UBUNTU
   }
+}
+
+bool Window::GrabKey( Dali::KEY keyCode, Dali::Window::KeyGrabMode grabMode )
+{
+#ifndef DALI_PROFILE_UBUNTU
+  int xGrabMode;
+  if( grabMode == Dali::Window::OR_EXCLUSIVE )
+  {
+    xGrabMode = OR_EXCLUSIVE_GRAB;
+  }
+  else if( grabMode == Dali::Window::EXCLUSIVE )
+  {
+    xGrabMode = EXCLUSIVE_GRAB;
+  }
+  else if( grabMode == Dali::Window::TOP_POSITION )
+  {
+    xGrabMode = TOP_POSITION_GRAB;
+  }
+  else if( grabMode == Dali::Window::SHARED )
+  {
+    xGrabMode = SHARED_GRAB;
+  }
+  else
+  {
+    return false;
+  }
+
+  int ret = utilx_grab_key (static_cast<Display*>( ecore_x_display_get() ),
+                            static_cast<XWindow>( AnyCast<Ecore_X_Window>( GetNativeHandle() ) ),
+                            KeyLookup::GetKeyName( keyCode ), xGrabMode);
+  return ret==0;
+#else
+  DALI_LOG_ERROR( "Window::GrabKey() is not supported for Ubuntu.\n" );
+  return false;
+#endif // DALI_PROFILE_UBUNTU
+}
+
+bool Window::UngrabKey( Dali::KEY keyCode )
+{
+#ifndef DALI_PROFILE_UBUNTU
+  int ret = utilx_ungrab_key (static_cast<Display*>( ecore_x_display_get()),
+                              static_cast<XWindow>( AnyCast<Ecore_X_Window>( GetNativeHandle() ) ),
+                              KeyLookup::GetKeyName( keyCode ) );
+  return ret==0;
+#else
+  DALI_LOG_ERROR( "Window::UngrabKey() is not supported for Ubuntu.\n" );
+  return false;
+#endif // DALI_PROFILE_UBUNTU
 }
 
 

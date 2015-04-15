@@ -477,6 +477,17 @@ void Window::RotationDone( int orientation, int width, int height )
 {
 }
 
+bool Window::GrabKey( Dali::KEY keyCode, Dali::Window::KeyGrabMode grabMode )
+{
+  DALI_LOG_ERROR( "Window::GrabKey() is not supported for Wayland.\n" );
+  return false;
+}
+
+bool Window::UngrabKey( Dali::KEY keyCode )
+{
+  DALI_LOG_ERROR( "Window::UngrabKey() is not supported for Wayland.\n" );
+  return false;
+}
 
 } // Adaptor
 } // Internal

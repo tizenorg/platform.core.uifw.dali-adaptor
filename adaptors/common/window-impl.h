@@ -171,6 +171,16 @@ public:
    */
   void RotationDone( int orientation, int width, int height );
 
+  /**
+   * @copydoc Dali::Window::GrabKey() const
+   */
+  bool GrabKey( Dali::KEY keyCode, Dali::Window::KeyGrabMode grabMode );
+
+  /**
+   * @copydoc Dali::Window::UngrabKey() const
+   */
+  bool UngrabKey( Dali::KEY keyCode );
+
 private:
   /**
    * Private constructor.

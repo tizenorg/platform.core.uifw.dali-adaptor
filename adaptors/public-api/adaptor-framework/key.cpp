@@ -29,4 +29,9 @@ bool IsKey( const KeyEvent& keyEvent, KEY daliKey)
   return Internal::Adaptor::KeyLookup::IsKey( keyEvent, daliKey );
 }
 
+const char* GetKeyName( int daliKeyCode )
+{
+  return Internal::Adaptor::KeyLookup::GetKeyName( daliKeyCode );
+}
+
 }

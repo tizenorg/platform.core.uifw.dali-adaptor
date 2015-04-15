@@ -27,6 +27,9 @@
 #include <dali/public-api/object/any.h>
 #include <dali/public-api/signals/dali-signal.h>
 
+// INTERNAL HEADERS
+#include "key.h"
+
 namespace Dali
 {
 typedef Dali::Rect<int> PositionSize;
@@ -95,6 +98,17 @@ public:
   {
     FIXED_COLOR = 0, // fixed color style
     CHANGEABLE_COLOR // changeable color style
+  };
+
+  /**
+   * @brief Key grab mode.
+   */
+  enum KeyGrabMode
+  {
+    OR_EXCLUSIVE = 0,  // Definition for getting the grabbed-key exclusively regardless of its position on the window stack with the possibility of overriding the grab by the other client window mode.
+    EXCLUSIVE,         // Definition for getting the grabbed-key exclusively regardless of its position on the window stack mode.
+    TOP_POSITION,      // Definition for getting the grabbed-key only when on the top of the grabbing-window stack mode.
+    SHARED             // Definition for getting the grabbed-key together with the other client window(s) mode.
   };
 
   // Methods
@@ -242,6 +256,24 @@ public:
    * @return The native handle of the window or an empty handle.
    */
   Any GetNativeHandle() const;
+
+  /**
+   * @brief Grabs the key specfied by @a key for this window in the @a grabMode.
+   * @privlevel inhouse
+   * @note KeyGrabMode is fully supported on Tizen and restricted on other platforms (Ubuntu: XXX only, ...).
+   * @param[in] keyCode The key code to grab (defined in key.h)
+   * @param[in] grabMode The grab mode for the key
+   * @return true if the grab succeed.
+   */
+  bool GrabKey( KEY keyCode, KeyGrabMode grabMode );
+
+  /**
+   * @brief Ungrabs the key specfied by @a key for this window.
+   * @privlevel inhouse
+   * @param[in] keyCode The key code to ungrab (defined in key.h)
+   * @return true if the ungrab succeed.
+   */
+  bool UngrabKey( KEY keyCode );
 
 public: // Signals
   /**
