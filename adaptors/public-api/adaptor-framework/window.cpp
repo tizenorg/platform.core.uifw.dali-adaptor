@@ -141,6 +141,16 @@ Any Window::GetNativeHandle() const
   return GetImplementation(*this).GetNativeHandle();
 }
 
+bool Window::GrabKey( KEY dailKey, KeyGrabMode grabMode )
+{
+  return GetImplementation(*this).GrabKey( dailKey, grabMode );
+}
+
+bool Window::UngrabKey( KEY dailKey )
+{
+  return GetImplementation(*this).UngrabKey( dailKey );
+}
+
 Window::Window( Internal::Adaptor::Window* window )
 : BaseHandle( window )
 {

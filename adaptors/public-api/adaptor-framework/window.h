@@ -27,6 +27,9 @@
 #include <dali/public-api/object/any.h>
 #include <dali/public-api/signals/dali-signal.h>
 
+// INTERNAL HEADERS
+#include "key.h"
+
 namespace Dali
 {
 typedef Dali::Rect<int> PositionSize;
@@ -73,9 +76,9 @@ public:
    */
   enum IndicatorBgOpacity
   {
-    OPAQUE = 100, // Fully opaque indicator Bg
-    TRANSLUCENT = 50, // Semi translucent indicator Bg
-    TRANSPARENT = 0 // Fully transparent indicator Bg
+    OPAQUE = 100,     ///< Fully opaque indicator Bg
+    TRANSLUCENT = 50, ///< Semi translucent indicator Bg
+    TRANSPARENT = 0   ///< Fully transparent indicator Bg
   };
 
   /**
@@ -83,9 +86,9 @@ public:
    */
   enum IndicatorVisibleMode
   {
-    INVISIBLE = 0, // hide indicator
-    VISIBLE = 1, // show indicator
-    AUTO = 2 // hide in default, will show when necessary
+    INVISIBLE = 0, ///< hide indicator
+    VISIBLE = 1,   ///< show indicator
+    AUTO = 2       ///< hide in default, will show when necessary
   };
 
   /**
@@ -93,8 +96,19 @@ public:
    */
   enum IndicatorStyle
   {
-    FIXED_COLOR = 0, // fixed color style
-    CHANGEABLE_COLOR // changeable color style
+    FIXED_COLOR = 0, ///< fixed color style
+    CHANGEABLE_COLOR ///< changeable color style
+  };
+
+  /**
+   * @brief Key grab mode.
+   */
+  enum KeyGrabMode
+  {
+    OR_EXCLUSIVE = 0,  ///< Grab a key exclusively regardless of the grabbing-window's position on the window stack with the possibility of overriding the grab by the other client window mode.
+    EXCLUSIVE,         ///< Grab a key exclusively regardless of the grabbing-window's position on the window stack mode.
+    TOP_POSITION,      ///< Grab a key only when on the top of the grabbing-window stack mode.
+    SHARED             ///< Grab a key together with the other client window(s) mode.
   };
 
   // Methods
@@ -242,6 +256,22 @@ public:
    * @return The native handle of the window or an empty handle.
    */
   Any GetNativeHandle() const;
+
+  /**
+   * @brief Grabs the key specfied by @a key for this window in the @a grabMode.
+   * @note KeyGrabMode is fully supported on Tizen and restricted on other platforms (Ubuntu: XXX only, ...).
+   * @param[in] dailKey The key code to grab (defined in key.h)
+   * @param[in] grabMode The grab mode for the key
+   * @return true if the grab succeed.
+   */
+  bool GrabKey( KEY dailKey, KeyGrabMode grabMode );
+
+  /**
+   * @brief Ungrabs the key specfied by @a key for this window.
+   * @param[in] dailKey The key code to ungrab (defined in key.h)
+   * @return true if the ungrab succeed.
+   */
+  bool UngrabKey( KEY dailKey );
 
 public: // Signals
   /**
