@@ -281,11 +281,14 @@ private:
   FontId CreateFixedSizeFont( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex, bool cacheDescription );
 
   /**
+   * @brief Converts a bitmap from freetype to a usable BufferImage
    *
    * @param[in] destBitmap
    * @param[in] srcBitmap
+   *
+   * @return @e true if the conversion was successful.
    */
-  void ConvertBitmap( BufferImage& destBitmap, FT_Bitmap srcBitmap );
+  bool ConvertBitmap( BufferImage& destBitmap, FT_Bitmap srcBitmap );
 
   /**
    * @brief Finds in the cache if there is a triplet with the path to the font file name, the font point size and the face index.

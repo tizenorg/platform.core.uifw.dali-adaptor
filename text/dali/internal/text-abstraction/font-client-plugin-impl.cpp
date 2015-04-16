@@ -580,7 +580,10 @@ BufferImage FontClient::Plugin::CreateBitmap( FontId fontId,
           if ( FT_Err_Ok == error )
           {
             FT_BitmapGlyph bitmapGlyph = (FT_BitmapGlyph)glyph;
-            ConvertBitmap( bitmap, bitmapGlyph->bitmap );
+            if ( !ConvertBitmap( bitmap, bitmapGlyph->bitmap ) )
+            {
+              DALI_LOG_ERROR( "ConvertBitmap failed on font: %s\n", mFontCache[fontId-1].mPath.c_str() );
+            }
           }
           else
           {
@@ -589,7 +592,10 @@ BufferImage FontClient::Plugin::CreateBitmap( FontId fontId,
         }
         else
         {
-          ConvertBitmap( bitmap, ftFace->glyph->bitmap );
+          if ( !ConvertBitmap( bitmap, ftFace->glyph->bitmap ) )
+          {
+            DALI_LOG_ERROR( "ConvertBitmap failed on font: %s\n", mFontCache[fontId-1].mPath.c_str() );
+          }
         }
 
         // Created FT_Glyph object must be released with FT_Done_Glyph
@@ -831,9 +837,10 @@ FontId FontClient::Plugin::CreateFont( const FontPath& path,
   return id;
 }
 
-void FontClient::Plugin::ConvertBitmap( BufferImage& destBitmap,
+bool FontClient::Plugin::ConvertBitmap( BufferImage& destBitmap,
                                         FT_Bitmap srcBitmap )
 {
+  bool success = false;
   if( srcBitmap.width*srcBitmap.rows > 0 )
   {
     switch( srcBitmap.pixel_mode )
@@ -846,6 +853,7 @@ void FontClient::Plugin::ConvertBitmap( BufferImage& destBitmap,
 
           PixelBuffer* destBuffer = destBitmap.GetBuffer();
           memcpy( destBuffer, srcBitmap.buffer, srcBitmap.width*srcBitmap.rows );
+          success = true;
         }
         break;
       }
@@ -859,17 +867,20 @@ void FontClient::Plugin::ConvertBitmap( BufferImage& destBitmap,
 
           PixelBuffer* destBuffer = destBitmap.GetBuffer();
           memcpy( destBuffer, srcBitmap.buffer, srcBitmap.width*srcBitmap.rows*4 );
+          success = true;
         }
         break;
       }
 #endif
       default:
       {
-        DALI_LOG_ERROR( "FontClient Unable to create Bitmap of this PixelType\n" );
+        DALI_LOG_ERROR( "FontClient Unable to create Bitmap of %ix%i of PixelType: %i\n",
+                         srcBitmap.width, srcBitmap.rows, srcBitmap.pixel_mode );
         break;
       }
     }
   }
+  return success;
 }
 
 bool FontClient::Plugin::FindFont( const FontPath& path,
