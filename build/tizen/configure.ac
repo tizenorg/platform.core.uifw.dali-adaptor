@@ -106,6 +106,12 @@ AC_ARG_ENABLE(shaderbincache,
               [enable_shaderbincache=$enableval],
               [enable_shaderbincache=DISABLE])
 
+AC_ARG_ENABLE(dump-freetype-bitmaps,
+              [AC_HELP_STRING([--enable-dump-freetype-bitmaps],
+                              [dumps freetype bitmaps to disk])],
+              [dump_freetype_bitmaps=yes],
+              [dump_freetype_bitmaps=no])              
+              
 if test "x$enable_debug" = "xyes"; then
   DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DDEBUG_ENABLED"
 fi
@@ -266,6 +272,10 @@ fi
 
 if test "x$freetype_bitmap_support" = "xyes"; then
 DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DFREETYPE_BITMAP_SUPPORT"
+fi
+
+if test "x$dump_freetype_bitmaps" = "xyes"; then
+  DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DDUMP_FREETYPE_BITMAPS"
 fi
 
 AC_OUTPUT
