@@ -351,6 +351,13 @@ private:
                      const FontStyle& fontStyle,
                      FontDescriptionId& validatedFontId );
 
+  /**
+   * @brief Dumps a bitmap image supplied by FontClient to a tga format file
+   *
+   * @param[in] srcBitmap Bitmap to dump
+   */
+  void DumpBitmap( const FT_Bitmap& srcBitmap);
+
   FT_Library mFreeTypeLibrary; ///< A handle to a FreeType library instance.
 
   unsigned int mDpiHorizontal; ///< Horizontal dpi.

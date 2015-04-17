@@ -24,6 +24,10 @@
 #include <dali/integration-api/debug.h>
 
 // EXTERNAL INCLUDES
+#ifdef DUMP_FREETYPE_BITMAPS
+#include <ctime>
+#include <sys/stat.h>
+#endif
 #include <fontconfig/fontconfig.h>
 
 /**
@@ -583,6 +587,9 @@ BufferImage FontClient::Plugin::CreateBitmap( FontId fontId,
           {
             FT_BitmapGlyph bitmapGlyph = (FT_BitmapGlyph)glyph;
             ConvertBitmap( bitmap, bitmapGlyph->bitmap );
+#ifdef DUMP_FREETYPE_BITMAPS
+            DumpBitmap( bitmapGlyph->bitmap );
+#endif
           }
           else
           {
@@ -592,6 +599,9 @@ BufferImage FontClient::Plugin::CreateBitmap( FontId fontId,
         else
         {
           ConvertBitmap( bitmap, ftFace->glyph->bitmap );
+#ifdef DUMP_FREETYPE_BITMAPS
+          DumpBitmap( ftFace->glyph->bitmap );
+#endif
         }
 
         // Created FT_Glyph object must be released with FT_Done_Glyph
@@ -1068,6 +1078,88 @@ void FontClient::Plugin::GetFixedSizes( const FontFamily& fontFamily,
   }
   DALI_LOG_ERROR( "FreeType Cannot check font: %s %s\n", fontFamily.c_str(), fontStyle.c_str() );
 }
+
+#ifdef DUMP_FREETYPE_BITMAPS
+void FontClient::Plugin::DumpBitmap( const FT_Bitmap& srcBitmap )
+{
+  time_t rawTime;
+  tm* timeInfo;
+  char buffer[ 64 ];
+  char output[ 64 ];
+  static unsigned int count = 0;
+
+  mkdir("tga", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH );
+  time( &rawTime );
+  timeInfo = localtime( &rawTime );
+  strftime( buffer, 80, "%d-%m-%Y", timeInfo );
+  sprintf(buffer, "%s_%i.tga", buffer, count++ );
+  sprintf(output, "./tga/%s", buffer );
+
+  FILE* fp = fopen( output, "w" );
+  if ( fp != NULL )
+  {
+    char tgaHeader[ 18 ] = { 0 };
+    tgaHeader[ 2 ] = 2; // color type
+    tgaHeader[ 12 ] = srcBitmap.width & 0xFF;
+    tgaHeader[ 13 ] = ( srcBitmap.width >> 8 ) & 0XFF;
+    tgaHeader[ 14 ] = srcBitmap.rows & 0xFF;
+    tgaHeader[ 15 ] = ( srcBitmap.rows >> 8 ) & 0xFF;
+    tgaHeader[ 16 ] = 32; // bitdepth
+    fwrite( ( const char*)&tgaHeader, 1, sizeof( tgaHeader ), fp );
+
+    if( srcBitmap.width*srcBitmap.rows > 0 )
+    {
+      switch( srcBitmap.pixel_mode )
+      {
+        case FT_PIXEL_MODE_GRAY:
+        {
+          for ( int32_t y = srcBitmap.rows - 1; y >=0 ; y-- )
+          {
+            for ( uint32_t x = 0; x < srcBitmap.width; ++x )
+            {
+              putc( static_cast< int >( 0xFF ), fp );
+              putc( static_cast< int >( 0xFF ), fp );
+              putc( static_cast< int >( 0xFF ), fp );
+              unsigned char pixel = *( srcBitmap.buffer + ( y * srcBitmap.width ) + x ) & 0xFF;
+              putc( static_cast< int >( pixel ), fp );
+            }
+          }
+          break;
+        }
+#ifdef FREETYPE_BITMAP_SUPPORT
+        case FT_PIXEL_MODE_BGRA:
+        {
+          for ( int32_t y = srcBitmap.rows - 1; y >=0 ; y-- )
+          {
+            for ( uint32_t x = 0; x < srcBitmap.width; ++x )
+            {
+              unsigned char* pixel  = srcBitmap.buffer + ( ( y * ( srcBitmap.width ) + x ) *4 );
+              putc( static_cast< int >( *pixel++ ), fp );
+              putc( static_cast< int >( *pixel++ ), fp );
+              putc( static_cast< int >( *pixel++ ), fp );
+              putc( static_cast< int >( *pixel++ ), fp );
+            }
+          }
+          break;
+        }
+#endif
+        default:
+        {
+          break;
+        }
+      }
+    }
+
+    static const char footer[ 26 ] =
+    "\0\0\0\0" // no extension area
+    "\0\0\0\0" // no developer directory
+    "TRUEVISION-XFILE"
+    ".";
+    fwrite((const char*)&footer, 1, sizeof( footer ), fp);
+    fclose(fp);
+  }
+}
+#endif
 
 } // namespace Internal
 
