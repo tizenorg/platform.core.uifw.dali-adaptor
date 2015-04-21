@@ -24,7 +24,6 @@ Requires:       boost-thread
 Requires:       giflib
 BuildRequires:  pkgconfig
 BuildRequires:  gawk
-BuildRequires:  pkgconfig(sensor)
 BuildRequires:  pkgconfig(aul)
 BuildRequires:  boost-devel
 BuildRequires:  giflib-devel
@@ -55,6 +54,7 @@ BuildRequires:  fribidi-devel
 
 %if 0%{?over_tizen_2_2}
 BuildRequires:  pkgconfig(capi-system-info)
+BuildRequires:  pkgconfig(capi-system-sensor)
 %endif
 
 %if 0%{?dali_assimp_plugin}
