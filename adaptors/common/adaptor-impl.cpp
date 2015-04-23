@@ -506,7 +506,7 @@ void Adaptor::FeedTouchPoint( TouchPoint& point, int timeStamp )
   mEventHandler->FeedTouchPoint( point, timeStamp );
 }
 
-void Adaptor::FeedWheelEvent( MouseWheelEvent& wheelEvent )
+void Adaptor::FeedWheelEvent( WheelEvent& wheelEvent )
 {
   mEventHandler->FeedWheelEvent( wheelEvent );
 }
