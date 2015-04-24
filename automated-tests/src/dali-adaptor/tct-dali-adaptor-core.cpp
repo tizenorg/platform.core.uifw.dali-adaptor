@@ -4,12 +4,17 @@
 #include <test-harness.h>
 #include "tct-dali-adaptor-core.h"
 
+int gArgc;
+char ** gArgv;
+
 int main(int argc, char * const argv[])
 {
   int result = TestHarness::EXIT_STATUS_BAD_ARGUMENT;
 
   const char* optString = "r";
   bool optRerunFailed(false);
+  gArgc = argc;
+  gArgv = (char **)argv;
 
   int nextOpt = 0;
   do
