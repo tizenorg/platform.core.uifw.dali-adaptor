@@ -15,6 +15,12 @@ SET(TC_SOURCES
     utc-Dali-FileLoader.cpp
 )
 
+if(NOT UBUNTU_PROFILE)
+LIST(APPEND TC_SOURCES
+    utc-Dali-KeyGrab.cpp
+)
+endif()
+
 LIST(APPEND TC_SOURCES
     dali-test-suite-utils/test-harness.cpp
     dali-test-suite-utils/dali-test-suite-utils.cpp
