@@ -20,6 +20,7 @@
 
 // INTERNAL INCLUDES
 #include <dali/public-api/common/dali-common.h>
+#include "key.h"
 
 namespace Dali
 {
@@ -33,7 +34,7 @@ namespace WindowExtensions
  *
  * The effect will be shown when the application is launched, quit, shown and hiden.
  *
- * @note This function is only specified by tizen.
+ * @note This function is only specified by Tizen.
  *
  * @param[in] window The window to set.
  * @param[in] enable True if the effect is enabled.
@@ -43,12 +44,40 @@ DALI_IMPORT_API void EnableEffect( Window window, bool enable );
 /**
  * @brief Retrieve whether the effect is enabled or not.
  *
- * @note This function is only specified by tizen.
+ * @note This function is only specified by Tizen.
  *
  * @param[in] window The window to set.
  * @return True if the effect is enabled.
  */
 DALI_IMPORT_API bool IsEffectEnabled( Window window );
+
+/**
+ * @brief Key grab mode.
+ */
+enum KeyGrabMode
+{
+  TOP_POSITION = 0,  ///< Grab a key only when on the top of the grabbing-window stack mode.
+  SHARED             ///< Grab a key together with the other client window(s) mode.
+};
+
+/**
+ * @brief Grabs the key specfied by @a key for @a window in @a grabMode.
+ * @note This function is only specified by Tizen.
+ * @param[in] window The window to set
+ * @param[in] dailKey The key code to grab (defined in key.h)
+ * @param[in] grabMode The grab mode for the key
+ * @return true if the grab succeed.
+ */
+DALI_IMPORT_API bool GrabKey( Window window, Dali::KEY daliKey, KeyGrabMode grabMode );
+
+/**
+ * @brief Ungrabs the key specfied by @a key for @a window.
+ * @note This function is only specified by Tizen.
+ * @param[in] window The window to set
+ * @param[in] dailKey The key code to ungrab (defined in key.h)
+ * @return true if the ungrab succeed.
+ */
+DALI_IMPORT_API bool UngrabKey( Window window, Dali::KEY daliKey );
 
 } // namespace WindowExtensions
 

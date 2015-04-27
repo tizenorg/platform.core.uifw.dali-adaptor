@@ -25,9 +25,12 @@
 #include <sstream>
 #include <Ecore.h>
 #include <Ecore_X.h>
+#include <utilX.h>
 
 // INTERNAL INCLUDES
 #include <window.h>
+#include <key-impl.h>
+#include <ecore-x-types.h>
 
 namespace
 {
@@ -114,6 +117,36 @@ bool IsEffectEnabled( Window window )
   HintContainer::iterator iter = std::find( hints.begin(), hints.end(), HINT_EFFECT_NAME );
 
   return iter != hints.end();
+}
+
+bool GrabKey( Window window, Dali::KEY daliKey, KeyGrabMode grabMode )
+{
+  int xGrabMode;
+  if( grabMode == TOP_POSITION )
+  {
+    xGrabMode = TOP_POSITION_GRAB;
+  }
+  else if( grabMode == SHARED )
+  {
+    xGrabMode = SHARED_GRAB;
+  }
+  else
+  {
+    return false;
+  }
+
+  int ret = utilx_grab_key ( static_cast<Display*>( ecore_x_display_get() ),
+                             static_cast<XWindow>( AnyCast<Ecore_X_Window>( window.GetNativeHandle() ) ),
+                             Dali::Internal::Adaptor::KeyLookup::GetKeyName( daliKey ), xGrabMode );
+  return ret==0;
+}
+
+bool UngrabKey( Window window, Dali::KEY daliKey )
+{
+  int ret = utilx_ungrab_key ( static_cast<Display*>( ecore_x_display_get() ),
+                               static_cast<XWindow>( AnyCast<Ecore_X_Window>( window.GetNativeHandle() ) ),
+                               Dali::Internal::Adaptor::KeyLookup::GetKeyName( daliKey ) );
+  return ret==0;
 }
 
 } // namespace WindowExtensions
