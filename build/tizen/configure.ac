@@ -84,6 +84,8 @@ if test "x$tpkp_curl_available" = "xyes"; then
   DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DTPK_CURL_ENABLED "
 fi
 
+PKG_CHECK_MODULES(UTILX, utilX, [ utilx_available=yes ], [ utilx_available=no ] )
+
 AC_ARG_ENABLE([feedback],
               [AC_HELP_STRING([ --enable-feedback],
                               [Enable feedback plugin])],
