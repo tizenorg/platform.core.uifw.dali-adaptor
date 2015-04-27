@@ -72,9 +72,9 @@ public:
    */
   enum IndicatorBgOpacity
   {
-    OPAQUE = 100, // Fully opaque indicator Bg
-    TRANSLUCENT = 50, // Semi translucent indicator Bg
-    TRANSPARENT = 0 // Fully transparent indicator Bg
+    OPAQUE = 100,     ///< Fully opaque indicator Bg
+    TRANSLUCENT = 50, ///< Semi translucent indicator Bg
+    TRANSPARENT = 0   ///< Fully transparent indicator Bg
   };
 
   /**
@@ -82,9 +82,9 @@ public:
    */
   enum IndicatorVisibleMode
   {
-    INVISIBLE = 0, // hide indicator
-    VISIBLE = 1, // show indicator
-    AUTO = 2 // hide in default, will show when necessary
+    INVISIBLE = 0, ///< hide indicator
+    VISIBLE = 1,   ///< show indicator
+    AUTO = 2       ///< hide in default, will show when necessary
   };
 
   // Methods
