@@ -52,7 +52,6 @@ Requires:       boost-thread
 Requires:       giflib
 BuildRequires:  pkgconfig
 BuildRequires:  gawk
-BuildRequires:  pkgconfig(sensor)
 BuildRequires:  pkgconfig(aul)
 BuildRequires:  boost-devel
 BuildRequires:  giflib-devel
@@ -79,6 +78,7 @@ BuildRequires:  libcurl-devel
 
 %if 0%{?over_tizen_2_2}
 BuildRequires:  pkgconfig(capi-system-info)
+BuildRequires:  pkgconfig(capi-system-sensor)
 %endif
 
 %if %{with wayland}

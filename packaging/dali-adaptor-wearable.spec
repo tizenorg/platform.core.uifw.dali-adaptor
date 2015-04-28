@@ -18,7 +18,6 @@ Requires:       boost-thread
 Requires:       giflib
 BuildRequires:  pkgconfig
 BuildRequires:  gawk
-BuildRequires:  pkgconfig(sensor)
 BuildRequires:  pkgconfig(aul)
 BuildRequires:  boost-devel
 BuildRequires:  giflib-devel
@@ -26,6 +25,7 @@ BuildRequires:  pkgconfig(xi)
 BuildRequires:  pkgconfig(fontconfig)
 BuildRequires:  pkgconfig(elementary)
 BuildRequires:  pkgconfig(capi-appfw-application)
+BuildRequires:  pkgconfig(capi-system-sensor)
 BuildRequires:  libjpeg-turbo-devel
 BuildRequires:  pkgconfig(evas)
 BuildRequires:  pkgconfig(xfixes)

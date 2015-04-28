@@ -19,12 +19,16 @@
  */
 
 // EXTERNAL INCLUDES
+#ifdef OVER_TIZEN_SDK_2_2
+#include <sensor.h>
+#endif
+
 #include <deque>
 #include <dali/public-api/object/base-object.h>
 
 // INTERNAL INCLUDES
-#include <tilt-sensor.h>
-#include <timer.h>
+#include <public-api/adaptor-framework/timer.h>
+#include <public-api/adaptor-framework/tilt-sensor.h>
 
 namespace Dali
 {
@@ -122,7 +126,24 @@ public:
    */
   static bool DoConnectSignal( BaseObject* object, ConnectionTrackerInterface* tracker, const std::string& signalName, FunctorDelegate* functor );
 
+  /**
+   * Update sensor data
+   * @note This is called by static sensor callback function
+   * @param[in] event sensor event data
+   */
+#ifdef OVER_TIZEN_SDK_2_2
+  void Update(sensor_event_s *event);
+#endif
+
 private:
+
+  enum State
+  {
+    DISCONNECTED,
+    CONNECTED,
+    STARTED,
+    STOPPED
+  };
 
   /**
    * Private constructor; see also TiltSensor::New()
@@ -135,9 +156,22 @@ private:
   virtual ~TiltSensor();
 
   /**
-   * Timer callback to update the tilt values
+   * Connect sensor device
    */
-  bool Update();
+  bool Connect();
+  /**
+   * Disconnect sensor device
+   */
+  void Disconnect();
+
+  /**
+   * Start sensor operation
+   */
+  bool Start();
+  /**
+   * Stop sensor operation
+   */
+  void Stop();
 
   // Undefined
   TiltSensor(const TiltSensor&);
@@ -146,21 +180,24 @@ private:
   TiltSensor& operator=(TiltSensor&);
 
 private:
-
+  State mState;
   float mFrequencyHertz;
-  Dali::Timer mTimer;
-  SlotDelegate< TiltSensor > mTimerSlot;
 
-  int mSensorFrameworkHandle;
+#ifdef OVER_TIZEN_SDK_2_2
+  sensor_type_e mSensorType;
+  sensor_h mSensor;
+  sensor_listener_h mSensorListener;
+#else
+  int mSensorType;
+  int* mSensor;
+  int* mSensorListener;
+#endif
 
   float mRoll;
   float mPitch;
   Quaternion mRotation;
 
   Radian mRotationThreshold;
-
-  std::deque<float> mRollValues;
-  std::deque<float> mPitchValues;
 
   TiltedSignalType mTiltedSignal;
 };
