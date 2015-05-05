@@ -116,6 +116,9 @@ FontClient::Plugin::Plugin( unsigned int horizontalDpi,
   mFontDescriptionCache( 1u ),
   mFontIdCache()
 {
+  // mDpiHorizontal = 45u;
+  // mDpiVertical = 45u;
+
   int error = FT_Init_FreeType( &mFreeTypeLibrary );
   if( FT_Err_Ok != error )
   {
@@ -482,25 +485,34 @@ bool FontClient::Plugin::GetGlyphMetrics( GlyphInfo* array,
 
   for( unsigned int i=0; i<size; ++i )
   {
-    FontId fontId = array[i].fontId;
+    GlyphInfo& glyphInfo = array[i];
 
-    if( fontId > 0 &&
-        fontId-1 < mFontCache.size() )
+    if( 0u == glyphInfo.fontId )
     {
-      FT_Face ftFace = mFontCache[fontId-1].mFreeTypeFace;
+      success = false;
+      break;
+    }
+
+    const FontId fontId = glyphInfo.fontId - 1u;
+
+    if( fontId < mFontCache.size() )
+    {
+      const CacheItem& fontCacheItem = mFontCache[fontId];
+
+      FT_Face ftFace = fontCacheItem.mFreeTypeFace;
 
 #ifdef FREETYPE_BITMAP_SUPPORT
       // Check to see if we should be loading a Fixed Size bitmap?
-      if ( mFontCache[fontId-1].mIsFixedSizeBitmap )
+      if( fontCacheItem.mIsFixedSizeBitmap )
       {
-        int error = FT_Load_Glyph( ftFace, array[i].index, FT_LOAD_COLOR );
+        int error = FT_Load_Glyph( ftFace, glyphInfo.index, FT_LOAD_COLOR );
         if ( FT_Err_Ok == error )
         {
-          array[i].width = mFontCache[ fontId -1 ].mFixedWidthPixels;
-          array[i].height = mFontCache[ fontId -1 ].mFixedHeightPixels;
-          array[i].advance = mFontCache[ fontId -1 ].mFixedWidthPixels;
-          array[i].xBearing = 0.0f;
-          array[i].yBearing = mFontCache[ fontId -1 ].mFixedHeightPixels;
+          glyphInfo.width = fontCacheItem.mFixedWidthPixels;
+          glyphInfo.height = fontCacheItem.mFixedHeightPixels;
+          glyphInfo.advance = fontCacheItem.mFixedWidthPixels;
+          glyphInfo.xBearing = 0.0f;
+          glyphInfo.yBearing = fontCacheItem.mFixedHeightPixels;
         }
         else
         {
@@ -511,21 +523,21 @@ bool FontClient::Plugin::GetGlyphMetrics( GlyphInfo* array,
       else
 #endif
       {
-        int error = FT_Load_Glyph( ftFace, array[i].index, FT_LOAD_DEFAULT );
+        int error = FT_Load_Glyph( ftFace, glyphInfo.index, FT_LOAD_DEFAULT );
 
         if( FT_Err_Ok == error )
         {
-          array[i].width  = static_cast< float >( ftFace->glyph->metrics.width ) * FROM_266;
-          array[i].height = static_cast< float >( ftFace->glyph->metrics.height ) * FROM_266 ;
+          glyphInfo.width  = static_cast< float >( ftFace->glyph->metrics.width ) * FROM_266;
+          glyphInfo.height = static_cast< float >( ftFace->glyph->metrics.height ) * FROM_266 ;
           if( horizontal )
           {
-            array[i].xBearing += static_cast< float >( ftFace->glyph->metrics.horiBearingX ) * FROM_266;
-            array[i].yBearing += static_cast< float >( ftFace->glyph->metrics.horiBearingY ) * FROM_266;
+            glyphInfo.xBearing += static_cast< float >( ftFace->glyph->metrics.horiBearingX ) * FROM_266;
+            glyphInfo.yBearing += static_cast< float >( ftFace->glyph->metrics.horiBearingY ) * FROM_266;
           }
           else
           {
-            array[i].xBearing += static_cast< float >( ftFace->glyph->metrics.vertBearingX ) * FROM_266;
-            array[i].yBearing += static_cast< float >( ftFace->glyph->metrics.vertBearingY ) * FROM_266;
+            glyphInfo.xBearing += static_cast< float >( ftFace->glyph->metrics.vertBearingX ) * FROM_266;
+            glyphInfo.yBearing += static_cast< float >( ftFace->glyph->metrics.vertBearingY ) * FROM_266;
           }
         }
         else
@@ -538,6 +550,8 @@ bool FontClient::Plugin::GetGlyphMetrics( GlyphInfo* array,
     {
       success = false;
     }
+
+    std::cout << " a : " << glyphInfo.advance << ", x : " << glyphInfo.width << ", h : " << glyphInfo.height << std::endl; 
   }
 
   return success;
