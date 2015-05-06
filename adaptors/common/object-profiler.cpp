@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/profiling.h>
-#include <dali/public-api/actors/image-actor.h>
 #include <dali/public-api/common/stage.h>
 #include <dali/public-api/object/ref-object.h>
 #include <dali/public-api/object/base-object.h>
@@ -96,14 +95,7 @@ void ObjectProfiler::DisplayInstanceCounts()
     if( iter->second.compare("ImageActor") == 0 )
     {
       BaseHandle handle(iter->first);
-      Dali::ImageActor imageActor = Dali::ImageActor::DownCast(handle);
-      if( imageActor )
-      {
-        if( imageActor.GetStyle() == Dali::ImageActor::STYLE_QUAD )
-        {
-          quadCount++;
-        }
-      }
+      //TODO: MESH_REWORK: do something here?
     }
   }
 
@@ -177,7 +169,6 @@ int ObjectProfiler::GetMemorySize(const std::string& name, int count)
       { "Actor", ACTOR_MEMORY_SIZE },
       { "Layer", LAYER_MEMORY_SIZE },
       { "CameraActor", CAMERA_ACTOR_MEMORY_SIZE },
-      { "ImageActor", IMAGE_ACTOR_MEMORY_SIZE },
       { "Image", IMAGE_MEMORY_SIZE },
     };
 

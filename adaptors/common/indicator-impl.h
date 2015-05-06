@@ -19,10 +19,11 @@
  */
 
 // EXTERNAL INCLUDES
-#include <dali/public-api/actors/image-actor.h>
+#include <dali/public-api/actors/renderer.h>
 #include <dali/public-api/animation/animation.h>
 #include <dali/public-api/events/pan-gesture.h>
 #include <dali/public-api/events/pan-gesture-detector.h>
+#include <dali/public-api/images/image.h>
 
 // INTERNAL INCLUDES
 #include <indicator-buffer.h>
@@ -397,6 +398,15 @@ private:
    */
   void ClearSharedFileInfo();
 
+  /**
+   * Create renderer
+   */
+  Dali::Renderer CreateRenderer();
+
+  /**
+   * Set
+   */
+
 private:
 
   struct SharedFileInfo
@@ -430,7 +440,7 @@ private:
   IndicatorBufferPtr               mIndicatorBuffer;     ///< class which handles indicator rendering
   PixmapId                         mPixmap;              ///< Pixmap including indicator content
   Dali::Image                      mImage;               ///< Image created from mIndicatorBuffer
-  Dali::ImageActor                 mIndicatorImageActor; ///< Actor created from mImage
+  Dali::Sampler                    mIndicatorSampler;    ///< Sampler for the mImage
 
   Dali::Actor                      mIndicatorActor;      ///< Handle to topmost indicator actor
   Dali::Actor                      mEventActor;          ///< Handle to event

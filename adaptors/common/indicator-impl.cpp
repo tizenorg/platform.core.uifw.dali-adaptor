@@ -28,12 +28,14 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include <dali/public-api/images/native-image.h>
+#include <dali/public-api/actors/blending.h>
+#include <dali/public-api/common/stage.h>
 #include <dali/public-api/events/touch-event.h>
 #include <dali/public-api/events/touch-point.h>
-#include <dali/public-api/common/stage.h>
-#include <dali/public-api/actors/blending.h>
-#include <dali/public-api/shader-effects/shader-effect.h>
+#include <dali/public-api/images/native-image.h>
+#include <dali/public-api/object/property-buffer.h>
+#include <dali/public-api/object/property-map.h>
+#include <dali/public-api/shader-effects/material.h>
 
 #include <dali/integration-api/debug.h>
 
@@ -204,6 +206,36 @@ struct IpcDataEvMouseOut
   }
 };
 
+#define MAKE_SHADER(A)#A
+
+const char* VERTEX_SHADER = MAKE_SHADER(
+attribute mediump vec2    aPosition;
+attribute highp   vec2    aTexCoord;
+varying   mediump vec2    vTexCoord;
+uniform   mediump mat4    uMvpMatrix;
+uniform   mediump vec3    uSize;
+
+void main()
+{
+  mediump vec4 vertexPosition = vec4(aPosition, 0.0, 1.0);
+  vertexPosition.xyz *= uSize;
+  vertexPosition = uMvpMatrix * vertexPosition;
+  vTexCoord = aTexCoord;
+  gl_Position = vertexPosition;
+}
+);
+
+const char* FRAGMENT_SHADER = MAKE_SHADER(
+varying mediump vec2  vTexCoord;
+uniform lowp    vec4  uColor;
+uniform sampler2D     sTexture;
+
+void main()
+{
+  gl_FragColor = texture2D( sTexture, vTexCoord ) * uColor;
+}
+);
+
 } // anonymous namespace
 
 
@@ -325,19 +357,17 @@ Indicator::Indicator( Adaptor* adaptor, Dali::Window::WindowOrientation orientat
   mIsAnimationPlaying( false ),
   mCurrentSharedFile( 0 )
 {
-  mIndicatorImageActor = Dali::ImageActor::New();
-  mIndicatorImageActor.SetBlendFunc( Dali::BlendingFactor::ONE, Dali::BlendingFactor::ONE_MINUS_SRC_ALPHA,
-                                    Dali::BlendingFactor::ONE, Dali::BlendingFactor::ONE );
-
-  mIndicatorImageActor.SetParentOrigin( ParentOrigin::TOP_CENTER );
-  mIndicatorImageActor.SetAnchorPoint( AnchorPoint::TOP_CENTER );
-
-  // Indicator image handles the touch event including "leave"
-  mIndicatorImageActor.SetLeaveRequired( true );
-  mIndicatorImageActor.TouchedSignal().Connect( this, &Indicator::OnTouched );
 
   mIndicatorActor = Dali::Actor::New();
-  mIndicatorActor.Add( mIndicatorImageActor );
+  mIndicatorActor.SetParentOrigin( ParentOrigin::TOP_CENTER );
+  mIndicatorActor.SetAnchorPoint( AnchorPoint::TOP_CENTER );
+
+  Dali::Renderer indicatorRenderer = CreateRenderer();
+  mIndicatorActor.AddRenderer( indicatorRenderer );
+
+  // Indicator image handles the touch event including "leave"
+  mIndicatorActor.SetLeaveRequired( true );
+  mIndicatorActor.TouchedSignal().Connect( this, &Indicator::OnTouched );
 
   // Event handler to find out flick down gesture
   mEventActor = Dali::Actor::New();
@@ -412,7 +442,7 @@ void Indicator::Close()
   }
 
   Dali::Image emptyImage;
-  mIndicatorImageActor.SetImage(emptyImage);
+  mIndicatorSampler.SetImage(emptyImage);
 }
 
 void Indicator::SetOpacityMode( Dali::Window::IndicatorBgOpacity mode )
@@ -437,7 +467,7 @@ void Indicator::SetVisible( Dali::Window::IndicatorVisibleMode visibleMode, bool
 
     mVisible = visibleMode;
 
-    if( mIndicatorImageActor.GetImage() )
+    if( mIndicatorSampler.GetImage() )
     {
       if( CheckVisibleState() && mVisible == Dali::Window::AUTO )
       {
@@ -626,7 +656,6 @@ void Indicator::Resize( int width, int height )
     mImageWidth = width;
     mImageHeight = height;
 
-    mIndicatorImageActor.SetSize( mImageWidth, mImageHeight );
     mIndicatorActor.SetSize( mImageWidth, mImageHeight );
     mEventActor.SetSize(mImageWidth, mImageHeight);
 
@@ -851,8 +880,8 @@ void Indicator::CreateNewPixmapImage()
 
   if( pixmapImage )
   {
-    mIndicatorImageActor.SetImage( Dali::NativeImage::New(*pixmapImage) );
-    mIndicatorImageActor.SetSize( mImageWidth, mImageHeight );
+    Dali::NativeImage image = Dali::NativeImage::New(*pixmapImage);
+    mIndicatorSampler.SetImage( image );
     mIndicatorActor.SetSize( mImageWidth, mImageHeight );
     mEventActor.SetSize(mImageWidth, mImageHeight);
 
@@ -879,7 +908,7 @@ void Indicator::CreateNewImage( int bufferNumber )
 
   if( CopyToBuffer( bufferNumber ) ) // Only create images if we have valid image buffer
   {
-    mIndicatorImageActor.SetImage( image );
+    mIndicatorSampler.SetImage( image );
   }
   else
   {
@@ -1044,6 +1073,54 @@ void Indicator::ClearSharedFileInfo()
   }
 }
 
+Dali::Renderer Indicator::CreateRenderer()
+{
+  // Create vertices
+  const float halfQuadSize = .5f;
+  struct TexturedQuadVertex { Vector2 position; Vector2 textureCoordinates; };
+  TexturedQuadVertex texturedQuadVertexData[4] = {
+    { Vector2(-halfQuadSize, -halfQuadSize), Vector2(0.f, 0.f) },
+    { Vector2( halfQuadSize, -halfQuadSize), Vector2(1.f, 0.f) },
+    { Vector2(-halfQuadSize,  halfQuadSize), Vector2(0.f, 1.f) },
+    { Vector2( halfQuadSize,  halfQuadSize), Vector2(1.f, 1.f) } };
+
+  Dali::Property::Map texturedQuadVertexFormat;
+  texturedQuadVertexFormat["aPosition"] = Property::VECTOR2;
+  texturedQuadVertexFormat["aTexCoord"] = Property::VECTOR2;
+  Dali::PropertyBuffer texturedQuadVertices = Dali::PropertyBuffer::New(
+    Dali::PropertyBuffer::STATIC,
+    texturedQuadVertexFormat,
+    sizeof(texturedQuadVertexData)/sizeof(texturedQuadVertexData[0]) );
+  texturedQuadVertices.SetData(texturedQuadVertexData);
+
+  // Create indices
+  unsigned int indexData[6] = { 0, 3, 1, 0, 2, 3 };
+  Dali::Property::Map indexFormat;
+  indexFormat["indices"] = Property::UNSIGNED_INTEGER;
+  Dali::PropertyBuffer indices = Dali::PropertyBuffer::New(
+    Dali::PropertyBuffer::STATIC,
+    indexFormat,
+    sizeof(indexData)/sizeof(indexData[0]) );
+  indices.SetData(indexData);
+
+  // Create the geometry object
+  Dali::Geometry texturedQuadGeometry = Dali::Geometry::New();
+  texturedQuadGeometry.AddVertexBuffer( texturedQuadVertices );
+  texturedQuadGeometry.SetIndexBuffer( indices );
+
+
+  Dali::Shader shader = Dali::Shader::New( VERTEX_SHADER, FRAGMENT_SHADER );
+  Dali::Material material = Dali::Material::New( shader );
+  Dali::Image image;
+  mIndicatorSampler = Dali::Sampler::New( image, "sTexture" );
+  material.AddSampler( mIndicatorSampler );
+
+  material.SetBlendFunc( Dali::BlendingFactor::ONE, Dali::BlendingFactor::ONE_MINUS_SRC_ALPHA,
+                         Dali::BlendingFactor::ONE, Dali::BlendingFactor::ONE );
+
+  return Dali::Renderer::New( texturedQuadGeometry, material );
+}
+
 /**
  * duration can be this
  *
@@ -1074,7 +1151,7 @@ void Indicator::ShowIndicator(float duration)
   {
     if( EqualsZero(duration) )
     {
-      mIndicatorAnimation.AnimateTo( Property( mIndicatorImageActor, Dali::Actor::Property::POSITION ), Vector3(0, -mImageHeight, 0), Dali::AlphaFunction::EASE_OUT );
+      mIndicatorAnimation.AnimateTo( Property( mIndicatorActor, Dali::Actor::Property::POSITION ), Vector3(0, -mImageHeight, 0), Dali::AlphaFunction::EASE_OUT );
 
       mIsShowing = false;
 
@@ -1082,7 +1159,7 @@ void Indicator::ShowIndicator(float duration)
     }
     else
     {
-      mIndicatorAnimation.AnimateTo( Property( mIndicatorImageActor, Dali::Actor::Property::POSITION ), Vector3(0, 0, 0), Dali::AlphaFunction::EASE_OUT );
+      mIndicatorAnimation.AnimateTo( Property( mIndicatorActor, Dali::Actor::Property::POSITION ), Vector3(0, 0, 0), Dali::AlphaFunction::EASE_OUT );
 
       mIsShowing = true;
 
