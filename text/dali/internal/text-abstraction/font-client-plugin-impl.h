@@ -19,7 +19,7 @@
  */
 
 // INTERNAL INCLUDES
-#include <dali/public-api/text-abstraction/font-metrics.h>
+#include <dali/devel-api/text-abstraction/font-metrics.h>
 #include <dali/internal/text-abstraction/font-client-impl.h>
 
 // EXTERNAL INCLUDES

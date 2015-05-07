@@ -23,7 +23,7 @@
 #include <Ecore_X.h>
 #include <algorithm>
 
-#include <dali/public-api/common/vector-wrapper.h>
+#include <dali/devel-api/common/vector-wrapper.h>
 #include <dali/integration-api/debug.h>
 
 // INTERNAL INCLUDES

@@ -21,7 +21,7 @@
 // EXTERNAL INCLUDES
 #include <string>
 
-#include <dali/public-api/common/vector-wrapper.h>
+#include <dali/devel-api/common/vector-wrapper.h>
 #include <dali/public-api/images/native-image-interface.h>
 #include <dali/public-api/images/pixel.h>
 #include <dali/public-api/object/any.h>

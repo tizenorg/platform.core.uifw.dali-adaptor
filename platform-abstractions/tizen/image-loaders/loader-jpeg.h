@@ -19,7 +19,7 @@
  */
 
 #include <stdio.h>
-#include <dali/public-api/common/vector-wrapper.h>
+#include <dali/devel-api/common/vector-wrapper.h>
 #include <dali/public-api/images/pixel.h>
 #include "image-encoder.h"
 #include "image-loader-input.h"

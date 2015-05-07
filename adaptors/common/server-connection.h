@@ -22,7 +22,7 @@
 #include <Ecore.h>
 #include <Ecore_Ipc.h>
 
-#include <dali/public-api/common/vector-wrapper.h>
+#include <dali/devel-api/common/vector-wrapper.h>
 
 namespace Dali
 {

@@ -17,7 +17,7 @@
 
 #include "loader-bmp.h"
 
-#include <dali/public-api/common/vector-wrapper.h>
+#include <dali/devel-api/common/vector-wrapper.h>
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/bitmap.h>
 

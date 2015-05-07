@@ -32,7 +32,7 @@
 #include <vconf-keys.h>
 #endif // DALI_PROFILE_UBUNTU
 
-#include <dali/public-api/common/vector-wrapper.h>
+#include <dali/devel-api/common/vector-wrapper.h>
 #include <dali/public-api/events/touch-point.h>
 #include <dali/public-api/events/key-event.h>
 #include <dali/public-api/events/mouse-wheel-event.h>

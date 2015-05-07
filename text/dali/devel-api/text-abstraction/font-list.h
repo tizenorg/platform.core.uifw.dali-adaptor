@@ -21,7 +21,7 @@
 // EXTERNAL INCLUDES
 #include <string>
 #include <iostream>
-#include <dali/public-api/common/vector-wrapper.h>
+#include <dali/devel-api/common/vector-wrapper.h>
 
 namespace Dali
 {
