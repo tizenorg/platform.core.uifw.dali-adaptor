@@ -21,7 +21,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <stdint.h>
-#include <dali/public-api/common/compile-time-assert.h>
+#include <dali/devel-api/common/compile-time-assert.h>
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/bitmap.h>
 #include <dali/public-api/images/pixel.h>

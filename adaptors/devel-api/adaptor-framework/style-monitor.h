@@ -25,7 +25,7 @@
 #include <dali/public-api/signals/dali-signal.h>
 
 // INTERNAL INCLUDES
-#include "style-change.h"
+#include <dali/public-api/adaptor-framework/style-change.h>
 
 namespace Dali
 {
