@@ -176,7 +176,6 @@ AM_CONDITIONAL([WAYLAND], [test x$enable_wayland = xyes])
 # should not disable features. This allows the developer to override
 # features through the command line.
 
-PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
 
 if test "x$enable_profile" != "xUBUNTU"; then
 PKG_CHECK_MODULES(CAPI_APPFW_APPLICATION, capi-appfw-application)
