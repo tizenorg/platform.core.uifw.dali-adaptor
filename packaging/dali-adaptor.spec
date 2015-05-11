@@ -73,7 +73,7 @@ BuildRequires:  pkgconfig(libexif)
 BuildRequires:  pkgconfig(capi-system-system-settings)
 BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(glesv2)
-BuildRequires:  pkgconfig(egl)
+#BuildRequires:  pkgconfig(egl)
 BuildRequires:  libcurl-devel
 
 
