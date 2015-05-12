@@ -151,6 +151,11 @@ public:
    */
   BufferImage CreateBitmap( FontId fontId, GlyphIndex glyphIndex );
 
+  /**
+   * @copydoc Dali::FontClient::GetEllipsisGlyph()
+   */
+  const GlyphInfo& GetEllipsisGlyph( PointSize26Dot6 pointSize );
+
 private:
 
   /**
