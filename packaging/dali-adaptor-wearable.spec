@@ -89,7 +89,6 @@ Feedback plugin to play haptic and audio feedback for Dali
 %setup -q
 %define dali_data_rw_dir         /opt/usr/share/dali/
 %define dali_data_ro_dir         /usr/share/dali/
-%define user_font_cache_dir      %{dali_data_rw_dir}/glyphcache/
 %define user_shader_cache_dir    %{dali_data_ro_dir}/core/shaderbin/
 %define font_preloaded_path      /usr/share/fonts/
 %define font_downloaded_path     /opt/share/fonts/
