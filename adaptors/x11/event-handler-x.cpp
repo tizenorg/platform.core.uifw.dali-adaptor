@@ -356,8 +356,9 @@ struct EventHandler::Impl
     Ecore_Event_Key *keyEvent( (Ecore_Event_Key*)event );
     bool eventHandled( false );
 
-    // If a device key then skip ecore_imf_context_filter_event.
-    if ( ! KeyLookup::IsDeviceButton( keyEvent->keyname ) )
+    // Send key events to IMF ?
+    if ( NULL != keyEvent->string && /* skip modifiers like shift */
+         ! KeyLookup::IsDeviceButton( keyEvent->keyname ) /* skip device keys */ )
     {
       Ecore_IMF_Context* imfContext = NULL;
       Dali::ImfManager imfManager( ImfManager::Get() );
@@ -368,6 +369,9 @@ struct EventHandler::Impl
 
       if ( imfContext )
       {
+        DALI_LOG_INFO( gImfLogging, Debug::Verbose, "imfContext %p Ecore_Event_Key: keyname %s key %s string %s compose %s timestamp %d modifiers %d\n",
+                       imfContext, keyEvent->keyname, keyEvent->key, keyEvent->string, keyEvent->compose, keyEvent->timestamp, keyEvent->modifiers );
+
         // We're consuming key down event so we have to pass to IMF so that it can parse it as well.
         Ecore_IMF_Event_Key_Down ecoreKeyDownEvent;
         ecoreKeyDownEvent.keyname   = keyEvent->keyname;
@@ -417,6 +421,7 @@ struct EventHandler::Impl
       }
     }
 
+    DALI_LOG_INFO( gImfLogging, Debug::General, "EVENT <<EcoreEventKeyDown \n" );
     return ECORE_CALLBACK_PASS_ON;
   }
 
@@ -432,7 +437,8 @@ struct EventHandler::Impl
     bool eventHandled( false );
 
     // XF86Stop and XF86Send must skip ecore_imf_context_filter_event.
-    if ( strcmp( keyEvent->keyname, "XF86Send"  ) &&
+    if ( NULL != keyEvent->string && /* skip modifiers like shift */
+         strcmp( keyEvent->keyname, "XF86Send"  ) &&
          strcmp( keyEvent->keyname, "XF86Phone" ) &&
          strcmp( keyEvent->keyname, "XF86Stop"  ) )
     {
@@ -445,6 +451,9 @@ struct EventHandler::Impl
 
       if ( imfContext )
       {
+        DALI_LOG_INFO( gImfLogging, Debug::Verbose, "imfContext %p Ecore_Event_Key: keyname %s key %s string %s compose %s timestamp %d modifiers %d\n",
+                       imfContext, keyEvent->keyname, keyEvent->key, keyEvent->string, keyEvent->compose, keyEvent->timestamp, keyEvent->modifiers );
+
         // We're consuming key up event so we have to pass to IMF so that it can parse it as well.
         Ecore_IMF_Event_Key_Up ecoreKeyUpEvent;
         ecoreKeyUpEvent.keyname   = keyEvent->keyname;
@@ -484,6 +493,7 @@ struct EventHandler::Impl
       }
     }
 
+    DALI_LOG_INFO( gImfLogging, Debug::General, "EVENT <<EcoreEventKeyUp \n" );
     return ECORE_CALLBACK_PASS_ON;
   }
 
