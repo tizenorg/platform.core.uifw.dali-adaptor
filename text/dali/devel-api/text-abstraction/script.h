@@ -57,6 +57,10 @@ enum Script
   HEBREW,     ///< The Hebrew script. Used by the Hebrew, Yiddish, Ladino, and Judeo-Arabic.
   HIRAGANA,   ///< The Hiragana script. Used by the Japanese.
   KATAKANA,   ///< The Katakana script. Used by the Japanese.
+  CYRILLIC,   ///< The Cyrillic script. Used by Russian, Bulgarian, Ukrainian, Macedonian, ...
+  GEORGIAN,   ///< The Georgian script. Used by Georgian.
+  GREEK,      ///< The Greek script. Used by Greek.
+  ARMENIAN,   ///< The Armenian script. Used by Armenian.
   EMOJI,      ///< The Emoji which map to standardized Unicode characters.
   UNKNOWN     ///< The script is unknown.
 };
@@ -84,6 +88,10 @@ const char* const ScriptName[] =
   "HEBREW",     ///< The Hebrew script. Used by the Hebrew, Yiddish, Ladino, and Judeo-Arabic.
   "HIRAGANA",   ///< The Hiragana script. Used by the Japanese.
   "KATAKANA",   ///< The Katakana script. Used by the Japanese.
+  "CYRILLIC",   ///< The Cyrillic script. Used by Russian, Bulgarian, Ukrainian, Macedonian, ...
+  "GEORGIAN",   ///< The Georgian script. Used by Georgian.
+  "GREEK",      ///< The Greek script. Used by Greek.
+  "ARMENIAN",   ///< The Armenian script. Used by Armenian.
   "EMOJI",      ///< The Emoji which map to standardized Unicode characters.
   "UNKNOWN"     ///< The script is unknown.
 };
