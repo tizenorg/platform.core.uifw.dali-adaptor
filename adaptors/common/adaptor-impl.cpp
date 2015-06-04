@@ -34,6 +34,8 @@
 
 #include <dali/devel-api/text-abstraction/font-client.h>
 
+#include <integration-api/display-connection.h>
+
 #include <callback-manager.h>
 #include <trigger-event.h>
 #include <render-surface.h>
@@ -52,7 +54,6 @@
 #include <clipboard-impl.h>
 #include <vsync-monitor.h>
 #include <object-profiler.h>
-#include <base/display-connection.h>
 
 #include <tizen-logging.h>
 

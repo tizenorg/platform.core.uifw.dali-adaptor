@@ -16,7 +16,7 @@
  */
 
 // CLASS HEADER
-#include <base/display-connection.h>
+#include <integration-api/display-connection.h>
 
 // EXTERNAL INCLUDES
 
