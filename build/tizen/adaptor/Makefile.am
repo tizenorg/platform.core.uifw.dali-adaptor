@@ -207,9 +207,9 @@ libdali_adaptor_la_includes = \
                       -I../../../platform-abstractions/portable \
                       -I../../../platform-abstractions/ \
                       -I../../../adaptors/public-api \
-                      -I../../../adaptors/integration-api \
                       -I../../../adaptors/public-api/adaptor-framework \
                       -I../../../adaptors/devel-api/adaptor-framework \
+                      -I../../../adaptors/integration-api \
                       -I../../../adaptors/common \
                       -I../../../adaptors/base/interfaces \
                       -I../../../adaptors/ \
@@ -401,7 +401,7 @@ linker_test_SOURCES = linker-test.cpp
 linker_test_CXXFLAGS = \
   -I../../../adaptors/common \
   -I../../../adaptors/public-api \
-    -I../../../adaptors/integration-api \
+  -I../../../adaptors/integration-api \
   -I../../../adaptors/base/interfaces \
   -I../../../adaptors/public-api/adaptor-framework \
   -I../../../adaptors/devel-api/adaptor-framework \
