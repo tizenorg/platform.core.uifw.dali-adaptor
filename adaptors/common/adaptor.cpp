@@ -160,6 +160,11 @@ void Adaptor::FeedKeyEvent( KeyEvent& keyEvent )
   mImpl->FeedKeyEvent(keyEvent);
 }
 
+void Adaptor::SceneCreated()
+{
+  mImpl->SceneCreated();
+}
+
 Adaptor::Adaptor()
 : mImpl( NULL )
 {
