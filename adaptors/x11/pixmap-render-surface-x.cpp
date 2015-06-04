@@ -30,11 +30,10 @@
 #include <dali/integration-api/debug.h>
 
 // INTERNAL INCLUDES
-
+#include <integration-api/display-connection.h>
 #include <ecore-x-types.h>
 #include <trigger-event.h>
 #include <gl/egl-implementation.h>
-#include <base/display-connection.h>
 
 namespace Dali
 {

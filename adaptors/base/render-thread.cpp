@@ -25,7 +25,7 @@
 #include <base/interfaces/adaptor-internal-services.h>
 #include <base/update-render-synchronization.h>
 #include <base/environment-options.h>
-#include <base/display-connection.h>
+#include <integration-api/display-connection.h>
 
 namespace Dali
 {

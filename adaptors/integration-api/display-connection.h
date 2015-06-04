@@ -37,7 +37,7 @@ namespace Internal
   }
 }
 
-class DisplayConnection
+class DALI_IMPORT_API DisplayConnection
 {
 public:
 
@@ -93,7 +93,7 @@ public:
   /**
    * @brief This constructor is used by DisplayConnection New() methods.
    *
-   * @param [in] handle A pointer to a newly allocated DisplayConnection resource
+   * @param [in] impl A pointer to a newly allocated DisplayConnection resource
    */
   explicit DALI_INTERNAL DisplayConnection(Internal::Adaptor::DisplayConnection* impl);
 
