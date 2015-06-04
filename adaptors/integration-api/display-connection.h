@@ -37,7 +37,7 @@ namespace Internal
   }
 }
 
-class DisplayConnection
+class DALI_IMPORT_API DisplayConnection
 {
 public:
 

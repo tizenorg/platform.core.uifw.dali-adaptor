@@ -24,8 +24,8 @@
 #include <ecore-wl-types.h>
 
 // INTERNAL INCLUDES
-#include <base/display-connection.h>
 #include <dali/public-api/object/base-object.h>
+#include <integration-api/display-connection.h>
 #include <gl/egl-implementation.h>
 
 namespace Dali
