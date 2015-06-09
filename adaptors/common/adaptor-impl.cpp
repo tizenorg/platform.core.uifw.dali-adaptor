@@ -35,7 +35,6 @@
 #include <dali/devel-api/text-abstraction/font-client.h>
 
 #include <callback-manager.h>
-#include <trigger-event.h>
 #include <render-surface.h>
 #include <tts-player-impl.h>
 #include <accessibility-manager-impl.h>
@@ -133,7 +132,7 @@ void Adaptor::Initialize( Dali::Configuration::ContextLoss configuration )
 
   mObjectProfiler = new ObjectProfiler();
 
-  mNotificationTrigger = new TriggerEvent( MakeCallback( this, &Adaptor::ProcessCoreEvents ) );
+  mNotificationTrigger = mTriggerEventFactory.CreateTriggerEvent( MakeCallback( this, &Adaptor::ProcessCoreEvents ), TriggerEventInterface::KEEP_ALIVE_AFTER_TRIGGER);
 
   mVSyncMonitor = new VSyncMonitor;
 
@@ -461,24 +460,12 @@ bool Adaptor::AddIdle( CallbackBase* callback )
   // Only add an idle if the Adaptor is actually running
   if( RUNNING == mState )
   {
-    idleAdded = mCallbackManager->AddCallback( callback, CallbackManager::IDLE_PRIORITY );
+    idleAdded = mCallbackManager->AddIdleCallback( callback );
   }
 
   return idleAdded;
 }
 
-bool Adaptor::CallFromMainLoop( CallbackBase* callback )
-{
-  bool callAdded(false);
-
-  // Only allow the callback if the Adaptor is actually running
-  if ( RUNNING == mState )
-  {
-    callAdded = mCallbackManager->AddCallback( callback, CallbackManager::DEFAULT_PRIORITY );
-  }
-
-  return callAdded;
-}
 
 Dali::Adaptor& Adaptor::Get()
 {
@@ -538,7 +525,7 @@ Dali::Integration::GlAbstraction& Adaptor::GetGlesInterface()
   return *mGLES;
 }
 
-TriggerEventInterface& Adaptor::GetTriggerEventInterface()
+TriggerEventInterface& Adaptor::GetProcessCoreEventsTrigger()
 {
   return *mNotificationTrigger;
 }

@@ -30,7 +30,7 @@
 
 #include <cstring>
 
-#include <Ecore.h>
+//#include <Ecore.h>
 
 namespace Dali
 {

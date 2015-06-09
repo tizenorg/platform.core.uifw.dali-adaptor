@@ -63,8 +63,8 @@ struct Window::EventHandler
    */
   EventHandler( Window* window )
   : mWindow( window ),
-    mWindowPropertyHandler( ecore_event_handler_add( ECORE_X_EVENT_WINDOW_PROPERTY,  EcoreEventWindowPropertyChanged, this ) ),
-    mClientMessagehandler( ecore_event_handler_add( ECORE_X_EVENT_CLIENT_MESSAGE,  EcoreEventClientMessage, this ) ),
+    mWindowPropertyHandler(NULL/* ecore_event_handler_add( ECORE_X_EVENT_WINDOW_PROPERTY,  EcoreEventWindowPropertyChanged, this )*/ ),
+    mClientMessagehandler( NULL/*ecore_event_handler_add( ECORE_X_EVENT_CLIENT_MESSAGE,  EcoreEventClientMessage, this )*/ ),
     mEcoreWindow( 0 )
   {
     // store ecore window handle
@@ -83,7 +83,7 @@ struct Window::EventHandler
                              &tmp, 1);
 #endif // DALI_PROFILE_UBUNTU
 
-    ecore_x_input_multi_select( mEcoreWindow );
+
   }
 
   /**
@@ -327,6 +327,15 @@ Window::Window()
   mEventHandler(NULL),
   mPreferredOrientation(Dali::Window::PORTRAIT)
 {
+
+  // typically ecore_x_init is called by app_efl_main->elm_init
+  // but if we're not using app_efl_main then we have to call it ourselves
+  if( ecore_x_display_get() == NULL )
+  {
+    ecore_x_init (NULL); //  internally calls _ecore_x_input_init
+    DALI_LOG_WARNING(" calling ecore_x_init");
+  }
+
 }
 
 Window::~Window()

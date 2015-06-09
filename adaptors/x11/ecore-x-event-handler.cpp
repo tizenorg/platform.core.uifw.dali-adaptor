@@ -204,6 +204,9 @@ struct EventHandler::Impl
     // Only register for touch and key events if we have a window
     if ( window != 0 )
     {
+      // this will go through calling XISelectEvents
+      ecore_x_input_multi_select( window );
+
       // Register Touch events
       mEcoreEventHandler.push_back( ecore_event_handler_add( ECORE_EVENT_MOUSE_BUTTON_DOWN,  EcoreEventMouseButtonDown, handler ) );
       mEcoreEventHandler.push_back( ecore_event_handler_add( ECORE_EVENT_MOUSE_BUTTON_UP,    EcoreEventMouseButtonUp,   handler ) );
@@ -274,6 +277,7 @@ struct EventHandler::Impl
 
           if( match )
           {
+            printf(" got a match --------- \n");
             mXiDeviceId = xiEventMask.deviceid;
 
             // SelectXi2Event
@@ -885,6 +889,7 @@ struct EventHandler::Impl
    */
   static Eina_Bool EcoreEventClientMessage( void* data, int type, void* event )
   {
+    printf(" EcoreEventClientMessage \n");
 #ifndef DALI_PROFILE_UBUNTU
     Ecore_X_Event_Client_Message* clientMessageEvent( (Ecore_X_Event_Client_Message*)event );
     EventHandler* handler( (EventHandler*)data );

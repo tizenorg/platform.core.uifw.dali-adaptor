@@ -281,6 +281,7 @@ void Application::OnResize(Dali::Adaptor& adaptor)
 
 bool Application::AddIdle( CallbackBase* callback )
 {
+  DALI_LOG_ERROR("add idle \n");
   return mAdaptor->AddIdle( callback );
 }
 
