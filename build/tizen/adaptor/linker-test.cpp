@@ -46,12 +46,18 @@ public:
 
 /*****************************************************************************/
 
+void RunTest( Application& application )
+{
+  LinkerApp linkerApp (application);
+  application.MainLoop();
+}
+
 int
 main(int argc, char **argv)
 {
   Application app = Application::New(&argc, &argv);
-  LinkerApp linkerApp (app);
-  app.MainLoop();
+
+  RunTest( app );
 
   return 0;
 }
