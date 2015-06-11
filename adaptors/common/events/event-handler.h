@@ -26,7 +26,7 @@
 #include <damage-observer.h>
 #include <drag-and-drop-detector-impl.h>
 #include <accessibility-manager-impl.h>
-#include <clipboard-event-notifier-impl.h>
+#include <clipboard.h>
 #include <imf-manager-impl.h>
 #include <rotation-observer.h>
 
@@ -166,7 +166,6 @@ private:
 
   DragAndDropDetectorPtr mDragAndDropDetector; ///< Pointer to the drag & drop detector, to send Drag & Drop events to.
   Dali::AccessibilityManager mAccessibilityManager; ///< Pointer to the accessibility manager
-  Dali::ClipboardEventNotifier mClipboardEventNotifier; ///< Pointer to the clipboard event notifier
   Dali::Clipboard mClipboard;///< Pointer to the clipboard
 
   struct Impl; ///< Contains Ecore specific information

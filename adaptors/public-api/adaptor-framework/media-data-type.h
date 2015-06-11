@@ -99,7 +99,7 @@ public:
    *
    * @return the extracted string/text
    */
-  std::string& getPlainText();
+  const std::string& getPlainText() const;
 
   /**
    * @brief Retrieve the html from the MediaDataType container

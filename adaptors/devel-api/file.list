@@ -3,7 +3,6 @@ devel_api_src_files = \
   $(adaptor_devel_api_dir)/adaptor-framework/bitmap-loader.cpp \
   $(adaptor_devel_api_dir)/adaptor-framework/bitmap-saver.cpp \
   $(adaptor_devel_api_dir)/adaptor-framework/clipboard.cpp \
-  $(adaptor_devel_api_dir)/adaptor-framework/clipboard-event-notifier.cpp \
   $(adaptor_devel_api_dir)/adaptor-framework/color-controller.cpp \
   $(adaptor_devel_api_dir)/adaptor-framework/drag-and-drop-detector.cpp \
   $(adaptor_devel_api_dir)/adaptor-framework/event-feeder.cpp \
@@ -27,7 +26,6 @@ devel_api_adaptor_framework_header_files = \
   $(adaptor_devel_api_dir)/adaptor-framework/accessibility-manager.h \
   $(adaptor_devel_api_dir)/adaptor-framework/bitmap-loader.h \
   $(adaptor_devel_api_dir)/adaptor-framework/bitmap-saver.h \
-  $(adaptor_devel_api_dir)/adaptor-framework/clipboard-event-notifier.h \
   $(adaptor_devel_api_dir)/adaptor-framework/clipboard.h \
   $(adaptor_devel_api_dir)/adaptor-framework/color-controller.h \
   $(adaptor_devel_api_dir)/adaptor-framework/drag-and-drop-detector.h \
