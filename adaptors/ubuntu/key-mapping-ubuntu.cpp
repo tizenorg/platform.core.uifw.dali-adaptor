@@ -15,45 +15,73 @@
  *
  */
 
-// EXTERNAL INCLUDES
-#include <map>
-#include <string.h>
-#include <iostream>
-
 // CLASS HEADER
-#include <stdlib.h>
-#include <iostream>
-#include <dali.h>
-#include <dali-test-suite-utils.h>
+#include "key-impl.h"
 
-using namespace Dali;
-
-void utc_dali_adaptor_key_startup(void)
+namespace Dali
 {
-  test_return_value = TET_UNDEF;
-}
 
-void utc_dali_adaptor_key_cleanup(void)
+const KEY DALI_KEY_INVALID          = -1;
+const KEY DALI_KEY_ESCAPE           = 9;
+const KEY DALI_KEY_BACKSPACE        = 22;
+const KEY DALI_KEY_CURSOR_UP        = 111;
+const KEY DALI_KEY_CURSOR_LEFT      = 113;
+const KEY DALI_KEY_CURSOR_RIGHT     = 114;
+const KEY DALI_KEY_CURSOR_DOWN      = 116;
+const KEY DALI_KEY_BACK             = 166;
+const KEY DALI_KEY_CAMERA           = 167;
+const KEY DALI_KEY_CONFIG           = 168;
+const KEY DALI_KEY_POWER            = 169;
+const KEY DALI_KEY_PAUSE            = 170;
+const KEY DALI_KEY_CANCEL           = 171;
+const KEY DALI_KEY_PLAY_CD          = 172;
+const KEY DALI_KEY_STOP_CD          = 173;
+const KEY DALI_KEY_PAUSE_CD         = 174;
+const KEY DALI_KEY_NEXT_SONG        = 175;
+const KEY DALI_KEY_PREVIOUS_SONG    = 176;
+const KEY DALI_KEY_REWIND           = 177;
+const KEY DALI_KEY_FASTFORWARD      = 178;
+const KEY DALI_KEY_MEDIA            = 179;
+const KEY DALI_KEY_PLAY_PAUSE       = 180;
+const KEY DALI_KEY_MUTE             = 181;
+const KEY DALI_KEY_MENU             = 182;
+const KEY DALI_KEY_HOME             = 183;
+const KEY DALI_KEY_HOMEPAGE         = 187;
+const KEY DALI_KEY_WEBPAGE          = 188;
+const KEY DALI_KEY_MAIL             = 189;
+const KEY DALI_KEY_SCREENSAVER      = 190;
+const KEY DALI_KEY_BRIGHTNESS_UP    = 191;
+const KEY DALI_KEY_BRIGHTNESS_DOWN  = 192;
+const KEY DALI_KEY_SOFT_KBD         = 193;
+const KEY DALI_KEY_QUICK_PANEL      = 194;
+const KEY DALI_KEY_TASK_SWITCH      = 195;
+const KEY DALI_KEY_APPS             = 196;
+const KEY DALI_KEY_SEARCH           = 197;
+const KEY DALI_KEY_VOICE            = 198;
+const KEY DALI_KEY_LANGUAGE         = 199;
+const KEY DALI_KEY_VOLUME_UP        = 200;
+const KEY DALI_KEY_VOLUME_DOWN      = 201;
+
+namespace Internal
 {
-  test_return_value = TET_PASS;
-}
 
-// Copied from key-impl.h
-struct KeyLookup
+namespace Adaptor
 {
-  const char* keyName;      ///< XF86 key name
-  const int   daliKeyCode;  ///< Dali Enum Representation
-  const bool  deviceButton; ///< Whether the key is from a button on the device
-};
 
-// Common keys for all platforms
+namespace KeyLookup
+{
+
+// matches a DALI_KEY enum, to a key name
 KeyLookup KeyLookupTable[]=
 {
-  { "Escape",                DALI_KEY_ESCAPE,          false },  // item not defined in utilX
-  { "Menu",                  DALI_KEY_MENU,            false },  // item not defined in utilX
+  // more than one key name can be assigned to a single dali-key code
+  // e.g. "Menu" and "XF86Menu" are both assigned to  DALI_KEY_MENU
 
-  // Now the key names are used as literal string not defined symbols,
-  // since these definition in utilX.h is deprecated and we're guided not to use them
+  { "Escape",                DALI_KEY_ESCAPE,          false },
+  { "Menu",                  DALI_KEY_MENU,            false },
+
+  // Now literal strings are used as key names instead of defined symbols in utilX,
+  // since these definition in utilX.h is deprecated
   { "XF86Camera",            DALI_KEY_CAMERA,          false },
   { "XF86Camera_Full",       DALI_KEY_CONFIG,          false },
   { "XF86PowerOff",          DALI_KEY_POWER,           true  },
@@ -88,41 +116,13 @@ KeyLookup KeyLookupTable[]=
   { "XF86AudioRaiseVolume",  DALI_KEY_VOLUME_UP,       true  },
   { "XF86AudioLowerVolume",  DALI_KEY_VOLUME_DOWN,     true  },
 };
-const std::size_t KEY_LOOKUP_COUNT = (sizeof( KeyLookupTable))/ (sizeof(KeyLookup));
 
+const std::size_t KEY_LOOKUP_COUNT = (sizeof( KeyLookupTable ))/ (sizeof( KeyLookup ));
 
-// Generate a KeyPressEvent to send to Core
-Dali::KeyEvent GenerateKeyPress( const std::string& keyName )
-{
-  KeyEvent keyPress;
-  keyPress.keyPressedName = keyName;
-  return keyPress;
-}
+} // namespace KeyLookup
 
-int UtcDaliKeyIsKey(void)
-{
-  TestApplication application;
+} // namespace Adaptor
 
-  for ( std::size_t i = 0; i < KEY_LOOKUP_COUNT; ++i )
-  {
-    tet_printf( "Checking %s", KeyLookupTable[i].keyName );
-    DALI_TEST_CHECK( IsKey( GenerateKeyPress( KeyLookupTable[i].keyName ), KeyLookupTable[i].daliKeyCode ) );
-  }
-  END_TEST;
-}
+} // namespace Internal
 
-int UtcDaliKeyIsKeyNegative(void)
-{
-  TestApplication application;
-
-  // Random value
-  DALI_TEST_CHECK( IsKey( GenerateKeyPress( "invalid-key-name" ), DALI_KEY_MUTE ) == false );
-
-  // Compare with another key value
-  for ( std::size_t i = 0; i < KEY_LOOKUP_COUNT; ++i )
-  {
-    tet_printf( "Checking %s", KeyLookupTable[i].keyName );
-    DALI_TEST_CHECK( IsKey( GenerateKeyPress( KeyLookupTable[i].keyName ), KeyLookupTable[ ( i + 1 ) % KEY_LOOKUP_COUNT ].daliKeyCode ) == false );
-  }
-  END_TEST;
-}
+} // namespace Dali

@@ -27,9 +27,6 @@ namespace Dali DALI_IMPORT_API
 
 /**
  * @brief Mapping of keyboard and mouse button event keycodes to platform specific codes.
- *
- * For tizen the X Server Keycode is used as reference, unless it's over ridden
- * in utilX.h in which case the values are based on utilX.h
  */
 
 typedef int KEY;
@@ -52,9 +49,6 @@ extern const KEY DALI_KEY_FASTFORWARD;
 extern const KEY DALI_KEY_MEDIA;
 extern const KEY DALI_KEY_PLAY_PAUSE;
 extern const KEY DALI_KEY_MUTE;
-extern const KEY DALI_KEY_SEND;
-extern const KEY DALI_KEY_SELECT;
-extern const KEY DALI_KEY_END;
 extern const KEY DALI_KEY_MENU;
 extern const KEY DALI_KEY_HOME;
 extern const KEY DALI_KEY_HOMEPAGE;
