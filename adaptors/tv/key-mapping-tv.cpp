@@ -18,14 +18,6 @@
 // CLASS HEADER
 #include "key-impl.h"
 
-// EXTERNAL INCLUDES
-#include <map>
-#include <string.h>
-#include <iostream>
-
-#include <dali/integration-api/debug.h>
-
-
 namespace Dali
 {
 
@@ -85,14 +77,7 @@ namespace KeyLookup
 namespace
 {
 
-struct KeyLookup
-{
-  const char* keyName;      ///< X string representation
-  const int   daliKeyCode;  ///< Dali Enum Representation
-  const bool  deviceButton; ///< Whether the key is from a button on the device
-};
-
-// matches a DALI_KEY enum, to a X key name
+// matches a DALI_KEY enum, to key name
 KeyLookup KeyLookupTable[]=
 {
   // more than one key name can be assigned to a single dali-key code
@@ -100,77 +85,48 @@ KeyLookup KeyLookupTable[]=
 
   { "Escape",               DALI_KEY_ESCAPE,          false },  // item not defined in utilX
   { "Menu",                 DALI_KEY_MENU,            false },  // item not defined in utilX
+
+  // Now the key names are used as literal string not defined symbols,
+  // since these definition in utilX.h is deprecated and we're guided not to use them
+  { "XF86Camera",            DALI_KEY_CAMERA,          false },
+  { "XF86Camera_Full",       DALI_KEY_CONFIG,          false },
+  { "XF86PowerOff",          DALI_KEY_POWER,           true  },
+  { "XF86Standby",           DALI_KEY_PAUSE,           false },
+  { "Cancel",                DALI_KEY_CANCEL,          false },
+  { "XF86AudioPlay",         DALI_KEY_PLAY_CD,         false },
+  { "XF86AudioStop",         DALI_KEY_STOP_CD,         false },
+  { "XF86AudioPause",        DALI_KEY_PAUSE_CD,        false },
+  { "XF86AudioNext",         DALI_KEY_NEXT_SONG,       false },
+  { "XF86AudioPrev",         DALI_KEY_PREVIOUS_SONG,   false },
+  { "XF86AudioRewind",       DALI_KEY_REWIND,          false },
+  { "XF86AudioForward",      DALI_KEY_FASTFORWARD,     false },
+  { "XF86AudioMedia",        DALI_KEY_MEDIA,           false },
+  { "XF86AudioPlayPause",    DALI_KEY_PLAY_PAUSE,      false },
+  { "XF86AudioMute",         DALI_KEY_MUTE,            false },
+  { "XF86Send",              DALI_KEY_SEND,            true  },
+  { "XF86Phone",             DALI_KEY_SELECT,          true  },
+  { "XF86Stop",              DALI_KEY_END,             true  },
+  { "XF86Menu",              DALI_KEY_MENU,            true  },
+  { "XF86Home",              DALI_KEY_HOME,            true  },
+  { "XF86Back",              DALI_KEY_BACK,            true  },
+  { "XF86HomePage",          DALI_KEY_HOMEPAGE,        false },
+  { "XF86WWW",               DALI_KEY_WEBPAGE,         false },
+  { "XF86Mail",              DALI_KEY_MAIL,            false },
+  { "XF86ScreenSaver",       DALI_KEY_SCREENSAVER,     false },
+  { "XF86MonBrightnessUp",   DALI_KEY_BRIGHTNESS_UP,   false },
+  { "XF86MonBrightnessDown", DALI_KEY_BRIGHTNESS_DOWN, false },
+  { "XF86SoftKBD",           DALI_KEY_SOFT_KBD,        false },
+  { "XF86QuickPanel",        DALI_KEY_QUICK_PANEL,     false },
+  { "XF86TaskPane",          DALI_KEY_TASK_SWITCH,     false },
+  { "XF86Apps",              DALI_KEY_APPS,            false },
+  { "XF86Search",            DALI_KEY_SEARCH,          false },
+  { "XF86Voice",             DALI_KEY_VOICE,           false },
+  { "Hangul",                DALI_KEY_LANGUAGE,        false },
+  { "XF86AudioRaiseVolume",  DALI_KEY_VOLUME_UP,       true  },
+  { "XF86AudioLowerVolume",  DALI_KEY_VOLUME_DOWN,     true  },
 };
 
 const std::size_t KEY_LOOKUP_COUNT = (sizeof( KeyLookupTable))/ (sizeof(KeyLookup));
-
-class KeyMap
-{
-  public:
-
-  KeyMap():
-  mLookup( cmpString )
-  {
-    // create the lookup
-    for( size_t i = 0; i < KEY_LOOKUP_COUNT ; ++i )
-    {
-      const KeyLookup&  keyLookup( KeyLookupTable[i] );
-      mLookup[ keyLookup.keyName  ] = DaliKeyType( keyLookup.daliKeyCode, keyLookup.deviceButton );
-    }
-  }
-
-  int GetDaliKeyEnum( const char* keyName ) const
-  {
-    Lookup::const_iterator i = mLookup.find( keyName );
-    if( i == mLookup.end() )
-    {
-      return -1;
-    }
-    else
-    {
-      return (*i).second.first;
-    }
-  }
-
-  bool IsDeviceButton( const char* keyName ) const
-  {
-    Lookup::const_iterator i = mLookup.find( keyName );
-    if ( i != mLookup.end() )
-    {
-      return (*i).second.second;
-    }
-    return false;
-  }
-
-  private:
-
-  /**
-   * compare function, to compare string by pointer
-   */
-  static bool cmpString( const char* a, const char* b)
-  {
-    return strcmp(a, b) < 0;
-  }
-
-  typedef std::pair< int, bool > DaliKeyType;
-  typedef std::map<const char* /* key name */, DaliKeyType /* key code */, bool(*) ( char const* a, char const* b) > Lookup;
-  Lookup mLookup;
-
-};
-const KeyMap globalKeyLookup;
-
-} // un-named name space
-
-bool IsKey( const Dali::KeyEvent& keyEvent, Dali::KEY daliKey)
-{
-  int key = globalKeyLookup.GetDaliKeyEnum( keyEvent.keyPressedName.c_str() );
-  return daliKey == key;
-}
-
-bool IsDeviceButton( const char* keyName )
-{
-  return globalKeyLookup.IsDeviceButton( keyName );
-}
 
 } // namespace KeyLookup
 
