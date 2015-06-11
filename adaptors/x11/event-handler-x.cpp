@@ -688,10 +688,10 @@ struct EventHandler::Impl
     Ecore_Event_Key *keyEvent( (Ecore_Event_Key*)event );
     bool eventHandled( false );
 
-    // XF86Stop and XF86Send must skip ecore_imf_context_filter_event.
-    if ( strcmp( keyEvent->keyname, "XF86Send"  ) &&
-         strcmp( keyEvent->keyname, "XF86Phone" ) &&
-         strcmp( keyEvent->keyname, "XF86Stop"  ) )
+    // Send, home, back button must skip ecore_imf_context_filter_event.
+    if ( strcmp( keyEvent->keyname, KeyLookup::GetKeyName( DALI_KEY_SEND ) ) &&
+         strcmp( keyEvent->keyname, KeyLookup::GetKeyName( DALI_KEY_HOME ) ) &&
+         strcmp( keyEvent->keyname, KeyLookup::GetKeyName( DALI_KEY_BACK ) ) )
     {
       Ecore_IMF_Context* imfContext = NULL;
       Dali::ImfManager imfManager( ImfManager::Get() );
