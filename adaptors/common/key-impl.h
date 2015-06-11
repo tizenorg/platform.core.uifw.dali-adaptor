@@ -36,10 +36,20 @@ namespace Adaptor
 namespace KeyLookup
 {
 
+struct KeyLookup
+{
+  const char* keyName;      ///< X string representation
+  const int   daliKeyCode;  ///< Dali Enum Representation
+  const bool  deviceButton; ///< Whether the key is from a button on the device
+};
+
+extern KeyLookup KeyLookupTable[];
+extern const std::size_t KEY_LOOKUP_COUNT;
+
 /**
  * @copydoc Dali::IsKey()
  */
-bool IsKey( const Dali::KeyEvent& keyEvent, Dali::KEY daliKey);
+bool IsKey( const Dali::KeyEvent& keyEvent, Dali::KEY daliKey );
 
 /**
  * Check if a the given key name string is a button on the device itself.
@@ -47,6 +57,13 @@ bool IsKey( const Dali::KeyEvent& keyEvent, Dali::KEY daliKey);
  * @return true if the key is matched, false if not
  */
 bool IsDeviceButton( const char* keyName );
+
+/**
+ * Get the key name from the dali key code.
+ * @param daliKey The dali key code
+ * @return The key name
+ */
+const char* GetKeyName( Dali::KEY daliKey );
 
 } // namespace KeyLookup
 
