@@ -162,6 +162,7 @@ struct Framework::Impl
       return;
     }
 
+#ifndef OVER_TIZEN_SDK_2_2
     // get bundle name
     char* bundleName = const_cast<char*>(bundle_get_val(bundleData, "name"));
     if(bundleName != NULL)
@@ -175,6 +176,7 @@ struct Framework::Impl
     {
       framework->SetBundleId(bundleId);
     }
+#endif
   }
 
 #ifndef OVER_TIZEN_SDK_2_2
@@ -317,7 +319,9 @@ void Framework::Run()
 
 void Framework::Quit()
 {
+#ifndef OVER_TIZEN_SDK_2_2
   app_efl_exit();
+#endif
 }
 
 bool Framework::IsMainLoopRunning()
