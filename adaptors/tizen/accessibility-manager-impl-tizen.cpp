@@ -42,19 +42,36 @@ namespace Adaptor
 
 namespace
 {
+
+// TODO: Update vconf-key.h ?
+const char * DALI_VCONFKEY_SETAPPL_ACCESSIBILITY_DBUS_TTS = "db/setting/accessibility/atspi";
+
+bool GetEnabledVConf()
+{
+  int isEnabled = 0;
+  vconf_get_bool( DALI_VCONFKEY_SETAPPL_ACCESSIBILITY_DBUS_TTS, &isEnabled );
+
+  if( isEnabled == 0 )
+  {
+    vconf_get_bool( VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &isEnabled );
+  }
+
+  return (bool)isEnabled;
+}
+
 #if defined(DEBUG_ENABLED)
-Debug::Filter* gAccessibilityManagerLogFilter = Debug::Filter::New(Debug::NoLogging, false, "LOG_ACCESSIBILITY_MANAGER");
+Debug::Filter* gAccessibilityManagerLogFilter = Debug::Filter::New( Debug::NoLogging, false, "LOG_ACCESSIBILITY_MANAGER" );
 #endif
 
 void AccessibilityOnOffNotification(keynode_t* node, void* data)
 {
-  AccessibilityManager* manager = static_cast<AccessibilityManager*>(data);
-  int isEnabled = 0;
-  vconf_get_bool(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &isEnabled);
+  AccessibilityManager* manager = static_cast<AccessibilityManager*>( data );
 
-  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, isEnabled?"ENABLED":"DISABLED");
+  bool isEnabled = GetEnabledVConf();
 
-  if(isEnabled == 1)
+  DALI_LOG_INFO( gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, isEnabled ? "ENABLED" : "DISABLED" );
+
+  if( isEnabled )
   {
     manager->EnableAccessibility();
   }
@@ -297,19 +314,10 @@ AccessibilityManager::AccessibilityManager()
   mIndicator(NULL),
   mIndicatorFocused(false)
 {
-  int isEnabled = 0;
-  vconf_get_bool(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &isEnabled);
-  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, isEnabled?"ENABLED":"DISABLED");
+  mIsEnabled = GetEnabledVConf();
+  DALI_LOG_INFO( gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, mIsEnabled ? "ENABLED" : "DISABLED" );
 
-  if(isEnabled == 1)
-  {
-    mIsEnabled = true;
-  }
-  else
-  {
-    mIsEnabled = false;
-  }
-
+  vconf_notify_key_changed( DALI_VCONFKEY_SETAPPL_ACCESSIBILITY_DBUS_TTS, AccessibilityOnOffNotification, this );
   vconf_notify_key_changed( VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, AccessibilityOnOffNotification, this );
 
   mAccessibilityGestureDetector = new AccessibilityGestureDetector();
@@ -318,6 +326,7 @@ AccessibilityManager::AccessibilityManager()
 AccessibilityManager::~AccessibilityManager()
 {
   vconf_ignore_key_changed( VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, AccessibilityOnOffNotification );
+  vconf_ignore_key_changed( DALI_VCONFKEY_SETAPPL_ACCESSIBILITY_DBUS_TTS, AccessibilityOnOffNotification );
 }
 
 } // namespace Adaptor

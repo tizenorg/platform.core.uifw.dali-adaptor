@@ -174,6 +174,71 @@ public:
    */
   void HandleActionDisableEvent();
 
+  /**
+   * @copydoc Dali::AccessibilityManager::HandleActionScrollUpEvent()
+   */
+  bool HandleActionScrollUpEvent();
+
+  /**
+   * @copydoc Dali::AccessibilityManager::HandleActionScrollDownEvent()
+   */
+  bool HandleActionScrollDownEvent();
+
+  /**
+   * @copydoc Dali::AccessibilityManager::HandleActionPageLeftEvent()
+   */
+  bool HandleActionPageLeftEvent();
+
+  /**
+   * @copydoc Dali::AccessibilityManager::HandleActionPageRightEvent()
+   */
+  bool HandleActionPageRightEvent();
+
+  /**
+   * @copydoc Dali::AccessibilityManager::HandleActionPageUpEvent()
+   */
+  bool HandleActionPageUpEvent();
+
+  /**
+   * @copydoc Dali::AccessibilityManager::HandleActionPageDownEvent()
+   */
+  bool HandleActionPageDownEvent();
+
+  /**
+   * @copydoc Dali::AccessibilityManager::HandleActionMoveToFirstEvent()
+   */
+  bool HandleActionMoveToFirstEvent();
+
+  /**
+   * @copydoc Dali::AccessibilityManager::HandleActionMoveToLastEvent()
+   */
+  bool HandleActionMoveToLastEvent();
+
+  /**
+   * @copydoc Dali::AccessibilityManager::HandleActionReadFromTopEvent()
+   */
+  bool HandleActionReadFromTopEvent();
+
+  /**
+   * @copydoc Dali::AccessibilityManager::HandleActionZoomEvent()
+   */
+  bool HandleActionZoomEvent();
+
+  /**
+   * @copydoc Dali::AccessibilityManager::HandleActionReadIndicatorInformationEvent()
+   */
+  bool HandleActionReadIndicatorInformationEvent();
+
+  /**
+   * @copydoc Dali::AccessibilityManager::HandleActionReadPauseResumeEvent()
+   */
+  bool HandleActionReadPauseResumeEvent();
+
+  /**
+   * @copydoc Dali::AccessibilityManager::HandleActionStartStopEvent()
+   */
+  bool HandleActionStartStopEvent();
+
 public: // Signals
 
   /**
@@ -273,6 +338,110 @@ public: // Signals
   }
 
   /**
+   * @copydoc Dali::AccessibilityManager::ActionScrollUpSignal
+   */
+  AccessibilityActionSignalType& ActionScrollUpSignal()
+  {
+    return mActionScrollUpSignal;
+  }
+
+  /**
+   * @copydoc Dali::AccessibilityManager::ActionScrollDownSignal
+   */
+  AccessibilityActionSignalType& ActionScrollDownSignal()
+  {
+    return mActionScrollDownSignal;
+  }
+
+  /**
+   * @copydoc Dali::AccessibilityManager::ActionPageLeftSignal
+   */
+  AccessibilityActionSignalType& ActionPageLeftSignal()
+  {
+    return mActionPageLeftSignal;
+  }
+
+  /**
+   * @copydoc Dali::AccessibilityManager::ActionPageRightSignal
+   */
+  AccessibilityActionSignalType& ActionPageRightSignal()
+  {
+    return mActionPageRightSignal;
+  }
+
+  /**
+   * @copydoc Dali::AccessibilityManager::ActionPageUpSignal
+   */
+  AccessibilityActionSignalType& ActionPageUpSignal()
+  {
+    return mActionPageUpSignal;
+  }
+
+  /**
+   * @copydoc Dali::AccessibilityManager::ActionPageDownSignal
+   */
+  AccessibilityActionSignalType& ActionPageDownSignal()
+  {
+    return mActionPageDownSignal;
+  }
+
+  /**
+   * @copydoc Dali::AccessibilityManager::ActionMoveToFirstSignal
+   */
+  AccessibilityActionSignalType& ActionMoveToFirstSignal()
+  {
+    return mActionMoveToFirstSignal;
+  }
+
+  /**
+   * @copydoc Dali::AccessibilityManager::ActionMoveToLastSignal
+   */
+  AccessibilityActionSignalType& ActionMoveToLastSignal()
+  {
+    return mActionMoveToLastSignal;
+  }
+
+  /**
+   * @copydoc Dali::AccessibilityManager::ActionReadFromTopSignal
+   */
+  AccessibilityActionSignalType& ActionReadFromTopSignal()
+  {
+    return mActionReadFromTopSignal;
+  }
+
+  /**
+   * @copydoc Dali::AccessibilityManager::ActionZoomSignal
+   */
+  AccessibilityActionSignalType& ActionZoomSignal()
+  {
+    return mActionZoomSignal;
+  }
+
+  /**
+   * @copydoc Dali::AccessibilityManager::ActionReadIndicatorInformationSignal
+   */
+  AccessibilityActionSignalType& ActionReadIndicatorInformationSignal()
+  {
+    return mActionReadIndicatorInformationSignal;
+  }
+
+  /**
+   * @copydoc Dali::AccessibilityManager::ActionReadPauseResumeSignal
+   */
+  AccessibilityActionSignalType& ActionReadPauseResumeSignal()
+  {
+    return mActionReadPauseResumeSignal;
+  }
+
+  /**
+   * @copydoc Dali::AccessibilityManager::ActionStartStopSignal
+   */
+  AccessibilityActionSignalType& ActionStartStopSignal()
+  {
+    return mActionStartStopSignal;
+  }
+
+  /**
    * @copydoc Dali::AccessibilityManager::ActionScrollSignal
    */
   AccessibilityActionScrollSignalType& ActionScrollSignal()
@@ -319,6 +488,19 @@ private:
   AccessibilityActionSignalType mActionDownSignal;
   AccessibilityActionSignalType mActionClearFocusSignal;
   AccessibilityActionSignalType mActionBackSignal;
+  AccessibilityActionSignalType mActionScrollUpSignal;
+  AccessibilityActionSignalType mActionScrollDownSignal;
+  AccessibilityActionSignalType mActionPageLeftSignal;
+  AccessibilityActionSignalType mActionPageRightSignal;
+  AccessibilityActionSignalType mActionPageUpSignal;
+  AccessibilityActionSignalType mActionPageDownSignal;
+  AccessibilityActionSignalType mActionMoveToFirstSignal;
+  AccessibilityActionSignalType mActionMoveToLastSignal;
+  AccessibilityActionSignalType mActionReadFromTopSignal;
+  AccessibilityActionSignalType mActionZoomSignal;
+  AccessibilityActionSignalType mActionReadIndicatorInformationSignal;
+  AccessibilityActionSignalType mActionReadPauseResumeSignal;
+  AccessibilityActionSignalType mActionStartStopSignal;
   AccessibilityActionScrollSignalType mActionScrollSignal;
 
 public:
