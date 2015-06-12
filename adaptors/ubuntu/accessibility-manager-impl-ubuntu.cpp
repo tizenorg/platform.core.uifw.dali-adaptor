@@ -581,6 +581,371 @@ bool AccessibilityManager::HandleActionDownEvent()
   return ret;
 }
 
+bool AccessibilityManager::HandleActionScrollUpEvent()
+{
+  bool ret = false;
+
+  Dali::AccessibilityManager handle( this );
+
+  /*
+   * In order to application decide reading action first,
+   * emit ActionScrollUp signal in first, AccessibilityActionScrollUp for handler in next
+   */
+  if ( !mIndicatorFocused )
+  {
+    if( !mActionScrollUpSignal.Empty() )
+    {
+      mActionScrollUpSignal.Emit( handle );
+    }
+  }
+
+  if( mActionHandler )
+  {
+    ret = mActionHandler->AccessibilityActionScrollUp();
+  }
+
+  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
+
+  return ret;
+}
+
+
+bool AccessibilityManager::HandleActionScrollDownEvent()
+{
+  bool ret = false;
+
+  Dali::AccessibilityManager handle( this );
+
+  /*
+   * In order to application decide reading action first,
+   * emit ActionScrollDown signal in first, mActionScrollDownSignal for handler in next
+   */
+  if ( !mIndicatorFocused )
+  {
+    if( !mActionScrollDownSignal.Empty() )
+    {
+      mActionScrollDownSignal.Emit( handle );
+    }
+  }
+
+  if( mActionHandler )
+  {
+    ret = mActionHandler->AccessibilityActionScrollDown();
+  }
+
+  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
+
+  return ret;
+}
+
+bool AccessibilityManager::HandleActionPageLeftEvent()
+{
+  bool ret = false;
+
+  Dali::AccessibilityManager handle( this );
+
+  /*
+   * In order to application decide reading action first,
+   * emit ActionPageLeft signal in first, AccessibilityActionPageLeft for handler in next
+   */
+  if ( !mIndicatorFocused )
+  {
+    if( !mActionPageLeftSignal.Empty() )
+    {
+      mActionPageLeftSignal.Emit( handle );
+    }
+  }
+
+  if( mActionHandler )
+  {
+    ret = mActionHandler->AccessibilityActionPageLeft();
+  }
+
+  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
+
+  return ret;
+}
+
+bool AccessibilityManager::HandleActionPageRightEvent()
+{
+  bool ret = false;
+
+  Dali::AccessibilityManager handle( this );
+
+  /*
+   * In order to application decide reading action first,
+   * emit ActionPageRight signal in first, AccessibilityActionPageRight for handler in next
+   */
+  if ( !mIndicatorFocused )
+  {
+    if( !mActionPageRightSignal.Empty() )
+    {
+      mActionPageRightSignal.Emit( handle );
+    }
+  }
+
+  if( mActionHandler )
+  {
+    ret = mActionHandler->AccessibilityActionPageRight();
+  }
+
+  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
+
+  return ret;
+}
+
+bool AccessibilityManager::HandleActionPageUpEvent()
+{
+  bool ret = false;
+
+  Dali::AccessibilityManager handle( this );
+
+  /*
+   * In order to application decide reading action first,
+   * emit ActionPageUp signal in first, AccessibilityActionPageUp for handler in next
+   */
+  if ( !mIndicatorFocused )
+  {
+    if( !mActionPageUpSignal.Empty() )
+    {
+      mActionPageUpSignal.Emit( handle );
+    }
+  }
+
+  if( mActionHandler )
+  {
+    ret = mActionHandler->AccessibilityActionPageUp();
+  }
+
+  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
+
+  return ret;
+}
+
+bool AccessibilityManager::HandleActionPageDownEvent()
+{
+  bool ret = false;
+
+  Dali::AccessibilityManager handle( this );
+
+  /*
+   * In order to application decide reading action first,
+   * emit ActionPageDown signal in first, AccessibilityActionPageDown for handler in next
+   */
+  if ( !mIndicatorFocused )
+  {
+    if( !mActionPageDownSignal.Empty() )
+    {
+      mActionPageDownSignal.Emit( handle );
+    }
+  }
+
+  if( mActionHandler )
+  {
+    ret = mActionHandler->AccessibilityActionPageDown();
+  }
+
+  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
+
+  return ret;
+}
+
+bool AccessibilityManager::HandleActionMoveToFirstEvent()
+{
+  bool ret = false;
+
+  Dali::AccessibilityManager handle( this );
+
+  /*
+   * In order to application decide reading action first,
+   * emit ActionMoveToFirst signal in first, AccessibilityActionMoveToFirst for handler in next
+   */
+  if ( !mIndicatorFocused )
+  {
+    if( !mActionMoveToFirstSignal.Empty() )
+    {
+      mActionMoveToFirstSignal.Emit( handle );
+    }
+  }
+
+  if( mActionHandler )
+  {
+    ret = mActionHandler->AccessibilityActionMoveToFirst();
+  }
+
+  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
+
+  return ret;
+}
+
+bool AccessibilityManager::HandleActionMoveToLastEvent()
+{
+  bool ret = false;
+
+  Dali::AccessibilityManager handle( this );
+
+  /*
+   * In order to application decide reading action first,
+   * emit ActionMoveToLast signal in first, AccessibilityActionMoveToLast for handler in next
+   */
+  if ( !mIndicatorFocused )
+  {
+    if( !mActionMoveToLastSignal.Empty() )
+    {
+      mActionMoveToLastSignal.Emit( handle );
+    }
+  }
+
+  if( mActionHandler )
+  {
+    ret = mActionHandler->AccessibilityActionMoveToLast();
+  }
+
+  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
+
+  return ret;
+}
+
+bool AccessibilityManager::HandleActionReadFromTopEvent()
+{
+  bool ret = false;
+
+  Dali::AccessibilityManager handle( this );
+
+  /*
+   * In order to application decide reading action first,
+   * emit ActionReadFromTop signal in first, AccessibilityActionReadFromTop for handler in next
+   */
+  if ( !mIndicatorFocused )
+  {
+    if( !mActionReadFromTopSignal.Empty() )
+    {
+      mActionReadFromTopSignal.Emit( handle );
+    }
+  }
+
+  if( mActionHandler )
+  {
+    ret = mActionHandler->AccessibilityActionReadFromTop();
+  }
+
+  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
+
+  return ret;
+}
+
+bool AccessibilityManager::HandleActionZoomEvent()
+{
+  bool ret = false;
+
+  Dali::AccessibilityManager handle( this );
+
+  /*
+   * In order to application decide reading action first,
+   * emit ActionZoom signal in first, AccessibilityActionZoom for handler in next
+   */
+  if ( !mIndicatorFocused )
+  {
+    if( !mActionZoomSignal.Empty() )
+    {
+      mActionZoomSignal.Emit( handle );
+    }
+  }
+
+  if( mActionHandler )
+  {
+    ret = mActionHandler->AccessibilityActionZoom();
+  }
+
+  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
+
+  return ret;
+}
+
+bool AccessibilityManager::HandleActionReadIndicatorInformationEvent()
+{
+  bool ret = false;
+
+  Dali::AccessibilityManager handle( this );
+
+  /*
+   * In order to application decide reading action first,
+   * emit ActionReadIndicatorInformation signal in first, AccessibilityActionReadIndicatorInformation for handler in next
+   */
+  if ( !mIndicatorFocused )
+  {
+    if( !mActionReadIndicatorInformationSignal.Empty() )
+    {
+      mActionReadIndicatorInformationSignal.Emit( handle );
+    }
+  }
+
+  if( mActionHandler )
+  {
+    ret = mActionHandler->AccessibilityActionReadIndicatorInformation();
+  }
+
+  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
+
+  return ret;
+}
+
+bool AccessibilityManager::HandleActionReadPauseResumeEvent()
+{
+  bool ret = false;
+
+  Dali::AccessibilityManager handle( this );
+
+  /*
+   * In order to application decide reading action first,
+   * emit ActionReadPauseResume signal in first, AccessibilityActionReadPauseResume for handler in next
+   */
+  if ( !mIndicatorFocused )
+  {
+    if( !mActionReadPauseResumeSignal.Empty() )
+    {
+      mActionReadPauseResumeSignal.Emit( handle );
+    }
+  }
+
+  if( mActionHandler )
+  {
+    ret = mActionHandler->AccessibilityActionReadPauseResume();
+  }
+
+  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
+
+  return ret;
+}
+
+bool AccessibilityManager::HandleActionStartStopEvent()
+{
+  bool ret = false;
+
+  Dali::AccessibilityManager handle( this );
+
+  /*
+   * In order to application decide reading action first,
+   * emit ActionStartStop signal in first, AccessibilityActionStartStop for handler in next
+   */
+  if ( !mIndicatorFocused )
+  {
+    if( !mActionStartStopSignal.Empty() )
+    {
+      mActionStartStopSignal.Emit( handle );
+    }
+  }
+
+  if( mActionHandler )
+  {
+    ret = mActionHandler->AccessibilityActionStartStop();
+  }
+
+  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
+
+  return ret;
+}
+
 } // namespace Adaptor
 
 } // namespace Internal

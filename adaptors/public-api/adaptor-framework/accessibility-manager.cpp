@@ -127,6 +127,71 @@ void AccessibilityManager::HandleActionDisableEvent()
   Internal::Adaptor::AccessibilityManager::GetImplementation(*this).HandleActionDisableEvent();
 }
 
+bool AccessibilityManager::HandleActionScrollUpEvent()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).HandleActionScrollUpEvent();
+}
+
+bool AccessibilityManager::HandleActionScrollDownEvent()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).HandleActionScrollDownEvent();
+}
+
+bool AccessibilityManager::HandleActionPageLeftEvent()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).HandleActionPageLeftEvent();
+}
+
+bool AccessibilityManager::HandleActionPageRightEvent()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).HandleActionPageRightEvent();
+}
+
+bool AccessibilityManager::HandleActionPageUpEvent()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).HandleActionPageUpEvent();
+}
+
+bool AccessibilityManager::HandleActionPageDownEvent()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).HandleActionPageDownEvent();
+}
+
+bool AccessibilityManager::HandleActionMoveToFirstEvent()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).HandleActionMoveToFirstEvent();
+}
+
+bool AccessibilityManager::HandleActionMoveToLastEvent()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).HandleActionMoveToLastEvent();
+}
+
+bool AccessibilityManager::HandleActionReadFromTopEvent()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).HandleActionReadFromTopEvent();
+}
+
+bool AccessibilityManager::HandleActionZoomEvent()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).HandleActionZoomEvent();
+}
+
+bool AccessibilityManager::HandleActionReadIndicatorInformationEvent()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).HandleActionReadIndicatorInformationEvent();
+}
+
+bool AccessibilityManager::HandleActionReadPauseResumeEvent()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).HandleActionReadPauseResumeEvent();
+}
+
+bool AccessibilityManager::HandleActionStartStopEvent()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).HandleActionStartStopEvent();
+}
+
 AccessibilityManager::AccessibilityActionSignalType& AccessibilityManager::StatusChangedSignal()
 {
   return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).StatusChangedSignal();
@@ -185,6 +250,71 @@ AccessibilityManager::AccessibilityActionSignalType& AccessibilityManager::Actio
 AccessibilityManager::AccessibilityActionSignalType& AccessibilityManager::ActionBackSignal()
 {
   return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).ActionBackSignal();
+}
+
+AccessibilityManager::AccessibilityActionSignalType& AccessibilityManager::ActionScrollUpSignal()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).ActionScrollUpSignal();
+}
+
+AccessibilityManager::AccessibilityActionSignalType& AccessibilityManager::ActionScrollDownSignal()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).ActionScrollDownSignal();
+}
+
+AccessibilityManager::AccessibilityActionSignalType& AccessibilityManager::ActionPageLeftSignal()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).ActionPageLeftSignal();
+}
+
+AccessibilityManager::AccessibilityActionSignalType& AccessibilityManager::ActionPageRightSignal()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).ActionPageRightSignal();
+}
+
+AccessibilityManager::AccessibilityActionSignalType& AccessibilityManager::ActionPageUpSignal()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).ActionPageUpSignal();
+}
+
+AccessibilityManager::AccessibilityActionSignalType& AccessibilityManager::ActionPageDownSignal()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).ActionPageDownSignal();
+}
+
+AccessibilityManager::AccessibilityActionSignalType& AccessibilityManager::ActionMoveToFirstSignal()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).ActionMoveToFirstSignal();
+}
+
+AccessibilityManager::AccessibilityActionSignalType& AccessibilityManager::ActionMoveToLastSignal()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).ActionMoveToLastSignal();
+}
+
+AccessibilityManager::AccessibilityActionSignalType& AccessibilityManager::ActionReadFromTopSignal()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).ActionReadFromTopSignal();
+}
+
+AccessibilityManager::AccessibilityActionSignalType& AccessibilityManager::ActionZoomSignal()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).ActionZoomSignal();
+}
+
+AccessibilityManager::AccessibilityActionSignalType& AccessibilityManager::ActionReadIndicatorInformationSignal()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).ActionReadIndicatorInformationSignal();
+}
+
+AccessibilityManager::AccessibilityActionSignalType& AccessibilityManager::ActionReadPauseResumeSignal()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).ActionReadPauseResumeSignal();
+}
+
+AccessibilityManager::AccessibilityActionSignalType& AccessibilityManager::ActionStartStopSignal()
+{
+  return Internal::Adaptor::AccessibilityManager::GetImplementation(*this).ActionStartStopSignal();
 }
 
 AccessibilityManager::AccessibilityActionScrollSignalType& AccessibilityManager::ActionScrollSignal()
