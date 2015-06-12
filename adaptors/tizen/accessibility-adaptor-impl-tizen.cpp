@@ -16,7 +16,7 @@
  */
 
 // CLASS HEADER
-#include "accessibility-manager-impl.h"
+#include "accessibility-adaptor-impl.h"
 
 // EXTERNAL INCLUDES
 #include <vconf.h>
@@ -42,79 +42,96 @@ namespace Adaptor
 
 namespace
 {
+
+// TODO: Update vconf-key.h ?
+const char * DALI_VCONFKEY_SETAPPL_ACCESSIBILITY_DBUS_TTS = "db/setting/accessibility/atspi";
+
+bool GetEnabledVConf()
+{
+  int isEnabled = 0;
+  vconf_get_bool( DALI_VCONFKEY_SETAPPL_ACCESSIBILITY_DBUS_TTS, &isEnabled );
+
+  if( isEnabled == 0 )
+  {
+    vconf_get_bool( VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &isEnabled );
+  }
+
+  return (bool)isEnabled;
+}
+
 #if defined(DEBUG_ENABLED)
-Debug::Filter* gAccessibilityManagerLogFilter = Debug::Filter::New(Debug::NoLogging, false, "LOG_ACCESSIBILITY_MANAGER");
+Debug::Filter* gAccessibilityAdaptorLogFilter = Debug::Filter::New( Debug::NoLogging, false, "LOG_ACCESSIBILITY_ADAPTOR" );
 #endif
 
 void AccessibilityOnOffNotification(keynode_t* node, void* data)
 {
-  AccessibilityManager* manager = static_cast<AccessibilityManager*>(data);
-  int isEnabled = 0;
-  vconf_get_bool(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &isEnabled);
+  AccessibilityAdaptor* adaptor = static_cast<AccessibilityAdaptor*>( data );
 
-  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, isEnabled?"ENABLED":"DISABLED");
+  bool isEnabled = GetEnabledVConf();
 
-  if(isEnabled == 1)
+  DALI_LOG_INFO( gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, isEnabled ? "ENABLED" : "DISABLED" );
+
+  if( isEnabled )
   {
-    manager->EnableAccessibility();
+    adaptor->EnableAccessibility();
   }
   else
   {
-    manager->DisableAccessibility();
+    adaptor->DisableAccessibility();
   }
 }
 
 BaseHandle Create()
 {
-  BaseHandle handle( AccessibilityManager::Get() );
+  BaseHandle handle( AccessibilityAdaptor::Get() );
 
   if ( !handle )
   {
     Dali::SingletonService service( SingletonService::Get() );
     if ( service )
     {
-      Dali::AccessibilityManager manager = Dali::AccessibilityManager( new AccessibilityManager() );
-      service.Register( typeid( manager ), manager );
-      handle = manager;
+      Dali::AccessibilityAdaptor adaptor = Dali::AccessibilityAdaptor( new AccessibilityAdaptor() );
+      service.Register( typeid( adaptor ), adaptor );
+      handle = adaptor;
     }
   }
 
   return handle;
 }
-TypeRegistration ACCESSIBILITY_MANAGER_TYPE( typeid(Dali::AccessibilityManager), typeid(Dali::BaseHandle), Create, true /* Create Instance At Startup */ );
+TypeRegistration ACCESSIBILITY_MANAGER_TYPE( typeid(Dali::AccessibilityAdaptor), typeid(Dali::BaseHandle), Create, true /* Create Instance At Startup */ );
 
 } // unnamed namespace
 
-Dali::AccessibilityManager AccessibilityManager::Get()
+Dali::AccessibilityAdaptor AccessibilityAdaptor::Get()
 {
-  Dali::AccessibilityManager manager;
+  Dali::AccessibilityAdaptor adaptor;
 
   Dali::SingletonService service( SingletonService::Get() );
   if ( service )
   {
     // Check whether the singleton is already created
-    Dali::BaseHandle handle = service.GetSingleton( typeid( Dali::AccessibilityManager ) );
+    Dali::BaseHandle handle = service.GetSingleton( typeid( Dali::AccessibilityAdaptor ) );
     if(handle)
     {
       // If so, downcast the handle
-      manager = Dali::AccessibilityManager( dynamic_cast< AccessibilityManager* >( handle.GetObjectPtr() ) );
+      adaptor = Dali::AccessibilityAdaptor( dynamic_cast< AccessibilityAdaptor* >( handle.GetObjectPtr() ) );
     }
   }
 
-  return manager;
+  return adaptor;
 }
 
-Vector2 AccessibilityManager::GetReadPosition() const
+Vector2 AccessibilityAdaptor::GetReadPosition() const
 {
   return mReadPosition;
 }
 
-void AccessibilityManager::SetActionHandler(AccessibilityActionHandler& handler)
+void AccessibilityAdaptor::SetActionHandler(AccessibilityActionHandler& handler)
 {
   mActionHandler = &handler;
 }
 
-void AccessibilityManager::SetGestureHandler(AccessibilityGestureHandler& handler)
+void AccessibilityAdaptor::SetGestureHandler(AccessibilityGestureHandler& handler)
 {
   if( mAccessibilityGestureDetector )
   {
@@ -122,11 +139,11 @@ void AccessibilityManager::SetGestureHandler(AccessibilityGestureHandler& handle
   }
 }
 
-bool AccessibilityManager::HandleActionClearFocusEvent()
+bool AccessibilityAdaptor::HandleActionClearFocusEvent()
 {
   bool ret = false;
 
-  Dali::AccessibilityManager handle( this );
+  Dali::AccessibilityAdaptor handle( this );
 
   /*
    * In order to application decide reading action first,
@@ -145,16 +162,16 @@ bool AccessibilityManager::HandleActionClearFocusEvent()
     ret = mActionHandler->ClearAccessibilityFocus();
   }
 
-  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
+  DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
 
   return ret;
 }
 
-bool AccessibilityManager::HandleActionScrollEvent(const TouchPoint& point, unsigned long timeStamp)
+bool AccessibilityAdaptor::HandleActionScrollEvent(const TouchPoint& point, unsigned long timeStamp)
 {
   bool ret = false;
 
-  Dali::AccessibilityManager handle( this );
+  Dali::AccessibilityAdaptor handle( this );
 
   Dali::TouchEvent event(timeStamp);
   event.points.push_back(point);
@@ -187,7 +204,7 @@ bool AccessibilityManager::HandleActionScrollEvent(const TouchPoint& point, unsi
   return ret;
 }
 
-bool AccessibilityManager::HandleActionTouchEvent(const TouchPoint& point, unsigned long timeStamp)
+bool AccessibilityAdaptor::HandleActionTouchEvent(const TouchPoint& point, unsigned long timeStamp)
 {
   bool ret = false;
 
@@ -201,11 +218,11 @@ bool AccessibilityManager::HandleActionTouchEvent(const TouchPoint& point, unsig
   return ret;
 }
 
-bool AccessibilityManager::HandleActionBackEvent()
+bool AccessibilityAdaptor::HandleActionBackEvent()
 {
   bool ret = false;
 
-  Dali::AccessibilityManager handle( this );
+  Dali::AccessibilityAdaptor handle( this );
 
   /*
    * In order to application decide reading action first,
@@ -224,22 +241,22 @@ bool AccessibilityManager::HandleActionBackEvent()
     ret = mActionHandler->AccessibilityActionBack();
   }
 
-  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
+  DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
 
   return ret;
 }
 
-void AccessibilityManager::HandleActionEnableEvent()
+void AccessibilityAdaptor::HandleActionEnableEvent()
 {
   EnableAccessibility();
 }
 
-void AccessibilityManager::HandleActionDisableEvent()
+void AccessibilityAdaptor::HandleActionDisableEvent()
 {
   DisableAccessibility();
 }
 
-void AccessibilityManager::EnableAccessibility()
+void AccessibilityAdaptor::EnableAccessibility()
 {
   if(mIsEnabled == false)
   {
@@ -251,12 +268,12 @@ void AccessibilityManager::EnableAccessibility()
     }
 
     //emit status changed signal
-    Dali::AccessibilityManager handle( this );
+    Dali::AccessibilityAdaptor handle( this );
     mStatusChangedSignal.Emit( handle );
   }
 }
 
-void AccessibilityManager::DisableAccessibility()
+void AccessibilityAdaptor::DisableAccessibility()
 {
   if(mIsEnabled == true)
   {
@@ -268,7 +285,7 @@ void AccessibilityManager::DisableAccessibility()
     }
 
     //emit status changed signal
-    Dali::AccessibilityManager handle( this );
+    Dali::AccessibilityAdaptor handle( this );
     mStatusChangedSignal.Emit( handle );
 
     // Destroy the TtsPlayer if exists.
@@ -281,43 +298,35 @@ void AccessibilityManager::DisableAccessibility()
   }
 }
 
-bool AccessibilityManager::IsEnabled() const
+bool AccessibilityAdaptor::IsEnabled() const
 {
   return mIsEnabled;
 }
 
-void AccessibilityManager::SetIndicator(Indicator* indicator)
+void AccessibilityAdaptor::SetIndicator(Indicator* indicator)
 {
   mIndicator = indicator;
 }
 
-AccessibilityManager::AccessibilityManager()
+AccessibilityAdaptor::AccessibilityAdaptor()
 : mIsEnabled(false),
   mActionHandler(NULL),
   mIndicator(NULL),
   mIndicatorFocused(false)
 {
-  int isEnabled = 0;
-  vconf_get_bool(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &isEnabled);
-  DALI_LOG_INFO(gAccessibilityManagerLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, isEnabled?"ENABLED":"DISABLED");
+  mIsEnabled = GetEnabledVConf();
+  DALI_LOG_INFO( gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, mIsEnabled ? "ENABLED" : "DISABLED" );
 
-  if(isEnabled == 1)
-  {
-    mIsEnabled = true;
-  }
-  else
-  {
-    mIsEnabled = false;
-  }
-
+  vconf_notify_key_changed( DALI_VCONFKEY_SETAPPL_ACCESSIBILITY_DBUS_TTS, AccessibilityOnOffNotification, this );
   vconf_notify_key_changed( VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, AccessibilityOnOffNotification, this );
 
   mAccessibilityGestureDetector = new AccessibilityGestureDetector();
 }
 
-AccessibilityManager::~AccessibilityManager()
+AccessibilityAdaptor::~AccessibilityAdaptor()
 {
   vconf_ignore_key_changed( VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, AccessibilityOnOffNotification );
+  vconf_ignore_key_changed( DALI_VCONFKEY_SETAPPL_ACCESSIBILITY_DBUS_TTS, AccessibilityOnOffNotification );
 }
 
 } // namespace Adaptor

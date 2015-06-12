@@ -20,16 +20,16 @@
 
 // EXTERNAL INCLUDES
 #include <vconf.h>
-#include <Ecore.h>
-#include <Ecore_Wayland.h>
+#include <Ecore_X.h>
 #include <Elementary.h>
 
-#include <dali/public-api/object/type-registry.h>
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/events/gesture-requests.h>
 
 // INTERNAL INCLUDES
 #include "system-settings.h"
+
+#define MSG_DOMAIN_CONTROL_ACCESS (int)ECORE_X_ATOM_E_ILLUME_ACCESS_CONTROL
 
 namespace Dali
 {
@@ -39,6 +39,12 @@ namespace Internal
 
 namespace Adaptor
 {
+
+namespace {
+#if defined(DEBUG_ENABLED)
+Debug::Filter* gAccessibilityAdaptorLogFilter = Debug::Filter::New(Debug::NoLogging, false, "LOG_ACCESSIBILITY_ADAPTOR");
+#endif
+} // unnamed namespace
 
 bool AccessibilityAdaptor::HandleActionNextEvent(bool allowEndFeedback)
 {
@@ -57,7 +63,14 @@ bool AccessibilityAdaptor::HandleActionNextEvent(bool allowEndFeedback)
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    Elm_Access_Action_Info actionInfo;
+    actionInfo.action_type = ELM_ACCESS_ACTION_HIGHLIGHT_NEXT;
+
+    ret = mIndicator->SendMessage(MSG_DOMAIN_CONTROL_ACCESS, actionInfo.action_type, &actionInfo, sizeof(actionInfo));
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionNext(allowEndFeedback);
   }
@@ -85,7 +98,14 @@ bool AccessibilityAdaptor::HandleActionPreviousEvent(bool allowEndFeedback)
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    Elm_Access_Action_Info actionInfo;
+    actionInfo.action_type = ELM_ACCESS_ACTION_HIGHLIGHT_PREV;
+
+    ret = mIndicator->SendMessage(MSG_DOMAIN_CONTROL_ACCESS, actionInfo.action_type, &actionInfo, sizeof(actionInfo));
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionPrevious(allowEndFeedback);
   }
@@ -113,7 +133,14 @@ bool AccessibilityAdaptor::HandleActionActivateEvent()
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    Elm_Access_Action_Info actionInfo;
+    actionInfo.action_type = ELM_ACCESS_ACTION_ACTIVATE;
+
+    ret = mIndicator->SendMessage(MSG_DOMAIN_CONTROL_ACCESS, actionInfo.action_type, &actionInfo, sizeof(actionInfo));
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionActivate();
   }
@@ -166,6 +193,12 @@ bool AccessibilityAdaptor::HandleActionReadEvent(unsigned int x, unsigned int y,
     }
     else if( mIndicatorFocused && !indicatorFocused )
     {
+      Elm_Access_Action_Info actionInfo;
+      actionInfo.action_type = ELM_ACCESS_ACTION_UNHIGHLIGHT;
+
+      // Indicator should be unhighlighted
+      ret = mIndicator->SendMessage(MSG_DOMAIN_CONTROL_ACCESS, actionInfo.action_type, &actionInfo, sizeof(actionInfo));
+      DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] Send unhighlight message to indicator!!!!\n", __FUNCTION__, __LINE__);
     }
 
     mIndicatorFocused = indicatorFocused;
@@ -173,6 +206,22 @@ bool AccessibilityAdaptor::HandleActionReadEvent(unsigned int x, unsigned int y,
     // Send accessibility READ action information to Indicator
     if( mIndicatorFocused )
     {
+      Elm_Access_Action_Info actionInfo;
+      actionInfo.x = mReadPosition.x;
+      actionInfo.y = mReadPosition.y;
+
+      if(allowReadAgain)
+      {
+        actionInfo.action_type = ELM_ACCESS_ACTION_READ;
+      }
+      else
+      {
+        actionInfo.action_type = static_cast<Elm_Access_Action_Type>( GetElmAccessActionOver() );
+      }
+
+      ret = mIndicator->SendMessage(MSG_DOMAIN_CONTROL_ACCESS, actionInfo.action_type, &actionInfo, sizeof(actionInfo));
+
+      DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] Send READ message to indicator!!!!\n", __FUNCTION__, __LINE__);
     }
   }
 
@@ -234,7 +283,14 @@ bool AccessibilityAdaptor::HandleActionReadNextEvent(bool allowEndFeedback)
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    Elm_Access_Action_Info actionInfo;
+    actionInfo.action_type = ELM_ACCESS_ACTION_HIGHLIGHT_NEXT;
+
+    ret = mIndicator->SendMessage(MSG_DOMAIN_CONTROL_ACCESS, actionInfo.action_type, &actionInfo, sizeof(actionInfo));
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionReadNext(allowEndFeedback);
   }
@@ -262,7 +318,14 @@ bool AccessibilityAdaptor::HandleActionReadPreviousEvent(bool allowEndFeedback)
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    Elm_Access_Action_Info actionInfo;
+    actionInfo.action_type = ELM_ACCESS_ACTION_HIGHLIGHT_PREV;
+
+    ret = mIndicator->SendMessage(MSG_DOMAIN_CONTROL_ACCESS, actionInfo.action_type, &actionInfo, sizeof(actionInfo));
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionReadPrevious(allowEndFeedback);
   }
@@ -290,7 +353,14 @@ bool AccessibilityAdaptor::HandleActionUpEvent()
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    Elm_Access_Action_Info actionInfo;
+    actionInfo.action_type = ELM_ACCESS_ACTION_UP;
+
+    ret = mIndicator->SendMessage(MSG_DOMAIN_CONTROL_ACCESS, actionInfo.action_type, &actionInfo, sizeof(actionInfo));
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionUp();
   }
@@ -318,7 +388,14 @@ bool AccessibilityAdaptor::HandleActionDownEvent()
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    Elm_Access_Action_Info actionInfo;
+    actionInfo.action_type = ELM_ACCESS_ACTION_DOWN;
+
+    ret = mIndicator->SendMessage(MSG_DOMAIN_CONTROL_ACCESS, actionInfo.action_type, &actionInfo, sizeof(actionInfo));
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionDown();
   }
@@ -346,7 +423,11 @@ bool AccessibilityAdaptor::HandleActionScrollUpEvent()
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    // TODO: Send message to indicator with the correct action type
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionScrollUp();
   }
@@ -375,7 +456,11 @@ bool AccessibilityAdaptor::HandleActionScrollDownEvent()
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    // TODO: Send message to indicator with the correct action type
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionScrollDown();
   }
@@ -403,7 +488,11 @@ bool AccessibilityAdaptor::HandleActionPageLeftEvent()
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    // TODO: Send message to indicator with the correct action type
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionPageLeft();
   }
@@ -431,7 +520,11 @@ bool AccessibilityAdaptor::HandleActionPageRightEvent()
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    // TODO: Send message to indicator with the correct action type
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionPageRight();
   }
@@ -459,7 +552,11 @@ bool AccessibilityAdaptor::HandleActionPageUpEvent()
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    // TODO: Send message to indicator with the correct action type
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionPageUp();
   }
@@ -487,7 +584,11 @@ bool AccessibilityAdaptor::HandleActionPageDownEvent()
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    // TODO: Send message to indicator with the correct action type
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionPageDown();
   }
@@ -515,7 +616,11 @@ bool AccessibilityAdaptor::HandleActionMoveToFirstEvent()
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    // TODO: Send message to indicator with the correct action type
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionMoveToFirst();
   }
@@ -543,7 +648,11 @@ bool AccessibilityAdaptor::HandleActionMoveToLastEvent()
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    // TODO: Send message to indicator with the correct action type
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionMoveToLast();
   }
@@ -571,7 +680,11 @@ bool AccessibilityAdaptor::HandleActionReadFromTopEvent()
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    // TODO: Send message to indicator with the correct action type
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionReadFromTop();
   }
@@ -599,7 +712,11 @@ bool AccessibilityAdaptor::HandleActionReadFromNextEvent()
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    // TODO: Send message to indicator with the correct action type
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionReadFromNext();
   }
@@ -627,7 +744,11 @@ bool AccessibilityAdaptor::HandleActionZoomEvent()
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    // TODO: Send message to indicator with the correct action type
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionZoom();
   }
@@ -655,7 +776,11 @@ bool AccessibilityAdaptor::HandleActionReadIndicatorInformationEvent()
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    // TODO: Send message to indicator with the correct action type
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionReadIndicatorInformation();
   }
@@ -683,7 +808,11 @@ bool AccessibilityAdaptor::HandleActionReadPauseResumeEvent()
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    // TODO: Send message to indicator with the correct action type
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionReadPauseResume();
   }
@@ -711,7 +840,11 @@ bool AccessibilityAdaptor::HandleActionStartStopEvent()
     }
   }
 
-  if( mActionHandler )
+  if( mIndicator && mIndicatorFocused )
+  {
+    // TODO: Send message to indicator with the correct action type
+  }
+  else if( mActionHandler )
   {
     ret = mActionHandler->AccessibilityActionStartStop();
   }

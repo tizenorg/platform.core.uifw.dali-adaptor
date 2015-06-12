@@ -21,6 +21,7 @@
 #include <dali/public-api/dali-core.h>
 
 // Application / UI Framework adaption
+#include <dali/public-api/adaptor-framework/accessibility-adaptor.h>
 #include <dali/public-api/adaptor-framework/application.h>
 #include <dali/public-api/adaptor-framework/input-method.h>
 #include <dali/public-api/adaptor-framework/key.h>
