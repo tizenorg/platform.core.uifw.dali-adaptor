@@ -190,13 +190,13 @@ void TizenPlatformAbstraction::SetDpi(unsigned int dpiHor, unsigned int dpiVer)
   }
 }
 
-bool TizenPlatformAbstraction::LoadFile( const std::string& filename, std::vector< unsigned char >& buffer ) const
+bool TizenPlatformAbstraction::LoadFile( const std::string& filename, Dali::Vector< unsigned char >& buffer ) const
 {
   bool result = false;
 
-  if (mResourceLoader)
+  if( mResourceLoader )
   {
-    result = mResourceLoader->LoadFile(filename, buffer);
+    result = mResourceLoader->LoadFile( filename, buffer );
   }
 
   return result;
@@ -213,13 +213,13 @@ std::string TizenPlatformAbstraction::LoadFile( const std::string& filename )
   return result;
 }
 
-bool TizenPlatformAbstraction::SaveFile(const std::string& filename, std::vector< unsigned char >& buffer) const
+bool TizenPlatformAbstraction::SaveFile(const std::string& filename, const unsigned char * buffer, unsigned int numBytes ) const
 {
   bool result = false;
 
-  if (mResourceLoader)
+  if( mResourceLoader )
   {
-    result = mResourceLoader->SaveFile(filename, buffer);
+    result = mResourceLoader->SaveFile( filename, buffer, numBytes );
   }
 
   return result;
@@ -241,13 +241,14 @@ Integration::DynamicsFactory* TizenPlatformAbstraction::GetDynamicsFactory()
   return mDynamicsFactory;
 }
 
-bool TizenPlatformAbstraction::LoadShaderBinFile( const std::string& filename, std::vector< unsigned char >& buffer ) const
+bool TizenPlatformAbstraction::LoadShaderBinFile( const std::string& filename, Dali::Vector< unsigned char >& buffer ) const
 {
   bool result = false;
 
 #ifdef SHADERBIN_CACHE_ENABLED
   std::string path;
 
+  // First check the system location where shaders are stored at install time:
   if( mResourceLoader )
   {
     path = DALI_SHADERBIN_DIR;
@@ -255,15 +256,40 @@ bool TizenPlatformAbstraction::LoadShaderBinFile( const std::string& filename, s
     result = mResourceLoader->LoadFile( path, buffer );
   }
 
+  // Fallback to the cache of shaders stored after previous runtime compilations:
+  // On desktop this looks in the current working directory that the app was launched from.
   if( mResourceLoader && result == false )
   {
     path = mDataStoragePath;
     path += filename;
     result = mResourceLoader->LoadFile( path, buffer );
   }
+# else
+#pragma message "DALI WARNING(PERFORMANCE) - SHADERBIN_CACHE_ENABLED not defined.\n";
 #endif
 
   return result;
+}
+
+bool TizenPlatformAbstraction::SaveShaderBinFile( const std::string& filename, const unsigned char * buffer, unsigned int numBytes ) const
+{
+  bool result = false;
+
+#ifdef SHADERBIN_CACHE_ENABLED
+
+    // Fallback to the cache of shaders stored after previous runtime compilations:
+    // On desktop this looks in the current working directory that the app was launched from.
+    if( mResourceLoader )
+    {
+      std::string path = mDataStoragePath;
+      path += filename;
+      result = mResourceLoader->SaveFile( path, buffer, numBytes );
+    }
+# else
+#pragma message "DALI WARNING(PERFORMANCE) - SHADERBIN_CACHE_ENABLED not defined.\n";
+#endif
+
+    return result;
 }
 
 void TizenPlatformAbstraction::SetDataStoragePath( const std::string& path )
