@@ -253,6 +253,7 @@ bool TizenPlatformAbstraction::LoadShaderBinFile( const std::string& filename, s
     path = DALI_SHADERBIN_DIR;
     path += filename;
     result = mResourceLoader->LoadFile( path, buffer );
+    DALI_LOG_ERROR( "path: %s, result: %s\n", path.c_str(), result ? "true" : "false" ); /// @todo Temp <<<<<<<<<<<<<<<<,
   }
 
   if( mResourceLoader && result == false )
@@ -260,7 +261,10 @@ bool TizenPlatformAbstraction::LoadShaderBinFile( const std::string& filename, s
     path = mDataStoragePath;
     path += filename;
     result = mResourceLoader->LoadFile( path, buffer );
+    DALI_LOG_ERROR( "path: %s, result: %s\n", path.c_str(), result ? "true" : "false" ); /// @todo Temp <<<<<<<<<<<<<<<<,
   }
+# else
+  DALI_LOG_ERROR( "SHADERBIN_CACHE_ENABLED not defined.\n" ); /// @todo Temp <<<<<<<<<<<<<<<<
 #endif
 
   return result;
