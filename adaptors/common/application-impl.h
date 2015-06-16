@@ -28,6 +28,7 @@
 
 #include <framework.h>
 #include <window-impl.h>
+#include <base/environment-options.h>
 
 namespace Dali
 {
@@ -306,10 +307,12 @@ private:
   Dali::Application::WINDOW_MODE        mWindowMode;
   std::string                           mName;
   std::string                           mStylesheet;
+  EnvironmentOptions                    mEnvironmentOptions;
 
   bool                                  mInitialized;
 
   SlotDelegate< Application >           mSlotDelegate;
+
 };
 
 inline Application& GetImplementation(Dali::Application& application)
