@@ -248,19 +248,26 @@ bool TizenPlatformAbstraction::LoadShaderBinFile( const std::string& filename, s
 #ifdef SHADERBIN_CACHE_ENABLED
   std::string path;
 
+  // First check the system location where shaders are stored at install time:
   if( mResourceLoader )
   {
     path = DALI_SHADERBIN_DIR;
     path += filename;
     result = mResourceLoader->LoadFile( path, buffer );
+    //DALI_LOG_ERROR( "path: %s, result: %s\n", path.c_str(), result ? "true" : "false" ); /// @todo Temp <<<<<<<<<<<<<<<<,
   }
 
+  // Fallback to the cache of shaders stored after previous runtime compilations:
+  // On desktop this looks in the current working directory that the app was launched from.
   if( mResourceLoader && result == false )
   {
     path = mDataStoragePath;
     path += filename;
     result = mResourceLoader->LoadFile( path, buffer );
+    //DALI_LOG_ERROR( "path: %s, result: %s\n", path.c_str(), result ? "true" : "false" ); /// @todo Temp <<<<<<<<<<<<<<<<,
   }
+# else
+  DALI_LOG_ERROR( "SHADERBIN_CACHE_ENABLED not defined.\n" ); /// @todo Temp <<<<<<<<<<<<<<<<
 #endif
 
   return result;
