@@ -269,4 +269,5 @@ Configuration
   Data Dir (Read/Write):            $dataReadWriteDir
   Data Dir (Read Only):             $dataReadOnlyDir
   OVERTIZEN2.2:                     $with_over_tizen_2_2
+  Shader Binary Cache:              $enable_shaderbincache
 "
