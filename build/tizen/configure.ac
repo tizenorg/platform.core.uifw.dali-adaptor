@@ -65,7 +65,7 @@ if test "x$eldbus_available" = "xyes"; then
 fi
 AC_SUBST(DALI_ELDBUS_AVAILABLE)
 
-
+# Check for availability of BulletPhysics
 PKG_CHECK_EXISTS(bullet, [
   BULLET_CFLAGS=`pkg-config --cflags bullet`
   BULLET_LIBS=`pkg-config --libs bullet`
@@ -271,4 +271,5 @@ Configuration
   Data Dir (Read Only):             $dataReadOnlyDir
   OVERTIZEN2.2:                     $with_over_tizen_2_2
   EldBus:                           $eldbus_available
+  Shader Binary Cache:              $enable_shaderbincache
 "

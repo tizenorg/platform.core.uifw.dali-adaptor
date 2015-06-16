@@ -429,6 +429,15 @@ void ResourceLoader::SetDpi(unsigned int dpiHor, unsigned int dpiVer)
 
 bool ResourceLoader::LoadFile( const std::string& filename, std::vector< unsigned char >& buffer ) const
 {
+  Dali::Vector<unsigned char> daliVec;
+  const bool result = LoadFile( filename, daliVec );
+  buffer.resize( daliVec.Size() );
+  memcpy( &buffer[0], &daliVec[0], daliVec.Size() );
+  return result;
+}
+
+bool ResourceLoader::LoadFile( const std::string& filename, Dali::Vector< unsigned char >& buffer ) const
+{
   DALI_LOG_TRACE_METHOD(gLoaderFilter);
 
   DALI_ASSERT_DEBUG( 0 != filename.length());
@@ -447,9 +456,9 @@ bool ResourceLoader::LoadFile( const std::string& filename, std::vector< unsigne
     stream.seekg(0, std::ios_base::beg);
 
     // allocate a buffer
-    buffer.resize(length);
+    buffer.Resize(length);
     // read data into buffer
-    stream.read(reinterpret_cast<char*>(buffer.data()), length);
+    stream.read(reinterpret_cast<char*>(buffer.Begin()), length);
 
     DALI_LOG_INFO(gLoaderFilter, Debug::Verbose, "ResourceLoader::LoadFile(%s) - loaded %d bytes\n", filename.c_str(), length);
 
@@ -500,6 +509,11 @@ std::string ResourceLoader::LoadFile(const std::string& filename) const
 
 bool ResourceLoader::SaveFile(const std::string& filename, std::vector< unsigned char >& buffer)
 {
+  return SaveFile( filename, &buffer[0], buffer.size() );
+}
+
+bool ResourceLoader::SaveFile(const std::string& filename, const unsigned char * buffer, unsigned int numBytes )
+{
   DALI_LOG_TRACE_METHOD(gLoaderFilter);
 
   DALI_ASSERT_DEBUG( 0 != filename.length());
@@ -513,10 +527,10 @@ bool ResourceLoader::SaveFile(const std::string& filename, std::vector< unsigned
     std::ostream stream(&buf);
 
     // determine size of buffer
-    int length = static_cast<int>(buffer.size());
+    int length = static_cast<int>(numBytes);
 
     // write contents of buffer to the file
-    stream.write(reinterpret_cast<char*>(buffer.data()), length);
+    stream.write(reinterpret_cast<const char*>(buffer), length);
 
     if( !stream.bad() )
     {
