@@ -105,8 +105,7 @@ void TapGestureDetector::SendEvent(const Integration::TouchEvent& event)
           {
             mLastTapTime = event.time;
             EmitSingleTap( event.time, point );
-            mState = Clear;
-            break;
+            mState = Registered;
           }
           else
           {
@@ -114,9 +113,8 @@ void TapGestureDetector::SendEvent(const Integration::TouchEvent& event)
             EmitGesture( Gesture::Started, event.time );
             mState = Clear;
           }
-          break;
         }
-        if (pointState == TouchPoint::Down)
+        else if (pointState == TouchPoint::Down)
         {
           Vector2 distanceDelta(abs(mTouchPosition.x - point.screen.x),
                                 abs(mTouchPosition.y - point.screen.y));
