@@ -55,13 +55,13 @@ Debug::Filter* gWindowLogFilter = Debug::Filter::New(Debug::Concise, false, "LOG
 /**
  * TODO: Abstract Window class out and move this into a window implementation for Ecore
  */
-struct Window::EventHandler
+struct Window::EcoreXEventHandler
 {
   /**
    * Constructor
    * @param[in]  window  A pointer to the window class.
    */
-  EventHandler( Window* window )
+  EcoreXEventHandler( Window* window )
   : mWindow( window ),
     mEcoreWindow( 0 )
   {
@@ -70,7 +70,7 @@ struct Window::EventHandler
   /**
    * Destructor
    */
-  ~EventHandler()
+  ~EcoreXEventHandler()
   {
     if ( mWindowPropertyHandler )
     {
@@ -226,7 +226,7 @@ void Window::Initialize(const PositionSize& windowPosition, const std::string& n
   mOrientation = Orientation::New(this);
 
   // create event handler for Wayland window
-  mEventHandler = new EventHandler( this );
+  mEventHandler = new EcoreXEventHandler( this );
 }
 
 void Window::DoShowIndicator( Dali::Window::WindowOrientation lastOrientation )
