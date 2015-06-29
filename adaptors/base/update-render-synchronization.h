@@ -26,7 +26,9 @@
 // INTERNAL INCLUDES
 #include <base/interfaces/performance-interface.h>
 #include <trigger-event-interface.h>
+#include <base/conditional-wait.h>
 #include <base/frame-time.h>
+
 #include <base/render-thread.h>
 
 namespace Dali
@@ -55,7 +57,6 @@ class AdaptorInternalServices;
  * The Core::GetMaximumUpdateCount() method determines how many frames may be prepared, ahead of the rendering.
  * For example if the maximum update count is 2, then Core::Update() for frame N+1 may be processed whilst frame N is being rendered.
  * However the Core::Update() for frame N+2 may not be called, until the Core::Render() method for frame N has returned.
- *
  */
 class UpdateRenderSynchronization
 {
@@ -143,24 +144,16 @@ public:
   bool UpdateSyncWithRender( bool notifyEvent, bool& renderNeedsUpdate );
 
   /**
-   * Called by update thread to wait for all rendering to finish.
-   * Used by update to check the status of the final render before pausing.
-   * @pre Called by update thread only.
-   */
-  void UpdateWaitForAllRenderingToFinish();
-
-  /**
    * Try block the update-thread when there's nothing to update.
    * @return True if updating should continue, false if the update-thread should quit.
    */
   bool UpdateTryToSleep();
 
   /**
-   * Block the render thread whilst waiting for requests e.g. providing a new
-   * surface.
+   * Block the render thread whilst waiting for a new surface
    * @param[in] request Pointer to set if there are any requests
    */
-  bool RenderSyncWithRequest(RenderRequest*& request );
+  bool RenderWaitForNewSurface( RenderRequest*& request );
 
   /**
    * Called by the render-thread to wait for a buffer to read from and then render.
@@ -180,7 +173,7 @@ public:
   void RenderFinished( bool updateRequired, bool requestProcessed );
 
   /**
-   * Called by the render/update threads to wait for a Synchronization
+   * Called by the update thread to wait for Vsync synchronization
    */
   void WaitSync();
 
@@ -251,38 +244,38 @@ private:
 
 private:
 
-  const unsigned int mMaximumUpdateCount;             ///< How many frames may be prepared, ahead of the rendering.
+  const unsigned int mMaximumUpdateCount;            ///< How many frames may be prepared, ahead of the rendering.
 
-  unsigned int mNumberOfVSyncsPerRender;              ///< How many frames for each update/render cycle.
+  unsigned int mNumberOfVSyncsPerRender;             ///< How many frames for each update/render cycle.
 
-  volatile unsigned int mUpdateReadyCount;            ///< Incremented after each update, decremented after each render (protected by mMutex)
+  volatile unsigned int mUpdateReadyCount;           ///< Incremented after each update, decremented after each render (protected by mMutex)
   // ARM CPUs perform aligned 32 bit read/writes atomically, so the following variables do not require mutex protection on modification
-  volatile int mRunning;                              ///< Used during UpdateThread::Stop() to exit the update & render loops
-  volatile int mUpdateRequired;                       ///< Used to inform the update thread, that render requires another update
-  volatile int mPaused;                               ///< The paused flag
-  volatile int mUpdateRequested;                      ///< An update has been requested
-  volatile int mAllowUpdateWhilePaused;               ///< whether to allow (one) update while paused
-  volatile int mVSyncSleep;                           ///< Set true when the VSync thread should sleep
+  volatile int mRunning;                             ///< Used during UpdateThread::Stop() to exit the update & render loops
+  volatile int mUpdateRequired;                      ///< Used to inform the update thread, that render requires another update
+  volatile int mPaused;                              ///< The paused flag
+  volatile int mUpdateRequested;                     ///< An update has been requested
+  volatile int mAllowUpdateWhilePaused;              ///< whether to allow (one) update while paused
+  volatile int mSleeping;                            ///< Set true when the VSync thread should sleep
   volatile unsigned int mSyncFrameNumber;            ///< Frame number of latest Sync
   volatile unsigned int mSyncSeconds;                ///< Timestamp (seconds) of latest Sync
   volatile unsigned int mSyncMicroseconds;           ///< Timestamp (microseconds) of latest Sync
 
-  boost::mutex mMutex;                                ///< This mutex must be locked before reading/writing mUpdateReadyCount
-  boost::condition_variable mUpdateFinishedCondition; ///< The render thread waits for this condition
-  boost::condition_variable mUpdateSleepCondition;    ///< The update thread waits for this condition when sleeping
-  boost::condition_variable mRenderFinishedCondition; ///< The update thread waits for this condition
-  boost::condition_variable mVSyncReceivedCondition;  ///< The render thread waits on this condition
-  boost::condition_variable mVSyncSleepCondition;     ///< The vsync thread waits for this condition
-  boost::condition_variable mPausedCondition;         ///< The controller waits for this condition while paused
-  boost::condition_variable mRenderRequestSleepCondition;   ///< The render thread waits for this condition
-  boost::condition_variable mRenderRequestFinishedCondition;///< The controller waits for this condition
+  ConditionalWait mUpdateFinishedCondition;           ///< The render thread waits for this condition
+  ConditionalWait mRenderFinishedCondition;           ///< The update thread waits for this condition
+  ConditionalWait mVSyncReceivedCondition;            ///< The render thread waits on this condition
+
+  ConditionalWait mSleepCondition;                    ///< The state machine is in sleep state
+  ConditionalWait mPausedCondition;                   ///< The controller waits for this condition while paused
+
+  ConditionalWait mRenderWaitForSurface;              ///< The render thread waits for this condition
+  ConditionalWait mRenderRequestFinishedCondition;    ///< The controller waits for this condition
 
   FrameTime mFrameTime;                               ///< Frame timer predicts next vsync time
   TriggerEventInterface& mNotificationTrigger;        ///< Reference to notification event trigger
   PerformanceInterface* mPerformanceInterface;        ///< The performance logging interface
 
-  ReplaceSurfaceRequest mReplaceSurfaceRequest; ///< Holder for a replace surface request
-  bool mReplaceSurfaceRequested; ///< True if there is a new replace surface request
+  ReplaceSurfaceRequest mReplaceSurfaceRequest;       ///< Holder for a replace surface request
+  bool mReplaceSurfaceRequested;                      ///< True if there is a new replace surface request
 
 }; // class UpdateRenderSynchronization
 
