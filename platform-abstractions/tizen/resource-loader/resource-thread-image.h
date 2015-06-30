@@ -35,7 +35,7 @@ public:
    * Constructor
    * @param[in] resourceLoader A reference to the ResourceLoader
    */
-  ResourceThreadImage(ResourceLoader& resourceLoader, bool forRemoteImage);
+  ResourceThreadImage( ResourceLoader& resourceLoader );
 
   /**
    * Destructor

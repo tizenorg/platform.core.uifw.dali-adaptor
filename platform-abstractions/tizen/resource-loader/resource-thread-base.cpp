@@ -272,7 +272,7 @@ void ResourceThreadBase::ProcessNextRequest()
       }
       break;
 
-      case RequestDownload:
+      case RequestHttpDownload:
       {
         Download(*request);
       }
