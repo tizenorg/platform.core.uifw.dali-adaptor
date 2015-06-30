@@ -21,6 +21,8 @@
 // EXTERNAL HEADERS
 #include <Ecore.h>
 #include <Ecore_X.h>
+#include <iostream>
+#include "application-impl.h"
 
 #include <dali/integration-api/core.h>
 #include <dali/integration-api/system-overlay.h>
@@ -65,6 +67,7 @@ struct Window::EventHandler
   : mWindow( window ),
     mWindowPropertyHandler( ecore_event_handler_add( ECORE_X_EVENT_WINDOW_PROPERTY,  EcoreEventWindowPropertyChanged, this ) ),
     mClientMessagehandler( ecore_event_handler_add( ECORE_X_EVENT_CLIENT_MESSAGE,  EcoreEventClientMessage, this ) ),
+    mWindowDeleteRequest( ecore_event_handler_add( ECORE_X_EVENT_WINDOW_DELETE_REQUEST, EcoreEventWindowDeleteRequest, this ) ),
     mEcoreWindow( 0 )
   {
     // store ecore window handle
@@ -84,6 +87,8 @@ struct Window::EventHandler
 #endif // DALI_PROFILE_UBUNTU
 
     ecore_x_input_multi_select( mEcoreWindow );
+
+    ecore_x_icccm_protocol_set( mEcoreWindow, ECORE_X_WM_PROTOCOL_DELETE_REQUEST, EINA_TRUE );
   }
 
   /**
@@ -98,6 +103,10 @@ struct Window::EventHandler
     if ( mClientMessagehandler )
     {
       ecore_event_handler_del( mClientMessagehandler );
+    }
+    if ( mWindowDeleteRequest )
+    {
+      ecore_event_handler_del( mWindowDeleteRequest );
     }
   }
 
@@ -190,10 +199,19 @@ struct Window::EventHandler
     return handled;
   }
 
+  /// Called when the window receives a delete request
+  static Eina_Bool EcoreEventWindowDeleteRequest( void* data, int type, void* event )
+  {
+    EventHandler* handler( (EventHandler*)data );
+    handler->mWindow->mDeleteRequestSignal.Emit();
+    return ECORE_CALLBACK_DONE;
+  }
+
   // Data
   Window* mWindow;
   Ecore_Event_Handler* mWindowPropertyHandler;
   Ecore_Event_Handler* mClientMessagehandler;
+  Ecore_Event_Handler* mWindowDeleteRequest;
   Ecore_X_Window mEcoreWindow;
 };
 
