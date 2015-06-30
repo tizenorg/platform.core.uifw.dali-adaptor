@@ -49,7 +49,7 @@ public:
     /** Pull a resource out of the platform's file system. */
     RequestLoad,
     /** Pull a resource over http protocol. */
-    RequestDownload,
+    RequestHttpDownload,
     /** Pull a resource out of a memory buffer. */
     RequestDecode,
     /** Push a resource's data out to the file system. */
