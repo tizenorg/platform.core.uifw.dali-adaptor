@@ -18,9 +18,6 @@
 // CLASS HEADER
 #include "vsync-notifier.h"
 
-// EXTERNAL INCLUDES
-#include <boost/thread.hpp>
-
 #include <dali/integration-api/core.h>
 #include <dali/integration-api/platform-abstraction.h>
 
@@ -78,7 +75,9 @@ void VSyncNotifier::Start()
   {
     mVSyncMonitor->Initialize();
 
-    mThread = new boost::thread( boost::bind( &VSyncNotifier::Run, this ) );
+    mThread = (pthread_t*)malloc(sizeof(pthread_t));
+    int error = pthread_create( mThread, NULL, InternalThreadEntryFunc, this );
+    DALI_ASSERT_ALWAYS( !error && "Return code from pthread_create() in VSyncNotifier" );
   }
 }
 
@@ -89,9 +88,9 @@ void VSyncNotifier::Stop()
   if( mThread )
   {
     // wait for the thread to finish
-    mThread->join();
+    pthread_join(*mThread, NULL);
 
-    delete mThread;
+    free(mThread);
     mThread = NULL;
   }
 
