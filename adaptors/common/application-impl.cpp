@@ -98,7 +98,7 @@ Application::Application( int* argc, char** argv[], const std::string& styleshee
 
 Application::~Application()
 {
-  mSingletonService.UnregisterAll();
+  mSingletonService.Release();
 
   delete mFramework;
   delete mCommandLineOptions;

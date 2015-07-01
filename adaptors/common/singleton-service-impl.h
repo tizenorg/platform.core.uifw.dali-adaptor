@@ -61,6 +61,11 @@ public:
   void UnregisterAll();
 
   /**
+   * @copydoc Dali::SingletonService::Release()
+   */
+  void Release();
+
+  /**
    * @copydoc Dali::SingletonService::GetSingleton()
    */
   BaseHandle GetSingleton( const std::type_info& info ) const;

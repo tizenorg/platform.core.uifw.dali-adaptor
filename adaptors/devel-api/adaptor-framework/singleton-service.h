@@ -92,6 +92,13 @@ public:
   void UnregisterAll();
 
   /**
+   * @brief Destroys the singleton class
+   *
+   * @note This is not intended for application developers.
+   */
+  void Release();
+
+  /**
    * @brief Gets the singleton for the given type.
    *
    * @note This is not intended for application developers.
