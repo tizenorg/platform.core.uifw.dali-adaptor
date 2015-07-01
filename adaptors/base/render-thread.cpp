@@ -166,57 +166,40 @@ bool RenderThread::Run()
   // render loop, we stay inside here when rendering
   while( running )
   {
-    // Sync with update thread and get any outstanding requests from ThreadSynchronization
+    // TODO Sync with update thread and get any outstanding requests from ThreadSynchronization
+
     DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run. 1 - RenderSyncWithUpdate()\n");
     RenderRequest* request = NULL;
-    running = mThreadSync.RenderSyncWithUpdate( request );
+    running = mThreadSync.RenderReady( request );
 
     DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run. 2 - Process requests\n");
 
     // Consume any pending events to avoid memory leaks
     mDisplayConnection->ConsumeEvents();
 
-    bool processRequests = true;
-    bool requestProcessed = false;
-    while( processRequests && running)
+    // Check if we've got any requests from the main thread (e.g. replace surface)
+    if( ! ProcessRequest( request ) )
     {
-      // Check if we've got any requests from the main thread (e.g. replace surface)
-      requestProcessed = ProcessRequest( request );
-
-      // perform any pre-render operations
-      DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run. 3 - PreRender\n");
-      bool preRendered = PreRender(); // Returns false if no surface onto which to render
-      if( preRendered )
+      if( PreRender() ) // Returns false if no surface onto which to render
       {
-        processRequests = false;
+        // Render
+        DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run. 4 - Core.Render()\n");
+        mCore.Render( renderStatus );
+
+        // Notify the update-thread that a render has completed
+        DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run. 5 - Sync.RenderFinished()\n");
+
+        uint64_t newTime( mThreadSync.GetTimeMicroseconds() );
+
+        // perform any post-render operations
+        if ( renderStatus.HasRendered() )
+        {
+          DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run. 6 - PostRender()\n");
+          PostRender( static_cast< unsigned int >(newTime - currentTime) );
+        }
+
+        currentTime = newTime;
       }
-      else
-      {
-        // Block until new surface... - cleared by ReplaceSurface code in ThreadController
-        running = mThreadSync.RenderSyncWithRequest(request);
-      }
-    }
-
-    if( running )
-    {
-       // Render
-      DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run. 4 - Core.Render()\n");
-      mCore.Render( renderStatus );
-
-      // Notify the update-thread that a render has completed
-      DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run. 5 - Sync.RenderFinished()\n");
-      mThreadSync.RenderFinished( renderStatus.NeedsUpdate(), requestProcessed );
-
-      uint64_t newTime( mThreadSync.GetTimeMicroseconds() );
-
-      // perform any post-render operations
-      if ( renderStatus.HasRendered() )
-      {
-        DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run. 6 - PostRender()\n");
-        PostRender( static_cast< unsigned int >(newTime - currentTime) );
-      }
-
-      currentTime = newTime;
     }
   }
 
@@ -270,6 +253,7 @@ bool RenderThread::ProcessRequest( RenderRequest* request )
         ReplaceSurface( replaceSurfaceRequest->GetSurface() );
         replaceSurfaceRequest->ReplaceCompleted();
         processedRequest = true;
+        mThreadSync.SurfaceReplaced();
         break;
       }
     }

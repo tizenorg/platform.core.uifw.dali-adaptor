@@ -102,15 +102,12 @@ bool UpdateThread::Run()
   // install a function for logging
   mEnvironmentOptions.InstallLogFunction();
 
-  bool running( true );
-
   // Update loop, we stay inside here while the update-thread is running
-  while ( running )
+  while ( mThreadSync.UpdateReady( status.NeedsNotification() ) )
   {
     DALI_LOG_INFO( gUpdateLogFilter, Debug::Verbose, "UpdateThread::Run. 1 - Sync()\n");
 
     // Inform synchronization object update is ready to run, this will pause update thread if required.
-    mThreadSync.UpdateReadyToRun();
     DALI_LOG_INFO( gUpdateLogFilter, Debug::Verbose, "UpdateThread::Run. 2 - Ready()\n");
 
     // get the last delta and the predict when this update will be rendered
@@ -128,34 +125,28 @@ bool UpdateThread::Run()
       FPSTracking(status.SecondsFromLastFrame());
     }
 
-    bool renderNeedsUpdate;
-
     // tell the synchronisation class that a buffer has been written to,
     // and to wait until there is a free buffer to write to
-    running = mThreadSync.UpdateSyncWithRender( status.NeedsNotification(), renderNeedsUpdate );
     DALI_LOG_INFO( gUpdateLogFilter, Debug::Verbose, "UpdateThread::Run. 4 - UpdateSyncWithRender complete\n");
 
-    if( running )
+    unsigned int keepUpdatingStatus = status.KeepUpdating();
+
+    // Optional logging of update/render status
+    if ( mStatusLogInterval )
     {
-      unsigned int keepUpdatingStatus = status.KeepUpdating();
+      UpdateStatusLogging( keepUpdatingStatus );
+    }
 
-      // Optional logging of update/render status
-      if ( mStatusLogInterval )
-      {
-        UpdateStatusLogging( keepUpdatingStatus, renderNeedsUpdate );
-      }
+    //  2 things can keep update running.
+    // - The status of the last update
+    // - The status of the last render
+    bool runUpdate = (Integration::KeepUpdating::NOT_REQUESTED != keepUpdatingStatus);
 
-      //  2 things can keep update running.
-      // - The status of the last update
-      // - The status of the last render
-      bool runUpdate = (Integration::KeepUpdating::NOT_REQUESTED != keepUpdatingStatus) || renderNeedsUpdate;
+    if( !runUpdate )
+    {
+      DALI_LOG_INFO( gUpdateLogFilter, Debug::Verbose, "UpdateThread::Run. 5 - Nothing to update, trying to sleep\n");
 
-      if( !runUpdate )
-      {
-        DALI_LOG_INFO( gUpdateLogFilter, Debug::Verbose, "UpdateThread::Run. 5 - Nothing to update, trying to sleep\n");
-
-        running = mThreadSync.UpdateTryToSleep();
-      }
+      mThreadSync.Sleep();
     }
   }
 
@@ -196,7 +187,7 @@ void UpdateThread::OutputFPSRecord()
   }
 }
 
-void UpdateThread::UpdateStatusLogging( unsigned int keepUpdatingStatus, bool renderNeedsUpdate )
+void UpdateThread::UpdateStatusLogging( unsigned int keepUpdatingStatus )
 {
   DALI_ASSERT_ALWAYS( mStatusLogInterval );
 
@@ -234,11 +225,6 @@ void UpdateThread::UpdateStatusLogging( unsigned int keepUpdatingStatus, bool re
     if ( keepUpdatingStatus & Integration::KeepUpdating::RENDER_TASK_SYNC )
     {
       oss += "<Render task waiting for completion> ";
-    }
-
-    if ( renderNeedsUpdate )
-    {
-      oss  +=  "<Render needs Update> ";
     }
 
     DALI_LOG_UPDATE_STATUS( "%s\n", oss.c_str());
