@@ -82,11 +82,20 @@ void TapGestureDetector::SendEvent(const Integration::TouchEvent& event)
 
       case Touched:
       {
+        unsigned long deltaBetweenTouchDownTouchUp = abs( event.time - mTouchTime ) ;
+
         if ( pointState == TouchPoint::Up )
         {
-          mLastTapTime = mTouchTime;
-          EmitSingleTap( event.time, point );
-          mState = Registered;
+          if ( deltaBetweenTouchDownTouchUp < MAXIMUM_TIME_ALLOWED )
+          {
+            mLastTapTime = mTouchTime;
+            EmitSingleTap( event.time, point );
+            mState = Registered;
+          }
+          else
+          {
+            mState = Clear;
+          }
         }
         else if (pointState == TouchPoint::Interrupted)
         {
