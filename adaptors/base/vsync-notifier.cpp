@@ -18,6 +18,8 @@
 // CLASS HEADER
 #include "vsync-notifier.h"
 
+// EXTERNAL INCLUDES
+#include <unistd.h>
 #include <dali/integration-api/core.h>
 #include <dali/integration-api/platform-abstraction.h>
 
@@ -165,7 +167,7 @@ void VSyncNotifier::Run()
 
     DALI_LOG_INFO( gSyncLogFilter, Debug::General, "VSyncNotifier::Run. 3 SyncWithUpdateAndRender(frame#:%d, current Sec:%u current uSec:%u)\n", frameNumber+1, currentSeconds, currentMicroseconds);
 
-    running = mThreadSync.VSyncNotifierSyncWithUpdateAndRender( validSync, ++frameNumber, currentSeconds, currentMicroseconds, mNumberOfVSyncsPerRender );
+    running = mThreadSync.VSyncReady( validSync, ++frameNumber, currentSeconds, currentMicroseconds, mNumberOfVSyncsPerRender );
     // The number of vsyncs per render may have been modified by this call.
   }
 
