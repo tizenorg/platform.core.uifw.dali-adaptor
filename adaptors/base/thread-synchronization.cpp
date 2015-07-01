@@ -41,9 +41,63 @@ const unsigned int INPUT_EVENT_UPDATE_PERIOD( MICROSECONDS_PER_SECOND / 90 ); //
 
 } // unnamed namespace
 
+struct ThreadSynchronization::Transition
+{
+  typedef void ( *StateChangeFunction )( ThreadSynchronization* );
+
+  State::Type currentState;
+  Event::Type event;
+  StateChangeFunction stateChangeFunction;
+  State::Type nextState;
+
+  static Transition STATE_MACHINE[];
+};
+
+namespace
+{
+void StartRendering( ThreadSynchronization* obj )
+{
+  // notify vsync, notify render
+}
+
+void StopRendering( ThreadSynchronization* obj ) {}
+void PauseRendering( ThreadSynchronization* obj ) {}
+void StartRenderingFromPaused( ThreadSynchronization* obj ) {}
+void StopRenderingFromPaused( ThreadSynchronization* obj ) {}
+void UpdateNotify( ThreadSynchronization* obj )
+{
+  // wait vsync, wait render
+}
+
+void UpdateOnce( ThreadSynchronization* obj )
+{
+  //
+}
+} // unnamed namespace
+
+ThreadSynchronization::Transition ThreadSynchronization::Transition::STATE_MACHINE[] =
+{
+  { State::STOPPED, Event::START, StartRendering,           State::RUNNING },
+  { State::RUNNING, Event::STOP,  StopRendering,            State::STOPPED },
+  { State::RUNNING, Event::PAUSE, StopRendering,            State::PAUSED  },
+  //{ State::PAUSED,  Event::STOP,  StopRenderingFromPaused,  State::STOPPED },
+  //{ State::PAUSED,  Event::START, StartRenderingFromPaused, State::RUNNING },
+  //{ State::PAUSED,  Event::UPDATE_ONCE, UpdateOnce,         State::UPDATING_ONCE },
+
+  { State::RUNNING, Event::UPDATE_READY, UpdateNotify, State::RUNNING },
+  { State::STOPPED, Event::UPDATE_READY, UpdateNotify, State::STOPPED },
+//  { State::PAUSED,  Event::UPDATE_READY, NULL, State::PAUSED  },
+//  { State::UPDATING_ONCE, Event::UPDATE_READY, NULL, State::UPDATING_ONCE },
+};
+
 ThreadSynchronization::ThreadSynchronization( AdaptorInternalServices& adaptorInterfaces,
                                                           unsigned int numberOfVSyncsPerRender)
-: mMaximumUpdateCount( adaptorInterfaces.GetCore().GetMaximumUpdateCount()),
+: mState( State::STOPPED ),
+  mUpdateCondition(),
+  mRenderCondition(),
+  mVSyncCondition(),
+
+  mMaximumUpdateCount( adaptorInterfaces.GetCore().GetMaximumUpdateCount()),
   mNumberOfVSyncsPerRender( numberOfVSyncsPerRender ),
   mUpdateReadyCount( 0u ),
   mRunning( false ),
@@ -71,6 +125,11 @@ void ThreadSynchronization::Start()
 {
   mFrameTime.SetMinimumFrameTimeInterval( mNumberOfVSyncsPerRender * TIME_PER_FRAME_IN_MICROSECONDS );
   mRunning = true;
+  mState = State::RUNNING;
+
+  // Start update thread by notifying render and vsync
+  mRenderCondition.Notify();
+  mVSyncCondition.Notify();
 }
 
 void ThreadSynchronization::Stop()

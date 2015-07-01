@@ -25,6 +25,7 @@
 
 // INTERNAL INCLUDES
 #include <base/interfaces/performance-interface.h>
+#include <base/conditional-wait.h>
 #include <trigger-event-interface.h>
 #include <base/frame-time.h>
 #include <base/render-thread.h>
@@ -250,6 +251,42 @@ private:
   void AddPerformanceMarker( PerformanceInterface::MarkerType type );
 
 private:
+
+  struct State
+  {
+    enum Type
+    {
+      RUNNING,
+      PAUSED,
+      STOPPED,
+      UPDATING_ONCE,
+      SURFACE_BEING_REPLACED,
+    };
+  };
+
+  struct Event
+  {
+    enum Type
+    {
+      START,
+      PAUSE,
+      RESUME,
+      REPLACE_SURFACE,
+      STOP,
+      UPDATE_ONCE,
+      UPDATE_READY,
+      VSYNC_READY,
+      RENDER_READY,
+    };
+  };
+
+  struct Transition;
+
+  State::Type mState;
+  ConditionalWait    mUpdateCondition;
+  ConditionalWait    mRenderCondition;
+  ConditionalWait    mVSyncCondition;
+
 
   const unsigned int mMaximumUpdateCount;             ///< How many frames may be prepared, ahead of the rendering.
 
