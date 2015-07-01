@@ -18,6 +18,8 @@
 // CLASS HEADER
 #include "vsync-notifier.h"
 
+// EXTERNAL INCLUDES
+#include <unistd.h>
 #include <dali/integration-api/core.h>
 #include <dali/integration-api/platform-abstraction.h>
 
@@ -50,7 +52,7 @@ Integration::Log::Filter* gSyncLogFilter = Integration::Log::Filter::New(Debug::
 VSyncNotifier::VSyncNotifier( ThreadSynchronization& sync,
                               AdaptorInternalServices& adaptorInterfaces,
                               const EnvironmentOptions& environmentOptions )
-: mThreadSync( sync ),
+: mThreadSynchronization( sync ),
   mCore( adaptorInterfaces.GetCore() ),
   mPlatformAbstraction( adaptorInterfaces.GetPlatformAbstractionInterface() ),
   mVSyncMonitor( adaptorInterfaces.GetVSyncMonitorInterface() ),
@@ -165,7 +167,8 @@ void VSyncNotifier::Run()
 
     DALI_LOG_INFO( gSyncLogFilter, Debug::General, "VSyncNotifier::Run. 3 SyncWithUpdateAndRender(frame#:%d, current Sec:%u current uSec:%u)\n", frameNumber+1, currentSeconds, currentMicroseconds);
 
-    running = mThreadSync.VSyncNotifierSyncWithUpdateAndRender( validSync, ++frameNumber, currentSeconds, currentMicroseconds, mNumberOfVSyncsPerRender );
+    mThreadSynchronization.AddPerformanceMarker( PerformanceInterface::VSYNC );
+    running = mThreadSynchronization.VSyncReady( validSync, ++frameNumber, currentSeconds, currentMicroseconds, mNumberOfVSyncsPerRender );
     // The number of vsyncs per render may have been modified by this call.
   }
 
