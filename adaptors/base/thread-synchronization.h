@@ -25,6 +25,7 @@
 
 // INTERNAL INCLUDES
 #include <base/interfaces/performance-interface.h>
+#include <base/conditional-wait.h>
 #include <trigger-event-interface.h>
 #include <base/frame-time.h>
 #include <base/render-thread.h>
@@ -57,7 +58,7 @@ class AdaptorInternalServices;
  * However the Core::Update() for frame N+2 may not be called, until the Core::Render() method for frame N has returned.
  *
  */
-class UpdateRenderSynchronization
+class ThreadSynchronization
 {
 public:
 
@@ -66,12 +67,12 @@ public:
    * @param[in] adaptorInterfaces base adaptor interface
    * @param[in] numberOfVSyncsPerRender The number of frames per render
   */
-  UpdateRenderSynchronization( AdaptorInternalServices& adaptorInterfaces, unsigned int numberOfVSyncsPerRender );
+  ThreadSynchronization( AdaptorInternalServices& adaptorInterfaces, unsigned int numberOfVSyncsPerRender );
 
   /**
    * Non virtual destructor. Not intended as base class.
    */
-  ~UpdateRenderSynchronization();
+  ~ThreadSynchronization();
 
   /**
    * Start the threads
@@ -238,10 +239,10 @@ public:
 private:
 
   // Undefined copy constructor.
-  UpdateRenderSynchronization( const UpdateRenderSynchronization& );
+  ThreadSynchronization( const ThreadSynchronization& );
 
   // Undefined assignment operator.
-  UpdateRenderSynchronization& operator=( const UpdateRenderSynchronization& );
+  ThreadSynchronization& operator=( const ThreadSynchronization& );
 
   /**
    * Helper to add a performance marker to the performance server (if its active)
@@ -250,6 +251,42 @@ private:
   void AddPerformanceMarker( PerformanceInterface::MarkerType type );
 
 private:
+
+  struct State
+  {
+    enum Type
+    {
+      RUNNING,
+      PAUSED,
+      STOPPED,
+      UPDATING_ONCE,
+      SURFACE_BEING_REPLACED,
+    };
+  };
+
+  struct Event
+  {
+    enum Type
+    {
+      START,
+      PAUSE,
+      RESUME,
+      REPLACE_SURFACE,
+      STOP,
+      UPDATE_ONCE,
+      UPDATE_READY,
+      VSYNC_READY,
+      RENDER_READY,
+    };
+  };
+
+  struct Transition;
+
+  State::Type mState;
+  ConditionalWait    mUpdateCondition;
+  ConditionalWait    mRenderCondition;
+  ConditionalWait    mVSyncCondition;
+
 
   const unsigned int mMaximumUpdateCount;             ///< How many frames may be prepared, ahead of the rendering.
 
@@ -284,7 +321,7 @@ private:
   ReplaceSurfaceRequest mReplaceSurfaceRequest; ///< Holder for a replace surface request
   bool mReplaceSurfaceRequested; ///< True if there is a new replace surface request
 
-}; // class UpdateRenderSynchronization
+}; // class ThreadSynchronization
 
 } // namespace Adaptor
 
