@@ -257,8 +257,8 @@ void Adaptor::Start()
   PositionSize size = mSurface->GetPositionSize();
   mCore->SurfaceResized( size.width, size.height );
 
-  // Start all the threads
-  mThreadController->Start();
+  // Initialize the thread controller
+  mThreadController->Initialize();
 
   mState = RUNNING;
 
@@ -734,6 +734,9 @@ void Adaptor::SurfaceSizeChanged(const PositionSize& positionSize)
 void Adaptor::NotifySceneCreated()
 {
   GetCore().SceneCreated();
+
+  // Start thread controller after the scene has been created
+  mThreadController->Start();
 }
 
 void Adaptor::NotifyLanguageChanged()
