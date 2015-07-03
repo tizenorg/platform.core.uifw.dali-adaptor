@@ -73,6 +73,21 @@ public:
    */
   void Stop();
 
+  /**
+   * @copydoc Dali::HapticPlayer::PlaySound()
+   */
+  int PlaySound( const std::string& fileName );
+
+  /**
+   * @copydoc Dali::HapticPlayer::StopSound()
+   */
+  void StopSound( int handle );
+
+  /**
+   * @copydoc Dali::HapticPlayer::PlayFeedbackPattern()
+   */
+  void PlayFeedbackPattern( int type, int pattern );
+
 private:
 
   /**
