@@ -91,6 +91,21 @@ void HapticPlayer::Stop()
   mPlugin.StopHaptic();
 }
 
+int HapticPlayer::PlaySound( const std::string& filename )
+{
+  return mPlugin.PlaySound(filename);
+}
+
+void HapticPlayer::StopSound( int handle )
+{
+  mPlugin.StopSound(handle);
+}
+
+void HapticPlayer::PlayFeedbackPattern( int type, int pattern )
+{
+  mPlugin.PlayFeedbackPattern(type, pattern);
+}
+
 HapticPlayer::HapticPlayer()
 : mPlugin( FeedbackPluginProxy::DEFAULT_OBJECT_NAME )
 {

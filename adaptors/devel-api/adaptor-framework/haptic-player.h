@@ -77,6 +77,26 @@ public:
    */
   void Stop();
 
+  /**
+   * Plays a sound file.
+   * @param[in] fileName Path to the sound file to play.
+   * @return A handle which can be used to stop the sound playback.
+   */
+  int PlaySound( const std::string& fileName );
+
+  /**
+   * Stops a currently playing sound.
+   * @param[in] handle A handle to the currently playing sound.
+   */
+  void StopSound( int handle );
+
+  /**
+   * Plays a feedback pattern.
+   * @param[in] type The type of feedback.
+   * @param[in] pattern The ID of the pattern to play.
+   */
+  void PlayFeedbackPattern( int type, int pattern );
+
 public: // Not intended for application developers
 
   /**

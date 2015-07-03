@@ -52,6 +52,21 @@ void HapticPlayer::Stop()
   GetImplementation(*this).Stop();
 }
 
+int HapticPlayer::PlaySound( const std::string& fileName )
+{
+  return GetImplementation(*this).PlaySound(fileName);
+}
+
+void HapticPlayer::StopSound( int handle )
+{
+  GetImplementation(*this).StopSound(handle);
+}
+
+void HapticPlayer::PlayFeedbackPattern( int type, int pattern )
+{
+  GetImplementation(*this).PlayFeedbackPattern(type, pattern);
+}
+
 HapticPlayer::HapticPlayer( Internal::Adaptor::HapticPlayer* player )
 : BaseHandle( player )
 {
