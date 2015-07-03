@@ -19,9 +19,11 @@
  */
 
 // EXTERNAL INCLUDES
-#include <boost/thread.hpp>
+#include <base/conditional-wait.h>
+#include <dali/devel-api/common/mutex.h>
 
 // INTERNAL INCLUDES
+
 #include <ecore-x-render-surface.h>
 
 namespace Dali
@@ -148,8 +150,8 @@ private:
 
 private: // Data
 
-  boost::condition_variable   mSyncNotify; ///< condition to notify main thread that pixmap was flushed to onscreen
-  boost::mutex                mSyncMutex;  ///< mutex to lock during waiting sync
+  Internal::Adaptor::ConditionalWait  mSyncNotify; ///< condition to notify main thread that pixmap was flushed to onscreen
+  Dali::Mutex      mSyncMutex;  ///< mutex to lock during waiting sync
   Ecore_X_Pixmap   mX11Pixmap;    ///< X-Pixmap
   SyncMode         mSyncMode;     ///< Stores whether the post render should block waiting for compositor
   bool             mSyncReceived; ///< true, when a pixmap sync has occurred, (cleared after reading)

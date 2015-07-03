@@ -219,14 +219,14 @@ void PixmapRenderSurface::SetSyncMode( SyncMode syncMode )
 
 void PixmapRenderSurface::AcquireLock( SyncMode syncMode )
 {
-  boost::unique_lock< boost::mutex > lock( mSyncMutex );
+  Dali::Mutex::ScopedLock lock( mSyncMutex );
 
   // wait for sync
   if( syncMode != SYNC_MODE_NONE &&
       mSyncMode != SYNC_MODE_NONE &&
       !mSyncReceived )
   {
-    mSyncNotify.wait( lock );
+    mSyncNotify.Wait( );
   }
   mSyncReceived = false;
 }
@@ -234,12 +234,12 @@ void PixmapRenderSurface::AcquireLock( SyncMode syncMode )
 void PixmapRenderSurface::ReleaseLock()
 {
   {
-    boost::unique_lock< boost::mutex > lock( mSyncMutex );
+    Dali::Mutex::ScopedLock lock( mSyncMutex );
     mSyncReceived = true;
   }
 
   // wake render thread if it was waiting for the notify
-  mSyncNotify.notify_all();
+  mSyncNotify.Notify();
 }
 
 } // namespace ECore
