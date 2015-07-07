@@ -24,11 +24,6 @@
 #include <base/performance-logging/networking/client-send-data-interface.h>
 #include <base/interfaces/socket-factory-interface.h>
 
-namespace boost
-{
-class thread;
-}
-
 namespace Dali
 {
 
