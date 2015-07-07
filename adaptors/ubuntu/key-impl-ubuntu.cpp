@@ -48,8 +48,8 @@
 
 // Renamed 3-Touch key
 #define KEY_MENU                "XF86Send"      /**< this macro means the XKeySym (XServer Key Symbol) corresponds to 'Send' key */
-#define KEY_HOME                "XF86Phone"     /**< this macro means the XKeySym (XServer Key Symbol) corresponds to 'Home' key */
-#define KEY_BACK                "XF86Stop"      /**< this macro means the XKeySym (XServer Key Symbol) corresponds to 'End' key */
+#define KEY_HOME                "XF86Home"     /**< this macro means the XKeySym (XServer Key Symbol) corresponds to 'Home' key */
+#define KEY_BACK                "XF86Back"      /**< this macro means the XKeySym (XServer Key Symbol) corresponds to 'End' key */
 
 //Other functions keys
 #define KEY_HOMEPAGE            "XF86HomePage"  /**< this macro means the XKeySym (XServer Key Symbol) corresponds to 'HomePage' key */

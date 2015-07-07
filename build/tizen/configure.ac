@@ -32,8 +32,6 @@ DALI_ADAPTOR_VERSION=dali_version
 AC_SUBST(DALI_ADAPTOR_VERSION)
 
 FREETYPE_REQUIRED=9.16.3
-# 17.1.11 = Freetype version 2.5.2
-FREETYPE_BITMAP_SUPPORT_VERSION=17.1.11
 
 PKG_CHECK_MODULES(DALICORE, dali-core)
 PKG_CHECK_MODULES(ELEMENTARY, elementary)
@@ -41,7 +39,6 @@ PKG_CHECK_MODULES(ECORE, ecore)
 PKG_CHECK_MODULES(ECORE_IPC, ecore-ipc)
 PKG_CHECK_MODULES(EXIF, libexif)
 PKG_CHECK_MODULES(FREETYPE, [freetype2 >= $FREETYPE_REQUIRED])
-PKG_CHECK_MODULES(FREETYPE_BITMAP_SUPPORT, [freetype2 >= $FREETYPE_BITMAP_SUPPORT_VERSION], [ freetype_bitmap_support=yes  ], [ freetype_bitmap_support=no ] )
 PKG_CHECK_MODULES(FONTCONFIG, fontconfig)
 PKG_CHECK_MODULES(PNG, libpng)
 PKG_CHECK_MODULES(XML, libxml-2.0)
@@ -53,7 +50,6 @@ PKG_CHECK_MODULES(FRIBIDI, fribidi)
 PKG_CHECK_MODULES(TTRACE,  ttrace, AC_DEFINE(ENABLE_TTRACE, 1, [ttrace available]),
                   [ AC_MSG_NOTICE([Tizen Trace not avaiable]) ]
                   )
-
 
 # Check for EldBus.h in ECore
 PKG_CHECK_MODULES(ELDBUS, eldbus, [ eldbus_available=yes ],  [ eldbus_available=no ] )
@@ -172,9 +168,30 @@ AM_CONDITIONAL([WAYLAND], [test x$enable_wayland = xyes])
 # should not disable features. This allows the developer to override
 # features through the command line.
 
+if test "x$enable_profile" = "xCOMMON"; then
 PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
+fi
 
-if test "x$enable_profile" != "xUBUNTU"; then
+if test "x$enable_profile" = "xMOBILE"; then
+PKG_CHECK_MODULES(OPENGLES20, opengl-es-20)
+enable_assimp=no
+fi
+
+if test "x$enable_profile" = "xLITE"; then
+PKG_CHECK_MODULES(OPENGLES20, gles20)
+fi
+
+if test "x$enable_profile" = "xWEARABLE"; then
+PKG_CHECK_MODULES(OPENGLES20, gles20)
+fi
+
+if test "x$enable_profile" = "xTV"; then
+PKG_CHECK_MODULES(OPENGLES20, gles20)
+fi
+
+if test "x$enable_profile" = "xUBUNTU"; then
+PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
+else
 PKG_CHECK_MODULES(CAPI_APPFW_APPLICATION, capi-appfw-application)
 PKG_CHECK_MODULES(DLOG, dlog)
 PKG_CHECK_MODULES(SENSOR, sensor)
@@ -246,15 +263,11 @@ AC_CONFIG_FILES([
 
 AM_CONDITIONAL([USE_PLUGIN], [test x$enable_feedback = xyes || test x$enable_bullet = xyes])
 
-if test "x$enable_feedback" = "xyes" || test "x$enable_bullet" = "xyes"; then
-AC_CONFIG_FILES([
- plugins/Makefile
-])
-fi
-
-if test "x$freetype_bitmap_support" = "xyes"; then
-DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DFREETYPE_BITMAP_SUPPORT"
-fi
+#if test "x$enable_feedback" = "xyes" || test "x$enable_bullet" = "xyes"; then
+#AC_CONFIG_FILES([
+ #plugins/Makefile
+#])
+#fi
 
 AC_OUTPUT
 
@@ -265,7 +278,6 @@ Configuration
   Prefix:                           $prefix
   Debug Build:                      $enable_debug
   Compile flags                     $DALI_ADAPTOR_CFLAGS
-  Freetype bitmap support (Emoji):  $freetype_bitmap_support
   Profile:                          $enable_profile
   Data Dir (Read/Write):            $dataReadWriteDir
   Data Dir (Read Only):             $dataReadOnlyDir

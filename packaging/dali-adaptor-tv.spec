@@ -123,6 +123,11 @@ LDFLAGS+=" -Wl,--rpath=%{_libdir} -Wl,--as-needed -Wl,--gc-sections -Wl,-Bsymbol
 CXXFLAGS+=" -D_ARCH_ARM_ -lgcc"
 %endif
 
+%if 0%{?under_tizen_2_3_capi_enable}
+CFLAGS+=" -DUNDER_TIZEN_2_3_CAPI"
+CXXFLAGS+=" -DUNDER_TIZEN_2_3_CAPI"
+%endif
+
 libtoolize --force
 cd %{_builddir}/%{name}-%{version}/build/tizen
 autoreconf --install

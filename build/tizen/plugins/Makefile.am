@@ -63,13 +63,13 @@ libdali_feedback_plugin_la_LIBADD = \
 libdali_feedback_plugin_la_LDFLAGS = \
                       -rdynamic
 
-if MOBILE_PROFILE
-libdali_feedback_plugin_la_CXXFLAGS += \
-                      $(DEVICED_CFLAGS)
+#if MOBILE_PROFILE
+#libdali_feedback_plugin_la_CXXFLAGS += \
+                      #$(DEVICED_CFLAGS)
 
-libdali_feedback_plugin_la_LIBADD += \
-                      $(DEVICED_LIBS)
-endif
+#libdali_feedback_plugin_la_LIBADD += \
+                      #$(DEVICED_LIBS)
+#endif
 
 if TV_PROFILE
 libdali_feedback_plugin_la_CXXFLAGS += \

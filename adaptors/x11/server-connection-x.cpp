@@ -63,6 +63,7 @@ ServerConnection::ServerConnection(
 
   if( !mIpcServer )
   {
+    DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "mIpcServer is null\n" );
     ecore_ipc_shutdown();
   }
   else
