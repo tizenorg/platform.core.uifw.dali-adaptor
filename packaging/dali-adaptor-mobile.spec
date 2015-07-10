@@ -177,7 +177,8 @@ FONT_CONFIGURATION_FILE="%{font_configuration_file}" ; export FONT_CONFIGURATION
 %if 0%{?over_tizen_2_2}
            --with-over-tizen_2_2 \
 %endif
-           --libdir=%{_libdir}
+           --libdir=%{_libdir} \
+           --with-node-js=/usr/include/node/
 
 make %{?jobs:-j%jobs}
 
