@@ -14,6 +14,9 @@ Source0:    %{name}-%{version}.tar.gz
 %define dali_assimp_plugin 0
 %define over_tizen_2_2 1
 
+# macro is enabled by passing --define "with_node_js 1"
+%define build_with_node_js 0%{?with_node_js:1}
+
 %if 0%{?over_tizen_2_2}
 %define shaderbincache_flag ENABLE
 %endif
@@ -177,7 +180,10 @@ FONT_CONFIGURATION_FILE="%{font_configuration_file}" ; export FONT_CONFIGURATION
 %if 0%{?over_tizen_2_2}
            --with-over-tizen_2_2 \
 %endif
-           --libdir=%{_libdir}
+           --libdir=%{_libdir} \
+%if %{?build_with_node_js}
+          --with-node-js=/usr/include/node/
+%endif
 
 make %{?jobs:-j%jobs}
 
