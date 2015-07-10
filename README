@@ -24,6 +24,10 @@ T.O.C.
 
  gbs build -A [TARGET_ARCH] --spec dali-adaptor-mobile.spec
 
+ To build for Node.JS ( libuv mainloop ), add --define "with_node_js 1"
+
+
+
 1.3. WEARABLE Profile
 ---------------------
 
