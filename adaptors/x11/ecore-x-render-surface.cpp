@@ -47,9 +47,11 @@ namespace ECore
 EcoreXRenderSurface::EcoreXRenderSurface(Dali::PositionSize positionSize,
                                          Any surface,
                                          const std::string& name,
+                                         const std::string& className,
                                          bool isTransparent)
 : mPosition(positionSize),
   mTitle(name),
+  mClassName( className ),
   mRenderNotification(NULL),
   mColorDepth(isTransparent ? COLOR_DEPTH_32 : COLOR_DEPTH_24),
   mOwnSurface(false)

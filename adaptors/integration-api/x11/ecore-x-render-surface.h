@@ -48,11 +48,13 @@ public:
     * @param [in] positionSize the position and size of the surface
     * @param [in] surface can be a X-window or X-pixmap (type must be unsigned int).
     * @param [in] name optional name of surface passed in
+    * @param [in] className optional class name of the surface passed in
     * @param [in] isTransparent if it is true, surface has 32 bit color depth, otherwise, 24 bit
     */
   EcoreXRenderSurface(Dali::PositionSize positionSize,
                       Any surface,
                       const std::string& name,
+                      const std::string& className,
                       bool isTransparent = false);
 
   /**
@@ -180,6 +182,7 @@ protected: // Data
 
   PositionSize                mPosition;           ///< Position
   std::string                 mTitle;              ///< Title of window which shows from "xinfo -topvwins" command
+  std::string                 mClassName;          ///< The class name of the window
   TriggerEventInterface*      mRenderNotification; ///< Render notification trigger
   ColorDepth                  mColorDepth;         ///< Color depth of surface (32 bit or 24 bit)
   bool                        mOwnSurface;         ///< Whether we own the surface (responsible for deleting it)

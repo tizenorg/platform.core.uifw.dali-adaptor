@@ -56,8 +56,9 @@ const int MINIMUM_DIMENSION_CHANGE( 1 ); ///< Minimum change for window to be co
 WindowRenderSurface::WindowRenderSurface( Dali::PositionSize positionSize,
                                           Any surface,
                                           const std::string& name,
+                                          const std::string& className,
                                           bool isTransparent)
-: EcoreXRenderSurface( positionSize, surface, name, isTransparent ),
+: EcoreXRenderSurface( positionSize, surface, name, className, isTransparent ),
   mNeedToApproveDeiconify(false)
 {
   DALI_LOG_INFO( gRenderSurfaceLogFilter, Debug::Verbose, "Creating Window\n" );
@@ -268,6 +269,7 @@ void WindowRenderSurface::CreateXRenderable()
   // set up window title which will be helpful for debug utitilty
   ecore_x_icccm_title_set( mX11Window, mTitle.c_str() );
   ecore_x_netwm_name_set( mX11Window, mTitle.c_str() );
+  ecore_x_icccm_name_class_set( mX11Window, mTitle.c_str(), mClassName.c_str() );
 
   // set up etc properties to match with ecore-evas
   char *id = NULL;

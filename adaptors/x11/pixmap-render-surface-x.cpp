@@ -63,7 +63,7 @@ PixmapRenderSurface::PixmapRenderSurface(Dali::PositionSize positionSize,
                                          Any surface,
                                          const std::string& name,
                                          bool isTransparent)
-: EcoreXRenderSurface( positionSize, surface, name, isTransparent ),
+: EcoreXRenderSurface( positionSize, surface, name, std::string(), isTransparent ),
   mImpl( new Impl )
 {
   mImpl->mSyncMode = SYNC_MODE_NONE;
