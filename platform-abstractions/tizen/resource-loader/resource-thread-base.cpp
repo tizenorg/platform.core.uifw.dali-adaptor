@@ -21,8 +21,6 @@
 #include "atomics.h"
 
 using namespace Dali::Integration;
-using boost::mutex;
-using boost::unique_lock;
 
 namespace Dali
 {
@@ -46,6 +44,7 @@ class CancelRequestException {};
 
 ResourceThreadBase::ResourceThreadBase( ResourceLoader& resourceLoader ) :
   mResourceLoader( resourceLoader ),
+  mThread( 0 ),
   mCurrentRequestId( NO_REQUEST_IN_FLIGHT ),
   mCancelRequestId( NO_REQUEST_CANCELLED ),
   mPaused( false )
@@ -54,7 +53,8 @@ ResourceThreadBase::ResourceThreadBase( ResourceLoader& resourceLoader ) :
   mLogFilter = Debug::Filter::New(Debug::Concise, false, "LOG_RESOURCE_THREAD_BASE");
 #endif
 
-  mThread = new boost::thread(boost::bind(&ResourceThreadBase::ThreadLoop, this));
+  int error = pthread_create( &mThread, NULL, InternalThreadEntryFunc, this );
+  DALI_ASSERT_ALWAYS( !error && "Error in pthread_create()" );
 }
 
 ResourceThreadBase::~ResourceThreadBase()
@@ -71,13 +71,12 @@ void ResourceThreadBase::TerminateThread()
   if (mThread)
   {
     // wake thread
-    mCondition.notify_all();
+    mCondition.Notify();
+
     // wait for thread to exit
-    mThread->join();
-    // delete thread instance
-    delete mThread;
-    // mark thread terminated
-    mThread = NULL;
+    pthread_join( mThread, NULL );
+
+    mThread = 0;
   }
 }
 
@@ -88,7 +87,7 @@ void ResourceThreadBase::AddRequest(const ResourceRequest& request, const Reques
 
   {
     // Lock while adding to the request queue
-    unique_lock<mutex> lock( mMutex );
+    Dali::Mutex::ScopedLock lock( mMutex );
 
     wasEmpty = mQueue.empty();
     wasPaused = mPaused;
@@ -99,7 +98,7 @@ void ResourceThreadBase::AddRequest(const ResourceRequest& request, const Reques
   if( wasEmpty && !wasPaused )
   {
     // Wake-up the thread
-    mCondition.notify_all();
+    mCondition.Notify();
   }
 }
 
@@ -112,7 +111,7 @@ void ResourceThreadBase::CancelRequest( const Integration::ResourceId resourceId
   // Eliminate the cancelled request from the request queue if it is in there:
   {
     // Lock while searching and removing from the request queue:
-    unique_lock<mutex> lock( mMutex );
+    Dali::Mutex::ScopedLock lock( mMutex );
 
     for( RequestQueueIter iterator = mQueue.begin();
          iterator != mQueue.end();
@@ -149,9 +148,15 @@ void ResourceThreadBase::InterruptionPoint() const
   }
 }
 
+void* ResourceThreadBase::InternalThreadEntryFunc( void* This )
+{
+    ( static_cast<ResourceThreadBase*>( This ) )->ThreadLoop();
+    return NULL;
+}
+
 void ResourceThreadBase::Pause()
 {
-  unique_lock<mutex> lock( mMutex );
+  Dali::Mutex::ScopedLock lock( mMutex );
   mPaused = true;
 }
 
@@ -160,7 +165,7 @@ void ResourceThreadBase::Resume()
   // Clear the paused flag and if we weren't running already, also wake up the background thread:
   bool wasPaused = false;
   {
-    unique_lock<mutex> lock( mMutex );
+    Dali::Mutex::ScopedLock lock( mMutex );
     wasPaused = mPaused;
     mPaused = false;
   }
@@ -169,7 +174,7 @@ void ResourceThreadBase::Resume()
   // chance to do some work:
   if( wasPaused )
   {
-    mCondition.notify_all();
+    mCondition.Notify();
   }
 }
 
@@ -231,7 +236,7 @@ void ResourceThreadBase::ThreadLoop()
 
 void ResourceThreadBase::WaitForRequests()
 {
-  unique_lock<mutex> lock( mMutex );
+  Dali::Mutex::ScopedLock lock( mMutex );
 
   if( mQueue.empty() || mPaused == true )
   {
@@ -248,7 +253,7 @@ void ResourceThreadBase::ProcessNextRequest()
 
   {
     // lock the queue and extract the next request
-    unique_lock<mutex> lock(mMutex);
+    Dali::Mutex::ScopedLock lock( mMutex );
 
     if (!mQueue.empty())
     {
