@@ -87,6 +87,39 @@ void ConditionalWait::Wait()
   pthread_mutex_unlock( &mImpl->mutex );
 }
 
+void ConditionalWait::Wait( Dali::Mutex::ScopedLock& mutexLock )
+{
+  Dali::Mutex& externalMutex = mutexLock.GetMutex();
+  DALI_ASSERT_DEBUG( externalMutex.IsLocked() );
+
+  // pthread_cond_wait requires a lock to be held
+  pthread_mutex_lock( &mImpl->mutex );
+
+  // Only one thread can get here so now we can unlock the external mutex:
+  externalMutex.Unlock();
+
+  ++(mImpl->count);
+
+  // pthread_cond_wait may wake up without anyone calling Notify so loop until
+  // count has been reset in a notify:
+  do
+  {
+    // wait while condition changes
+    pthread_cond_wait( &mImpl->condition, &mImpl->mutex ); // releases the lock whilst waiting
+  }
+  while( 0 != mImpl->count );
+
+  // Timing sensitive intermittent deadlock case where num waiters > 1:
+  // Waiting thread 1 exits above loop with internal lock held and external not held.
+  // Waiting thread 2 enters top of function with internal lock not held and external lock held at this instant.
+  // !!! Deadlock !!! Waiter 1 cannot get the external lock held by Waiter 2. Waiter 2 cannot get internal mutex held by waiter 1.
+
+  externalMutex.Lock();
+
+  // when condition returns the mutex is locked so release the lock
+  pthread_mutex_unlock( &mImpl->mutex );
+}
+
 unsigned int ConditionalWait::GetWaitCount() const
 {
   return mImpl->count;
