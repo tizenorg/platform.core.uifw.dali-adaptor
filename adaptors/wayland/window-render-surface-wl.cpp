@@ -48,8 +48,9 @@ const int MINIMUM_DIMENSION_CHANGE( 1 ); ///< Minimum change for window to be co
 WindowRenderSurface::WindowRenderSurface( Dali::PositionSize positionSize,
                                           Any surface,
                                           const std::string& name,
+                                          const std::string& className,
                                           bool isTransparent)
-: EcoreWlRenderSurface( positionSize, surface, name, isTransparent ),
+: EcoreWlRenderSurface( positionSize, surface, name, className, isTransparent ),
   mNeedToApproveDeiconify(false)
 {
   DALI_LOG_INFO( gRenderSurfaceLogFilter, Debug::Verbose, "Creating Window\n" );
