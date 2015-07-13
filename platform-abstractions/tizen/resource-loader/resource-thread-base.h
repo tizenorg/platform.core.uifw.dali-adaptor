@@ -21,12 +21,16 @@
 // INTERNAL INCLUDES
 #include "resource-loader.h"
 #include "resource-loading-client.h"
-#include <dali/integration-api/platform-abstraction.h>
-#include <dali/integration-api/resource-cache.h>
+#include <base/conditional-wait.h>
 
 // EXTERNAL INCLUDES
 #include <deque>
-#include <boost/thread.hpp>
+#include <pthread.h>
+#include <dali/devel-api/common/mutex.h>
+#include <dali/integration-api/platform-abstraction.h>
+#include <dali/integration-api/resource-cache.h>
+
+
 
 namespace Dali
 {
@@ -154,11 +158,18 @@ protected:
    */
   virtual void InterruptionPoint() const;
 
+private:
+  /**
+   * Helper for the thread calling the entry function
+   * @param[in] This A pointer to the current UpdateThread object
+   */
+  static void* InternalThreadEntryFunc( void* This );
+
 protected:
   ResourceLoader& mResourceLoader;
-  boost::thread* mThread;                       ///< thread instance
-  boost::condition_variable mCondition;         ///< condition variable
-  boost::mutex mMutex;                          ///< used to protect mQueue
+  pthread_t mThread;                            ///< thread instance
+  Internal::Adaptor::ConditionalWait mCondition;         ///< condition variable
+  Dali::Mutex                        mMutex; ///< used to protect mQueue
   RequestQueue mQueue;                          ///< Request queue
 private:
   Integration::ResourceId mCurrentRequestId;    ///< Current request, set by worker thread
