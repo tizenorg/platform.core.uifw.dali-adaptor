@@ -45,6 +45,7 @@ public:
   WindowRenderSurface( Dali::PositionSize positionSize,
                        Any surface,
                        const std::string& name,
+                       const std::string& className,
                        bool isTransparent = false );
 
   /**
