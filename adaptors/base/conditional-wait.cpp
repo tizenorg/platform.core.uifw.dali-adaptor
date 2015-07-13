@@ -87,6 +87,15 @@ void ConditionalWait::Wait()
   pthread_mutex_unlock( &mImpl->mutex );
 }
 
+void ConditionalWait::Wait( Dali::Mutex::ScopedLock& mutexLock )
+{
+    // Release the lock passed in while making sure we have it again before returning:
+  Dali::Mutex::ScopedUnlock relocker( mutexLock.GetMutex() );
+  relocker.Unlock();
+
+  Wait();
+}
+
 unsigned int ConditionalWait::GetWaitCount() const
 {
   return mImpl->count;
