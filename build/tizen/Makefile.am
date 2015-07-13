@@ -17,7 +17,7 @@
 SUBDIRS = adaptor
 
 if USE_PLUGIN
-SUBDIRS += plugins
+#SUBDIRS += plugins
 endif
 
 pkgconfigdir = $(libdir)/pkgconfig
