@@ -9,6 +9,8 @@ License:    Apache-2.0
 URL:        https://review.tizen.org/git/?p=platform/core/uifw/dali-adaptor.git;a=summary
 Source0:    %{name}-%{version}.tar.gz
 
+%define profile %{tizen_profile_name}
+
 %if "%{profile}" == "mobile"
 %define dali_profile MOBILE
 %define dali_feedback_plugin 0
@@ -72,7 +74,7 @@ BuildRequires:  pkgconfig(libexif)
 BuildRequires:  pkgconfig(capi-system-system-settings)
 BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(glesv2)
-BuildRequires:  pkgconfig(egl)
+#BuildRequires:  pkgconfig(egl)
 BuildRequires:  libcurl-devel
 
 
