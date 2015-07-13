@@ -9,6 +9,8 @@ License:    Apache-2.0, BSD-2.0, MIT
 URL:        https://review.tizen.org/git/?p=platform/core/uifw/dali-adaptor.git;a=summary
 Source0:    %{name}-%{version}.tar.gz
 
+%define profile %{tizen_profile_name}
+
 %if "%{profile}" == "mobile"
 %define dali_profile MOBILE
 %define dali_feedback_plugin 0
@@ -64,9 +66,16 @@ BuildRequires:  pkgconfig(libexif)
 BuildRequires:  pkgconfig(capi-system-system-settings)
 BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(glesv2)
-BuildRequires:  pkgconfig(egl)
+#BuildRequires:  pkgconfig(egl)
 BuildRequires:  libcurl-devel
 
+%if "%{?tizen_profile_name}" == "wearable"
+BuildRequires:  pkgconfig(gles20)
+%endif
+%if "%{?tizen_profile_name}" == "mobile"
+BuildRequires:  pkgconfig(opengl-es-20)
+%endif
+BuildRequires:  pkgconfig(efl-assist)
 
 %if 0%{?over_tizen_2_2}
 BuildRequires:  pkgconfig(capi-system-info)
@@ -124,7 +133,7 @@ Group:      System/Libraries
 %if 0%{?dali_feedback_plugin}
 #Requires:       libdeviced
 BuildRequires:  pkgconfig(mm-sound)
-BuildRequires:  pkgconfig(haptic)
+BuildRequires:  pkgconfig(deviced)
 BuildRequires:  libfeedback-devel
 %endif
 
