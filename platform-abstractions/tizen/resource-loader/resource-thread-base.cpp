@@ -15,7 +15,11 @@
  *
  */
 
+// EXTERNAL INCLUDES
+#include <memory>
 #include <dali/integration-api/debug.h>
+
+// INTERNAL INCLUDES
 #include "resource-thread-base.h"
 #include "tizen-logging.h"
 #include "atomics.h"
@@ -36,7 +40,7 @@ namespace TizenPlatform
 
 namespace
 {
-const char * const IDLE_PRIORITY_ENVIRONMENT_VARIABLE_NAME = "DALI_RESOURCE_THREAD_IDLE_PRIORITY"; ///@Todo Move this to somewhere that other environment variables are declared and document it there.
+const char * const IDLE_PRIORITY_ENVIRONMENT_VARIABLE_NAME = "DALI_RESOURCE_THREAD_IDLE_PRIORITY";
 } // unnamed namespace
 
 /** Thrown by InterruptionPoint() to abort a request early. */
@@ -242,7 +246,7 @@ void ResourceThreadBase::WaitForRequests()
   {
     // Waiting for a wake up from resource loader control thread
     // This will be to process a new request or terminate
-    mCondition.wait(lock);
+    mCondition.Wait( lock );
   }
 }
 

@@ -18,6 +18,9 @@
  *
  */
 
+// EXTERNAL INCLUDES
+#include <dali/devel-api/common/mutex.h>
+
 namespace Dali
 {
 
@@ -58,6 +61,17 @@ public:
    * Will always block current thread until Notify is called
    */
   void Wait();
+
+  /**
+   * @brief Wait for another thread to notify us when the condition is true and we can continue
+   *
+   * Will always block current thread until Notify is called.
+   * Releases the lock passed in while waiting and re-acquires it when returning
+   * from the wait.
+   * param[in] mutexLock A lock on a mutex which will be released for the duration
+   *           of the wait and acquired again before it returns.
+   */
+  void Wait( Dali::Mutex::ScopedLock& mutexLock );
 
   /**
    * @brief Return the count of threads waiting for this conditional

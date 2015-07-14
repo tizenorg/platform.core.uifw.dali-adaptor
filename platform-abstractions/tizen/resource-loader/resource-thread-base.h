@@ -166,15 +166,15 @@ private:
   static void* InternalThreadEntryFunc( void* This );
 
 protected:
-  ResourceLoader& mResourceLoader;
-  pthread_t mThread;                            ///< thread instance
-  Internal::Adaptor::ConditionalWait mCondition;         ///< condition variable
-  Dali::Mutex                        mMutex; ///< used to protect mQueue
-  RequestQueue mQueue;                          ///< Request queue
+  ResourceLoader&                    mResourceLoader;
+  pthread_t                          mThread;    ///< thread instance
+  Internal::Adaptor::ConditionalWait mCondition; ///< condition variable
+  Dali::Mutex                        mMutex;     ///< used to protect mQueue
+  RequestQueue                       mQueue;     ///< Request queue
 private:
-  Integration::ResourceId mCurrentRequestId;    ///< Current request, set by worker thread
-  volatile Integration::ResourceId mCancelRequestId; ///< Request to be cancelled on thread: written by external thread and read by worker.
-  bool mPaused;                                ///< Whether to process work in mQueue
+  Integration::ResourceId          mCurrentRequestId; ///< Current request, set by worker thread
+  volatile Integration::ResourceId mCancelRequestId;  ///< Request to be cancelled on thread: written by external thread and read by worker.
+  bool                             mPaused;           ///< Whether to process work in mQueue
 
 #if defined(DEBUG_ENABLED)
 public:
