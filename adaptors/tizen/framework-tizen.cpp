@@ -26,6 +26,7 @@
 #ifdef OVER_TIZEN_SDK_2_2
 #include <system_info.h>
 #include <app_control_internal.h>
+#include <bundle_internal.h>
 #endif
 
 #include <dali/integration-api/debug.h>
@@ -322,7 +323,11 @@ void Framework::Run()
 
 void Framework::Quit()
 {
+#ifndef OVER_TIZEN_SDK_2_2
   app_efl_exit();
+#else
+  ui_app_exit();
+#endif
 }
 
 bool Framework::IsMainLoopRunning()
