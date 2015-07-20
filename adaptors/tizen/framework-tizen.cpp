@@ -26,6 +26,7 @@
 #ifdef OVER_TIZEN_SDK_2_2
 #include <system_info.h>
 #include <app_control_internal.h>
+#include <bundle_internal.h>
 #endif
 
 #include <dali/integration-api/debug.h>
@@ -90,8 +91,6 @@ struct Framework::Impl
 #else
     mEventCallback.app_control = AppControl;
 
-    ui_app_add_event_handler(&handlers[APP_EVENT_LOW_BATTERY], APP_EVENT_LOW_BATTERY, AppBatteryLow, data);
-    ui_app_add_event_handler(&handlers[APP_EVENT_LOW_MEMORY], APP_EVENT_LOW_MEMORY, AppMemoryLow, data);
     ui_app_add_event_handler(&handlers[APP_EVENT_DEVICE_ORIENTATION_CHANGED], APP_EVENT_DEVICE_ORIENTATION_CHANGED, AppDeviceRotated, data);
     ui_app_add_event_handler(&handlers[APP_EVENT_LANGUAGE_CHANGED], APP_EVENT_LANGUAGE_CHANGED, AppLanguageChanged, data);
     ui_app_add_event_handler(&handlers[APP_EVENT_REGION_FORMAT_CHANGED], APP_EVENT_REGION_FORMAT_CHANGED, AppRegionChanged, data);
@@ -309,6 +308,38 @@ void Framework::Run()
   {
     DALI_LOG_ERROR("Framework::Run(), ui_app_main() is failed. err = %d", ret);
   }
+
+  int testk = 0;
+  if( ret == APP_ERROR_INVALID_PARAMETER )
+  {
+    testk = 1;
+  }
+  else if( ret == APP_ERROR_OUT_OF_MEMORY )
+  {
+    testk = 2;
+  }
+  else if( ret == APP_ERROR_INVALID_CONTEXT )
+  {
+    testk = 3;
+  }
+  else if( ret == APP_ERROR_NO_SUCH_FILE )
+  {
+    testk = 4;
+  }
+  else if( ret == APP_ERROR_ALREADY_RUNNING )
+  {
+    testk = 5;
+  }
+  else if( ret == APP_ERROR_PERMISSION_DENIED )
+  {
+    testk = 6;
+  }
+  else
+  {
+    testk = 7;
+  }
+  DALI_LOG_ERROR("Framework::Run(), ui_app_main() is failed. err = %d", testk);
+
 #endif
 
   mRunning = false;
@@ -316,7 +347,11 @@ void Framework::Run()
 
 void Framework::Quit()
 {
+#ifndef OVER_TIZEN_SDK_2_2
   app_efl_exit();
+#else
+  ui_app_exit();
+#endif
 }
 
 bool Framework::IsMainLoopRunning()
