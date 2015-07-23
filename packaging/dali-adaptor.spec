@@ -257,6 +257,7 @@ exit 0
 %{dev_include_path}/dali/dali.h
 %{dev_include_path}/dali/public-api/*
 %{dev_include_path}/dali/devel-api/*
+%{dev_include_path}/dali/doc/dali-adaptor_doc.h
 %{_libdir}/pkgconfig/dali.pc
 
 %files integration-devel
