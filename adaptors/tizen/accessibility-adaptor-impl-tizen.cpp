@@ -266,6 +266,7 @@ void AccessibilityAdaptor::SetIndicator(Indicator* indicator)
 
 AccessibilityAdaptor::AccessibilityAdaptor()
 : mIsEnabled(false),
+  mReadPosition(0.0f, 0.0f),
   mActionHandler(NULL),
   mIndicator(NULL),
   mIndicatorFocused(false)
