@@ -83,6 +83,10 @@ include ../../../adaptors/devel-api/file.list
 static_libraries_libunibreak_src_dir = ../../../text/dali/internal/libunibreak
 include ../../../text/dali/internal/libunibreak/file.list
 
+# Package doc
+package_doc_dir = ../../../doc
+include ../../../doc/file.list
+
 ############# source files #############
 
 # COMMON
@@ -388,6 +392,10 @@ install-data-local:
 
 # Install resource log analyzer script
 bin_SCRIPTS = ../../../adaptors/scripts/dalireslog.sh
+
+#package doc (contains doxygen grouping information)
+packagedocdir = $(devincludepath)/doc
+packagedoc_HEADERS = $(package_doc_files)
 
 # linking test
 
