@@ -24,6 +24,9 @@
 
 namespace Dali DALI_IMPORT_API
 {
+/**
+ * @addtogroup dali-adaptor-framework* @{
+ */
 
 /**
  * @brief Mapping of keyboard and mouse button event keycodes to platform specific codes.
@@ -82,6 +85,9 @@ enum KEY
  */
 bool IsKey( const KeyEvent& keyEvent, KEY daliKey);
 
+/**
+ * @}
+ */
 } // namespace Dali
 
 #endif // __DALI_KEY_H__
