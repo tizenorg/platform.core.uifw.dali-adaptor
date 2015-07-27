@@ -426,9 +426,6 @@ void Adaptor::ReplaceSurface( Any nativeWindow, RenderSurface& surface )
 
   mCore->GetContextNotifier()->NotifyContextLost(); // Inform stage
 
-  // this method blocks until the render thread has completed the replace.
-  mUpdateRenderController->ReplaceSurface(mSurface);
-
   // Inform core, so that texture resources can be reloaded
   mCore->RecoverFromContextLoss();
 
