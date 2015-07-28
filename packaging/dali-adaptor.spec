@@ -37,6 +37,9 @@ Source0:    %{name}-%{version}.tar.gz
 %define shaderbincache_flag DISABLE
 %endif
 
+# macro is enabled by passing --define "with_node_js 1"
+%define build_with_node_js 0%{?with_node_js:1}
+
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 Requires:       boost-thread
@@ -86,6 +89,10 @@ BuildRequires:  pkgconfig(utilX)
 
 BuildRequires:  pkgconfig(harfbuzz)
 BuildRequires:  fribidi-devel
+
+%if %{?build_with_node_js}
+BuildRequires:  nodejs-devel
+%endif
 
 %description
 The DALi Tizen Adaptor provides a Tizen specific implementation of the dali-core
@@ -180,6 +187,9 @@ cd %{_builddir}/%{name}-%{version}/build/tizen && CXXFLAGS=$CXXFLAGS LDFLAGS=$LD
 %endif
 %if 0%{?over_tizen_2_2}
            --with-over-tizen_2_2 \
+%endif
+%if %{?build_with_node_js}
+           --with-node-js=/usr/include/node/ \
 %endif
            $configure_flags --libdir=%{_libdir}
 
