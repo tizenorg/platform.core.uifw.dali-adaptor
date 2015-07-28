@@ -37,6 +37,9 @@ Source0:    %{name}-%{version}.tar.gz
 %define shaderbincache_flag DISABLE
 %endif
 
+# macro is enabled by passing --define "with_node_js 1"
+%define build_with_node_js 0%{?with_node_js:1}
+
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 Requires:       boost-thread
@@ -182,6 +185,9 @@ cd %{_builddir}/%{name}-%{version}/build/tizen && CXXFLAGS=$CXXFLAGS LDFLAGS=$LD
            --with-over-tizen_2_2 \
 %endif
            $configure_flags --libdir=%{_libdir}
+%if %{?build_with_node_js}
+           --with-node-js=/usr/include/node/
+%endif
 
 make %{?jobs:-j%jobs}
 
