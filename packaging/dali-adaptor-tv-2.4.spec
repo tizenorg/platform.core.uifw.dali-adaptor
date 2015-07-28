@@ -9,6 +9,7 @@ License:    Apache-2.0
 URL:        https://review.tizen.org/git/?p=platform/core/uifw/dali-adaptor.git;a=summary
 Source0:    %{name}-%{version}.tar.gz
 
+%define profile tv
 
 %if "%{profile}" == "mobile"
 %define dali_profile MOBILE
@@ -16,6 +17,9 @@ Source0:    %{name}-%{version}.tar.gz
 %define over_tizen_2_2 1
 %define shaderbincache_flag DISABLE
 %endif
+
+# macro is enabled by passing --define "with_node_js 1"
+%define build_with_node_js 0%{?with_node_js:1}
 
 %if "%{profile}" == "tv"
 %define dali_profile TV
@@ -64,8 +68,7 @@ BuildRequires:  libdrm-devel
 BuildRequires:  pkgconfig(libexif)
 BuildRequires:  pkgconfig(capi-system-system-settings)
 BuildRequires:  pkgconfig(libpng)
-BuildRequires:  pkgconfig(glesv2)
-BuildRequires:  pkgconfig(egl)
+BuildRequires:  pkgconfig(gles20)
 BuildRequires:  libcurl-devel
 
 
@@ -182,7 +185,10 @@ cd %{_builddir}/%{name}-%{version}/build/tizen && CXXFLAGS=$CXXFLAGS LDFLAGS=$LD
 %if 0%{?over_tizen_2_2}
            --with-over-tizen_2_2 \
 %endif
-           $configure_flags --libdir=%{_libdir}
+           $configure_flags --libdir=%{_libdir} \
+%if %{?build_with_node_js}
+          --with-node-js=/usr/include/node/
+%endif
 
 make %{?jobs:-j%jobs}
 

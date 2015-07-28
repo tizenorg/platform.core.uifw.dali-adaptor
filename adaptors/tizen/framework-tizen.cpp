@@ -316,7 +316,7 @@ void Framework::Run()
 
 void Framework::Quit()
 {
-  app_efl_exit();
+ // app_efl_exit();
 }
 
 bool Framework::IsMainLoopRunning()
