@@ -315,11 +315,15 @@ FontId FontClient::Plugin::FindDefaultFont( Character charcode,
       // Keep going unless we prefer a different (color) font
       if( !preferColor || foundColor )
       {
+        FcPatternDestroy( match );
+        FcPatternDestroy( pattern );
         break;
       }
     }
-  }
 
+    FcPatternDestroy( match );
+    FcPatternDestroy( pattern );
+  }
   return fontId;
 }
 
@@ -1078,9 +1082,15 @@ void FontClient::Plugin::GetFixedSizes( const FontFamily& fontFamily,
     // Get the path to the font file name.
     FontPath path;
     GetFcString( match, FC_FILE, path );
+
+    FcPatternDestroy( match );
+    FcPatternDestroy( fontFamilyPattern );
     return GetFixedSizes( path, sizes );
   }
   DALI_LOG_ERROR( "FreeType Cannot check font: %s %s\n", fontFamily.c_str(), fontStyle.c_str() );
+
+  FcPatternDestroy( match );
+  FcPatternDestroy( fontFamilyPattern );
 }
 
 } // namespace Internal
