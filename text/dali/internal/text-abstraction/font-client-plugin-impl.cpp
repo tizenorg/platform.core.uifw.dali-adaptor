@@ -319,7 +319,6 @@ FontId FontClient::Plugin::FindDefaultFont( Character charcode,
       }
     }
   }
-
   return fontId;
 }
 
@@ -792,7 +791,9 @@ FontId FontClient::Plugin::CreateFont( const FontPath& path,
                                  0.0f,
                                  fixedHeight,
                                  0.0f,
-                                 0.0f );
+                                 0.0f,
+                                 fixedWidth,
+                                 fixedHeight );
 
             mFontCache.push_back( CacheItem( ftFace, path, pointSize, faceIndex, metrics, fixedWidth, fixedHeight ) );
             id = mFontCache.size();
@@ -835,13 +836,33 @@ FontId FontClient::Plugin::CreateFont( const FontPath& path,
       if( FT_Err_Ok == error )
       {
 
+        uint32_t maxWidth = 0;
+        uint32_t maxHeight = 0;
+
+        for ( uint32_t index = 0; index < ftFace->num_glyphs; ++index )
+        {
+          if ( FT_Err_Ok == FT_Load_Glyph( ftFace, index, FT_LOAD_DEFAULT ) )
+          {
+            if ( ftFace->glyph->metrics.width > maxWidth )
+            {
+              maxWidth = ftFace->glyph->metrics.width;
+            }
+            if ( ftFace->glyph->metrics.height > maxHeight )
+            {
+              maxHeight = ftFace->glyph->metrics.height;
+            }
+          }
+        }
+
         FT_Size_Metrics& ftMetrics = ftFace->size->metrics;
 
         FontMetrics metrics( static_cast< float >( ftMetrics.ascender  ) * FROM_266,
                              static_cast< float >( ftMetrics.descender ) * FROM_266,
                              static_cast< float >( ftMetrics.height    ) * FROM_266,
                              static_cast< float >( ftFace->underline_position ) * FROM_266,
-                             static_cast< float >( ftFace->underline_thickness ) * FROM_266 );
+                             static_cast< float >( ftFace->underline_thickness ) * FROM_266,
+                             static_cast< float >( maxWidth ) * FROM_266,
+                             static_cast< float >( maxHeight ) * FROM_266 );
 
         mFontCache.push_back( CacheItem( ftFace, path, pointSize, faceIndex, metrics ) );
         id = mFontCache.size();
