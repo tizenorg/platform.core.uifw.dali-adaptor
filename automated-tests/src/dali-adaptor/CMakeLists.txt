@@ -6,13 +6,22 @@ SET(RPM_NAME "core-${PKG_NAME}-tests")
 SET(CAPI_LIB "dali-adaptor")
 SET(TC_SOURCES
     utc-Dali-Key.cpp
-    utc-Dali-PixmapImage.cpp
     utc-Dali-SingletonService.cpp
     utc-Dali-Window.cpp
     utc-Dali-Timer.cpp
     utc-Dali-TtsPlayer.cpp
     utc-Dali-Application.cpp
 )
+
+if(UBUNTU_PROFILE)
+LIST(APPEND TC_SOURCES
+    utc-Dali-PixmapImage-ubuntu.cpp
+)
+else()
+LIST(APPEND TC_SOURCES
+    utc-Dali-PixmapImage-tizen.cpp
+)
+endif()
 
 LIST(APPEND TC_SOURCES
     dali-test-suite-utils/test-harness.cpp
