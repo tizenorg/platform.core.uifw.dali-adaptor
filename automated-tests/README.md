@@ -58,21 +58,21 @@ Building the tests
 Run the following commands:
 
     cd automated-tests
-    ./build.sh
+    ./build.sh --enable-profile=UBUNTU
 
 This will build dali-adaptor, dali-adaptor-internal and dali-platform-abstraction test sets.
 
 Test sets can be built individually:
 
-    ./build.sh dali-adaptor
+    ./build.sh --enable-profile=UBUNTU dali-adaptor
 
 They can also be built without regenerating test case scripts (Useful for quicker rebuilds)
 
-    ./build.sh -n dali-adaptor
+    ./build.sh -n --enable-profile=UBUNTU dali-adaptor
 
 Or without cleaning down the build area (Useful for fast build/run/debug cycles)
 
-    ./build.sh -n -r dali-adaptor
+    ./build.sh -n -r --enable-profile=UBUNTU dali-adaptor
 
 
 Executing the tests
