@@ -689,6 +689,8 @@ void Adaptor::OnWindowShown()
 {
   if ( PAUSED_WHILE_HIDDEN == mState )
   {
+    mUpdateRenderController->SetEglSurfaceState( true );
+
     // Adaptor can now be resumed
     mState = PAUSED;
 
@@ -703,6 +705,8 @@ void Adaptor::OnWindowHidden()
 {
   if ( STOPPED != mState )
   {
+    mUpdateRenderController->SetEglSurfaceState( false );
+
     Pause();
 
     // Adaptor cannot be resumed until the window is shown

@@ -128,6 +128,16 @@ public:
   bool NewSurface( RenderSurface* newSurface );
 
   /**
+   * Request to the render thread to change Egl Surface state.
+   */
+  bool SetEglSurfaceState(bool enable);
+
+  /**
+   * Return current EglSurfaceState which is set by SetEglSurfaceState.
+   */
+  bool GetEglSurfaceState();
+
+  /**
    * Called by Update thread before it runs the update. This is the point where we can pause
    */
   void UpdateReadyToRun();
@@ -283,6 +293,10 @@ private:
 
   ReplaceSurfaceRequest mReplaceSurfaceRequest; ///< Holder for a replace surface request
   bool mReplaceSurfaceRequested; ///< True if there is a new replace surface request
+
+  RenderRequest mEglSurfaceRequest;
+  RenderRequest::Request mEglSurfaceRequested;
+  bool mEglSurfaceEnabled; ///< True if EGL surface is enabled
 
 }; // class UpdateRenderSynchronization
 

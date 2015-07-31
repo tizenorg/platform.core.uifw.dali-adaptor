@@ -59,7 +59,10 @@ UpdateRenderSynchronization::UpdateRenderSynchronization( AdaptorInternalService
   mNotificationTrigger( adaptorInterfaces.GetProcessCoreEventsTrigger() ),
   mPerformanceInterface( adaptorInterfaces.GetPerformanceInterface() ),
   mReplaceSurfaceRequest(),
-  mReplaceSurfaceRequested( false )
+  mReplaceSurfaceRequested( false ),
+  mEglSurfaceRequest( RenderRequest::REQUEST_NONE ),
+  mEglSurfaceRequested( RenderRequest::REQUEST_NONE ),
+  mEglSurfaceEnabled( true )
 {
 }
 
@@ -188,6 +191,38 @@ bool UpdateRenderSynchronization::NewSurface( RenderSurface* newSurface )
   return result;
 }
 
+bool UpdateRenderSynchronization::SetEglSurfaceState(bool enable)
+{
+  bool result=false;
+
+  if ( mEglSurfaceEnabled == enable )
+  {
+    return result;
+  }
+  mEglSurfaceEnabled = enable;
+  UpdateRequested();
+  UpdateWhilePaused();
+
+  boost::unique_lock< boost::mutex > lock( mMutex );
+
+  mEglSurfaceRequested = enable ? RenderRequest::CREATE_EGL_SURFACE : RenderRequest::DESTROY_EGL_SURFACE;
+
+  // Unlock the render thread sleeping on requests
+  mRenderRequestSleepCondition.notify_one();
+
+  // Lock event thread until request has been processed
+  mRenderRequestFinishedCondition.wait(lock); // wait unlocks the mutex on entry, and locks again on exit.
+
+  mEglSurfaceRequested = RenderRequest::REQUEST_NONE;
+  result = mEglSurfaceRequest.GetRequestCompleted();
+
+  return result;
+}
+
+bool UpdateRenderSynchronization::GetEglSurfaceState()
+{
+  return mEglSurfaceEnabled;
+}
 
 void UpdateRenderSynchronization::UpdateReadyToRun()
 {
@@ -346,6 +381,13 @@ bool UpdateRenderSynchronization::RenderSyncWithUpdate(RenderRequest*& requestPt
     requestPtr = &mReplaceSurfaceRequest;
   }
   mReplaceSurfaceRequested = false;
+
+  if( mEglSurfaceRequested != RenderRequest::REQUEST_NONE )
+  {
+    requestPtr = &mEglSurfaceRequest;
+    requestPtr->SetRequest( mEglSurfaceRequested );
+    mEglSurfaceRequested = RenderRequest::REQUEST_NONE;
+  }
 
   // Flag is used to during UpdateThread::Stop() to exit the update/render loops
   return mRunning;

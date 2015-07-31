@@ -142,6 +142,16 @@ void UpdateRenderController::SetRenderRefreshRate(unsigned int numberOfVSyncsPer
   mUpdateRenderSync->SetRenderRefreshRate(numberOfVSyncsPerRender);
 }
 
+void UpdateRenderController::SetEglSurfaceState( bool enable )
+{
+  // tell render thread to change the EglSurfaceState. This call will block until completed
+  RenderSurface* currentSurface = mAdaptorInterfaces.GetRenderSurfaceInterface();
+
+  // Ensure the current surface releases any locks to prevent deadlock.
+  currentSurface->StopRender();
+
+  mUpdateRenderSync->SetEglSurfaceState( enable );
+}
 
 } // namespace Adaptor
 

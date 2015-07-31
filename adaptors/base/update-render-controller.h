@@ -104,6 +104,12 @@ public:
   void NewSurface( RenderSurface* surface );
 
   /**
+   * Request to change the Egl surface state in the renderThread.
+   * Called by the Window::EventHandler when Window get event
+   */
+  void SetEglSurfaceState( bool enable );
+
+  /**
    * @copydoc Dali::Adaptor::SetRenderRefreshRate()
    */
   void SetRenderRefreshRate( unsigned int numberOfVSyncsPerRender );

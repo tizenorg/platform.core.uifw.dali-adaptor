@@ -52,7 +52,10 @@ class RenderRequest
 public:
   enum Request
   {
+    REQUEST_NONE,
     REPLACE_SURFACE, // Request to replace surface
+    CREATE_EGL_SURFACE, // Request to create EGL surface
+    DESTROY_EGL_SURFACE // Request to destroy EGL surface
   };
 
   /**
@@ -66,8 +69,24 @@ public:
    */
   Request GetType();
 
+  /**
+   * @reset the request state
+   */
+  void SetRequest(RenderRequest::Request type);
+
+  /**
+   * @set the request to completed
+   */
+  void SetRequestCompleted();
+
+  /**
+   * @return the type of the request
+   */
+  bool GetRequestCompleted();
+
 private:
   Request mRequestType;
+  unsigned int mRequestCompleted; ///< Set to true when the request has completed.
 };
 
 class ReplaceSurfaceRequest : public RenderRequest
@@ -175,6 +194,18 @@ private: // Render thread side helpers
    * Called from render thread
    */
   void ShutdownEgl();
+
+  /**
+   * Create EGL surface.
+   * Called from render thread
+   */
+  void CreateEglSurface();
+
+  /**
+   * Destroy EGL surface.
+   * Called from render thread
+   */
+  void DestroyEglSurface();
 
   /**
    * Called before core renders the scene
