@@ -85,7 +85,7 @@ public:
   /**
    * clear the OpenGL context
    */
-  void MakeContextNull();
+  virtual void MakeContextNull();
 
   /**
    * Terminate GL

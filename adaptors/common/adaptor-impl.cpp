@@ -689,6 +689,9 @@ void Adaptor::OnWindowShown()
 {
   if ( PAUSED_WHILE_HIDDEN == mState )
   {
+    DALI_LOG_ERROR( "OnWindowShown\n" );
+    mUpdateRenderController->SetEglSurfaceState( true );
+
     // Adaptor can now be resumed
     mState = PAUSED;
 
@@ -703,6 +706,9 @@ void Adaptor::OnWindowHidden()
 {
   if ( STOPPED != mState )
   {
+    DALI_LOG_ERROR( "OnWindowHidden\n" );
+    mUpdateRenderController->SetEglSurfaceState( false );
+
     Pause();
 
     // Adaptor cannot be resumed until the window is shown

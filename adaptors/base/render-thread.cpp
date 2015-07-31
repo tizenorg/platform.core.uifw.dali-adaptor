@@ -44,13 +44,31 @@ Integration::Log::Filter* gRenderLogFilter = Integration::Log::Filter::New(Debug
 }
 
 RenderRequest::RenderRequest(RenderRequest::Request type)
-: mRequestType(type)
+: mRequestType( type ),
+  mRequestCompleted( false )
 {
 }
 
 RenderRequest::Request RenderRequest::GetType()
 {
   return mRequestType;
+}
+
+void RenderRequest::SetRequest(RenderRequest::Request type)
+{
+  mRequestType = type;
+  mRequestCompleted = false;
+}
+
+void RenderRequest::SetRequestCompleted()
+{
+  mRequestType = RenderRequest::REQUEST_NONE;
+  mRequestCompleted = true;
+}
+
+bool RenderRequest::GetRequestCompleted()
+{
+  return mRequestCompleted != 0u;
 }
 
 ReplaceSurfaceRequest::ReplaceSurfaceRequest()
@@ -281,6 +299,25 @@ bool RenderThread::ProcessRequest( RenderRequest* request )
         processedRequest = true;
         break;
       }
+      case RenderRequest::CREATE_EGL_SURFACE:
+      {
+        CreateEglSurface();
+        request->SetRequestCompleted();
+        processedRequest = true;
+        break;
+      }
+      case RenderRequest::DESTROY_EGL_SURFACE:
+      {
+        DestroyEglSurface();
+        request->SetRequestCompleted();
+        processedRequest = true;
+        break;
+      }
+      default:
+      {
+        DALI_LOG_WARNING("Warning : GetType returns unused type value in RenderThread::ProcessRequest\n");
+        break;
+      }
     }
   }
   return processedRequest;
@@ -307,6 +344,29 @@ void RenderThread::ReplaceSurface( RenderSurface* newSurface )
   // use the new surface from now on
   mSurface = newSurface;
   mSurfaceReplaced = true;
+}
+
+void RenderThread::CreateEglSurface()
+{
+  DALI_LOG_WARNING("*****************CreateEglSurface (%x)\n", mSurface);
+
+  // create the OpenGL surface
+  mSurface->CreateEglSurface(*mEGL);
+
+  // Make it current
+  mEGL->MakeContextCurrent();
+}
+
+void RenderThread::DestroyEglSurface()
+{
+  DALI_LOG_WARNING("****************DestroyEglSurface (%x)\n", mSurface);
+
+
+  // inform core of context destruction
+  mEGL->MakeContextNull();
+
+  // give a chance to destroy the OpenGL surface that created externally
+  mSurface->DestroyEglSurface( *mEGL );
 }
 
 void RenderThread::ShutdownEgl()

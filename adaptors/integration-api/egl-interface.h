@@ -45,6 +45,11 @@ public:
   virtual void MakeContextCurrent() = 0;
 
   /**
+   * Clear the OpenGL context current
+   */
+  virtual void MakeContextNull() = 0;
+
+  /**
    * Terminate GL
    */
   virtual void TerminateGles() = 0;
