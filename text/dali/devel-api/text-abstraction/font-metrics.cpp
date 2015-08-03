@@ -29,7 +29,9 @@ FontMetrics::FontMetrics()
   descender( 0.f ),
   height( 0.f ),
   underlinePosition( 0.f ),
-  underlineThickness( 0.f )
+  underlineThickness( 0.f ),
+  maxWidth( 0.f ),
+  maxHeight( 0.f )
 {
 }
 
@@ -37,12 +39,16 @@ FontMetrics::FontMetrics( float ascenderPixels,
                           float descenderPixels,
                           float heightPixels,
                           float underlinePositionPixels,
-                          float underlineThicknessPixels )
+                          float underlineThicknessPixels,
+                          float maxWidth,
+                          float maxHeight )
 : ascender( ascenderPixels ),
   descender( descenderPixels ),
   height( heightPixels ),
   underlinePosition( underlinePositionPixels ),
-  underlineThickness( underlineThicknessPixels )
+  underlineThickness( underlineThicknessPixels ),
+  maxWidth( maxWidth ),
+  maxHeight( maxHeight )
 {
 }
 

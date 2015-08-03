@@ -44,13 +44,17 @@ struct DALI_IMPORT_API FontMetrics
                float descenderPixels,
                float heightPixels,
                float underlinePositionPixels,
-               float underlinePositionThickness );
+               float underlinePositionThickness,
+               float maxWidth,
+               float maxHeight );
 
   float ascender;             ///< The ascender in pixels.
   float descender;            ///< The descender in pixels.
   float height;               ///< The height in pixels.
   float underlinePosition;    ///< The underline position in pixels.
   float underlineThickness;   ///< The vertical height of the underline in pixels.
+  float maxWidth;             ///< The maximum width of a glyph in this font in pixels.
+  float maxHeight;            ///< The maximum height of a glyph in this font in pixels.
 };
 
 } // Dali
