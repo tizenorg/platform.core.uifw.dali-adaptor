@@ -294,6 +294,8 @@ void ResourceThreadBase::ProcessNextRequest()
       }
       break;
     }
+
+    delete request;
   }
 }
 
