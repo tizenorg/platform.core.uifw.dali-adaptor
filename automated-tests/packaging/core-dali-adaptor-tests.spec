@@ -14,6 +14,7 @@ BuildRequires:  pkgconfig(dali-core)
 BuildRequires:  pkgconfig(dali)
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(ecore)
+BuildRequires:  pkgconfig(capi-system-sensor)
 
 %description
 Core API unit TC (%{name})
