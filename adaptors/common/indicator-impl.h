@@ -23,6 +23,7 @@
 #include <dali/public-api/animation/animation.h>
 #include <dali/public-api/events/pan-gesture.h>
 #include <dali/public-api/events/pan-gesture-detector.h>
+#include <dali/public-api/images/buffer-image.h>
 
 // INTERNAL INCLUDES
 #include <indicator-buffer.h>
@@ -332,11 +333,6 @@ private:
   bool CopyToBuffer( int bufferNumber );
 
   /**
-   * Update the background with the correct colors
-   */
-  void SetBackground();
-
-  /**
    * Create a new image for the indicator, and set up signal handling for it.
    * @param[in] bufferNumber The shared file number
    */
@@ -432,6 +428,7 @@ private:
   Dali::Image                      mImage;               ///< Image created from mIndicatorBuffer
   Dali::ImageActor                 mIndicatorImageActor; ///< Actor created from mImage
 
+  Dali::Actor                      mBackgroundActor;     ///< Actor for background
   Dali::Actor                      mIndicatorActor;      ///< Handle to topmost indicator actor
   Dali::Actor                      mEventActor;          ///< Handle to event
   Dali::PanGestureDetector         mPanDetector;         ///< Pan detector to find flick gesture for hidden indicator

@@ -336,8 +336,37 @@ Indicator::Indicator( Adaptor* adaptor, Dali::Window::WindowOrientation orientat
   mIndicatorImageActor.SetLeaveRequired( true );
   mIndicatorImageActor.TouchedSignal().Connect( this, &Indicator::OnTouched );
 
+
+  const unsigned int bitmapWidth = 2;
+  Dali::BufferImage backgroundImageData = Dali::BufferImage::New( bitmapWidth, bitmapWidth, Dali::Pixel::RGBA8888 );
+  Dali::PixelBuffer* pixbuf = backgroundImageData.GetBuffer();
+  if( pixbuf )
+  {
+    for( size_t i = 0; i < bitmapWidth * bitmapWidth; ++i )
+    {
+      pixbuf[i*4+0] = 0;
+      pixbuf[i*4+1] = 0;
+      pixbuf[i*4+2] = 0;
+      pixbuf[i*4+3] = 0xFF;
+    }
+    backgroundImageData.Update();
+  }
+
+  mBackgroundActor = Dali::ImageActor::New( backgroundImageData );
+  mBackgroundActor.SetParentOrigin( ParentOrigin::TOP_CENTER );
+  mBackgroundActor.SetAnchorPoint( AnchorPoint::TOP_CENTER );
+  mBackgroundActor.SetZ( -0.02f );
+
+  // add indicator image to image actor to move it with background
+  mBackgroundActor.Add( mIndicatorImageActor );
+
   mIndicatorActor = Dali::Actor::New();
-  mIndicatorActor.Add( mIndicatorImageActor );
+  mIndicatorActor.Add( mBackgroundActor );
+
+  if( mOrientation == Dali::Window::LANDSCAPE || mOrientation == Dali::Window::LANDSCAPE_INVERSE )
+  {
+    mBackgroundActor.SetVisible( false );
+  }
 
   // Event handler to find out flick down gesture
   mEventActor = Dali::Actor::New();
@@ -396,6 +425,16 @@ void Indicator::Open( Dali::Window::WindowOrientation orientation )
   mOrientation = orientation;
 
   Connect();
+
+  // Change background visibility depending on orientation
+  if(mOpacityMode == Dali::Window::OPAQUE && ( mOrientation == Dali::Window::PORTRAIT || mOrientation == Dali::Window::PORTRAIT_INVERSE ) ) //@todo add case for translucent when
+  {
+    mBackgroundActor.SetVisible(true);
+  }
+  else
+  {
+    mBackgroundActor.SetVisible(false);
+  }
 }
 
 void Indicator::Close()
@@ -418,7 +457,17 @@ void Indicator::Close()
 void Indicator::SetOpacityMode( Dali::Window::IndicatorBgOpacity mode )
 {
   mOpacityMode = mode;
-  SetBackground();
+
+  switch( mOpacityMode )
+  {
+    case Dali::Window::TRANSLUCENT: //@todo use a gradient rendererer
+    case Dali::Window::TRANSPARENT:
+      mBackgroundActor.SetVisible( false );
+      break;
+    case Dali::Window::OPAQUE:
+      mBackgroundActor.SetVisible( true );
+      break;
+  }
 }
 
 void Indicator::SetVisible( Dali::Window::IndicatorVisibleMode visibleMode, bool forceUpdate )
@@ -629,8 +678,7 @@ void Indicator::Resize( int width, int height )
     mIndicatorImageActor.SetSize( mImageWidth, mImageHeight );
     mIndicatorActor.SetSize( mImageWidth, mImageHeight );
     mEventActor.SetSize(mImageWidth, mImageHeight);
-
-    SetBackground();
+    mBackgroundActor.SetSize( mImageWidth, mImageHeight );
   }
 }
 
@@ -840,10 +888,6 @@ bool Indicator::CopyToBuffer( int bufferNumber )
   return success;
 }
 
-void Indicator::SetBackground()
-{
-}
-
 void Indicator::CreateNewPixmapImage()
 {
   DALI_LOG_TRACE_METHOD_FMT( gIndicatorLogFilter, "W:%d H:%d", mImageWidth, mImageHeight );
@@ -855,8 +899,7 @@ void Indicator::CreateNewPixmapImage()
     mIndicatorImageActor.SetSize( mImageWidth, mImageHeight );
     mIndicatorActor.SetSize( mImageWidth, mImageHeight );
     mEventActor.SetSize(mImageWidth, mImageHeight);
-
-    SetBackground();
+    mBackgroundActor.SetSize( mImageWidth, mImageHeight );
   }
   else
   {
@@ -1074,7 +1117,7 @@ void Indicator::ShowIndicator(float duration)
   {
     if( EqualsZero(duration) )
     {
-      mIndicatorAnimation.AnimateTo( Property( mIndicatorImageActor, Dali::Actor::Property::POSITION ), Vector3(0, -mImageHeight, 0), Dali::AlphaFunction::EASE_OUT );
+      mIndicatorAnimation.AnimateTo( Property( mBackgroundActor, Dali::Actor::Property::POSITION ), Vector3(0, -mImageHeight, 0), Dali::AlphaFunction::EASE_OUT );
 
       mIsShowing = false;
 
@@ -1082,7 +1125,7 @@ void Indicator::ShowIndicator(float duration)
     }
     else
     {
-      mIndicatorAnimation.AnimateTo( Property( mIndicatorImageActor, Dali::Actor::Property::POSITION ), Vector3(0, 0, 0), Dali::AlphaFunction::EASE_OUT );
+      mIndicatorAnimation.AnimateTo( Property( mBackgroundActor, Dali::Actor::Property::POSITION ), Vector3(0, 0, 0), Dali::AlphaFunction::EASE_OUT );
 
       mIsShowing = true;
 
