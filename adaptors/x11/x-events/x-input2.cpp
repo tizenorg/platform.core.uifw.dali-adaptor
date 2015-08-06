@@ -111,7 +111,23 @@ void XInput2::CreateKeyEvent( const XIDeviceEvent* deviceEvent, KeyEvent& keyEve
 
 }
 
-void XInput2::ProcessEvent( XGenericEventCookie* cookie )
+// prototyping implementation
+void XInput2::ProcessKeyEvent( XKeyEvent* xEvent )
+{
+  KeyEvent keyEvent;
+  keyEvent.keyCode = xEvent->keycode;
+  keyEvent.state = KeyEvent::Down;
+  //keyEvent.keyModifier = deviceEvent->mods.effective;
+
+  KeySym sym = XkbKeycodeToKeysym( mDisplay, xEvent->keycode, 0 /* group */ , keyEvent.IsShiftModifier() );
+  char* keyname = XKeysymToString( sym );
+  keyEvent.keyPressedName = keyname;
+  keyEvent.time = xEvent->time;
+
+  mEventInterface->KeyEvent( keyEvent );
+}
+
+void XInput2::ProcessGenericEvent( XGenericEventCookie* cookie )
 {
   XIDeviceEvent* deviceEvent = static_cast< XIDeviceEvent* >(cookie->data);
 
@@ -244,16 +260,15 @@ void XInput2::SelectEvents( int deviceId, const Dali::Vector< unsigned int >& fi
   XIEventMask eventMask;
 
   eventMask.deviceid = deviceId;
-  eventMask.mask_len = sizeof( mask);
+  eventMask.mask_len = sizeof( mask );
   eventMask.mask = mask;
 
   for( VectorBase::SizeType i = 0; i< filter.Count(); ++i )
   {
-      XISetMask( mask, filter[i] );
+    XISetMask( mask, filter[i] );
   }
 
   XISelectEvents( mDisplay, mWindow, &eventMask, 1);
-
 }
 void XInput2::SelectInputEvents()
 {
@@ -294,19 +309,21 @@ void XInput2::SelectInputEvents()
         eventFilter.PushBack( XI_TouchBegin );
         eventFilter.PushBack( XI_TouchEnd );
       }
-      SelectEvents( device.deviceId, eventFilter );
     }
     // @todo work out if we should just be listening to MasterKeyboard
-    else if( device.use == XISlaveKeyboard )
+    // Floating slave devices also can generate key events. For example, TV remote controllers.
+    if( ( device.use == XIFloatingSlave ) || ( device.use == XISlaveKeyboard ) )
     {
       if( device.keyClass )
       {
         eventFilter.PushBack( XI_KeyPress );
         eventFilter.PushBack( XI_KeyRelease );
-
-        SelectEvents( device.deviceId, eventFilter );
       }
+    }
 
+    if( eventFilter.Count() > 0 )
+    {
+      SelectEvents( device.deviceId, eventFilter );
     }
   }
 }
