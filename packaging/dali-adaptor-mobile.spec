@@ -149,6 +149,10 @@ CFLAGS+=" -DOVER_TIZEN_SDK_2_2"
 CXXFLAGS+=" -DOVER_TIZEN_SDK_2_2"
 %endif
 
+# Allow 2.2 builds to compile when using this spec file.
+CFLAGS+=" -DTIZEN_2_2_COMPATIBILITY"
+CXXFLAGS+=" -DTIZEN_2_2_COMPATIBILITY"
+
 libtoolize --force
 cd %{_builddir}/%{name}-%{version}/build/tizen
 autoreconf --install
