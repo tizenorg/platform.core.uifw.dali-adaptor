@@ -55,6 +55,8 @@ void ConfigureCurlOptions( CURL* curl_handle, const std::string& url )
   curl_easy_setopt( curl_handle, CURLOPT_CONNECTTIMEOUT, CONNECTION_TIMEOUT_SECONDS );
   curl_easy_setopt( curl_handle, CURLOPT_HEADER, INCLUDE_HEADER );
   curl_easy_setopt( curl_handle, CURLOPT_NOBODY, EXCLUDE_BODY );
+
+  curl_easy_setopt( curl_handle, CURLOPT_SSL_VERIFYPEER, 0 );
 }
 
 // Without a write function or a buffer (file descriptor) to write to, curl will pump out
