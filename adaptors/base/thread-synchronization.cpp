@@ -61,6 +61,7 @@ ThreadSynchronization::ThreadSynchronization( AdaptorInternalServices& adaptorIn
   mRenderThreadStop( FALSE ),
   mRenderThreadReplacingSurface( FALSE ),
   mEventThreadSurfaceReplaced( FALSE ),
+  mWaitingForFirstRenderAfterResume( FALSE ),
   mVSyncThreadInitialised( FALSE ),
   mRenderThreadInitialised( FALSE ),
   mRenderThreadSurfaceReplaced( FALSE )
@@ -199,6 +200,11 @@ void ThreadSynchronization::Resume()
   {
     LOG_EVENT( "RESUMING" );
 
+    {
+      ConditionalWait::ScopedLock lock( mEventThreadWaitCondition );
+      mWaitingForFirstRenderAfterResume = TRUE;
+    }
+
     mFrameTime.Resume();
 
     // Start up Update thread again
@@ -206,6 +212,14 @@ void ThreadSynchronization::Resume()
 
     // Can lock so we do not want to have a lock when calling this to avoid deadlocks
     AddPerformanceMarker( PerformanceInterface::RESUME);
+
+    {
+      ConditionalWait::ScopedLock lock( mEventThreadWaitCondition );
+      while( mWaitingForFirstRenderAfterResume )
+      {
+        mEventThreadWaitCondition.Wait( lock );
+      }
+    }
   }
 }
 
@@ -457,6 +471,16 @@ bool ThreadSynchronization::RenderReady( RenderRequest*& requestPtr )
         ConditionalWait::ScopedLock renderLock( mRenderThreadWaitCondition );
         --mUpdateAheadOfRender;
       }
+    }
+
+    // Check if we've just resumed and notify event thread if we have.
+    if( WaitingForFirstRenderAfterResume() )
+    {
+      {
+        ConditionalWait::ScopedLock lock( mEventThreadWaitCondition );
+        mWaitingForFirstRenderAfterResume = FALSE;
+      }
+      mEventThreadWaitCondition.Notify();
     }
 
     // Check if we've had an update, if we haven't then we just wait
@@ -808,6 +832,12 @@ bool ThreadSynchronization::IsRenderThreadReplacingSurface()
 {
   ConditionalWait::ScopedLock lock( mRenderThreadWaitCondition );
   return mRenderThreadReplacingSurface;
+}
+
+bool ThreadSynchronization::WaitingForFirstRenderAfterResume()
+{
+  ConditionalWait::ScopedLock lock( mEventThreadWaitCondition );
+  return mWaitingForFirstRenderAfterResume;
 }
 
 } // namespace Adaptor

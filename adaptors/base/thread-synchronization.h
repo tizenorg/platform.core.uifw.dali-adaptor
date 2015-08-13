@@ -335,6 +335,14 @@ private:
    */
   inline bool IsRenderThreadReplacingSurface();
 
+  /**
+   * Check if the event thread is waiting for the first render after resuming.
+   * This will lock the mutex in mEventThreadWaitCondition.
+   *
+   * @return true if the event thread is waiting for the first render after resuming, false otherwise.
+   */
+  inline bool WaitingForFirstRenderAfterResume();
+
 private:
 
   struct State
@@ -384,6 +392,7 @@ private:
   volatile unsigned int mRenderThreadReplacingSurface;///< Whether the render-thread should replace the surface (set by the event & render threads, read by the render-thread).
 
   volatile unsigned int mEventThreadSurfaceReplaced;  ///< Checked by the event-thread & set by the render-thread when the surface has been replaced (set by the event & render threads, read by the event-thread).
+  volatile unsigned int mWaitingForFirstRenderAfterResume; ///< Checked by the event-thread & set by the render-thread when we resume (set by the event & render threads, read by the event-thread).
 
   unsigned int mVSyncThreadInitialised;               ///< Whether the V-Sync thread has been initialised (only used by v-sync-thread).
   unsigned int mRenderThreadInitialised;              ///< Whether the render-thread has been initialised (only used by the render-thread).
