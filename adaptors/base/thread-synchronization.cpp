@@ -61,6 +61,7 @@ ThreadSynchronization::ThreadSynchronization( AdaptorInternalServices& adaptorIn
   mRenderThreadStop( FALSE ),
   mRenderThreadReplacingSurface( FALSE ),
   mEventThreadSurfaceReplaced( FALSE ),
+  mWaitingForFirstRenderAfterResume( FALSE ),
   mVSyncThreadInitialised( FALSE ),
   mRenderThreadInitialised( FALSE ),
   mRenderThreadSurfaceReplaced( FALSE )
