@@ -239,9 +239,9 @@ void Application::OnPause()
 
 void Application::OnResume()
 {
-  mAdaptor->Resume();
   Dali::Application application(this);
   mResumeSignal.Emit( application );
+  mAdaptor->Resume();
 }
 
 void Application::OnReset()
