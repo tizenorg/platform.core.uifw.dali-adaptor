@@ -78,6 +78,8 @@ KeyLookup KeyLookupTable[]=
   { "BackSpace",             DALI_KEY_BACKSPACE,       false },
   { "Left",                  DALI_KEY_CURSOR_LEFT,     false },
   { "Right",                 DALI_KEY_CURSOR_RIGHT,    false }
+  { "Shift_L",               DALI_KEY_SHIFT_LEFT,      false },
+  { "Shift_R",               DALI_KEY_SHIFT_RIGHT,     false }
 };
 
 const std::size_t KEY_LOOKUP_COUNT = (sizeof( KeyLookupTable))/ (sizeof(KeyLookup));
