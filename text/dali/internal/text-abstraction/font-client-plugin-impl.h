@@ -56,13 +56,11 @@ struct FontClient::Plugin
    */
   struct FontDescriptionCacheItem
   {
-    FontDescriptionCacheItem( const FontFamily& fontFamily,
-                              const FontStyle& fontStyle,
+    FontDescriptionCacheItem( const FontDescription& fontDescription,
                               FontDescriptionId index );
 
-    FontFamily        fontFamily; ///< The font family name.
-    FontStyle         fontStyle;  ///< The font style.
-    FontDescriptionId index;      ///< Index to the vector of font descriptions.
+    FontDescription fontDescription; ///< The font description.
+    FontDescriptionId index;         ///< Index to the vector of font descriptions.
   };
 
   /**
@@ -138,10 +136,9 @@ struct FontClient::Plugin
   void SetDpi( unsigned int horizontalDpi, unsigned int verticalDpi );
 
   /**
-   * @copydoc Dali::FontClient::SetDefaultFontFamily()
+   * @copydoc Dali::FontClient::SetDefaultFont()
    */
-  void SetDefaultFontFamily( const FontFamily& fontFamilyName,
-                             const FontStyle& fontStyle );
+  void SetDefaultFont( const FontDescription& fontDescription );
 
   /**
    * @copydoc Dali::FontClient::GetDefaultFonts()
@@ -176,33 +173,31 @@ struct FontClient::Plugin
   FontId GetFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex, bool cacheDescription = true );
 
   /**
-   * @copydoc Dali::FontClient::GetFontId(const FontFamily& fontFamily, const FontStyle& fontStyle, PointSize26Dot6 pointSize, FaceIndex faceIndex )
+   * @copydoc Dali::FontClient::GetFontId( const FontDescription& fontDescription, PointSize26Dot6 pointSize, FaceIndex faceIndex )
    */
-  FontId GetFontId( const FontFamily& fontFamily,
-                    const FontStyle& fontStyle,
+  FontId GetFontId( const FontDescription& fontDescription,
                     PointSize26Dot6 pointSize,
                     FaceIndex faceIndex );
 
   /**
-   * @copydoc Dali::FontClient::IsScalable(const FontPath& path )
+   * @copydoc Dali::FontClient::IsScalable( const FontPath& path )
    */
   bool IsScalable( const FontPath& path );
 
   /**
-   * @copydoc Dali::FontClient::IsScalable( const FontFamily& fontFamily, const FontStyle& fontStyle )
+   * @copydoc Dali::FontClient::IsScalable( const FontDescription& fontDescription )
    */
-  bool IsScalable( const FontFamily& fontFamily, const FontStyle& fontStyle );
+  bool IsScalable( const FontDescription& fontDescription );
 
   /**
-   * @copydoc Dali::FontClient::GetFixedSizes( const FontPath& path, Dali::Vector< PointSize26Dot6>& sizes )
+   * @copydoc Dali::FontClient::GetFixedSizes()
    */
   void GetFixedSizes( const FontPath& path, Dali::Vector< PointSize26Dot6>& sizes );
 
   /**
-   * @copydoc Dali::FontClient::GetFixedSizes( const FontFamily& fontFamily, const FontStyle& fontStyle, Dali::Vector< PointSize26Dot6>& sizes )
+   * @copydoc Dali::FontClient::GetFixedSizes()
    */
-  void GetFixedSizes( const FontFamily& fontFamily,
-                      const FontStyle& fontStyle,
+  void GetFixedSizes( const FontDescription& fontDescription,
                       Dali::Vector< PointSize26Dot6 >& sizes );
 
   /**
@@ -247,8 +242,7 @@ private:
    *
    * @return The pattern.
    */
-  _FcPattern* CreateFontFamilyPattern( const FontFamily& fontFamily,
-                                       const FontStyle& fontStyle );
+  _FcPattern* CreateFontFamilyPattern( const FontDescription& fontDescription );
 
   /**
    * Retrieves the fonts present in the platform.
@@ -267,6 +261,17 @@ private:
    * @return @e true if the operation is successful.
    */
   bool GetFcString( const _FcPattern* const pattern, const char* const n, std::string& string );
+
+  /**
+   * Retrieves a font config object's value from a pattern.
+   *
+   * @param[in] pattern The font config pattern.
+   * @param[in] n The object.
+   * @param[out] intVal The object's value.
+   *
+   * @return @e true if the operation is successful.
+   */
+  bool GetFcInt( const _FcPattern* const pattern, const char* const n, int& intVal );
 
   /**
    * @brief Creates a font.
@@ -313,17 +318,15 @@ private:
   bool FindFont( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex, FontId& fontId ) const;
 
   /**
-   * @brief Finds in the cahce a pair 'font family, font style'.
+   * @brief Finds in the cahce a cluster 'font family, font style, font width' or 'font family, font weight, font width, font slant'
    * If there is one, it writes the index to the vector with font descriptions in the param @p  validatedFontId.
    *
-   * @param[in] fontFamily The font family name.
-   * @param[in] fontStyle The font style.
+   * @param[in] fontDescription The font to validate.
    * @param[out] validatedFontId The index to the vector with font descriptions.
    *
    * @return @e true if the pair is found.
    */
-  bool FindValidatedFont( const FontFamily& fontFamily,
-                          const FontStyle& fontStyle,
+  bool FindValidatedFont( const FontDescription& fontDescription,
                           FontDescriptionId& validatedFontId );
 
   /**
@@ -343,12 +346,12 @@ private:
   /**
    * @brief Validate a font family and style
    *
-   * @param[in] fontFamily Font Family to validate
-   * @param[in] fontStyle Font Style to validate
+   * @note If the font style is not empty it will be used instead the weight and slant.
+   *
+   * @param[in] fontDescription The font to validate.
    * @param[out] validatedFontId Result of validation
    */
-  void ValidateFont( const FontFamily& fontFamily,
-                     const FontStyle& fontStyle,
+  void ValidateFont( const FontDescription& fontDescription,
                      FontDescriptionId& validatedFontId );
 
   FT_Library mFreeTypeLibrary; ///< A handle to a FreeType library instance.

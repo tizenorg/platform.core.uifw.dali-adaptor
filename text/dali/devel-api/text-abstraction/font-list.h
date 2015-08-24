@@ -19,25 +19,81 @@
  */
 
 // EXTERNAL INCLUDES
-#include <string>
 #include <iostream>
+#include <stdint.h>
+#include <string>
 #include <dali/public-api/common/vector-wrapper.h>
+
 
 namespace Dali
 {
 
 namespace TextAbstraction
 {
-
 typedef std::string FontPath;
 typedef std::string FontFamily;
 typedef std::string FontStyle;
 
+namespace FontWidth
+{
+  enum Type
+  {
+    ULTRA_CONDENSED,
+    EXTRA_CONDENSED,
+    CONDENSED,
+    SEMI_CONDENSED,
+    NORMAL,
+    SEMI_EXPANDED,
+    EXPANDED,
+    EXTRA_EXPANDED,
+    ULTRA_EXPANDED,
+  };
+} // namespace FontWidth
+
+namespace FontWeight
+{
+  enum Type
+  {
+    THIN,
+    ULTRA_LIGHT,
+    EXTRA_LIGHT = ULTRA_LIGHT,
+    LIGHT,
+    DEMI_LIGHT,
+    SEMI_LIGHT = DEMI_LIGHT,
+    BOOK,
+    NORMAL,
+    REGULAR = NORMAL,
+    MEDIUM,
+    DEMI_BOLD,
+    SEMI_BOLD = DEMI_BOLD,
+    BOLD,
+    ULTRA_BOLD,
+    EXTRA_BOLD = ULTRA_BOLD,
+    BLACK,
+    HEAVY = BLACK,
+    EXTRA_BLACK = BLACK
+  };
+}
+
+namespace FontSlant
+{
+  enum Type
+  {
+    NORMAL,
+    ROMAN = NORMAL,
+    ITALIC,
+    OBLIQUE
+  };
+} // namespace FontSlant
+
 struct FontDescription
 {
-  FontPath   path;
-  FontFamily family;
-  FontStyle  style;
+  FontPath         path;
+  FontFamily       family;
+  FontStyle        style;
+  FontWidth::Type  width;
+  FontWeight::Type weight;
+  FontSlant::Type  slant;
 };
 
 typedef std::vector<FontDescription> FontList;
