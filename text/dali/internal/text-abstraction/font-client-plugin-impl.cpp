@@ -53,11 +53,9 @@ namespace Internal
 
 const bool FONT_FIXED_SIZE_BITMAP( true );
 
-FontClient::Plugin::FontDescriptionCacheItem::FontDescriptionCacheItem( const FontFamily& fontFamily,
-                                                                        const FontStyle& fontStyle,
+FontClient::Plugin::FontDescriptionCacheItem::FontDescriptionCacheItem( const FontDescription& fontDescription,
                                                                         FontDescriptionId index )
-: fontFamily( fontFamily ),
-  fontStyle( fontStyle ),
+: fontDescription( fontDescription ),
   index( index )
 {
 }
@@ -137,13 +135,11 @@ void FontClient::Plugin::SetDpi( unsigned int horizontalDpi,
   mDpiVertical = verticalDpi;
 }
 
-void FontClient::Plugin::SetDefaultFontFamily( const FontFamily& fontFamilyName,
-                                               const FontStyle& fontStyle )
+void FontClient::Plugin::SetDefaultFont( const FontDescription& fontDescription )
 {
   mDefaultFonts.clear();
 
-  FcPattern* fontFamilyPattern = CreateFontFamilyPattern( fontFamilyName,
-                                                          fontStyle );
+  FcPattern* fontFamilyPattern = CreateFontFamilyPattern( fontDescription );
 
   FcResult result = FcResultMatch;
 
@@ -169,12 +165,19 @@ void FontClient::Plugin::SetDefaultFontFamily( const FontFamily& fontFamilyName,
       if( GetFcString( fontPattern, FC_FILE, path ) )
       {
         mDefaultFonts.push_back( FontDescription() );
-        FontDescription& fontDescription = mDefaultFonts.back();
+        FontDescription& newFontDescription = mDefaultFonts.back();
 
-        fontDescription.path = path;
+        newFontDescription.path = path;
 
-        GetFcString( fontPattern, FC_FAMILY, fontDescription.family );
-        GetFcString( fontPattern, FC_STYLE, fontDescription.style );
+        int width = 0;
+        int weight = 0;
+        GetFcString( fontPattern, FC_FAMILY, newFontDescription.family );
+        GetFcString( fontPattern, FC_STYLE, newFontDescription.style );
+        GetFcInt( fontPattern, FC_WIDTH, width );
+        GetFcInt( fontPattern, FC_WEIGHT, weight );
+        GetFcBool( fontPattern, FC_SLANT, newFontDescription.slant );
+        newFontDescription.width = width;
+        newFontDescription.weight = weight;
       }
     }
 
@@ -188,8 +191,10 @@ void FontClient::Plugin::GetDefaultFonts( FontList& defaultFonts )
 {
   if( mDefaultFonts.empty() )
   {
-    SetDefaultFontFamily( DEFAULT_FONT_FAMILY_NAME,
-                          DEFAULT_FONT_STYLE );
+    FontDescription fontDescription;
+    fontDescription.family = DEFAULT_FONT_FAMILY_NAME;
+    fontDescription.style = DEFAULT_FONT_STYLE;
+    SetDefaultFont( fontDescription );
   }
 
   defaultFonts = mDefaultFonts;
@@ -252,8 +257,10 @@ FontId FontClient::Plugin::FindDefaultFont( Character charcode,
   // Create the list of default fonts if it has not been created.
   if( mDefaultFonts.empty() )
   {
-    SetDefaultFontFamily( DEFAULT_FONT_FAMILY_NAME,
-                          DEFAULT_FONT_STYLE );
+    FontDescription fontDescription;
+    fontDescription.family = DEFAULT_FONT_FAMILY_NAME;
+    fontDescription.style = DEFAULT_FONT_STYLE;
+    SetDefaultFont( fontDescription );
   }
 
   // Traverse the list of default fonts.
@@ -265,8 +272,7 @@ FontId FontClient::Plugin::FindDefaultFont( Character charcode,
   {
     const FontDescription& description = *it;
 
-    FcPattern* pattern = CreateFontFamilyPattern( description.family,
-                                                  description.style );
+    FcPattern* pattern = CreateFontFamilyPattern( description );
 
     FcResult result = FcResultMatch;
     FcPattern* match = FcFontMatch( NULL /* use default configure */, pattern, &result );
@@ -277,8 +283,7 @@ FontId FontClient::Plugin::FindDefaultFont( Character charcode,
     if( FcCharSetHasChar( charSet, charcode ) )
     {
       Vector< PointSize26Dot6 > fixedSizes;
-      GetFixedSizes( description.family,
-                     description.style,
+      GetFixedSizes( description,
                      fixedSizes );
 
       const Vector< PointSize26Dot6 >::SizeType count = fixedSizes.Count();
@@ -297,8 +302,7 @@ FontId FontClient::Plugin::FindDefaultFont( Character charcode,
         requestedSize = size;
       }
 
-      fontId = GetFontId( description.family,
-                          description.style,
+      fontId = GetFontId( description,
                           requestedSize,
                           0u );
 
@@ -350,11 +354,12 @@ FontId FontClient::Plugin::GetFontId( const FontPath& path,
   return id;
 }
 
-FontId FontClient::Plugin::GetFontId( const FontFamily& fontFamily,
-                                      const FontStyle& fontStyle,
+FontId FontClient::Plugin::GetFontId( const FontDescription& fontDescription,
                                       PointSize26Dot6 pointSize,
                                       FaceIndex faceIndex )
 {
+std::cout << "-->FontClient::Plugin::GetFontId" << std::endl;
+std::cout << "  fontDescription : Font path: [" << fontDescription.path << "] family: [" << fontDescription.family << "] style: [" << fontDescription.style << "] width : [" << fontDescription.width << "] weight : [" << fontDescription.weight << "] slant : [" << fontDescription.slant << "]" << std::endl;
   // This method uses three vectors which caches:
   // * Pairs of non validated 'fontFamily, fontStyle' and an index to a vector with paths to font file names.
   // * The path to font file names.
@@ -376,12 +381,12 @@ FontId FontClient::Plugin::GetFontId( const FontFamily& fontFamily,
   // Check first if the pair font family and style have been validated before.
   FontDescriptionId validatedFontId = 0u;
 
-  if( !FindValidatedFont( fontFamily,
-                          fontStyle,
+  if( !FindValidatedFont( fontDescription,
                           validatedFontId ) )
   {
     // Use font config to validate the font family name and font style.
-    ValidateFont( fontFamily, fontStyle, validatedFontId );
+    ValidateFont( fontDescription,
+                  validatedFontId );
   }
 
   // Check if exists a pair 'validatedFontId, pointSize' in the cache.
@@ -402,16 +407,17 @@ FontId FontClient::Plugin::GetFontId( const FontFamily& fontFamily,
                                              fontId ) );
   }
 
+std::cout << "  fontId : " << fontId << std::endl;
+std::cout << "<--FontClient::Plugin::GetFontId" << std::endl;
   return fontId;
 }
 
-void FontClient::Plugin::ValidateFont( const FontFamily& fontFamily,
-                                       const FontStyle& fontStyle,
+void FontClient::Plugin::ValidateFont( const FontDescription& fontDescription,
                                        FontDescriptionId& validatedFontId )
 {
+std::cout << "-->FontClient::Plugin::ValidateFont" << std::endl;
   // Create a font pattern.
-  FcPattern* fontFamilyPattern = CreateFontFamilyPattern( fontFamily,
-                                                            fontStyle );
+  FcPattern* fontFamilyPattern = CreateFontFamilyPattern( fontDescription );
 
   FcResult result = FcResultMatch;
 
@@ -425,6 +431,10 @@ void FontClient::Plugin::ValidateFont( const FontFamily& fontFamily,
     GetFcString( match, FC_FILE, description.path );
     GetFcString( match, FC_FAMILY, description.family );
     GetFcString( match, FC_STYLE, description.style );
+    GetFcInt( match, FC_WIDTH, reinterpret_cast<int&>( description.width ) );
+    GetFcInt( match, FC_WEIGHT, reinterpret_cast<int&>( description.weight ) );
+    GetFcBool( match, FC_SLANT, description.slant );
+std::cout << "  description : Font path: [" << description.path << "] family: [" << description.family << "] style: [" << description.style << "] width : [" << description.width << "] weight : [" << description.weight << "] slant : [" << description.slant << "]" << std::endl;
 
     // Set the index to the vector of paths to font file names.
     validatedFontId = mFontDescriptionCache.size();
@@ -433,7 +443,9 @@ void FontClient::Plugin::ValidateFont( const FontFamily& fontFamily,
     mFontDescriptionCache.push_back( description );
 
     // Cache the index and the pair font family name, font style.
-    FontDescriptionCacheItem item( fontFamily, fontStyle, validatedFontId );
+    FontDescriptionCacheItem item( description,
+                                   validatedFontId );
+
     mValidatedFontCache.push_back( item );
 
     // destroyed the matched pattern
@@ -441,11 +453,14 @@ void FontClient::Plugin::ValidateFont( const FontFamily& fontFamily,
   }
   else
   {
-    DALI_LOG_ERROR( "FontClient::Plugin::ValidateFont failed for font %s %s\n", fontFamily.c_str(), fontStyle.c_str() );
+    DALI_LOG_ERROR( "FontClient::Plugin::ValidateFont failed for font %s %s\n",
+                    fontDescription.family.c_str(),
+                    fontDescription.style.c_str() );
   }
 
   // destroy the pattern
   FcPatternDestroy( fontFamilyPattern );
+std::cout << "<--FontClient::Plugin::ValidateFont" << std::endl;
 }
 
 
@@ -673,6 +688,9 @@ void FontClient::Plugin::InitSystemFonts()
 
         GetFcString( fontPattern, FC_FAMILY, fontDescription.family );
         GetFcString( fontPattern, FC_STYLE, fontDescription.style );
+        GetFcInt( fontPattern, FC_WIDTH, reinterpret_cast<int&>( fontDescription.width ) );
+        GetFcInt( fontPattern, FC_WEIGHT, reinterpret_cast<int&>( fontDescription.weight ) );
+        GetFcBool( fontPattern, FC_SLANT, fontDescription.slant );
       }
     }
 
@@ -680,18 +698,30 @@ void FontClient::Plugin::InitSystemFonts()
   }
 }
 
-FcPattern* FontClient::Plugin::CreateFontFamilyPattern( const FontFamily& fontFamily,
-                                                        const FontStyle& fontStyle )
+FcPattern* FontClient::Plugin::CreateFontFamilyPattern( const FontDescription& fontDescription )
 {
+std::cout << "-->FontClient::Plugin::CreateFontFamilyPattern" << std::endl;
   // create the cached font family lookup pattern
   // a pattern holds a set of names, each name refers to a property of the font
   FcPattern* fontFamilyPattern = FcPatternCreate();
 
   // add a property to the pattern for the font family
-  FcPatternAddString( fontFamilyPattern, FC_FAMILY, reinterpret_cast<const FcChar8*>( fontFamily.c_str() ) );
+  FcPatternAddString( fontFamilyPattern, FC_FAMILY, reinterpret_cast<const FcChar8*>( fontDescription.family.c_str() ) );
 
-  // add a property to the pattern for the font family
-  FcPatternAddString( fontFamilyPattern, FC_STYLE, reinterpret_cast<const FcChar8*>( fontStyle.c_str() ) );
+  if( !fontDescription.style.empty() )
+  {
+std::cout << "  using style and width" << std::endl;
+    // add a property to the pattern for the font family
+    FcPatternAddString( fontFamilyPattern, FC_STYLE, reinterpret_cast<const FcChar8*>( fontDescription.style.c_str() ) );
+    FcPatternAddInteger( fontFamilyPattern, FC_WIDTH, fontDescription.width );
+  }
+  else
+  {
+std::cout << "  using width, weight and slant" << std::endl;
+    FcPatternAddInteger( fontFamilyPattern, FC_WIDTH, fontDescription.width );
+    FcPatternAddInteger( fontFamilyPattern, FC_WEIGHT, fontDescription.weight );
+    FcPatternAddBool( fontFamilyPattern, FC_SLANT, fontDescription.slant );
+  }
 
   // Add a property of the pattern, to say we want to match TrueType fonts
   FcPatternAddString( fontFamilyPattern , FC_FONTFORMAT, reinterpret_cast<const FcChar8*>( FONT_FORMAT.c_str() ) );
@@ -703,6 +733,7 @@ FcPattern* FontClient::Plugin::CreateFontFamilyPattern( const FontFamily& fontFa
   // e.g. patterns without a specified style or weight are set to Medium
   FcDefaultSubstitute( fontFamilyPattern );
 
+std::cout << "<--FontClient::Plugin::CreateFontFamilyPattern" << std::endl;
   return fontFamilyPattern;
 }
 
@@ -750,6 +781,33 @@ bool FontClient::Plugin::GetFcString( const FcPattern* const pattern,
     // Have to use reinterpret_cast because FcChar8 is unsigned char*, not a const char*.
     string.assign( reinterpret_cast<const char*>( file ) );
 
+    return true;
+  }
+
+  return false;
+}
+
+bool FontClient::Plugin::GetFcInt( const _FcPattern* const pattern, const char* const n, int& intVal )
+{
+  const FcResult retVal = FcPatternGetInteger( pattern, n, 0u, &intVal );
+
+  if( FcResultMatch == retVal )
+  {
+    return true;
+  }
+
+  return false;
+}
+
+bool FontClient::Plugin::GetFcBool( const _FcPattern* const pattern, const char* const n, bool& boolVal )
+{
+  FcBool boolean;
+  const FcResult retVal = FcPatternGetBool( pattern, n, 0u, &boolean );
+
+  boolVal = 0 != boolean;
+
+  if( FcResultMatch == retVal )
+  {
     return true;
   }
 
@@ -954,8 +1012,7 @@ bool FontClient::Plugin::FindFont( const FontPath& path,
   return false;
 }
 
-bool FontClient::Plugin::FindValidatedFont( const FontFamily& fontFamily,
-                                            const FontStyle& fontStyle,
+bool FontClient::Plugin::FindValidatedFont( const FontDescription& fontDescription,
                                             FontDescriptionId& validatedFontId )
 {
   validatedFontId = 0u;
@@ -967,8 +1024,8 @@ bool FontClient::Plugin::FindValidatedFont( const FontFamily& fontFamily,
   {
     const FontDescriptionCacheItem& item = *it;
 
-    if( ( fontFamily == item.fontFamily ) &&
-        ( fontStyle == item.fontStyle ) )
+    if( ( fontDescription.family == item.fontDescription.family ) &&
+        ( fontDescription.style == item.fontDescription.style ) )
     {
       validatedFontId = item.index;
 
@@ -1017,11 +1074,10 @@ bool FontClient::Plugin::IsScalable( const FontPath& path )
   return ( ftFace->num_fixed_sizes == 0 );
 }
 
-bool FontClient::Plugin::IsScalable( const FontFamily& fontFamily, const FontStyle& fontStyle )
+bool FontClient::Plugin::IsScalable( const FontDescription& fontDescription )
 {
   // Create a font pattern.
-  FcPattern* fontFamilyPattern = CreateFontFamilyPattern( fontFamily,
-                                                          fontStyle );
+  FcPattern* fontFamilyPattern = CreateFontFamilyPattern( fontDescription );
 
   FcResult result = FcResultMatch;
 
@@ -1038,7 +1094,7 @@ bool FontClient::Plugin::IsScalable( const FontFamily& fontFamily, const FontSty
   }
   else
   {
-    DALI_LOG_ERROR( "FreeType Cannot check font: %s %s\n", fontFamily.c_str(), fontStyle.c_str() );
+    DALI_LOG_ERROR( "FreeType Cannot check font: %s %s\n", fontDescription.family.c_str(), fontDescription.style.c_str() );
   }
   FcPatternDestroy( fontFamilyPattern );
   FcPatternDestroy( match );
@@ -1070,13 +1126,11 @@ void FontClient::Plugin::GetFixedSizes( const FontPath& path, Vector< PointSize2
   }
 }
 
-void FontClient::Plugin::GetFixedSizes( const FontFamily& fontFamily,
-                                        const FontStyle& fontStyle,
+void FontClient::Plugin::GetFixedSizes( const FontDescription& fontDescription,
                                         Vector< PointSize26Dot6 >& sizes )
 {
   // Create a font pattern.
-  FcPattern* fontFamilyPattern = CreateFontFamilyPattern( fontFamily,
-                                                          fontStyle );
+  FcPattern* fontFamilyPattern = CreateFontFamilyPattern( fontDescription );
 
   FcResult result = FcResultMatch;
 
@@ -1092,7 +1146,7 @@ void FontClient::Plugin::GetFixedSizes( const FontFamily& fontFamily,
   }
   else
   {
-    DALI_LOG_ERROR( "FreeType Cannot check font: %s %s\n", fontFamily.c_str(), fontStyle.c_str() );
+    DALI_LOG_ERROR( "FreeType Cannot check font: %s %s\n", fontDescription.family.c_str(), fontDescription.style.c_str() );
   }
   FcPatternDestroy( match );
   FcPatternDestroy( fontFamilyPattern );
