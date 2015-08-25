@@ -21,6 +21,7 @@
 #include <vconf.h>
 #endif // DALI_PROFILE_UBUNTU
 #include <dirent.h>
+#include <iostream>
 
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/bitmap.h>
@@ -88,6 +89,8 @@ void TizenPlatformAbstraction::Resume()
 void TizenPlatformAbstraction::GetDefaultFontDescription( std::string& fontFamily, std::string& fontStyle ) const
 {
   FontConfigurationParser::Parse(FONT_CONFIGURATION_FILE, fontFamily, fontStyle);
+  std::cout << "TizenPlatformAbstraction::GetDefaultFontDescription:" << fontFamily << std::endl;
+  //fontFamily = "Choco cooky"; todo Uncommenting this shows the path to Toolkit is working.
 }
 
 int TizenPlatformAbstraction::GetDefaultFontSize() const
