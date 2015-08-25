@@ -373,6 +373,8 @@ struct EventHandler::Impl
 
             // SelectXi2Event
             xiEventMask.mask = (unsigned char*)(calloc( 1, XIMaskLen( XI_LASTEVENT ) ) );
+            DALI_ASSERT_ALWAYS( xiEventMask.mask != NULL );
+
             XISetMask( xiEventMask.mask, XI_RawMotion );
 
             xiEventMask.mask_len = sizeof( xiEventMask.mask );
