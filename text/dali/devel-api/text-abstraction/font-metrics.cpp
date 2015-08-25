@@ -37,12 +37,14 @@ FontMetrics::FontMetrics( float ascenderPixels,
                           float descenderPixels,
                           float heightPixels,
                           float underlinePositionPixels,
-                          float underlineThicknessPixels )
+                          float underlineThicknessPixels,
+                          bool  isFixedSize )
 : ascender( ascenderPixels ),
   descender( descenderPixels ),
   height( heightPixels ),
   underlinePosition( underlinePositionPixels ),
-  underlineThickness( underlineThicknessPixels )
+  underlineThickness( underlineThicknessPixels ),
+  isFixedSize( isFixedSize )
 {
 }
 

@@ -796,7 +796,8 @@ FontId FontClient::Plugin::CreateFont( const FontPath& path,
                                  0.0f,
                                  fixedHeight,
                                  0.0f,
-                                 0.0f );
+                                 0.0f,
+                                 true/*isFixedSize*/ );
 
             mFontCache.push_back( CacheItem( ftFace, path, pointSize, faceIndex, metrics, fixedWidth, fixedHeight ) );
             id = mFontCache.size();
