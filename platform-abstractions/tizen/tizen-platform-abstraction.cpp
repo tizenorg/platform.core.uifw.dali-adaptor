@@ -21,6 +21,7 @@
 #include <vconf.h>
 #endif // DALI_PROFILE_UBUNTU
 #include <dirent.h>
+#include <iostream>
 
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/bitmap.h>
@@ -46,8 +47,8 @@ namespace TizenPlatform
 
 namespace
 {
-const std::string FONT_CONFIGURATION_FILE( FONT_CONFIGURATION_FILE_PATH ); ///< Default font configuration file
-const unsigned int NANOSECS_TO_MICROSECS( 1000 );                          ///< 1000 nanoseconds = 1 microsecond
+const std::string FONT_CONFIG_FILE ( FONT_CONFIGURATION_FILE ); ///< Default font configuration file
+const unsigned int NANOSECS_TO_MICROSECS( 1000 );               ///< 1000 nanoseconds = 1 microsecond
 }
 
 TizenPlatformAbstraction::TizenPlatformAbstraction()
@@ -87,7 +88,7 @@ void TizenPlatformAbstraction::Resume()
 
 void TizenPlatformAbstraction::GetDefaultFontDescription( std::string& fontFamily, std::string& fontStyle ) const
 {
-  FontConfigurationParser::Parse(FONT_CONFIGURATION_FILE, fontFamily, fontStyle);
+  FontConfigurationParser::Parse(FONT_CONFIG_FILE, fontFamily, fontStyle);
 }
 
 int TizenPlatformAbstraction::GetDefaultFontSize() const

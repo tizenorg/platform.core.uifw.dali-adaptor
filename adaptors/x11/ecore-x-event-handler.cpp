@@ -28,6 +28,7 @@
 #include <X11/extensions/XI2.h>
 
 #include <cstring>
+#include <iostream>
 
 #include <sys/time.h>
 
@@ -1656,6 +1657,7 @@ struct EventHandler::Impl
   static void VconfNotifyFontNameChanged( keynode_t* node, void* data )
   {
     EventHandler* handler = static_cast<EventHandler*>( data );
+    std::cout << "EventHandler VconfNotifyFontNameChanged" << std::endl;
     handler->SendEvent( StyleChange::DEFAULT_FONT_CHANGE );
   }
 
