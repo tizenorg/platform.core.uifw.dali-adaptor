@@ -372,10 +372,13 @@ struct EventHandler::Impl
             mXiDeviceId = xiEventMask.deviceid;
 
             // SelectXi2Event
-            xiEventMask.mask = (unsigned char*)(calloc( 1, XIMaskLen( XI_LASTEVENT ) ) );
+            Dali::Vector< unsigned char > mask;
+            mask.Reserve( XIMaskLen( XI_LASTEVENT ) );
+            xiEventMask.mask = mask.Begin();
+
             XISetMask( xiEventMask.mask, XI_RawMotion );
 
-            xiEventMask.mask_len = sizeof( xiEventMask.mask );
+            xiEventMask.mask_len = XIMaskLen( XI_LASTEVENT) * sizeof( unsigned char );
 
             int ret = XISelectEvents( display, rootWindow, &xiEventMask, 1 );
             if( ret == 0 )
@@ -387,8 +390,6 @@ struct EventHandler::Impl
             {
               DALI_LOG_INFO( gImfLogging, Debug::General, "Failed to Select Events\n" );
             }
-
-            free( xiEventMask.mask );
           }
 
           if( deviceInfo != NULL )
