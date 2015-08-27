@@ -641,6 +641,11 @@ BufferImage FontClient::Plugin::CreateBitmap( FontId fontId,
     }
   }
 
+  // If a buffer image has been created then update
+  if ( bitmap )
+  {
+    bitmap.Update();
+  }
   return bitmap;
 }
 
