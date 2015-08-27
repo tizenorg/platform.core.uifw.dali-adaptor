@@ -21,6 +21,7 @@
 // EXTERNAL INCLUDES
 
 // INTERNAL INCLUDES
+#include <integration-api/thread-synchronization-interface.h>
 #include <base/interfaces/performance-interface.h>
 #include <base/conditional-wait.h>
 #include <trigger-event-interface.h>
@@ -47,7 +48,7 @@ class AdaptorInternalServices;
  * However the Core::Update() for frame N+2 may not be called, until the Core::Render() method for frame N has returned.
  *
  */
-class ThreadSynchronization
+class ThreadSynchronization : public Dali::ThreadSynchronizationInterface
 {
 public:
 
@@ -200,6 +201,35 @@ public:
    * @note The first call to this method should be BEFORE the actual VSync so a thread-sync point can be established (and startup time is not delayed).
    */
   bool VSyncReady( bool validSync, unsigned int frameNumber, unsigned int seconds, unsigned int microseconds, unsigned int& numberOfVSyncsPerRender );
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  // Called by the RenderSurface on the Event Thread
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * @brief Inform the service that the surface has been rendered.
+   *
+   * @note Should only be called by the render-surface on the Event Thread.
+   */
+  void SurfaceRendered();
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  // Called by the RenderSurface on the Render Thread
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * @brief Called just before the render-surface renders our surface.
+   *
+   * @note Should only be called by the render-surface on the Render Thread.
+   */
+  void RenderPreSurfaceRender();
+
+  /**
+   * @brief Blocks the render thread until the surface has been rendered.
+   *
+   * @note Should only be called by the render-surface on the Render Thread.
+   */
+  void RenderWaitForSurfaceRender();
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // Called by ALL Threads
@@ -382,6 +412,8 @@ private:
 
   volatile unsigned int mRenderThreadStop;            ///< Whether the render-thread should be stopped (set by the update-thread, read by the render-thread).
   volatile unsigned int mRenderThreadReplacingSurface;///< Whether the render-thread should replace the surface (set by the event & render threads, read by the render-thread).
+
+  volatile unsigned int mRenderThreadSurfaceRendered; ///< Whether the render-surface has rendered our surface (set by the event & render threads, read by the render-thread).
 
   volatile unsigned int mEventThreadSurfaceReplaced;  ///< Checked by the event-thread & set by the render-thread when the surface has been replaced (set by the event & render threads, read by the event-thread).
 
