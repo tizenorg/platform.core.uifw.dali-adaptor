@@ -21,6 +21,7 @@
 // EXTERNAL INCLUDES
 #include <Ecore.h>
 #include <Evas.h>
+#include <Ecore_X.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -241,6 +242,62 @@ namespace Adaptor
 Debug::Filter* gIndicatorLogFilter = Debug::Filter::New(Debug::Concise, false, "LOG_INDICATOR");
 #endif
 
+// Impl to hide EFL implementation.
+struct Indicator::Impl
+{
+  // Construction & Destruction
+
+  /**
+   * Constructor
+   */
+  Impl(Indicator* indicator)
+  : mIndicator(indicator),
+    mEcoreEventHandler(NULL)
+  {
+    // Register Client message events for quick panel state.
+    mEcoreEventHandler = ecore_event_handler_add(ECORE_X_EVENT_CLIENT_MESSAGE,  EcoreEventClientMessage, this);
+  }
+
+  /**
+   * Destructor
+   */
+  ~Impl()
+  {
+    ecore_event_handler_del(mEcoreEventHandler);
+  }
+
+  /**
+   * Called when the client messages (i.e. quick panel state) are received.
+   */
+  static Eina_Bool EcoreEventClientMessage( void* data, int type, void* event )
+  {
+    Ecore_X_Event_Client_Message* clientMessageEvent((Ecore_X_Event_Client_Message*)event);
+    Indicator::Impl* indicatorImpl((Indicator::Impl*)data);
+
+    if (clientMessageEvent == NULL || indicatorImpl == NULL || indicatorImpl->mIndicator == NULL)
+    {
+      return ECORE_CALLBACK_PASS_ON;
+    }
+
+#ifndef DALI_PROFILE_UBUNTU
+    if (clientMessageEvent->message_type == ECORE_X_ATOM_E_INDICATOR_FLICK_DONE)
+    {
+      // if indicator is not showing, INDICATOR_FLICK_DONE is given
+      if( indicatorImpl->mIndicator->mVisible == Dali::Window::AUTO &&
+          !indicatorImpl->mIndicator->mIsShowing )
+      {
+        indicatorImpl->mIndicator->ShowIndicator( AUTO_INDICATOR_STAY_DURATION );
+      }
+    }
+#endif
+
+    return ECORE_CALLBACK_PASS_ON;
+  }
+
+  // Data
+  Indicator*           mIndicator;
+  Ecore_Event_Handler* mEcoreEventHandler;
+};
 
 Indicator::LockFile::LockFile(const std::string filename)
 : mFilename(filename),
@@ -347,7 +404,8 @@ Indicator::Indicator( Adaptor* adaptor, Dali::Window::WindowOrientation orientat
   mVisible( Dali::Window::INVISIBLE ),
   mIsShowing( true ),
   mIsAnimationPlaying( false ),
-  mCurrentSharedFile( 0 )
+  mCurrentSharedFile( 0 ),
+  mImpl( NULL )
 {
   mIndicatorImageActor = Dali::ImageActor::New();
   mIndicatorImageActor.SetBlendFunc( Dali::BlendingFactor::ONE, Dali::BlendingFactor::ONE_MINUS_SRC_ALPHA,
@@ -403,10 +461,19 @@ Indicator::Indicator( Adaptor* adaptor, Dali::Window::WindowOrientation orientat
   }
   // hide the indicator by default
   mIndicatorActor.SetVisible( false );
+
+  // create impl to handle ecore event
+  mImpl = new Impl(this);
 }
 
 Indicator::~Indicator()
 {
+  if(mImpl)
+  {
+    delete mImpl;
+    mImpl = NULL;
+  }
+
   if(mEventActor)
   {
     mEventActor.TouchedSignal().Disconnect( this, &Indicator::OnTouched );

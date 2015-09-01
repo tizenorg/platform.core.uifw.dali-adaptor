@@ -463,6 +463,9 @@ private:
 
   int                              mCurrentSharedFile;   ///< Current shared file number
   SharedFileInfo                   mSharedFileInfo[SHARED_FILE_NUMBER];    ///< Table to store shared file info
+
+  struct Impl; ///< Contains Ecore specific information
+  Impl* mImpl; ///< Created on construction and destroyed on destruction.
 };
 
 } // Adaptor
