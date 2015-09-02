@@ -633,7 +633,7 @@ void ThreadSynchronization::PostRenderWaitForCompletion()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-// ALL THREADS: Performance Marker
+// ALL THREADS: Performance Marker and GetPerformanceInterface
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 void ThreadSynchronization::AddPerformanceMarker( PerformanceInterface::MarkerType type )
@@ -642,6 +642,10 @@ void ThreadSynchronization::AddPerformanceMarker( PerformanceInterface::MarkerTy
   {
     mPerformanceInterface->AddMarker( type );
   }
+}
+PerformanceInterface* ThreadSynchronization::GetPerformanceInterface()
+{
+  return mPerformanceInterface;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

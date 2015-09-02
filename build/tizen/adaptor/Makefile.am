@@ -42,8 +42,15 @@ include ../../../adaptors/common/file.list
 
 # Wayland
 if WAYLAND
+if USE_EFL
+## Use ecore_wayland
 adaptor_wayland_dir = ../../../adaptors/wayland
 include ../../../adaptors/wayland/file.list
+else
+## Use pure wayland 
+adaptor_pure_wayland_dir = ../../../adaptors/pure-wayland
+include ../../../adaptors/pure-wayland/file.list
+endif
 else
 # X11
 adaptor_x11_dir = ../../../adaptors/x11
@@ -89,17 +96,28 @@ include ../../../doc/file.list
 
 ############# source files #############
 
+# FRAMEWORK FILES for adaptor 
+# Either use ecore / appcore / uiman
+# Or libuv 
+if USE_EFL
+adaptor_internal_src_files = $(adaptor_tizen_framework_efl_src_files)
+else
+adaptor_internal_src_files = $(adaptor_tizen_framework_libuv_src_files)
+endif
+
 # COMMON
 if COMMON_PROFILE
 
-adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
+adaptor_internal_src_files += $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_default_profile_src_files) \
                              $(adaptor_tizen_internal_src_files) \
                              $(static_libraries_libunibreak_src_files)
-
 if WAYLAND
-adaptor_internal_src_files += $(adaptor_wayland_tizen_internal_src_files) \
-                              $(adaptor_wayland_internal_default_profile_src_files)
+if USE_ECORE_WAYLAND
+adaptor_internal_src_files += $(adaptor_ecore_wayland_tizen_internal_src_files)
+else
+adaptor_internal_src_files += $(adaptor_pure_wayland_tizen_internal_src_files)
+endif
 else
 adaptor_internal_src_files += $(adaptor_x11_tizen_internal_src_files) \
                               $(adaptor_x11_internal_default_profile_src_files)
@@ -110,7 +128,7 @@ endif # COMMON_PROFILE
 # UBUNTU
 if UBUNTU_PROFILE
 
-adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
+adaptor_internal_src_files += $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_default_profile_src_files) \
                              $(adaptor_ubuntu_internal_src_files) \
                              $(adaptor_x11_ubuntu_internal_src_files) \
@@ -123,49 +141,59 @@ endif # UBUNTU_PROFILE
 # MOBILE
 if MOBILE_PROFILE
 
-adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
+adaptor_internal_src_files += $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_mobile_profile_src_files) \
                              $(adaptor_tizen_internal_src_files) \
                              $(static_libraries_libunibreak_src_files)
-
 if WAYLAND
-adaptor_internal_src_files += $(adaptor_wayland_tizen_internal_src_files)
+if USE_ECORE_WAYLAND
+adaptor_internal_src_files += $(adaptor_ecore_wayland_tizen_internal_src_files)
+else
+adaptor_internal_src_files += $(adaptor_pure_wayland_tizen_internal_src_files)
+endif
 else
 adaptor_internal_src_files += $(adaptor_x11_tizen_internal_src_files)
 endif # WAYLAND
-
 endif # MOBILE_PROFILE
 
 # WEARABLE
 if WEARABLE_PROFILE
 
-adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
+adaptor_internal_src_files += $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_mobile_profile_src_files) \
                              $(adaptor_tizen_internal_src_files) \
                              $(static_libraries_libunibreak_src_files)
 if WAYLAND
-adaptor_internal_src_files += $(adaptor_wayland_tizen_internal_src_files)
+if USE_ECORE_WAYLAND
+adaptor_internal_src_files += $(adaptor_ecore_wayland_tizen_internal_src_files)
+else
+adaptor_internal_src_files += $(adaptor_pure_wayland_tizen_internal_src_files)
+endif
 else
 adaptor_internal_src_files += $(adaptor_x11_tizen_internal_src_files)
 endif # WAYLAND
-
 endif # WEARABLE
 
 
 # TV
 if TV_PROFILE
 
-adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
-                             $(adaptor_common_internal_tv_profile_src_files) \
+adaptor_internal_src_files += $(adaptor_common_internal_src_files) \
+                             $(adaptor_common_internal_default_profile_src_files) \
                              $(adaptor_tizen_internal_src_files) \
-                             $(static_libraries_libunibreak_src_files)
+                             $(static_libraries_libunibreak_src_files) \
+                             $(adaptor_common_internal_profile_src_files)
+                           
 if WAYLAND
-adaptor_internal_src_files += $(adaptor_wayland_tizen_internal_src_files)
+if USE_ECORE_WAYLAND
+adaptor_internal_src_files += $(adaptor_ecore_wayland_tizen_internal_src_files)
+else
+adaptor_internal_src_files += $(adaptor_pure_wayland_tizen_internal_src_files)
+endif
 else
 adaptor_internal_src_files += $(adaptor_x11_tv_internal_src_files) \
                              $(adaptor_x11_internal_tv_profile_key_src_files)
 endif # WAYLAND
-
 endif
 
 # Node JS support for using an external libuv main loop. If not enabled then just use e-core as normal
@@ -221,9 +249,17 @@ libdali_adaptor_la_includes = \
                       -I../../../text/dali/internal/libunibreak
 
 if WAYLAND
-libdali_adaptor_la_includes += \
-                      -I../../../adaptors/wayland \
-                      -I../../../adaptors/integration-api/wayland
+libdali_adaptor_la_includes += -I../../../adaptors/integration-api/wayland
+
+if USE_ECORE_WAYLAND
+libdali_adaptor_la_includes += -I../../../adaptors/wayland 
+else
+libdali_adaptor_la_includes += -I../../../adaptors/pure-wayland 
+libdali_adaptor_la_includes += -I../../../adaptors/pure-wayland/imf 
+libdali_adaptor_la_includes += -I../../../adaptors/pure-wayland/clipboard 
+libdali_adaptor_la_includes += -I../../../adaptors/pure-wayland/native-image
+
+endif
 else
 libdali_adaptor_la_includes += \
                       -I../../../adaptors/x11 \
@@ -262,23 +298,14 @@ libdali_adaptor_la_CXXFLAGS = \
                       $(FREETYPE_CFLAGS) \
                       $(FONTCONFIG_CFLAGS) \
                       $(PNG_CFLAGS) \
-                      $(CAPI_APPFW_APPLICATION_CFLAGS) \
-                      $(CAPI_SYSTEM_INFO_CFLAGS) \
-                      $(ELEMENTARY_CFLAGS) \
-                      $(EVAS_CFLAGS) \
-                      $(ECORE_CFLAGS) \
-                      $(ECORE_IPC_CFLAGS) \
                       $(DLOG_CFLAGS) \
                       $(VCONF_CFLAGS) \
                       $(EXIF_CFLAGS) \
                       $(MMFSOUND_CFLAGS) \
                       $(TTS_CFLAGS) \
-                      $(SENSOR_CFLAGS) \
                       $(LIBDRM_CFLAGS) \
                       $(LIBEXIF_CFLAGS) \
-                      $(LIBCURL_CFLAGS) \
-                      $(CAPI_SYSTEM_SYSTEM_SETTINGS_CFLAGS) \
-                      $(ELDBUS_CFLAGS)
+                      $(LIBCURL_CFLAGS)
 
 libdali_adaptor_la_CFLAGS = $(libdali_adaptor_la_CXXFLAGS)
 
@@ -288,27 +315,52 @@ libdali_adaptor_la_LIBADD = \
                       $(FREETYPE_LIBS) \
                       $(FONTCONFIG_LIBS) \
                       $(PNG_LIBS) \
-                      $(ELEMENTARY_LIBS) \
-                      $(ECORE_IPC_LIBS) \
                       $(DLOG_LIBS) \
                       $(VCONF_LIBS) \
                       $(EXIF_LIBS) \
                       $(TTS_LIBS) \
-                      $(SENSOR_LIBS) \
                       $(LIBDRM_LIBS) \
                       $(LIBEXIF_LIBS) \
                       $(LIBCURL_LIBS) \
-                      $(CAPI_SYSTEM_SYSTEM_SETTINGS_LIBS) \
-                      $(CAPI_APPFW_APPLICATION_LIBS) \
                       $(HARFBUZZ_LIBS) \
-                      $(CAPI_SYSTEM_INFO_LIBS) \
-                      $(ELDBUS_LIBS) \
                       -lgif \
                       -lpthread \
-                      -lturbojpeg
+                      -lturbojpeg \
+                      -ljpeg
 
+if USE_EFL
+# EVAS used indicator
+libdali_adaptor_la_CXXFLAGS += $(ELEMENTARY_CFLAGS) \
+                               $(EVAS_CFLAGS) \
+                               $(ECORE_CFLAGS) \
+                               $(ECORE_IPC_CFLAGS) \
+                               $(ELDBUS_CFLAGS) \
+                               -DUSE_EFL
+                               
+                               
+libdali_adaptor_la_LIBADD += $(ELEMENTARY_LIBS) \
+                             $(ECORE_IPC_LIBS) \
+                             $(ELDBUS_LIBS)
+ 
+endif
+
+if USE_APPFW
+
+libdali_adaptor_la_CXXFLAGS += $(CAPI_APPFW_APPLICATION_CFLAGS) \
+                               $(CAPI_SYSTEM_SYSTEM_SETTINGS_CFLAGS) \
+                               $(CAPI_SYSTEM_INFO_CFLAGS) \
+                               $(TTS_CFLAGS) \
+                               $(SENSOR_CFLAGS)
+
+libdali_adaptor_la_LIBADD += $(CAPI_APPFW_APPLICATION_LIBS) \
+                             $(CAPI_SYSTEM_SYSTEM_SETTINGS_LIBS) \
+                             $(CAPI_SYSTEM_INFO_LIBS) \
+                             $(TTS_LIBS) \
+ 	                     $(SENSOR_LIBS)
+
+endif
 if WAYLAND
-libdali_adaptor_la_CXXFLAGS += $(WAYLAND_CFLAGS)
+libdali_adaptor_la_CXXFLAGS += $(WAYLAND_CFLAGS) 
 libdali_adaptor_la_LIBADD += $(WAYLAND_LIBS)
 else
 libdali_adaptor_la_CXXFLAGS += $(X11_CFLAGS)

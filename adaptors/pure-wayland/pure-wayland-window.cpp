@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,38 +15,30 @@
  *
  */
 
-// INTERNAL INCLUDES
-#include <ecore-wl-render-surface.h>
+// CLASS HEADER]
+
+#include "pure-wayland-window.h"
 
 namespace Dali
 {
 
-namespace Internal
+namespace Wayland
 {
 
-namespace Adaptor
+Window::Window()
+:mSurface( NULL ),
+ mShellSurface( NULL ),
+ mXdgSurface( NULL ),
+ mSurfaceId( 0 )
 {
 
-namespace ECore
-{
-
-DALI_EXPORT_API RenderSurface* CreatePixmapSurface(
-  PositionSize       positionSize,
-  Any                surface,
-  Any                display,
-  const std::string& name,
-  bool               isTransparent )
-{
-  return NULL;
 }
 
-} // namespace ECore
+Window::~Window()
+{
+}
 
-} // namespace Adaptor
 
-} // namespace Internal
+} // namespace Wayland
 
 } // namespace Dali
-
-
-

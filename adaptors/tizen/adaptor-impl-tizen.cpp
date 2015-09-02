@@ -19,8 +19,10 @@
 #include <adaptor-impl.h>
 
 // EXTERNAL INCLUDES
+#ifdef USE_EFL
 #ifndef TIZEN_SDK_2_2_COMPATIBILITY
 #include <app.h>
+#endif
 #endif
 
 namespace Dali
@@ -34,8 +36,10 @@ namespace Adaptor
 
 void Adaptor::GetDataStoragePath( std::string& path)
 {
+#ifdef USE_EFL
 #ifdef TIZEN_SDK_2_2_COMPATIBILITY
   path = "";
+
 #else
   char *pathInt = app_get_data_path();
   if ( pathInt )
@@ -47,6 +51,7 @@ void Adaptor::GetDataStoragePath( std::string& path)
   {
     path = "";
   }
+#endif
 #endif
 }
 
