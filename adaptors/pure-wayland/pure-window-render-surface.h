@@ -1,5 +1,5 @@
-#ifndef __DALI_ECORE_X_PIXMAP_RENDER_SURFACE_H__
-#define __DALI_ECORE_X_PIXMAP_RENDER_SURFACE_H__
+#ifndef __DALI_INTERNAL_PURE_WL_WINDOW_RENDER_SURFACE_H__
+#define __DALI_INTERNAL_PURE_WL_WINDOW_RENDER_SURFACE_H__
 
 /*
  * Copyright (c) 2014 Samsung Electronics Co., Ltd.
@@ -19,51 +19,70 @@
  */
 
 // INTERNAL INCLUDES
-#include <ecore-wl-render-surface.h>
+#include <wl-render-surface.h>
+#include <wayland-egl.h>
 
 namespace Dali
 {
 
-namespace ECore
+namespace Wayland
 {
 
 /**
- * Ecore X11 implementation of render surface.
+ * @copydoc Dali::ECore::EcoreWlRenderSurface.
+ * Window specialization.
  */
-class PixmapRenderSurface : public EcoreWlRenderSurface
+class WindowRenderSurface : public WlRenderSurface
 {
 public:
 
   /**
     * Uses an Wayland surface to render to.
     * @param [in] positionSize the position and size of the surface
-    * @param [in] surface can be a Wayland-window (type must be unsigned int).
+    * @param [in] surface can be a Wayland-window or Wayland-pixmap (type must be unsigned int).
     * @param [in] name optional name of surface passed in
     * @param [in] isTransparent if it is true, surface has 32 bit color depth, otherwise, 24 bit
     */
-  PixmapRenderSurface( Dali::PositionSize positionSize,
+  WindowRenderSurface( Dali::PositionSize positionSize,
                        Any surface,
                        const std::string& name,
-                       bool isTransparent = false);
+                       bool isTransparent = false );
 
   /**
-   * @copydoc Dali::RenderSurface::~RenderSurface
+   * @copydoc Dali::ECore::EcoreWlRenderSurface::~EcoreWlRenderSurface
    */
-  virtual ~PixmapRenderSurface();
+  virtual ~WindowRenderSurface();
 
 public: // API
 
   /**
-   * @copydoc Dali::ECore::EcoreWlRenderSurface::GetDrawable()
+   * @copydoc Dali::RenderSurface::GetDrawable()
    */
-  virtual Ecore_Wl_Window* GetDrawable();
+  virtual WlWindow* GetDrawable();
 
   /**
-   * @brief GetSurface
-   *
-   * @return pixmap
+   * Request to approve deiconify operation
+   * If it is requested, it will send ECORE_X_ATOM_E_DEICONIFY_APPROVE event to window manager after rendering
+   */
+  void RequestToApproveDeiconify();
+
+  /**
+   * Map window
+   */
+  virtual void Map();
+
+  /**
+   * @copydoc Dali::ECore::EcoreWlRenderSurface::GetSurface()
    */
   virtual Any GetSurface();
+
+  /**
+   * @copydoc Dali::ECore::EcoreWlRenderSurface::GetWlWindow()
+   */
+  virtual WlWindow* GetWlWindow();
+
+  // HACK because ecore_wayland store the display a global variable!
+  static WlDisplay* GetWaylandDisplay();
 
 public: // from Dali::RenderSurface
 
@@ -88,6 +107,16 @@ public: // from Dali::RenderSurface
   virtual bool ReplaceEGLSurface( EglInterface& egl );
 
   /**
+   * @copydoc Dali::RenderSurface::MoveResize()
+   */
+  virtual void MoveResize( Dali::PositionSize positionSize);
+
+  /**
+   * @copydoc Dali::RenderSurface::SetViewMode()
+   */
+  void SetViewMode( ViewMode viewMode );
+
+  /**
    * @copydoc Dali::RenderSurface::StartRender()
    */
   virtual void StartRender();
@@ -108,56 +137,39 @@ public: // from Dali::RenderSurface
   virtual void StopRender();
 
   /**
-   * @copydoc Dali::RenderSurface::SetThreadSynchronization
+   * @copydoc Dali::RenderSurface::ReleaseLock()
+   */
+  virtual void ReleaseLock();
+
+  /**
+   * @copydoc Dali::RenderSurface::SetThreadSynchronization()
    */
   virtual void SetThreadSynchronization( ThreadSynchronizationInterface& threadSynchronization );
 
-  /**
-   * @copydoc Dali::RenderSurface::SetPerformanceInterface
-   */
-  virtual void SetPerformanceInterface( Dali::Internal::Adaptor::PerformanceInterface& performanceInterface ) {};
 
-private:
-  enum SyncMode
-  {
-    SYNC_MODE_NONE,
-    SYNC_MODE_WAIT
-  };
+protected:
 
   /**
-   * Set the sync mode.
-   * @param[in] syncMode The sync mode
-   */
-  void SetSyncMode( SyncMode syncMode );
-
-  /**
-   * If sync mode is WAIT, then acquire a lock. This prevents render thread from
-   * continuing until the pixmap has been drawn by the compositor.
-   * It must be released for rendering to continue.
-   */
-  void AcquireLock();
-
-  /**
-   * Release any locks.
-   */
-  void ReleaseLock();
-
-  /**
-   * Create XPixmap
+   * Create WlWindow
    */
   virtual void CreateWlRenderable();
 
   /**
-   * @copydoc Dali::Internal::Adaptor::ECore::RenderSurface::UseExistingRenderable
+   * @copydoc Dali::Internal::Adaptor::ECore::EcoreWlRenderSurface::UseExistingRenderable
    */
   virtual void UseExistingRenderable( unsigned int surfaceId );
 
 private: // Data
 
-};
+ // WlWindow*   mWlWindow; ///< Wayland-Window
+  wl_egl_window*   mEglWindow;
+  bool mNeedToApproveDeiconify;
 
-} // namespace ECore
+
+}; // class WindowRenderSurface
+
+} // namespace Wayland
 
 } // namespace Dali
 
-#endif // __DALI_ECORE_X_PIXMAP_RENDER_SURFACE_H__
+#endif // __DALI_INTERNAL_ECORE_X_WINDOW_RENDER_SURFACE_H__

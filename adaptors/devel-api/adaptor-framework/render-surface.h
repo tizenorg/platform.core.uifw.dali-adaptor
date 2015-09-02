@@ -25,6 +25,7 @@
 #include <dali/public-api/common/view-mode.h>
 
 // INTERNAL INCLUDES
+#include <base/interfaces/performance-interface.h>
 
 namespace Dali
 {
@@ -156,6 +157,14 @@ public:
    * @param threadSynchronization The thread-synchronization implementation.
    */
   virtual void SetThreadSynchronization( ThreadSynchronizationInterface& threadSynchronization ) = 0;
+
+  /**
+   * @brief Sets the PerformanceInterface
+   *
+   * @param performanceInterface The performance-interface implementation
+   */
+  virtual void SetPerformanceInterface( Dali::Internal::Adaptor::PerformanceInterface& performanceInterface ) = 0 ;
+
 
 private:
 
