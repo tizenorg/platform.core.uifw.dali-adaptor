@@ -15,8 +15,9 @@
  *
  */
 
-// CLASS HEADER
+// HEADER
 #include "virtual-keyboard-impl.h"
+#include "ecore-virtual-keyboard-extension.h"
 
 // EXTERNAL INCLUDES
 #include <algorithm>
