@@ -59,6 +59,7 @@ Any DisplayConnection::GetDisplay()
 
 void DisplayConnection::ConsumeEvents()
 {
+
 }
 
 bool DisplayConnection::InitializeEgl(EglInterface& egl)
