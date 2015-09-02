@@ -26,6 +26,7 @@
 #include <base/thread-synchronization.h>
 #include <base/environment-options.h>
 #include <base/display-connection.h>
+#include <unistd.h>
 
 namespace Dali
 {
@@ -164,8 +165,11 @@ bool RenderThread::Run()
   DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run\n");
 
   // Install a function for logging
-  mEnvironmentOptions.InstallLogFunction();
+   mEnvironmentOptions.InstallLogFunction();
 
+  mDisplayConnection->ConsumeEvents();
+
+   // for wayland we have to get some events from Compositor for EGL to init correctly
   InitializeEgl();
 
   Dali::Integration::RenderStatus renderStatus;
@@ -196,15 +200,34 @@ bool RenderThread::Run()
         DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run. 3 - Core.Render()\n");
 
         mThreadSynchronization.AddPerformanceMarker( PerformanceInterface::RENDER_START );
+     /*   timespec sleepTime;
+        sleepTime.tv_sec = 0;
+        static int x =0;
+        if( x== 4)
+        {
+          sleepTime.tv_nsec = 15000000;
+          nanosleep( &sleepTime, NULL );
+          x=0;
+        }
+        x++;
+*/
+
         mCore.Render( renderStatus );
         mThreadSynchronization.AddPerformanceMarker( PerformanceInterface::RENDER_END );
 
         // Perform any post-render operations
         if ( renderStatus.HasRendered() )
         {
+
           DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run. 4 - PostRender()\n");
+          mThreadSynchronization.AddPerformanceMarker( PerformanceInterface::SWAP_START );
+
           PostRender();
+
+          mThreadSynchronization.AddPerformanceMarker( PerformanceInterface::SWAP_END );
+
         }
+
       }
     }
 

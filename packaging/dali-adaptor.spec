@@ -37,11 +37,16 @@ Source0:    %{name}-%{version}.tar.gz
 %define shaderbincache_flag DISABLE
 %endif
 
+# macro is enabled by passing --define "with_node_js 1"
+%define build_with_node_js 0%{?with_node_js:1}
+
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 Requires:       giflib
 BuildRequires:  pkgconfig
 BuildRequires:  gawk
+BuildRequires:  libxkbcommon-devel
+BuildRequires:  wayland-extension-client-devel
 BuildRequires:  pkgconfig(sensor)
 BuildRequires:  pkgconfig(aul)
 BuildRequires:  giflib-devel
@@ -63,7 +68,11 @@ BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(glesv2)
 BuildRequires:  pkgconfig(egl)
 BuildRequires:  libcurl-devel
+# BuildRequires:  mesa-libGLESv3-devel
 
+%if %{?build_with_node_js}
+BuildRequires:  nodejs-devel
+%endif
 
 %if 0%{?over_tizen_2_2}
 BuildRequires:  pkgconfig(capi-system-info)
@@ -166,6 +175,8 @@ CFLAGS+=" -DOVER_TIZEN_SDK_2_2"
 CXXFLAGS+=" -DOVER_TIZEN_SDK_2_2"
 %endif
 
+
+
 libtoolize --force
 cd %{_builddir}/%{name}-%{version}/build/tizen
 autoreconf --install
@@ -183,6 +194,9 @@ FONT_CONFIGURATION_FILE="%{font_configuration_file}" ; export FONT_CONFIGURATION
 %endif
 %if 0%{?over_tizen_2_2}
            --with-over-tizen_2_2 \
+%endif
+%if %{?build_with_node_js}
+           --with-node-js=/usr/include/node/ \
 %endif
            $configure_flags --libdir=%{_libdir}
 
