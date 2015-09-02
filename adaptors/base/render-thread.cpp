@@ -26,6 +26,7 @@
 #include <base/thread-synchronization.h>
 #include <base/environment-options.h>
 #include <base/display-connection.h>
+#include <unistd.h>
 
 namespace Dali
 {
@@ -164,8 +165,11 @@ bool RenderThread::Run()
   DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run\n");
 
   // Install a function for logging
-  mEnvironmentOptions.InstallLogFunction();
+   mEnvironmentOptions.InstallLogFunction();
 
+  mDisplayConnection->ConsumeEvents();
+
+   // for wayland we have to get some events from Compositor for EGL to init correctly
   InitializeEgl();
 
   Dali::Integration::RenderStatus renderStatus;

@@ -19,12 +19,10 @@
 #include "display-connection-impl.h"
 
 // EXTERNAL_HEADERS
-#include <Ecore_Wayland.h>
 #include <dali/integration-api/debug.h>
 
-// INTERNAL HEADERS
-#include <pixmap-render-surface.h>
-
+#include "pure-window-render-surface.h"
+#include <stdio.h>
 namespace Dali
 {
 
@@ -44,7 +42,9 @@ DisplayConnection* DisplayConnection::New()
 DisplayConnection::DisplayConnection()
 : mDisplay(NULL)
 {
-  mDisplay = ecore_wl_display_get();
+  // complete hack for now. On Wayland there is only one display
+  mDisplay = Wayland::WindowRenderSurface::GetWaylandDisplay();
+ // printf("DisplayConnection mdisplay = %p \n", mDisplay);
 }
 
 DisplayConnection::~DisplayConnection()
@@ -59,6 +59,14 @@ Any DisplayConnection::GetDisplay()
 
 void DisplayConnection::ConsumeEvents()
 {
+  //printf(" DisplayConnection::ConsumeEvents() ------------\n");
+
+  wl_display_flush(mDisplay);
+  wl_display_dispatch_pending(mDisplay);
+
+  //  wl_display_roundtrip( mDisplay);
+
+  //printf(" DisplayConnection::ConsumeEvents() ------------\n");
 
 }
 
@@ -66,7 +74,9 @@ bool DisplayConnection::InitializeEgl(EglInterface& egl)
 {
   EglImplementation& eglImpl = static_cast<EglImplementation&>(egl);
 
-  if (!eglImpl.InitializeGles(reinterpret_cast<EGLNativeDisplayType>(mDisplay)))
+ //printf(" DisplayConnection::InitializeEgl with %p\n", mDisplay);
+  //EGLNativeDisplayType {aka wl_display*}
+  if (!eglImpl.InitializeGles(static_cast<EGLNativeDisplayType>(mDisplay)))
   {
     DALI_LOG_ERROR("Failed to initialize GLES.");
     return false;
@@ -81,8 +91,8 @@ void DisplayConnection::GetDpi(unsigned int& dpiHorizontal, unsigned int& dpiVer
   float xres, yres;
 
   // 1 inch = 25.4 millimeters
-  xres = ecore_wl_dpi_get();
-  yres = ecore_wl_dpi_get();
+  xres = 72;//ecore_wl_dpi_get(); hardcoded for now
+  yres = 72;//ecore_wl_dpi_get();
 
   dpiHorizontal = int(xres + 0.5f);  // rounding
   dpiVertical   = int(yres + 0.5f);
