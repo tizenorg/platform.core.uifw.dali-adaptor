@@ -18,8 +18,9 @@
 // EXTERNAL INCLUDES
 #ifndef DALI_PROFILE_UBUNTU
 #include <system_settings.h>
-#endif // DALI_PROFILE_UBUNTU
 #include <Elementary.h>
+#endif // DALI_PROFILE_UBUNTU
+
 
 // INTERNAL INCLUDES
 #include "system-settings.h"

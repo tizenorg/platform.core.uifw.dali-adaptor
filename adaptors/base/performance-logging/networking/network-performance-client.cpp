@@ -168,7 +168,7 @@ bool NetworkPerformanceClient::TransmitMarker( const PerformanceMarker& marker, 
   {
     // write out the time stamp
     char buffer[64];
-    int size = snprintf( buffer, sizeof(buffer),"%d.%06d (seconds), %s\n",
+    int size = snprintf( buffer, sizeof(buffer),"%d.%06d %s\n",
                                     marker.GetTimeStamp().seconds,
                                     marker.GetTimeStamp().microseconds,
                                     description );
@@ -269,12 +269,12 @@ void NetworkPerformanceClient::ProcessCommand( char* buffer, unsigned int buffer
   }
   if( ! response.empty() )
   {
-    // add a carriage return for console clients
+    // only send a response to console clients
     if( mConsoleClient )
     {
       response+="\n";
+      WriteSocket( response.c_str(), response.length()  );
     }
-    WriteSocket( response.c_str(), response.length()  );
   }
 }
 
