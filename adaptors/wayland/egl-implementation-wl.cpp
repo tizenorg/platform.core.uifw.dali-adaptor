@@ -21,12 +21,13 @@
 #include <gl/egl-implementation.h>
 
 // EXTERNAL INCLUDES
+#include <stdio.h>
 #include <dali/integration-api/debug.h>
 #include <dali/public-api/common/dali-common.h>
 #include <dali/public-api/common/dali-vector.h>
 
 // INTERNAL INCLUDES
-#include <ecore-wl-render-surface.h>
+//#include <ecore-wl-render-surface.h>
 
 namespace Dali
 {
@@ -87,6 +88,7 @@ bool EglImplementation::InitializeGles( EGLNativeDisplayType display, bool isOwn
     EGLint minorVersion = 0;
     if ( !eglInitialize( mEglDisplay, &majorVersion, &minorVersion ) )
     {
+      DALI_ASSERT_ALWAYS( "eglInitialize failed" &&  0);
       return false;
     }
     eglBindAPI(EGL_OPENGL_ES_API);
@@ -367,6 +369,8 @@ void EglImplementation::ChooseConfig( bool isWindowType, ColorDepth depth )
   configAttribs.PushBack( 1 );
   configAttribs.PushBack( EGL_NONE );
 
+  printf("eglChooseConfig  mEglDisplay = %p\n ",mEglDisplay);
+
   if ( eglChooseConfig( mEglDisplay, &(configAttribs[0]), &mEglConfig, 1, &numConfigs ) != EGL_TRUE )
   {
     EGLint error = eglGetError();
@@ -418,6 +422,7 @@ void EglImplementation::CreateSurfaceWindow( EGLNativeWindowType window, ColorDe
 
   // egl choose config
   ChooseConfig(mIsWindow, mColorDepth);
+  printf("EglImplementation::CreateSurfaceWindow  display = %p\n",mEglDisplay);
 
   mEglSurface = eglCreateWindowSurface( mEglDisplay, mEglConfig, mEglNativeWindow, NULL );
   TEST_EGL_ERROR("eglCreateWindowSurface");
