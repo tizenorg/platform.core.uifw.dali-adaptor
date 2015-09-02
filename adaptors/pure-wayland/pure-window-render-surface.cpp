@@ -16,7 +16,7 @@
  */
 
 // CLASS HEADER
-#include "window-render-surface.h"
+#include "pure-window-render-surface.h"
 
 // EXTERNAL INCLUDES
 #include <dali/integration-api/gl-abstraction.h>
@@ -24,9 +24,8 @@
 
 // INTERNAL INCLUDES
 #include <wl-types.h>
-#include <trigger-event.h>
 #include <gl/egl-implementation.h>
-#include <base/display-connection.h>
+
 
 namespace Dali
 {
@@ -35,11 +34,12 @@ namespace Dali
 extern Debug::Filter* gRenderSurfaceLogFilter;
 #endif
 
-namespace ECore
+namespace Wayland
 {
 
 namespace
 {
+WlDisplay* gCurrentDisplay( NULL );
 
 const int MINIMUM_DIMENSION_CHANGE( 1 ); ///< Minimum change for window to be considered to have moved
 
@@ -49,36 +49,44 @@ WindowRenderSurface::WindowRenderSurface( Dali::PositionSize positionSize,
                                           Any surface,
                                           const std::string& name,
                                           bool isTransparent)
-: EcoreWlRenderSurface( positionSize, surface, name, isTransparent ),
+: WlRenderSurface( positionSize, surface, name, isTransparent ),
   mNeedToApproveDeiconify(false)
 {
   DALI_LOG_INFO( gRenderSurfaceLogFilter, Debug::Verbose, "Creating Window\n" );
   Init( surface );
+
+
+
+  gCurrentDisplay = this->mWindow.mDisplay;
 }
 
+WlDisplay* WindowRenderSurface::GetWaylandDisplay()
+{
+  return gCurrentDisplay;
+}
 WindowRenderSurface::~WindowRenderSurface()
 {
   if( mOwnSurface )
   {
-    ecore_wl_window_free( mWlWindow );
+    // free window
   }
 }
 
-Ecore_Wl_Window* WindowRenderSurface::GetDrawable()
+WlWindow* WindowRenderSurface::GetDrawable()
 {
   // already an e-core type
-  return mWlWindow;
+  return &mWindow;
 }
 
 Any WindowRenderSurface::GetSurface()
 {
   // already an e-core type
-  return Any( mWlWindow );
+  return Any( &mWindow );
 }
 
-Ecore_Wl_Window* WindowRenderSurface::GetWlWindow()
+WlWindow* WindowRenderSurface::GetWlWindow()
 {
-  return mWlWindow;
+  return &mWindow;
 }
 
 void WindowRenderSurface::RequestToApproveDeiconify()
@@ -101,31 +109,37 @@ void WindowRenderSurface::CreateEglSurface( EglInterface& eglIf )
 
   Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( eglIf );
 
-  // create the EGL surface
-  ecore_wl_window_surface_create(mWlWindow);
-  mEglWindow = wl_egl_window_create(ecore_wl_window_surface_get(mWlWindow), mPosition.width, mPosition.height);
+
+  // create the  surface
+  WlRenderSurface::CreateSurface();
+
+  //ecore_wl_window_surface_create(mWlWindow);
+
+  mEglWindow = wl_egl_window_create(mWindow.mSurface, mPosition.width, mPosition.height);
+
   eglImpl.CreateSurfaceWindow( (EGLNativeWindowType)mEglWindow, mColorDepth ); // reinterpret_cast does not compile
 }
 
 void WindowRenderSurface::DestroyEglSurface( EglInterface& eglIf )
 {
-  DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
+//  DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
-  Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( eglIf );
-  eglImpl.DestroySurface();
-  wl_egl_window_destroy(mEglWindow);
-  mEglWindow = NULL;
+  //Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( eglIf );
+  //eglImpl.DestroySurface();
+  //wl_egl_window_destroy(mEglWindow);
+//  mEglWindow = NULL;
 }
 
 bool WindowRenderSurface::ReplaceEGLSurface( EglInterface& egl )
 {
-  DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
+  return true;
+  //DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
-  wl_egl_window_destroy(mEglWindow);
-  mEglWindow = wl_egl_window_create(ecore_wl_window_surface_get(mWlWindow), mPosition.width, mPosition.height);
+  //wl_egl_window_destroy(mEglWindow);
+ // mEglWindow = wl_egl_window_create(ecore_wl_window_surface_get(mWlWindow), mPosition.width, mPosition.height);
 
-  Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( egl );
-  return eglImpl.ReplaceSurfaceWindow( (EGLNativeWindowType)mEglWindow ); // reinterpret_cast does not compile
+ // Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( egl );
+ // return eglImpl.ReplaceSurfaceWindow( (EGLNativeWindowType)mEglWindow ); // reinterpret_cast does not compile
 }
 
 void WindowRenderSurface::MoveResize( Dali::PositionSize positionSize )
@@ -149,12 +163,12 @@ void WindowRenderSurface::MoveResize( Dali::PositionSize positionSize )
 
   if(needToMove)
   {
-    ecore_wl_window_move(mWlWindow, positionSize.x, positionSize.y);
+   // ecore_wl_window_move(mWlWindow, positionSize.x, positionSize.y);
     mPosition = positionSize;
   }
   if (needToResize)
   {
-    ecore_wl_window_resize(mWlWindow, positionSize.width, positionSize.height, 0);
+   // ecore_wl_window_resize(mWlWindow, positionSize.width, positionSize.height, 0);
     mPosition = positionSize;
   }
 
@@ -162,7 +176,7 @@ void WindowRenderSurface::MoveResize( Dali::PositionSize positionSize )
 
 void WindowRenderSurface::Map()
 {
-  ecore_wl_window_show(mWlWindow);
+ // ecore_wl_window_show(mWlWindow);
 }
 
 void WindowRenderSurface::StartRender()
@@ -202,7 +216,7 @@ void WindowRenderSurface::SetViewMode( ViewMode viewMode )
 }
 
 void WindowRenderSurface::CreateWlRenderable()
-{
+{/*
    // if width or height are zero, go full screen.
   if ( (mPosition.width == 0) || (mPosition.height == 0) )
   {
@@ -219,13 +233,13 @@ void WindowRenderSurface::CreateWlRenderable()
   {
       DALI_ASSERT_ALWAYS(0 && "Failed to create X window");
   }
-
+*/
   //FIXME
 }
 
 void WindowRenderSurface::UseExistingRenderable( unsigned int surfaceId )
 {
-  mWlWindow = AnyCast< Ecore_Wl_Window* >( surfaceId );
+  return;
 }
 
 void WindowRenderSurface::ReleaseLock()

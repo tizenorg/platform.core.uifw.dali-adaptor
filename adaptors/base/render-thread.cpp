@@ -26,6 +26,7 @@
 #include <base/thread-synchronization.h>
 #include <base/environment-options.h>
 #include <base/display-connection.h>
+#include <unistd.h>
 
 namespace Dali
 {
