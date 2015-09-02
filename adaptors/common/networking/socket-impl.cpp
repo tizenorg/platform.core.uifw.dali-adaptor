@@ -334,11 +334,11 @@ bool Socket::Write( const void* buffer, unsigned int bufferSizeInBytes )
   int bytesWritten = 0;
 
   // write isn't guaranteed to write the entire buffer in one go
-
   while(  bytesWritten != static_cast< int>(bufferSizeInBytes))
   {
     const char* byteBuffer = static_cast<const char *>( buffer );
     byteBuffer+=bytesWritten;
+
 
     int ret = write( mSocketFileDescriptor, byteBuffer, bufferSizeInBytes - bytesWritten );
     if( ret < 1)
