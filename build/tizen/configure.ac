@@ -98,7 +98,7 @@ AC_ARG_ENABLE(networklogging,
               [AC_HELP_STRING([--enable-networklogging],
                               [enables network for debug tool])],
               [enable_networklogging=$enableval],
-              [enable_networklogging=no])
+              [enable_networklogging=yes])
 
 
 if test "x$enable_debug" = "xyes"; then
