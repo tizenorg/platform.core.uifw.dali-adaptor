@@ -19,7 +19,7 @@
 #include <virtual-keyboard.h>
 
 // INTERNAL INCLUDES
-#include <virtual-keyboard-impl.h>
+#include <ecore-virtual-keyboard-impl.h>
 
 namespace Dali
 {

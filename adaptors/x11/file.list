@@ -11,7 +11,10 @@ _adaptor_x11_internal_src_files = \
   $(adaptor_x11_dir)/pixmap-render-surface-x.cpp \
   $(adaptor_x11_dir)/ecore-x-render-surface.cpp \
   $(adaptor_x11_dir)/window-render-surface-x.cpp \
-  $(adaptor_x11_dir)/ecore-x-window-interface.cpp
+  $(adaptor_x11_dir)/ecore-x-window-interface.cpp \
+  $(adaptor_x11_dir)/indicator/ecore-indicator-impl.cpp \
+  $(adaptor_x11_dir)/indicator/ecore-server-connection.cpp \
+  $(adaptor_x11_dir)/ecore-virtual-keyboard-impl.cpp
 
 adaptor_ecore_x_event_handler_internal_src_files = \
   $(adaptor_x11_dir)/ecore-x-event-handler.cpp
@@ -22,6 +25,10 @@ adaptor_uv_x_event_handler_internal_src_files = \
   $(adaptor_x11_dir)/x-events/x-input2.cpp \
   $(adaptor_x11_dir)/x-events/x-input2-device.cpp \
   $(adaptor_x11_dir)/x-events/debug/x-input2-debug.cpp
+
+
+ 
+
 
 adaptor_x11_ubuntu_internal_src_files = \
   $(_adaptor_x11_internal_src_files)

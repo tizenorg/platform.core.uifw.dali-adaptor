@@ -42,8 +42,15 @@ include ../../../adaptors/common/file.list
 
 # Wayland
 if WAYLAND
+if USE_EFL
+## Use ecore_wayland
 adaptor_wayland_dir = ../../../adaptors/wayland
 include ../../../adaptors/wayland/file.list
+else
+## Use wayland direct
+adaptor_pure_wayland_dir = ../../../adaptors/pure-wayland
+include ../../../adaptors/pure-wayland/file.list
+endif
 else
 # X11
 adaptor_x11_dir = ../../../adaptors/x11
@@ -161,6 +168,8 @@ adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
                              $(static_libraries_libunibreak_src_files)
 if WAYLAND
 adaptor_internal_src_files += $(adaptor_wayland_tizen_internal_src_files)
+#  support for wayland without ecore, todo change all wayland to ecore-wayland, and pure-wayland to wayland
+adaptor_internal_src_files += $(adaptor_pure_wayland_tizen_internal_src_files)
 else
 adaptor_internal_src_files += $(adaptor_x11_tv_internal_src_files) \
                              $(adaptor_x11_internal_tv_profile_key_src_files)
@@ -196,10 +205,8 @@ libdali_adaptor_la_SOURCES = \
                      $(input_event_handler_src_files)
 
 
-if ENABLE_NETWORK_LOGGING
 libdali_adaptor_la_SOURCES += \
   $(base_adaptor_networking_src_files)
-endif
 
 libdali_adaptor_la_DEPENDENCIES =
 
