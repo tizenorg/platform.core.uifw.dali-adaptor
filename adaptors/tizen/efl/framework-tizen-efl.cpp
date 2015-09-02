@@ -21,7 +21,6 @@
 // EXTERNAL INCLUDES
 #include <app.h>
 #include <bundle.h>
-#include <Ecore.h>
 
 #ifdef OVER_TIZEN_SDK_2_2
 #include <system_info.h>

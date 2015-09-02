@@ -186,6 +186,8 @@ bool EglImplementation::InitializeGles( EGLNativeDisplayType display, bool isOwn
 
     mGlesInitialized = true;
     mIsOwnSurface = isOwnSurface;
+
+    eglSwapInterval(mEglDisplay, 1);
   }
 
   return mGlesInitialized;
