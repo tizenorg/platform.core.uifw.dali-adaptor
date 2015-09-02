@@ -24,8 +24,6 @@
 #include <dali/public-api/common/dali-common.h>
 #include <dali/public-api/common/view-mode.h>
 
-// INTERNAL INCLUDES
-
 namespace Dali
 {
 

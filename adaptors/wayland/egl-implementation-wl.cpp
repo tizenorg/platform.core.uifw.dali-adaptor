@@ -21,12 +21,12 @@
 #include <gl/egl-implementation.h>
 
 // EXTERNAL INCLUDES
+#include <stdio.h>
 #include <dali/integration-api/debug.h>
 #include <dali/public-api/common/dali-common.h>
 #include <dali/public-api/common/dali-vector.h>
 
-// INTERNAL INCLUDES
-#include <ecore-wl-render-surface.h>
+
 
 namespace Dali
 {
@@ -74,9 +74,16 @@ bool EglImplementation::InitializeGles( EGLNativeDisplayType display, bool isOwn
   {
     mEglNativeDisplay = display;
 
+
     //@todo see if we can just EGL_DEFAULT_DISPLAY instead
     mEglDisplay = eglGetDisplay(mEglNativeDisplay);
+    if(  mEglDisplay == EGL_NO_DISPLAY)
+    {
+      DALI_ASSERT_ALWAYS( "eglGetDisplay failed EGL_NO_DISPLAY" &&  0);
+    }
     EGLint error = eglGetError();
+
+
 
     if( mEglDisplay == NULL && error != EGL_SUCCESS )
     {
@@ -85,9 +92,28 @@ bool EglImplementation::InitializeGles( EGLNativeDisplayType display, bool isOwn
 
     EGLint majorVersion = 0;
     EGLint minorVersion = 0;
-    if ( !eglInitialize( mEglDisplay, &majorVersion, &minorVersion ) )
+    EGLBoolean ret = eglInitialize( mEglDisplay, &majorVersion, &minorVersion );
+    switch (ret)
     {
-      return false;
+    case EGL_FALSE:
+    {
+      DALI_ASSERT_ALWAYS( "eglInitialize failed EGL_FALSE" &&  0);
+      break;
+    }
+    case EGL_BAD_DISPLAY:
+    {
+      DALI_ASSERT_ALWAYS( "eglInitialize failed EGL_BAD_DISPLAY " &&  0);
+      break;
+    }
+    case EGL_NOT_INITIALIZED:
+    {
+      DALI_ASSERT_ALWAYS( "eglInitialize failed EGL_NOT_INITIALIZED " &&  0);
+      break;
+    }
+    default:
+    {
+      break;
+    }
     }
     eglBindAPI(EGL_OPENGL_ES_API);
 
@@ -237,6 +263,8 @@ void EglImplementation::MakeContextCurrent()
       eglQueryString(mEglDisplay, EGL_VERSION),
       eglQueryString(mEglDisplay, EGL_CLIENT_APIS),
       eglQueryString(mEglDisplay, EGL_EXTENSIONS));
+
+  eglSwapInterval( mEglDisplay, 1 );
 }
 
 void EglImplementation::MakeContextNull()

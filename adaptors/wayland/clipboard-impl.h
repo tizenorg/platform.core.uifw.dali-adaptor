@@ -20,8 +20,7 @@
 
 // EXTERNAL INCLUDES
 #include <dali/public-api/object/base-object.h>
-#include <Ecore.h>
-#include <Ecore_Wayland.h>
+
 
 // INTERNAL INCLUDES
 #include <clipboard.h>

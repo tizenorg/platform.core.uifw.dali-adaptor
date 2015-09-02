@@ -19,8 +19,6 @@
 #include "clipboard-impl.h"
 
 // EXTERNAL INCLUDES
-#include <Ecore.h>
-#include <Ecore_Wayland.h>
 #include <dali/public-api/object/any.h>
 #include <dali/public-api/object/type-registry.h>
 #include <dali/integration-api/debug.h>
@@ -28,17 +26,6 @@
 // INTERNAL INCLUDES
 #include <singleton-service-impl.h>
 
-namespace //unnamed namespace
-{
-const char* const CBHM_WINDOW = "CBHM_XWIN";
-const char* const CBHM_MSG = "CBHM_MSG";
-const char* const CBHM_ITEM = "CBHM_ITEM";
-const char* const CBHM_cCOUNT = "CBHM_cCOUNT";
-const char* const CBHM_ERROR = "CBHM_ERROR";
-const char* const SET_ITEM = "SET_ITEM";
-const char* const SHOW = "show0";
-const char* const HIDE = "cbhm_hide";
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Clipboard
@@ -97,16 +84,7 @@ bool Clipboard::SetItem(const std::string &itemData )
  */
 std::string Clipboard::GetItem( unsigned int index )  // change string to a Dali::Text object.
 {
-  if ( index >= NumberOfItems() )
-  {
-    return "";
-  }
-
-  std::string emptyString( "" );
-  char sendBuf[20];
-
-  snprintf( sendBuf, 20,  "%s%d", CBHM_ITEM, index );
-  return emptyString;
+  return "unimplemented";
 }
 
 /*

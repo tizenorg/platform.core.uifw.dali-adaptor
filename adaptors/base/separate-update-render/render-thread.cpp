@@ -142,7 +142,12 @@ bool RenderThread::Run()
         if ( renderStatus.HasRendered() )
         {
           DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run. 4 - PostRender()\n");
+          mThreadSynchronization.AddPerformanceMarker( PerformanceInterface::SWAP_START );
+
           mRenderHelper.PostRender();
+
+          mThreadSynchronization.AddPerformanceMarker( PerformanceInterface::SWAP_END );
+
         }
       }
     }
