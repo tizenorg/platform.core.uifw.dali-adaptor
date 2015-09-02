@@ -44,12 +44,42 @@ class FileDescriptorMonitor
 public:
 
   /**
-   * Constructor
+   * Bitmask of file descriptor event types
+   */
+  enum EventType
+  {
+    FD_NO_EVENT = 0x0,
+    FD_READABLE = 0x1,
+    FD_WRITABLE = 0x2,
+    FD_ERROR    = 0x4,
+  };
+  /**
+   * Constructor.
+   * The callback will be passed a EventType bitmask to signal what type of events occured on the file
+   * descriptor.
+   * E.g.
+   * void myCallback( EventType event )
+   * {
+   *    if( event & FileDescriptorMonitor::FD_ERROR)
+   *    {
+   *      LOG_ERROR("...)
+   *    }
+   *    if( event & FileDescriptorMonitor::FD_READABLE )
+   *    {
+   *      // read from FD
+   *    }
+   *
+   * }
+   *
    * @param[in]  fileDescriptor  The file descriptor to monitor
    * @param[in]  callback        Called when anything is written to the file descriptor
+   * @param[in]  eventBitmask     Bitmask of what to monitor on the file descriptor ( readable / writable ).
    * @note The ownership of callback is taken by this class.
+   * @note Under Linux it is possible the file descriptor monitor will signal a fd is
+   * readable or writable even when it isn’t. The developer should check for handle EAGAIN or equivalent
+   * when reading from or write to the fd.
    */
-  FileDescriptorMonitor( int fileDescriptor, CallbackBase* callback );
+  FileDescriptorMonitor( int fileDescriptor, CallbackBase* callback, int eventBitmask );
 
   /**
    * Destructor

@@ -37,11 +37,15 @@ Source0:    %{name}-%{version}.tar.gz
 %define shaderbincache_flag DISABLE
 %endif
 
+# macro is enabled by passing --define "with_node_js 1"
+%define build_with_node_js 0%{?with_node_js:1}
+
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 Requires:       giflib
 BuildRequires:  pkgconfig
 BuildRequires:  gawk
+BuildRequires:  libxkbcommon-devel
 BuildRequires:  pkgconfig(sensor)
 BuildRequires:  pkgconfig(aul)
 BuildRequires:  giflib-devel
@@ -64,7 +68,11 @@ BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(glesv2)
 BuildRequires:  pkgconfig(egl)
 BuildRequires:  libcurl-devel
+# BuildRequires:  mesa-libGLESv3-devel
 
+%if %{?build_with_node_js}
+BuildRequires:  nodejs-devel
+%endif
 
 %if 0%{?over_tizen_2_2}
 BuildRequires:  pkgconfig(capi-system-info)
@@ -167,6 +175,8 @@ CFLAGS+=" -DOVER_TIZEN_SDK_2_2"
 CXXFLAGS+=" -DOVER_TIZEN_SDK_2_2"
 %endif
 
+
+
 libtoolize --force
 cd %{_builddir}/%{name}-%{version}/build/tizen && autoreconf --install
 cd %{_builddir}/%{name}-%{version}/build/tizen && CXXFLAGS=$CXXFLAGS LDFLAGS=$LDFLAGS DALI_DATA_RW_DIR="%{dali_data_rw_dir}" DALI_DATA_RO_DIR="%{dali_data_ro_dir}" FONT_PRELOADED_PATH="%{font_preloaded_path}" FONT_DOWNLOADED_PATH="%{font_downloaded_path}" FONT_APPLICATION_PATH="%{font_application_path}" FONT_CONFIGURATION_FILE="%{font_configuration_file}"
@@ -177,6 +187,9 @@ cd %{_builddir}/%{name}-%{version}/build/tizen && CXXFLAGS=$CXXFLAGS LDFLAGS=$LD
 %endif
 %if 0%{?over_tizen_2_2}
            --with-over-tizen_2_2 \
+%endif
+%if %{?build_with_node_js}
+           --with-node-js=/usr/include/node/ \
 %endif
            $configure_flags --libdir=%{_libdir}
 
