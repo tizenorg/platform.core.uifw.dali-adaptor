@@ -21,7 +21,6 @@
 // EXTERNAL INCLUDES
 #include <app.h>
 #include <bundle.h>
-#include <Ecore.h>
 
 #ifndef TIZEN_SDK_2_2_COMPATIBILITY
 #include <system_info.h>

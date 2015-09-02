@@ -1,0 +1,19 @@
+# pure wayland
+
+adaptor_pure_wayland_tizen_internal_src_files = \
+  $(adaptor_pure_wayland_dir)/pure-wl-render-surface.cpp \
+  $(adaptor_pure_wayland_dir)/pure-window-render-surface.cpp \
+  $(adaptor_pure_wayland_dir)/pure-window-impl-wl.cpp \
+  $(adaptor_pure_wayland_dir)/pure-display-connection-impl-wl.cpp \
+  $(adaptor_pure_wayland_dir)/pure-wayland-client.cpp \
+  $(adaptor_pure_wayland_dir)/pure-wayland-input.cpp \
+  $(adaptor_pure_wayland_dir)/pure-wayland-event-handler.cpp \
+  $(adaptor_pure_wayland_dir)/input/pure-wayland-input-listeners.cpp \
+  $(adaptor_pure_wayland_dir)/input/pure-wayland-seat.cpp \
+  $(adaptor_pure_wayland_dir)/input/pure-wayland-key-mapping.cpp \
+  $(adaptor_pure_wayland_dir)/clipboard/pure-wayland-clipboard-impl.cpp \
+  $(adaptor_pure_wayland_dir)/imf/pure-wayland-imf-manager-impl.cpp \
+  $(adaptor_pure_wayland_dir)/native-image/pure-wayland-native-image-source-impl.cpp \
+  $(adaptor_pure_wayland_dir)/accessibility/pure-wayland-accessibility-adaptor-impl.cpp \
+  $(adaptor_pure_wayland_dir)/egl/pure-wayland-egl-implementation.cpp
+
