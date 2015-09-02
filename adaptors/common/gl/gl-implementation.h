@@ -30,6 +30,12 @@
 #include <GLES2/gl2.h>
 #endif
 
+#include <stdio.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <dali/integration-api/gl-abstraction.h>
 
 // INTERNAL INCLUDES
@@ -144,6 +150,16 @@ public:
 
   void Clear (GLbitfield mask)
   {
+    static int clearCalled = false;
+    if( !clearCalled )
+    {
+      int blah = open("/usr/apps/com.samsung.dali-demo/data/First_GL_COMMAND.txt",O_RDONLY);
+      if( blah != -1 )
+      {
+        close(blah);
+      }
+      clearCalled = true;
+    }
     glClear(mask);
   }
 
