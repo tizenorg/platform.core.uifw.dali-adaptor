@@ -246,6 +246,12 @@ public:
    */
   void AddPerformanceMarker( PerformanceInterface::MarkerType type );
 
+  /**
+   * @brief Helper to get performance interface
+   * @return performance interface
+   */
+  PerformanceInterface* GetPerformanceInterface();
+
 private:
 
   // Undefined copy constructor.

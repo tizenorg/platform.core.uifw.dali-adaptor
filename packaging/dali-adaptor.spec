@@ -1,3 +1,17 @@
+# NOTES
+# This spec file is used to build DALi Adaptor for different Tizen Profiles
+# Current profiles are:  Mobile, TV, Wearable, Common
+#
+# The profile variable is defined  outside of the spec file in a build.conf file.
+# Example defines inside build.conf:
+# %define profile tv
+# %define _with_wayland 1
+#
+# gbs will typically download the conf file automatically from the repo location when 
+# performing a gbs build ( use gbs build -v to see it download location) E.g.
+# http://download.tizen.org/snapshots/tizen/tv/tizen-tv/repos/arm-wayland/packages/repodata/xxxx-build.conf.gz
+
+
 %bcond_with wayland
 
 Name:       dali-adaptor
@@ -37,42 +51,69 @@ Source0:    %{name}-%{version}.tar.gz
 %define shaderbincache_flag DISABLE
 %endif
 
+# macro is enabled by passing gbs build --define "with_libuv 1" 
+%define build_with_libuv 0%{?with_libuv:1}
+
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 Requires:       giflib
 BuildRequires:  pkgconfig
 BuildRequires:  gawk
 BuildRequires:  pkgconfig(sensor)
-BuildRequires:  pkgconfig(aul)
 BuildRequires:  giflib-devel
 BuildRequires:  pkgconfig(fontconfig)
-BuildRequires:  pkgconfig(elementary)
-BuildRequires:  pkgconfig(capi-appfw-application)
 BuildRequires:  libjpeg-turbo-devel
-BuildRequires:  pkgconfig(evas)
 BuildRequires:  dali-devel
 BuildRequires:  dali-integration-devel
-BuildRequires:  pkgconfig(vconf)
-BuildRequires:  tts-devel
 BuildRequires:  pkgconfig(dlog)
 BuildRequires:  libdrm-devel
 BuildRequires:  pkgconfig(libexif)
-BuildRequires:  pkgconfig(capi-system-system-settings)
 BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(glesv2)
-BuildRequires:  pkgconfig(egl)
 BuildRequires:  libcurl-devel
+BuildRequires:  pkgconfig(harfbuzz)
+BuildRequires:  fribidi-devel
+BuildRequires:  pkgconfig(aul)
+BuildRequires:  pkgconfig(vconf)
+BuildRequires:  tts-devel
+BuildRequires:  pkgconfig(capi-system-system-settings)
+BuildRequires:  pkgconfig(capi-appfw-application)
 
+%if %{?build_with_libuv}
+# Tizen currently does not have libuv as a separate libuv package
+# So we have to look into the uv headers bundled inside node-js
+BuildRequires:  nodejs-devel
+%endif
 
 %if 0%{?over_tizen_2_2}
 BuildRequires:  pkgconfig(capi-system-info)
 %endif
 
+%define dali_needs_efl_libraries 1
+
+####### BUILDING FOR WAYLAND #######
 %if %{with wayland}
-BuildRequires:  pkgconfig(ecore-wayland)
 BuildRequires:  pkgconfig(wayland-egl)
 BuildRequires:  pkgconfig(wayland-client)
+%if %{build_with_libuv}
+# if we're building with wayland and runnning under node.js then we are using libuv mainloop
+# and DALis own wayland client (it needs wayland-client headers).
+# EFL libraries are not required in this case. 
+%define dali_needs_efl_libraries 0 
+
+BuildRequires:  libxkbcommon-devel
+BuildRequires:  wayland-extension-client-devel
+
+# needed for xdg_shell extension
+#BuildRequires:  wayland-extension-client
+# BuildRequires:  wayland-extension-client-devel
+
 %else
+BuildRequires:  pkgconfig(ecore-wayland)
+%endif 
+####### BUILDING FOR X11#######
+%else
+BuildRequires:  pkgconfig(egl)
 BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(xi)
 BuildRequires:  pkgconfig(xfixes)
@@ -80,8 +121,14 @@ BuildRequires:  pkgconfig(xdamage)
 BuildRequires:  pkgconfig(utilX)
 %endif
 
-BuildRequires:  pkgconfig(harfbuzz)
-BuildRequires:  fribidi-devel
+###### Building For ECORE and APPCORE
+%if 0%{?dali_needs_efl_libraries}
+BuildRequires:  pkgconfig(evas)
+BuildRequires:  pkgconfig(elementary)
+
+%endif
+
+
 
 %description
 The DALi Tizen Adaptor provides a Tizen specific implementation of the dali-core
@@ -165,6 +212,8 @@ CFLAGS+=" -DOVER_TIZEN_SDK_2_2"
 CXXFLAGS+=" -DOVER_TIZEN_SDK_2_2"
 %endif
 
+
+
 libtoolize --force
 cd %{_builddir}/%{name}-%{version}/build/tizen
 autoreconf --install
@@ -176,12 +225,20 @@ FONT_DOWNLOADED_PATH="%{font_downloaded_path}" ; export FONT_DOWNLOADED_PATH
 FONT_APPLICATION_PATH="%{font_application_path}"  ; export FONT_APPLICATION_PATH
 FONT_CONFIGURATION_FILE="%{font_configuration_file}" ; export FONT_CONFIGURATION_FILE
 
-%configure --prefix=$PREFIX --with-jpeg-turbo --enable-gles=20 --enable-shaderbincache=%{shaderbincache_flag} --enable-profile=%{dali_profile} \
+%configure --prefix=$PREFIX --enable-gles=20 --enable-shaderbincache=%{shaderbincache_flag} --enable-profile=%{dali_profile} \
 %if 0%{?dali_feedback_plugin}
            --enable-feedback \
 %endif
 %if 0%{?over_tizen_2_2}
            --with-over-tizen_2_2 \
+%endif
+%if 0%{?dali_needs_efl_libraries}
+            --enable-efl=yes \
+%else
+            --enable-efl=no \
+%endif 
+%if %{?build_with_libuv}
+           --with-libuv=/usr/include/node/ \
 %endif
            $configure_flags --libdir=%{_libdir}
 

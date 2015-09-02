@@ -29,9 +29,7 @@
 
 // INTERNAL INCLUDES
 #include <base/thread-controller.h>
-#if defined(NETWORK_LOGGING_ENABLED)
-#  include <base/performance-logging/performance-interface-factory.h>
-#endif
+#include <base/performance-logging/performance-interface-factory.h>
 #include <base/lifecycle-observer.h>
 
 #include <dali/devel-api/text-abstraction/font-client.h>
@@ -43,6 +41,7 @@
 #include <events/gesture-manager.h>
 #include <events/event-handler.h>
 #include <gl/gl-proxy-implementation.h>
+#include <gl/gl-proxy-timed-implementation.h>
 #include <gl/gl-implementation.h>
 #include <gl/egl-sync-implementation.h>
 #include <gl/egl-image-extensions.h>
@@ -114,12 +113,12 @@ void Adaptor::Initialize( Dali::Configuration::ContextLoss configuration )
   // Note, Tizen does not use DALI_RETAINS_ALL_DATA, as it can reload images from
   // files automatically.
 
-#if defined(NETWORK_LOGGING_ENABLED)
+//#if defined(NETWORK_LOGGING_ENABLED)
   if( mEnvironmentOptions->PerformanceServerRequired() )
   {
-    mPerformanceInterface = PerformanceInterfaceFactory::CreateInterface( *this, *mEnvironmentOptions );
+    mPerformanceInterface = Dali::Internal::Adaptor::PerformanceInterfaceFactory::CreateInterface( *this, *mEnvironmentOptions );
   }
-#endif
+//#endif
 
   mCallbackManager = CallbackManager::New();
 
@@ -127,7 +126,12 @@ void Adaptor::Initialize( Dali::Configuration::ContextLoss configuration )
 
   mGestureManager = new GestureManager(*this, Vector2(size.width, size.height), mCallbackManager, *mEnvironmentOptions);
 
-  if( mEnvironmentOptions->GetGlesCallTime() > 0 )
+  if( mPerformanceInterface )
+  {
+    // proxy for time stamped markers
+    mGLES = new GlProxyTimedImplementation(*mPerformanceInterface);
+  }
+  else if( mEnvironmentOptions->GetGlesCallTime() > 0 )
   {
     mGLES = new GlProxyImplementation( *mEnvironmentOptions );
   }

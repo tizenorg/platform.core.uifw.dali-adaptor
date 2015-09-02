@@ -129,7 +129,7 @@ void EnvironmentOptions::UnInstallLogFunction() const
 
 unsigned int EnvironmentOptions::GetNetworkControlMode() const
 {
-  return mNetworkControl;
+  return 1;//mNetworkControl;
 }
 unsigned int EnvironmentOptions::GetFrameRateLoggingFrequency() const
 {
