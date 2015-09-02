@@ -2,7 +2,7 @@
 #define __DALI_WL_TYPES_H__
 
 /*
- * Copyright (c) 2014 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,16 @@ namespace Dali
 
 typedef ::wl_display WlDisplay;
 typedef ::wl_surface WlSurface;
+typedef ::wl_array WlArray;
+typedef ::wl_shell WlShell;
+typedef ::wl_shell_surface WlShellSurface;
+typedef ::wl_registry WlRegistry;
+typedef ::wl_compositor WlCompositor;
+typedef ::wl_seat WlSeat;
+typedef ::wl_pointer WlPointer;
+typedef ::wl_keyboard WlKeyboard;
+typedef ::wl_touch WlTouch;
+
 
 } // namespace Dali
 

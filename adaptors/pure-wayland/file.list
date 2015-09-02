@@ -1,0 +1,11 @@
+# pure wayland
+
+adaptor_pure_wayland_tizen_internal_src_files = \
+  $(adaptor_pure_wayland_dir)/pure-wl-render-surface.cpp \
+  $(adaptor_pure_wayland_dir)/pure-window-render-surface.cpp \
+  $(adaptor_pure_wayland_dir)/pure-window-impl-wl.cpp \
+  $(adaptor_pure_wayland_dir)/pure-display-connection-impl-wl.cpp \
+  $(adaptor_pure_wayland_dir)/pure-wayland-client.cpp \
+  $(adaptor_pure_wayland_dir)/pure-wayland-input.cpp 
+
+

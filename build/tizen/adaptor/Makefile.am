@@ -43,7 +43,9 @@ include ../../../adaptors/common/file.list
 # Wayland
 if WAYLAND
 adaptor_wayland_dir = ../../../adaptors/wayland
+adaptor_pure_wayland_dir = ../../../adaptors/pure-wayland
 include ../../../adaptors/wayland/file.list
+include ../../../adaptors/pure-wayland/file.list
 else
 # X11
 adaptor_x11_dir = ../../../adaptors/x11
@@ -157,6 +159,8 @@ adaptor_internal_src_files = $(adaptor_common_internal_src_files) \
                              $(static_libraries_libunibreak_src_files)
 if WAYLAND
 adaptor_internal_src_files += $(adaptor_wayland_tizen_internal_src_files)
+#  support for wayland without ecore, todo change all wayland to ecore-wayland, and pure-wayland to wayland
+adaptor_internal_src_files += $(adaptor_pure_wayland_tizen_internal_src_files)
 else
 adaptor_internal_src_files += $(adaptor_x11_tv_internal_src_files) \
                              $(adaptor_x11_internal_tv_profile_key_src_files)
