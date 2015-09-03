@@ -214,7 +214,10 @@ bool WindowRenderSurface::PreRender( EglInterface&, Integration::GlAbstraction& 
 void WindowRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, DisplayConnection* displayConnection, bool replacingSurface )
 {
   Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( egl );
+
+  traceBegin(TTRACE_TAG_GRAPHICS, "SwapBuffers");
   eglImpl.SwapBuffers();
+  traceEnd(TTRACE_TAG_GRAPHICS);
 
   // When the window is deiconified, it approves the deiconify operation to window manager after rendering
   if(mNeedToApproveDeiconify)

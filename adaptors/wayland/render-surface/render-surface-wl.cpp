@@ -135,7 +135,10 @@ bool RenderSurface::PreRender( EglInterface&, Integration::GlAbstraction& )
 void RenderSurface::PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, DisplayConnection* displayConnection, bool replacingSurface )
 {
   Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( egl );
+
+  traceBegin(TTRACE_TAG_GRAPHICS, "SwapBuffers");
   eglImpl.SwapBuffers();
+  traceEnd(TTRACE_TAG_GRAPHICS);
 }
 
 void RenderSurface::StopRender()

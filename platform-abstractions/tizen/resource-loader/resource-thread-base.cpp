@@ -23,6 +23,7 @@
 #include "resource-thread-base.h"
 #include "tizen-logging.h"
 #include "atomics.h"
+#include <ttrace.h>
 
 using namespace Dali::Integration;
 
@@ -207,7 +208,9 @@ void ResourceThreadBase::ThreadLoop()
 
       if ( !mResourceLoader.IsTerminating() )
       {
+        traceBegin(TTRACE_TAG_GRAPHICS, "RESOURCE");
         ProcessNextRequest();
+        traceEnd(TTRACE_TAG_GRAPHICS);
       }
     }
 

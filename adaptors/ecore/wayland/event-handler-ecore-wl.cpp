@@ -50,6 +50,8 @@
 #include <style-monitor-impl.h>
 #include <base/core-event-interface.h>
 
+#include <ttrace.h>
+
 namespace Dali
 {
 
@@ -287,6 +289,10 @@ struct EventHandler::Impl
   {
     Ecore_Event_Mouse_Move *touchEvent( (Ecore_Event_Mouse_Move*)event );
     EventHandler* handler( (EventHandler*)data );
+
+    unsigned int curtime = GetCurrentMilliSeconds();
+    int msDiff = curtime - touchEvent->timestamp;
+    traceMark(TTRACE_TAG_GRAPHICS, "EcoreMouseMove: %d, %d", curtime, msDiff);
 
     if ( touchEvent->window == (unsigned int)ecore_wl_window_id_get(handler->mImpl->mWindow) )
     {
