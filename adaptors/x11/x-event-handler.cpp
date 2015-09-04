@@ -55,6 +55,8 @@
 #include <style-monitor-impl.h>
 #include <base/core-event-interface.h>
 #include <base/interfaces/window-event-interface.h>
+//todor
+#include <iostream>
 
 namespace Dali
 {
@@ -183,6 +185,7 @@ EventHandler::EventHandler( RenderSurface* surface, CoreEventInterface& coreEven
   mClipboard(Clipboard::Get()),
   mImpl( NULL )
 {
+  std::cout << "todor: EventHandler cons (x-event-handler)" << std::endl;
   Ecore_X_Window window = 0;
 
   // this code only works with the EcoreX11 RenderSurface so need to downcast
