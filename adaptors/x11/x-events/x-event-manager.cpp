@@ -6,6 +6,8 @@
 #include <cstring>
 #include <dali/integration-api/debug.h>
 #include <dali/public-api/signals/callback.h>
+//todor
+#include <iostream>
 
 namespace Dali
 {
@@ -32,7 +34,7 @@ XEventManager::XEventManager( XID window, Display* display, WindowEventInterface
   mWindow( window ),
   mInitialized( false )
 {
-
+  std::cout << "todor: XEventManager cons (x-event-manager)" << std::endl;
 }
 XEventManager::~XEventManager()
 {
