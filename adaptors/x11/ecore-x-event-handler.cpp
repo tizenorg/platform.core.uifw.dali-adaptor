@@ -58,6 +58,48 @@
 #include <physical-keyboard-impl.h>
 #include <style-monitor-impl.h>
 #include <base/core-event-interface.h>
+//todor
+#include <iostream>
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/extensions/XInput2.h>
+#include <X11/extensions/XI2.h>
+#include <X11/XKBlib.h>
+#include <file-descriptor-monitor.h>
+#include <base/interfaces/window-event-interface.h>
+#include "x-events/x-input2.h"
+#include <sys/epoll.h>
+#include <dali/public-api/common/dali-vector.h>
+#include <vector>
+
+
+//todor
+struct TestMainLoopData
+{
+  int testEPFD;
+  epoll_event testEvents[100];
+  Dali::CallbackBase* testHandlers[100];
+};
+static TestMainLoopData gTestMainLoopData;
+void *MainLoopOverride( void* data )
+{
+  for( ;; )
+  {
+    std::cout << "todor: ep ml" << std::endl;
+    int nfds = epoll_wait( gTestMainLoopData.testEPFD, gTestMainLoopData.testEvents, 100, -1 /* Timeout */ );
+
+    for( int i = 0; i < nfds; ++i )
+    {
+      std::cout << "todor: GOT EPOLL EVENT on fd: " << gTestMainLoopData.testEvents[i].data.fd << std::endl;
+      int fd = gTestMainLoopData.testEvents[i].data.fd;
+      Dali::CallbackBase* c = gTestMainLoopData.testHandlers[fd];
+      Dali::CallbackBase::Execute( *c, (void*)(&gTestMainLoopData.testEvents[i]) );
+    }
+  }
+  return NULL;
+}
+
+
 
 namespace Dali
 {
@@ -83,7 +125,7 @@ Integration::Log::Filter* gSelectionEventLogFilter = Integration::Log::Filter::N
 namespace
 {
 
-const char * DETENT_DEVICE_NAME = "tizen_detent";
+const char * DETENT_DEVICE_NAME = "tizen_detent";//todor
 
 // DBUS accessibility
 #define A11Y_BUS "org.a11y.Bus"
@@ -279,23 +321,401 @@ static unsigned int GetCurrentMilliSeconds(void)
 } // unnamed namespace
 
 // Impl to hide EFL implementation.
-struct EventHandler::Impl
+#if 0
+struct EventHandler::WEI : public WindowEventInterface
+{
+  WEI( EventHandler* handler, XID window, Display* display )
+    : //mXEventManager(window, display, this),
+      mHandler( handler )
+      //mPaused( false )
+    {
+      //mXEventManager.Initialize();
+    }
+    /**
+     * Destructor
+     */
+    ~WEI()
+    {
+    }
+
+private:
+    // @todo Consider allowing the EventHandler class to inherit from WindowEventInterface directly
+    virtual void TouchEvent( Dali::TouchPoint& point, unsigned long timeStamp )
+    {
+      mHandler->SendEvent( point, timeStamp );
+    }
+    virtual void KeyEvent( Dali::KeyEvent& keyEvent )
+    {
+      mHandler->SendEvent( keyEvent );
+    }
+    virtual void WheelEvent( Dali::WheelEvent& wheelEvent )
+    {
+      mHandler->SendWheelEvent( wheelEvent );
+    }
+    virtual void DamageEvent( Rect<int>& damageArea )
+    {
+      mHandler->SendEvent( damageArea );
+    }
+    virtual void WindowFocusOut( )
+    {
+      // used to do some work with ime
+    }
+    virtual void WindowFocusIn()
+    {
+      // used to do some work with ime
+    }
+
+    // Data
+    //XEventManager mXEventManager;
+    EventHandler* mHandler;
+    //bool mPaused;
+};
+#endif
+
+
+struct EventHandler::Impl : public WindowEventInterface
 {
   // Construction & Destruction
+
+  //todor
+  void XInput2CreateKeyEvent( const XIDeviceEvent* deviceEvent, Dali::KeyEvent& keyEvent ) const
+  {
+    // get the physical key code ( range 8..255)
+    KeyCode keycode = deviceEvent->detail;
+
+    keyEvent.keyCode = keycode;
+    keyEvent.state = KeyEvent::Down;
+    keyEvent.keyModifier = deviceEvent->mods.effective;
+
+    // extract key symbol. The symbol is typically the name visible on the key
+    // e.g. key code 201 might = Brightness increase, or a Korean character depending on the keyboard mapping.
+    // @todo For XKbKeycodeToKeysym to work correctly we need the group and level.
+    // investigate using XkbGetState to get initial state then start monitoring for XkbStateNotify events
+    KeySym sym = XkbKeycodeToKeysym( mDisplay, keycode, 0 /* group */ , keyEvent.IsShiftModifier() );
+    char* keyname = XKeysymToString( sym );
+
+    keyEvent.keyPressedName = keyname;
+    keyEvent.time = deviceEvent->time;
+  }
+  void ProcessEventX2Event( XGenericEventCookie* cookie )
+  {
+    XIDeviceEvent* deviceEvent = static_cast< XIDeviceEvent* >(cookie->data);
+
+    //X11Debug::LogXI2Event( cookie );
+
+    bool requiresProcessing  = true;//todor PreProcessEvent( deviceEvent );//todor for now force
+
+    if( !requiresProcessing )
+    {
+      return;
+    }
+
+    TouchPoint point ( deviceEvent->deviceid, TouchPoint::Last, deviceEvent->event_x, deviceEvent->event_y );
+    Time time( deviceEvent->time ); // X is using uint32 for time field ( see XI2proto.h )
+
+    switch( cookie->evtype)
+    {
+      case XI_TouchUpdate:
+      case XI_Motion:
+      {
+        std::cout << "todor: ProcessEventX2Event: XI_TouchUpdate" << std::endl;
+        point.state = TouchPoint::Motion;
+        TouchEvent( point, time );
+        break;
+      }
+      case XI_TouchBegin:
+      case XI_ButtonPress:
+      {
+        std::cout << "todor: ProcessEventX2Event: XI_TouchBegin" << std::endl;
+        point.state = TouchPoint::Down;
+        TouchEvent( point, time );
+        break;
+      }
+      case XI_TouchEnd:
+      case XI_ButtonRelease:
+      {
+        std::cout << "todor: ProcessEventX2Event: XI_TouchEnd" << std::endl;
+        point.state = TouchPoint::Up;
+        TouchEvent( point, time );
+        break;
+      }
+      case XI_FocusIn:
+      {
+        std::cout << "todor: ProcessEventX2Event: XI_FocusIn" << std::endl;
+        WindowFocusIn();
+        break;
+      }
+      case XI_FocusOut:
+      {
+        std::cout << "todor: ProcessEventX2Event: XI_FocusOut" << std::endl;
+        WindowFocusOut();
+        break;
+      }
+      case XI_KeyPress:
+      {
+        std::cout << "todor: ProcessEventX2Event: XI_KeyPress" << std::endl;
+        Dali::KeyEvent keyEvent;
+        XInput2CreateKeyEvent( deviceEvent, keyEvent );
+        KeyEvent( keyEvent );
+        break;
+      }
+      default:
+      {
+        break;
+      }
+    }
+  }
+#if 1
+  void TestXEventReceived()
+  {
+    std::cout << "todor: TestXEventReceived" << std::endl;
+#if 0
+    while( XPending( mDisplay) )
+    {
+      XEvent xEvent;
+      XNextEvent( mDisplay, &xEvent );
+
+      // cookie data pointer is undefined until XGetEventData is called.
+      XGenericEventCookie* cookie = &xEvent.xcookie;
+
+      if (XGetEventData( mDisplay, cookie))
+      {
+        if( cookie->extension == mXInput2.GetExtensionId() )
+        {
+          mXInput2.ProcessEvent( cookie );
+        }
+        XFreeEventData( mDisplay, cookie );
+      }
+    }
+#endif
+  }
+#endif
+  void TestXEventReceivedP1( void* e )
+  {
+    //epoll_event* event = (epoll_event*)e;
+    std::cout << "todor: TestXEventReceived p1: " << std::endl;
+
+    while( XPending( mDisplay ) )
+    {
+      std::cout << "todor: XPending got" << std::endl;
+      XEvent xEvent;
+      XNextEvent( mDisplay, &xEvent );
+
+      std::cout << "todor: XPending got: " << xEvent.type << std::endl;
+
+      // cookie data pointer is undefined until XGetEventData is called.
+      XGenericEventCookie* cookie = &xEvent.xcookie;
+
+      if (XGetEventData( mDisplay, cookie ) )
+      {
+        std::cout << "todor: XGetEventData got" << std::endl;
+        //todor force if( cookie->extension == mXInput2.GetExtensionId() )
+        {
+          ProcessEventX2Event( cookie );
+        }
+        XFreeEventData( mDisplay, cookie );
+      }
+    }
+  }
+
+  // @todo Consider allowing the EventHandler class to inherit from WindowEventInterface directly
+      virtual void TouchEvent( Dali::TouchPoint& point, unsigned long timeStamp )
+      {
+        std::cout << "todor: GOT VIRTUAL CALL: ................................... TouchEvent" << std::endl;
+        mHandler->SendEvent( point, timeStamp );
+      }
+      virtual void KeyEvent( Dali::KeyEvent& keyEvent )
+      {
+        std::cout << "todor: GOT VIRTUAL CALL: ................................... KeyEvent" << std::endl;
+        mHandler->SendEvent( keyEvent );
+      }
+      virtual void WheelEvent( Dali::WheelEvent& wheelEvent )
+      {
+        std::cout << "todor: GOT VIRTUAL CALL: ................................... WheelEvent" << std::endl;
+        mHandler->SendWheelEvent( wheelEvent );
+      }
+      virtual void DamageEvent( Rect<int>& damageArea )
+      {
+        std::cout << "todor: GOT VIRTUAL CALL: ................................... DamageEvent" << std::endl;
+        mHandler->SendEvent( damageArea );
+      }
+      virtual void WindowFocusOut( )
+      {
+        std::cout << "todor: GOT VIRTUAL CALL: ................................... WindowFocusOut" << std::endl;
+        // used to do some work with ime
+      }
+      virtual void WindowFocusIn()
+      {
+        std::cout << "todor: GOT VIRTUAL CALL: ................................... WindowFocusIn" << std::endl;
+        // used to do some work with ime
+      }
+
+      void XEHGetTouchDevices(Display* display, std::vector<int>& touchDevices)
+      {
+        int numberOfDevices = 0;
+        XIDeviceInfo *info = XIQueryDevice(display, XIAllDevices, &numberOfDevices);
+        XIDeviceInfo *device = info;
+
+        for (int i = 0; i < numberOfDevices; ++i, ++device)
+        {
+          switch (device->use)
+          {
+            case XIMasterPointer:
+            {
+              //LOG_INFO(gLogFilter, Debug::General, "Touch Input: Using Device \"%s\" (%d)\n", device->name, device->deviceid);
+              std::cout << "todor: Touch Input: Using Device XIMasterPointer" << std::endl;
+              touchDevices.push_back(device->deviceid);
+              break;
+            }
+
+            case XISlavePointer:
+            {
+              // Check to see whether we are already hooked up to this device through a master
+              // device that we may have added previously
+              std::vector<int>::iterator iterator = std::find(touchDevices.begin(), touchDevices.end(), device->attachment);
+
+              // Add if we have not
+              if (iterator == touchDevices.end())
+              {
+                //LOG_INFO(gLogFilter, Debug::General, "Touch Input: Using Device \"%s\" (%d)\n", device->name, device->deviceid);
+                std::cout << "todor: Touch Input: Using Device XISlavePointer" << std::endl;
+                touchDevices.push_back(device->deviceid);
+              }
+              break;
+            }
+
+            case XIFloatingSlave:
+            {
+              // Slaves can be any type, we are only interested in XIButtonClass types
+              if ((*(device->classes))->type == XIButtonClass)
+              {
+                // Check to see whether we are already hooked up to this device through a master
+                // device that we may have added previously
+                std::vector<int>::iterator iterator = std::find(touchDevices.begin(), touchDevices.end(), device->attachment);
+
+                // Add if we have not
+                if (iterator == touchDevices.end())
+                {
+                  //LOG_INFO(gLogFilter, Debug::General, "Touch Input: Using Device \"%s\" (%d)\n", device->name, device->deviceid);
+                  std::cout << "todor: Touch Input: Using Device XIFloatingSlave" << std::endl;
+                  touchDevices.push_back(device->deviceid);
+                }
+              }
+              break;
+            }
+
+            default:
+            {
+              // Do Nothing
+              break;
+            }
+          }
+        }
+
+        XIFreeDeviceInfo(info);
+      }
+
+
 
   /**
    * Constructor
    */
-  Impl( EventHandler* handler, Ecore_X_Window window )
+  Impl( EventHandler* handler, Ecore_X_Window window, Display* display, RenderSurface* surface )
+//todor      : mXEventManager(window, display, this), )
   : mHandler( handler ),
     mEcoreEventHandler(),
     mWindow( window ),
     mXiDeviceId( 0 )
+
+  //, mXInput2( window, display, this )
+  //, mXInput2( window, display, &mWEI )
+  , mDisplay( display )
+  //, mFileDescriptorMonitor( NULL )
+
 #ifdef DALI_ELDBUS_AVAILABLE
   , mSessionConnection( NULL ),
     mA11yConnection( NULL )
 #endif
   {
+    std::cout << "todor: ecore-x Impl()" << std::endl;
+
+    // xdisplay (not ecore)
+    //todor
+#if 0
+    //mDisplay = (Display*)surface->GetXDisplayForInput();
+    //XDisplay* GetXDisplayForInput() { return static_cast<XDisplay *>(mInputDisplay); }
+    //if ( InitialiseXInput( mDisplay ) )
+    {
+      //SelectEvents( mDisplay, surface->GetXWindow() );
+      std::vector<int> touchDevices;
+      XEHGetTouchDevices( mDisplay, touchDevices );
+
+      unsigned char mask[1] = { 0 };
+      XISetMask(mask, XI_ButtonPress);
+      XISetMask(mask, XI_ButtonRelease);
+      XISetMask(mask, XI_Motion);
+
+      int numberOfDevices = touchDevices.size();
+
+      XIEventMask *eventMasks = new XIEventMask[numberOfDevices];
+      XIEventMask *eventMasksPointer = eventMasks;
+
+      for (std::vector<int>::iterator iterator = touchDevices.begin();
+           iterator != touchDevices.end();
+           ++iterator, ++eventMasksPointer)
+      {
+        eventMasksPointer->deviceid = *iterator;
+        eventMasksPointer->mask_len = sizeof(mask);
+        eventMasksPointer->mask = mask;
+      }
+
+      XISelectEvents(display, mWindow, eventMasks, numberOfDevices);
+      XFlush(display);
+
+    }
+    //XSelectInput( mDisplay, surface->GetXWindow(), KeyPressMask | KeyReleaseMask );
+    //XSelectInput( mDisplay, mWindow, KeyPressMask | KeyReleaseMask );
+
+
+    //mXInput2.Initialize();
+    // Start monitoring for X events on a file descriptor return via ConnectionNumber.
+    int fileDescriptor = ConnectionNumber( mDisplay );
+    CallbackBase* callback =  MakeCallback( this, &Impl::TestXEventReceivedP1 );
+    //mFileDescriptorMonitor = new FileDescriptorMonitor( fileDescriptor, callback );
+    //mInitialized = true;
+    //static IOLoop * getInstance();
+    //IOLoop() {
+    gTestMainLoopData.testEPFD = epoll_create( 1 );
+    if( gTestMainLoopData.testEPFD < 0 )
+    {
+      std::cout << "Failed to create epoll" << std::endl;
+    }
+
+    gTestMainLoopData.testHandlers[fileDescriptor] = callback;
+    epoll_event e;
+    e.data.fd = fileDescriptor;
+    e.events = EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLPRI | EPOLLERR | EPOLLET;//events to poll
+    if( epoll_ctl( gTestMainLoopData.testEPFD, EPOLL_CTL_ADD, fileDescriptor, &e ) < 0 )
+    {
+      std::cout << "Failed to insert handler to epoll" << std::endl;
+    }
+#endif
+
+#if 0
+    //todor
+    //pthread_t threads[NUM_THREADS];
+    int rc = pthread_create( &mTestThread, NULL, &MainLoopOverride, NULL );
+    if( rc )
+    {
+       std::cout << "Error:unable to create thread," << rc << std::endl;
+       //exit(-1);
+    }
+    //pthread_exit(NULL);
+#endif
+
+
+
+#if 1
     // Only register for touch and key events if we have a window
     if ( window != 0 )
     {
@@ -430,6 +850,7 @@ struct EventHandler::Impl
 
 #endif // DALI_ELDBUS_AVAILABLE
     }
+#endif //todor
   }
 
   /**
@@ -546,7 +967,7 @@ struct EventHandler::Impl
     EventHandler* handler( (EventHandler*)data );
     if ( mouseWheelEvent->window == handler->mImpl->mWindow )
     {
-      WheelEvent wheelEvent( WheelEvent::MOUSE_WHEEL, mouseWheelEvent->direction, mouseWheelEvent->modifiers, Vector2(mouseWheelEvent->x, mouseWheelEvent->y), mouseWheelEvent->z, mouseWheelEvent->timestamp );
+      Dali::WheelEvent wheelEvent( Dali::WheelEvent::MOUSE_WHEEL, mouseWheelEvent->direction, mouseWheelEvent->modifiers, Vector2(mouseWheelEvent->x, mouseWheelEvent->y), mouseWheelEvent->z, mouseWheelEvent->timestamp );
       handler->SendWheelEvent( wheelEvent );
     }
     return ECORE_CALLBACK_PASS_ON;
@@ -597,7 +1018,7 @@ struct EventHandler::Impl
 
           DALI_LOG_INFO( gImfLogging, Debug::General, "EVENT EcoreEventCustomWheel: z: %d\n", z );
 
-          WheelEvent wheelEvent( WheelEvent::CUSTOM_WHEEL, 0, 0, Vector2(0.0f, 0.0f), z, timeStamp );
+          Dali::WheelEvent wheelEvent( Dali::WheelEvent::CUSTOM_WHEEL, 0, 0, Vector2(0.0f, 0.0f), z, timeStamp );
           handler->SendWheelEvent( wheelEvent );
         }
         break;
@@ -682,7 +1103,7 @@ struct EventHandler::Impl
           keyString = keyEvent->string;
         }
 
-        KeyEvent keyEvent(keyName, keyString, keyCode, modifier, time, KeyEvent::Down);
+        Dali::KeyEvent keyEvent(keyName, keyString, keyCode, modifier, time, Dali::KeyEvent::Down);
         handler->SendEvent( keyEvent );
       }
     }
@@ -751,7 +1172,7 @@ struct EventHandler::Impl
           keyString = keyEvent->string;
         }
 
-        KeyEvent keyEvent(keyName, keyString, keyCode, modifier, time, KeyEvent::Up);
+        Dali::KeyEvent keyEvent(keyName, keyString, keyCode, modifier, time, Dali::KeyEvent::Up);
         handler->SendEvent( keyEvent );
 
       }
@@ -1664,10 +2085,26 @@ struct EventHandler::Impl
 #endif // DALI_PROFILE_UBUNTU
 
   // Data
+
   EventHandler* mHandler;
   std::vector<Ecore_Event_Handler*> mEcoreEventHandler;
   Ecore_X_Window mWindow;
   int mXiDeviceId;
+  pthread_t mTestThread;
+
+  //todor
+  //WEI mWEI;
+  //XInput2 mXInput2;                                       ///< XInput2 handler
+#if 1
+  Display* mDisplay;                                      ///< X connection todor
+  //FileDescriptorMonitor* mFileDescriptorMonitor;          ///< File descriptor monitor for X events
+#endif
+
+public: //hack for thread
+  int mTestEPFD;
+  epoll_event mTestEvents[100];
+  CallbackBase* mTestHandlers[100];
+private:
 
 #ifdef DALI_ELDBUS_AVAILABLE
   Eldbus_Connection* mSessionConnection;
@@ -1688,6 +2125,7 @@ EventHandler::EventHandler( RenderSurface* surface, CoreEventInterface& coreEven
   mImpl( NULL ),
   mPaused( false )
 {
+  std::cout << "todor: EventHandler cons (ecore-x-event-handler)" << std::endl;
   Ecore_X_Window window = 0;
 
   // this code only works with the EcoreX11 RenderSurface so need to downcast
@@ -1696,9 +2134,13 @@ EventHandler::EventHandler( RenderSurface* surface, CoreEventInterface& coreEven
   {
     // enable multi touch
     window = ecoreSurface->GetXWindow();
+
+    Display* display = static_cast< Display* >(ecore_x_display_get());
+
+
+    mImpl = new Impl(this, window, display, surface );
   }
 
-  mImpl = new Impl(this, window);
 }
 
 EventHandler::~EventHandler()
@@ -1739,7 +2181,7 @@ void EventHandler::SendEvent(TouchPoint& point, unsigned long timeStamp)
   }
 }
 
-void EventHandler::SendEvent(KeyEvent& keyEvent)
+void EventHandler::SendEvent(Dali::KeyEvent& keyEvent)
 {
   Dali::PhysicalKeyboard physicalKeyboard = PhysicalKeyboard::Get();
   if ( physicalKeyboard )
@@ -1757,7 +2199,7 @@ void EventHandler::SendEvent(KeyEvent& keyEvent)
   mCoreEventInterface.ProcessCoreEvents();
 }
 
-void EventHandler::SendWheelEvent( WheelEvent& wheelEvent )
+void EventHandler::SendWheelEvent( Dali::WheelEvent& wheelEvent )
 {
   // Create WheelEvent and send to Core.
   Integration::WheelEvent event( static_cast< Integration::WheelEvent::Type >(wheelEvent.type), wheelEvent.direction, wheelEvent.modifiers, wheelEvent.point, wheelEvent.z, wheelEvent.timeStamp );

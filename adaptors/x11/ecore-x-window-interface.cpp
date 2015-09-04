@@ -27,6 +27,36 @@
 
 // INTERNAL INCLUDES
 #include <ecore-x-types.h>
+//todor
+#include <iostream>
+
+
+
+
+void _ecore_x_input_mouse_handler(XEvent *xevent)
+{
+
+  std::cout << "todor: ...................................................................... GOT IT" << std::endl;
+
+
+
+
+
+#if 0
+#ifdef ECORE_XI2
+if (xevent->type != GenericEvent) return;
+
+XIDeviceEvent *evd = (XIDeviceEvent *)(xevent->xcookie.data);
+int devid = evd->deviceid;
+
+switch (xevent->xcookie.evtype)
+{
+}
+#endif
+#endif
+}
+
+
 
 namespace Dali
 {
