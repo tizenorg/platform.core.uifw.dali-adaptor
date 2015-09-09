@@ -132,14 +132,16 @@ void RenderThread::Start()
 void RenderThread::Stop()
 {
   DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Stop()\n");
-
-  if( mSurface )
   {
-    // Tell surface we have stopped rendering
-    mSurface->StopRender();
+    Dali::Mutex::ScopedLock lock( mMutex );
+    if( mSurface )
+    {
+      // Tell surface we have stopped rendering
+      mSurface->StopRender();
 
-    // The surface will be destroyed soon; this pointer will become invalid
-    mSurface = NULL;
+      // The surface will be destroyed soon; this pointer will become invalid
+      mSurface = NULL;
+    }
   }
 
   // shutdown the render thread and destroy the opengl context
@@ -286,11 +288,13 @@ void RenderThread::ShutdownEgl()
 {
   // inform core of context destruction
   mCore.ContextDestroyed();
-
-  if( mSurface )
   {
-    // give a chance to destroy the OpenGL surface that created externally
-    mSurface->DestroyEglSurface( *mEGL );
+    Dali::Mutex::ScopedLock lock( mMutex );
+    if( mSurface )
+    {
+      // give a chance to destroy the OpenGL surface that created externally
+      mSurface->DestroyEglSurface( *mEGL );
+    }
   }
 
   // delete the GL context / egl surface

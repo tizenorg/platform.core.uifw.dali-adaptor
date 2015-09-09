@@ -124,9 +124,9 @@ void FrameTime::Resume()
 {
   DALI_LOG_INFO( gLogFilter, Debug::Concise, "FrameTime: Resuming\n" );
 
+  Dali::Mutex::ScopedLock lock( mMutex );
   SetLastSyncTime();   // Should only update the last Sync time so the elapsed time during suspension is taken into consideration when we next update.
   mFirstFrame = TRUE;
-
   mRunning = TRUE;
 }
 
@@ -142,6 +142,7 @@ void FrameTime::WakeUp()
 {
   DALI_LOG_INFO( gLogFilter, Debug::Concise, "FrameTime: Waking Up\n" );
 
+  Dali::Mutex::ScopedLock lock( mMutex );
   SetLastSyncTime();
   mLastSyncTimeAtUpdate = mLastSyncTime; // We do not want any animations to progress as we have just been woken up.
   mFirstFrame = TRUE;

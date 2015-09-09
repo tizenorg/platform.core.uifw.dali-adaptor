@@ -19,7 +19,7 @@
  */
 
 // EXTERNAL INCLUDES
-#include <pthread.h>
+#include <dali/devel-api/common/mutex.h>
 
 // INTERNAL INCLUDES
 #include <egl-interface.h>
@@ -218,6 +218,7 @@ private: // Data
   Dali::DisplayConnection*      mDisplayConnection;      ///< Display connection
   const EnvironmentOptions&     mEnvironmentOptions;     ///< Environment options
   bool                          mSurfaceReplaced;        ///< True when new surface has been initialzed.
+  Dali::Mutex                   mMutex;                  ///< Mutex to secure access to surface pointer
 };
 
 } // namespace Adaptor
