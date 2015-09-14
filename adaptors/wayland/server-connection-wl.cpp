@@ -45,17 +45,25 @@ ServerConnection::ServerConnection(
 : mConnected(false),
   mObserver(observer)
 {
+  Ecore_Ipc_Type ipctype = ECORE_IPC_LOCAL_USER;
+
   ecore_ipc_init();
   mService.name = eina_stringshare_add(serviceName);
   mService.num = serviceNumber;
   mService.isSystem = isSystem;
 
+  if( mService.isSystem )
+  {
+    ipctype = ECORE_IPC_LOCAL_SYSTEM;
+  }
+
   DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "ServerConnection: Connecting to %s %d\n", mService.name, mService.num );
 
-  mIpcServer = NULL;
+  mIpcServer = ecore_ipc_server_connect( ipctype, (char*)mService.name, mService.num, this );
 
   if( !mIpcServer )
   {
+    DALI_LOG_INFO( gIndicatorLogFilter, Debug::General, "mIpcServer is null\n" );
     ecore_ipc_shutdown();
   }
   else
