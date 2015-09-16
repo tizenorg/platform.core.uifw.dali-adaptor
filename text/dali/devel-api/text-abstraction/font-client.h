@@ -57,7 +57,58 @@ class FontClient;
  * FontId ubuntuMonoTwelve = fontClient.GetFontId( "/usr/share/fonts/truetype/ubuntu-font-family/UbuntuMono-R.ttf", 12*64 );
  * @endcode
  * Glyph metrics and bitmap resources can then be retrieved using the FontId.
+ *
+ *
+ * <h3> Font Matching </h3>
+ *
+ * An application can set a font for it's text to use.
+ * If that font can't support the glyphs in that text then the font will be substituted with a font that can.
+ * The below table shows the actual font that will be used in different scenarios.
+ *
+ * key:
+ * Choco : A font which supports Latin and Korean
+ * LatEx : A font which does not support Korean ( ㅖ ) and has no preferred list.
+ * LatUI : A font which does not support Korean ( ㅖ )
+ *  KorUI : A font which supports Korean ( ㅖ ), 1st preferred font after LatUI
+ *  ChiUI : A font which supports Chinese, 2nd preferred font after LatUI ( after KorUI )
+ * DepUI : A font which is no longer supported on any system
+ *
+ * System Font       |  Choco | Choco | LatUI | LatUI | LatUI | Choco | LatUI | Choco | Choco | Choco | LatEx | Choco | LatUI |
+ * Application Font  |    /   | LatUI |   /   | Choco | LatUI | LatUI |   /   | LatUI |   /   | LatEx |   /   | DepUI |   /   |
+ * Required text     |    ㅖ     |      ㅖ      |      ㅖ      |     ㅖ       |     ㅖ       |   hello | hello | ⊗⊗⊗⊗⊗ | ⊗⊗⊗⊗⊗ |   ㅖ     |      ㅖ      |   hello | ⊗⊗⊗⊗⊗ |
+ * Actual Font used  |  Choco | KorUI | KorUI | Choco | KorUI | LatUI | LatUI |   tbc |  tbc  |  tbc  |  tbc  | Choco |  tbc  |
+ * Scenario key      |    a   |   b   |   c   |   d   |   e   |   f   |   g   |   h   |   i   |   j   |   k   |   l   |   m   |
+ *
+ * Scenario key      | Explanation
+ * ---------------------------------------------------------------------
+ * a                 | System font supports text
+ * b                 | Application sets font which does not support text, font in preferred list supports text
+ * c                 | System font does not support text, preferred font list available
+ * d                 | Application sets font which supports text whilst system font does not
+ * e                 | Application set font and system font do not support text, font in preferred list supports text
+ * f                 | Application sets font which supports text and system font also supports text
+ * g                 | System font set which supports text, font has a preferred list.
+ * h                 | Application set to font with preferred list but none support obscure text.
+ * i                 | System font does not support obscure text.
+ * j                 | Application set font does not support text and has no preferred list. System font supports text.
+ * k                 | System font does not support text and has no preferred list.
+ * l                 | Application set to font which does not support text and has no preferred list. System font support text.
+ * m                 | System font does not support text and preferred list of that font does not support the text either.
+ *
+ * <h4> System Font Change </h4>
+ *
+ * If Application font is set then the system font changing will have no effect on that font.
+ *
+ * If the system font changes then the same matching will occur. The new font can be in these categories:
+ * 1) A font which supports text ( Scenario a )
+ * 2) A font which does not support text and has no preferred list. ( As scenario k )
+ * 3) A font which does not support text but has a preferred list in which a supported font is included. ( As scenario c )
+ * 4) A font which does not support text and has a preferred list in which does not have a supported font. ( As scenario m )
+ *
+ * tbc is behaviour which needs to be confirmed.
+ * Mixed text is treated on a per character basis.
  */
+
 class DALI_IMPORT_API FontClient : public BaseHandle
 {
 public:
