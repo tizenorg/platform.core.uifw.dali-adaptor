@@ -42,7 +42,7 @@ const unsigned int DEFAULT_MINIMUM_FRAME_TIME_INTERVAL( 16667u );
 
 const unsigned int MICROSECONDS_PER_SECOND( 1000000u );
 const unsigned int MICROSECONDS_PER_MILLISECOND( 1000u );
-
+const double RECIPROCAL_MICROSECONDS_PER_MILLISECOND( 0.001f );
 const float        MICROSECONDS_TO_SECONDS( 0.000001f );
 
 const unsigned int HISTORY_SIZE(3);
@@ -209,12 +209,14 @@ void FrameTime::PredictNextSyncTime( float& lastFrameDeltaSeconds, unsigned int&
     mFirstFrame = FALSE;
 
     // Calculate the time till the next render
-    unsigned int timeTillNextRender( minimumFrameTimeInterval * framesTillNextSync );
+    double preciseTimeTillNextRender = static_cast<double>( minimumFrameTimeInterval * framesTillNextSync );
 
     // Set the input variables
     lastFrameDeltaSeconds = lastFrameDelta * MICROSECONDS_TO_SECONDS;
-    lastSyncTimeMilliseconds = lastSyncTime / MICROSECONDS_PER_MILLISECOND;
-    nextSyncTimeMilliseconds = ( lastSyncTime + timeTillNextRender ) / MICROSECONDS_PER_MILLISECOND;
+    double preciseLastSyncTime = static_cast<double>( lastSyncTime );
+
+    lastSyncTimeMilliseconds = static_cast<unsigned int>( preciseLastSyncTime * RECIPROCAL_MICROSECONDS_PER_MILLISECOND );
+    nextSyncTimeMilliseconds = static_cast<unsigned int>( ( preciseLastSyncTime + preciseTimeTillNextRender ) * RECIPROCAL_MICROSECONDS_PER_MILLISECOND );
 
     DALI_LOG_INFO( gLogFilter, Debug::General, "FrameTime: Frame: %u, Time: %u, NextTime: %u, LastDelta: %f\n", mLastUpdateFrameNumber, lastSyncTimeMilliseconds, nextSyncTimeMilliseconds, lastFrameDeltaSeconds );
     DALI_LOG_INFO( gLogFilter, Debug::Verbose, "                      FramesInLastUpdate: %u, FramesTillNextSync: %u\n", framesInLastUpdate, framesTillNextSync );
