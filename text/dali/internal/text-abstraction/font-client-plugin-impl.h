@@ -47,6 +47,11 @@ namespace Internal
 typedef uint32_t FontDescriptionId;
 
 /**
+ *@brief Type used for indices addressing the vector with fallback font lists.
+ */
+typedef uint32_t FallbackFontListId;
+
+/**
  * @brief FontClient implementation.
  */
 struct FontClient::Plugin
@@ -363,6 +368,9 @@ private:
 
   FontList mSystemFonts;       ///< Cached system fonts.
   FontList mDefaultFonts;      ///< Cached default fonts.
+
+  std::vector<CacheItem> mFallbackCache; ///< A vector of indices into mFallbackFonts for each preferred font.
+  std::vector<FontList> mFallbackFontLists;  ///< Cached fallback font lists.
 
   std::vector<CacheItem>                mFontCache;            ///< Caches the FreeType face and font metrics of the triplet 'path to the font file name, font point size and face index'.
   std::vector<FontDescriptionCacheItem> mValidatedFontCache;   ///< Caches indices to the vector of font descriptions for a given font.
