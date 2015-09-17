@@ -135,6 +135,13 @@ FontId FontClient::FindDefaultFont( Character charcode, PointSize26Dot6 pointSiz
   return mPlugin->FindDefaultFont( charcode, pointSize, preferColor );
 }
 
+FontId FontClient::FindFallbackFont( const FontDescription& preferredFont, Character charcode, PointSize26Dot6 pointSize, bool preferColor )
+{
+  CreatePlugin();
+
+  return mPlugin->FindFallbackFont( preferredFont, charcode, pointSize, preferColor );
+}
+
 bool FontClient::IsScalable( const FontPath& path )
 {
   CreatePlugin();
