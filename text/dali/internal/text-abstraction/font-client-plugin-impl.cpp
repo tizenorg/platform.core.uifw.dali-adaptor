@@ -354,13 +354,31 @@ void FontClient::Plugin::GetDefaultPlatformFontDescription( FontDescription& fon
 {
   DALI_LOG_INFO( gLogFilter, Debug::Verbose, "FontClient::Plugin::GetDefaultPlatformFontDescription\n");
 
-  if ( Adaptor::IsAvailable() )
+  FcInitBringUptoDate(); // Could call this when the the Font change signal is received but currently should only update cache if a change in config file detected.
+  FcResult result = FcResultMatch;
+  FcPattern* fontFamilyPattern = FcPatternCreate();
+  FcConfigSubstitute(NULL, fontFamilyPattern, FcMatchPattern);
+
+  FcPattern* match = FcFontMatch( NULL /* use default configure */, fontFamilyPattern, &result );
+
+  if( match )
   {
-    std::string weight; // todo convert weight into enum
-    Dali::Internal::Adaptor::Adaptor& adaptorImpl( Dali::Internal::Adaptor::Adaptor::GetImplementation( Adaptor::Get() ) );
-    adaptorImpl.GetPlatformAbstraction().GetDefaultFontDescription( fontDescription.family, weight );
-    DALI_LOG_INFO( gLogFilter, Debug::Verbose, "FontClient::Plugin::GetDefaultPlatformFontDescription Retreived fontFamily:%s\n", fontDescription.family.c_str() );
+    int width = 0;
+    int weight = 0;
+    int slant = 0;
+    GetFcString( match, FC_FILE, fontDescription.path );
+    GetFcString( match, FC_FAMILY, fontDescription.family );
+    DALI_LOG_INFO( gLogFilter, Debug::Verbose, "FontClient::Plugin::GetDefaultPlatformFontDescription matched:%s \n", fontDescription.family.c_str());
+    GetFcInt( match, FC_WIDTH, width );
+    GetFcInt( match, FC_WEIGHT, weight );
+    GetFcInt( match, FC_SLANT, slant );
+    fontDescription.width = IntToWidthType( width );
+    fontDescription.weight = IntToWeightType( weight );
+    fontDescription.slant = IntToSlantType( slant );
+    // destroyed the matched pattern
+    FcPatternDestroy( match );
   }
+  FcPatternDestroy( fontFamilyPattern );
 }
 
 void FontClient::Plugin::GetSystemFonts( FontList& systemFonts )
@@ -417,6 +435,8 @@ FontId FontClient::Plugin::FindFontForCharacter( const FontList& fontList,
                                                  PointSize26Dot6 requestedSize,
                                                  bool preferColor )
 {
+  DALI_LOG_INFO( gLogFilter, Debug::Verbose, "FontClient::Plugin::FindFontForCharacter\n");
+
   FontId fontId(0);
   bool foundColor(false);
 
