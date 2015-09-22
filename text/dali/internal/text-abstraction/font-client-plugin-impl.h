@@ -24,6 +24,7 @@
 #include <dali/internal/text-abstraction/font-client-impl.h>
 
 // EXTERNAL INCLUDES
+#include <fontconfig/fontconfig.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
@@ -262,6 +263,14 @@ private:
    * Calls GetFcFontSet() to retrieve the fonts.
    */
   void InitSystemFonts();
+
+  /**
+   * Gets the FontDescription which matches the given pattern
+   * @param[in] pattern pattern to match against
+   * @param[out] fontDescription the resultant fontDescription that matched
+   * @return true if match found
+   */
+  bool MatchFontDescriptionToPattern( FcPattern* pattern, Dali::TextAbstraction::FontDescription& fontDescription );
 
   /**
    * @brief Creates a font family pattern used to match fonts.
