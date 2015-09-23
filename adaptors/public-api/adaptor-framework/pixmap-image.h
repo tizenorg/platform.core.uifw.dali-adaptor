@@ -49,6 +49,7 @@ typedef IntrusivePtr<PixmapImage> PixmapImagePtr;
 
 /**
  * @brief Used for displaying native Pixmap images.
+ * @since DALi 1.1.4
  *
  * The native pixmap can be created internally or
  * externally by X11 or ECORE-X11.
