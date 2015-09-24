@@ -96,6 +96,8 @@ const unsigned int NUM_FONT_SLANT_TYPE = sizeof( FONT_SLANT_TYPE_TO_INT ) / size
  */
 int ValueToIndex( int value, const int* const table, unsigned int maxIndex )
 {
+  DALI_LOG_INFO( gLogFilter, Debug::Verbose, "-->FontClient::Plugin::ValueToIndex value(%d)\n", value);
+
   if( ( NULL == table ) ||
       ( value <= table[0] ) )
   {
@@ -109,16 +111,18 @@ int ValueToIndex( int value, const int* const table, unsigned int maxIndex )
 
   for( unsigned int index = 0u; index < maxIndex; )
   {
-    const unsigned int indexPlus = ++index;
     const int v1 = table[index];
+    const unsigned int indexPlus = ++index;
     const int v2 = table[indexPlus];
     if( ( v1 < value ) && ( value <= v2 ) )
     {
-      return ( ( value - v1 ) < ( v2 - value ) ) ? index : indexPlus;
+      const int result = ( ( value - v1 ) < ( v2 - value ) ) ? index : indexPlus;
+      DALI_LOG_INFO( gLogFilter, Debug::Verbose, "FontClient::Plugin::ValueToIndex result(%d)\n",  result );
+      return result;
     }
-
-    index = indexPlus;
   }
+
+  DALI_LOG_INFO( gLogFilter, Debug::Verbose, "FontClient::Plugin::ValueToIndex exit 0 <-- \n");
 
   return 0;
 }
