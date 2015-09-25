@@ -158,13 +158,17 @@ void Application::Quit()
 
 void Application::QuitFromMainLoop()
 {
-  mAdaptor->Stop();
+  // Guard against abort callbacks from the wrong thread
+  if( Adaptor::Get() )
+  {
+    mAdaptor->Stop();
 
-  Dali::Application application(this);
-  mTerminateSignal.Emit( application );
+    Dali::Application application(this);
+    mTerminateSignal.Emit( application );
 
-  mFramework->Quit();
-  // This will trigger OnTerminate(), below, after the main loop has completed.
+    mFramework->Quit();
+    // This will trigger OnTerminate(), below, after the main loop has completed.
+  }
 }
 
 void Application::OnInit()
