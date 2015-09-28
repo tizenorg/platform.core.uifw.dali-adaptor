@@ -84,11 +84,6 @@ void TizenPlatformAbstraction::Resume()
   }
 }
 
-void TizenPlatformAbstraction::GetDefaultFontDescription( std::string& fontFamily, std::string& fontStyle ) const
-{
-  FontConfigurationParser::Parse(FONT_CONFIGURATION_FILE, fontFamily, fontStyle);
-}
-
 int TizenPlatformAbstraction::GetDefaultFontSize() const
 {
   int fontSize( -1 );
