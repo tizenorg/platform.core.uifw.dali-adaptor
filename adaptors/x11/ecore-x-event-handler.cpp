@@ -795,6 +795,7 @@ struct EventHandler::Impl
           ImfManager& imfManagerImpl( ImfManager::GetImplementation( imfManager ) );
           if( imfManagerImpl.RestoreAfterFocusLost() )
           {
+            DALI_LOG_INFO( gImfLogging, Debug::General, "EVENT EcoreEventWindowFocusIn - RestoreAfterFocusLost \n" );
             imfManagerImpl.Activate();
           }
         }
@@ -813,7 +814,7 @@ struct EventHandler::Impl
     Ecore_X_Event_Window_Focus_Out* focusOutEvent( (Ecore_X_Event_Window_Focus_Out*)event );
     EventHandler* handler( (EventHandler*)data );
 
-    DALI_LOG_INFO( gImfLogging, Debug::General, "EVENT >>EcoreEventWindowFocusOut \n" );
+    DALI_LOG_INFO( gImfLogging, Debug::General, "EVENT >>EcoreEventWindowFocusOut RestoreAfterFocusLost\n" );
 
     // If the window loses focus then hide the keyboard.
     if ( focusOutEvent->win == handler->mImpl->mWindow )
@@ -824,6 +825,7 @@ struct EventHandler::Impl
         if ( imfManager )
         {
           ImfManager& imfManagerImpl( ImfManager::GetImplementation( imfManager ) );
+          DALI_LOG_INFO( gImfLogging, Debug::General, "EVENT >>EcoreEventWindowFocusOut RestoreAfterFocusLost[%s]\n", imfManagerImpl.RestoreAfterFocusLost()?"true":"false" );
           if( imfManagerImpl.RestoreAfterFocusLost() )
           {
             imfManagerImpl.Deactivate();

@@ -133,6 +133,8 @@ void DisconnectCallbacks( Ecore_IMF_Context *imfContext )
 
 void Show()
 {
+  DALI_LOG_INFO( gLogFilter, Debug::General, "VKB Show\n" );
+
   Dali::ImfManager imfManager = ImfManager::Get(); // Create ImfManager instance (if required) to show the keyboard
   Ecore_IMF_Context* imfContext = reinterpret_cast<Ecore_IMF_Context*>( imfManager.GetContext() );
 
@@ -144,6 +146,8 @@ void Show()
 
 void Hide()
 {
+  DALI_LOG_INFO( gLogFilter, Debug::General, "VKB Hide\n" );
+
   if( ImfManager::IsAvailable() /* We do not want to create an ImfManager instance*/ )
   {
     Dali::ImfManager imfManager = ImfManager::Get();
