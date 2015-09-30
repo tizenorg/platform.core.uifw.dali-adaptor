@@ -326,6 +326,8 @@ bool ImfManager::RestoreAfterFocusLost() const
 
 void ImfManager::SetRestoreAfterFocusLost( bool toggle )
 {
+  DALI_LOG_INFO( gLogFilter, Debug::General, "ImfManager::SetRestoreAfterFocusLost[%s]\n", toggle?"true":"false" );
+
   mRestoreAfterFocusLost = toggle;
 }
 
