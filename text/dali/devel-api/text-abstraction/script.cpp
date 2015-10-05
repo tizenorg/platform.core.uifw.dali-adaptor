@@ -172,6 +172,19 @@ Script GetCharacterScript( Character character )
   // 6b. Additional transport and map symbols ( 1F681 - 1F6C5 )
   // 6c. Other additional symbols ( 1F30D - 1F567 )
 
+  // Symbols. Work around for these symbols.
+  // 0x25cb
+  // 0x25cf
+  // 0x25a1
+  // 0x25a0
+  // 0x2664
+  // 0x2661
+  // 0x2662
+  // 0x2667
+  // 0x2606
+  // 0x25aa
+  // 0x262a
+
   if( IsCommonScript( character ) )
   {
     return COMMON;
@@ -355,6 +368,39 @@ Script GetCharacterScript( Character character )
         {
           return LATIN;
         }
+
+        // Symbols
+        if( ( 0x25cb == character ) ||
+            ( 0x25cf == character ) ||
+            ( 0x25a1 == character ) )
+        {
+          return SYMBOLS1;
+        }
+
+        if( 0x25a0 == character )
+        {
+          return SYMBOLS2;
+        }
+
+        if( ( 0x2664 == character ) ||
+            ( 0x2661 == character ) ||
+            ( 0x2662 == character ) ||
+            ( 0x2667 == character ) )
+        {
+          return SYMBOLS3;
+        }
+
+        if( ( 0x2606 == character ) ||
+            ( 0x25aa == character ) )
+        {
+          return SYMBOLS4;
+        }
+
+        if( 0x262a == character )
+        {
+          return SYMBOLS5;
+        }
+
         // U+2194 5. Uncategorized: left right arrow
         // U+2B55 5. Uncategorized: heavy large circle
         if( ( 0x2194 <= character ) && ( character <= 0x2B55 ) )

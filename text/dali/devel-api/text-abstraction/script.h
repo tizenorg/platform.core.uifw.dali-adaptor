@@ -72,6 +72,12 @@ enum Script
 
   EMOJI,      ///< The Emoji which map to standardized Unicode characters.
 
+  SYMBOLS1,    ///< Some symbols.
+  SYMBOLS2,    ///< Some symbols.
+  SYMBOLS3,    ///< Some symbols.
+  SYMBOLS4,    ///< Some symbols.
+  SYMBOLS5,    ///< Some symbols.
+
   UNKNOWN     ///< The script is unknown.
 };
 
@@ -112,6 +118,11 @@ const char* const ScriptName[] =
   "KHMER",      ///< The Khmer script. Used by the Khmer language.
 
   "EMOJI",      ///< The Emoji which map to standardized Unicode characters.
+  "SYMBOLS1",    ///< Some symbols.
+  "SYMBOLS2",    ///< Some symbols.
+  "SYMBOLS3",    ///< Some symbols.
+  "SYMBOLS4",    ///< Some symbols.
+  "SYMBOLS5",    ///< Some symbols.
 
   "UNKNOWN"     ///< The script is unknown.
 };
