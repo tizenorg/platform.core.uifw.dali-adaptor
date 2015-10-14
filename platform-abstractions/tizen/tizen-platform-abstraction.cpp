@@ -127,21 +127,7 @@ Integration::ResourcePointer TizenPlatformAbstraction::LoadResourceSynchronously
 
 Integration::BitmapPtr TizenPlatformAbstraction::DecodeBuffer( const Integration::ResourceType& resourceType, uint8_t * buffer, size_t size )
 {
-  Integration::BitmapPtr bitmap = 0;
-
-  Dali::Internal::Platform::FileCloser fileCloser( buffer, size, "rb" );
-  FILE * const fp = fileCloser.GetFile();
-  if( fp )
-  {
-    bool result = ImageLoader::ConvertStreamToBitmap( resourceType, "", fp, StubbedResourceLoadingClient(), bitmap );
-    if ( !result || !bitmap )
-    {
-      bitmap.Reset();
-      DALI_LOG_WARNING( "Unable to decode bitmap supplied as in-memory blob.\n" );
-    }
-  }
-
-  return bitmap;
+  return ImageLoader::DecodeBuffer( resourceType, buffer, size );
 }
 
 void TizenPlatformAbstraction::CancelLoad(Integration::ResourceId id, Integration::ResourceTypeId typeId)

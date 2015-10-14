@@ -52,8 +52,23 @@ bool ConvertStreamToBitmap( const Integration::ResourceType& resourceType, std::
  */
 bool ConvertBitmapToStream( std::string path, FILE * const fp, Integration::BitmapPtr& ptr );
 
-
+/**
+ * Load a resource. This is a synchronous request, it will block the main loop whilst executing.
+ * @param[in] resourceType The type of resource to load
+ * @param[in] resourcePath The path to the resource
+ * @return A pointer to a ref-counted resource
+ */
 Integration::ResourcePointer LoadResourceSynchronously( const Integration::ResourceType& resourceType, const std::string& resourcePath );
+
+/**
+ * Decode a buffer of data synchronously.
+ * @param[in] resourceType The type of resource to load
+ * @param[in] buffer The encoded data
+ * @param[in] bufferSize The size of the buffer of data.
+ *
+ * @return A pointer to the decoded buffer.
+ */
+Integration::BitmapPtr DecodeBuffer(const Integration::ResourceType& resourceType, void * const buffer, size_t size);
 
 ImageDimensions  GetClosestImageSize( const std::string& filename,
                           ImageDimensions size,

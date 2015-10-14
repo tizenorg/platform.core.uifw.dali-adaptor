@@ -320,6 +320,25 @@ ResourcePointer LoadResourceSynchronously( const Integration::ResourceType& reso
   return resource;
 }
 
+Integration::BitmapPtr DecodeBuffer(const Integration::ResourceType& resourceType, void * const buffer, size_t size)
+{
+  Integration::BitmapPtr bitmap = 0;
+
+  Dali::Internal::Platform::FileCloser fileCloser( buffer, size, "rb" );
+  FILE * const fp = fileCloser.GetFile();
+  if( fp )
+  {
+    bool result = ConvertStreamToBitmap( resourceType, "", fp, StubbedResourceLoadingClient(), bitmap );
+    if ( !result || !bitmap )
+    {
+      bitmap.Reset();
+      DALI_LOG_WARNING( "Unable to decode bitmap supplied as in-memory blob.\n" );
+    }
+  }
+
+  return bitmap;
+}
+
 ///@ToDo: Rename GetClosestImageSize() functions. Make them use the orientation correction and scaling information. Requires jpeg loader to tell us about reorientation. [Is there still a requirement for this functionality at all?]
 ImageDimensions  GetClosestImageSize( const std::string& filename,
                                       ImageDimensions size,
