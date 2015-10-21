@@ -1277,6 +1277,8 @@ void Indicator::ShowIndicator(float duration)
   }
   else
   {
+    mIndicatorAnimation.Clear();
+
     if( EqualsZero(duration) )
     {
       mIndicatorAnimation.AnimateTo( Property( mIndicatorImageContainerActor, Dali::Actor::Property::POSITION ), Vector3(0, -mImageHeight, 0), Dali::AlphaFunction::EASE_OUT );
