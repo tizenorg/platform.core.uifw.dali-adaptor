@@ -21,6 +21,7 @@
 #include <string>
 #include <dali/public-api/common/dali-common.h>
 #include <dali/public-api/images/pixel.h>
+#include <dali/public-api/images/image-operations.h>
 #include <dali/public-api/object/base-handle.h>
 
 namespace Dali
@@ -33,12 +34,23 @@ class BitmapLoader;
 class DALI_IMPORT_API BitmapLoader : public BaseHandle
 {
 public:
+
   /**
-   * @brief Create an initialized bitmap loader. This will automatically load the image.
+   * @brief Create an initialized bitmap loader.
    *
-   * @param[in] filename  Filename of the bitmap image to load.
+   * By calling Load(), the synchronous loading is started immediately.
+   *
+   * @param [in] url The URL of the image file to load.
+   * @param [in] size The width and height to fit the loaded image to.
+   * @param [in] fittingMode The method used to fit the shape of the image before loading to the shape defined by the size parameter.
+   * @param [in] samplingMode The filtering method used when sampling pixels from the input image while fitting it to desired size.
+   * @param [in] orientationCorrection Reorient the image to respect any orientation metadata in its header.
    */
-  static BitmapLoader New(const std::string& filename);
+  static BitmapLoader New( const std::string& url,
+                           ImageDimensions size = ImageDimensions( 0, 0 ),
+                           FittingMode::Type fittingMode = FittingMode::DEFAULT,
+                           SamplingMode::Type samplingMode = SamplingMode::BOX_THEN_LINEAR,
+                           bool orientationCorrection = true);
 
   /**
    * @brief Create an empty handle.
@@ -68,6 +80,18 @@ public:
   BitmapLoader& operator=(const BitmapLoader& rhs);
 
 public:
+
+  /**
+   * @brief Start the synchronous loading.
+   */
+  void Load();
+
+  /**
+   * @brief Query whether the image is loaded.
+   *
+   * @reture true if the image is loaded, false otherwise.
+   */
+  bool IsLoaded();
 
   /**
    * Get the raw pixel data.
