@@ -39,7 +39,7 @@ namespace Adaptor
 {
 
 class VSyncMonitorInterface;
-class ThreadSynchronization;
+class ThreadSynchronizationBase;
 class EnvironmentOptions;
 class AdaptorInternalServices;
 
@@ -58,7 +58,7 @@ public:
    * @param[in] adaptorInterfaces base adaptor interface
    * @param[in] environmentOptions environment options
    */
-  VSyncNotifier( ThreadSynchronization& sync,
+  VSyncNotifier( ThreadSynchronizationBase& sync,
                  AdaptorInternalServices& adaptorInterfaces,
                  const EnvironmentOptions& environmentOptions);
 
@@ -97,7 +97,7 @@ private:
 
 private:
 
-  ThreadSynchronization&              mThreadSynchronization;   ///< Used to synchronize all the threads
+  ThreadSynchronizationBase&          mThreadSynchronization;   ///< Used to synchronize all the threads
   Dali::Integration::Core&            mCore;                    ///< Dali core reference
   Integration::PlatformAbstraction&   mPlatformAbstraction;     ///< The platform abstraction for retrieving the current time etc.
   VSyncMonitorInterface*              mVSyncMonitor;            ///< VSyncMonitor interface

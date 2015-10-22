@@ -1,5 +1,5 @@
-#ifndef __DALI_INTERNAL_THREAD_SYNCHRONIZATION_H__
-#define __DALI_INTERNAL_THREAD_SYNCHRONIZATION_H__
+#ifndef __DALI_INTERNAL_BASIC_THREAD_SYNCHRONIZATION_H__
+#define __DALI_INTERNAL_BASIC_THREAD_SYNCHRONIZATION_H__
 
 /*
  * Copyright (c) 2015 Samsung Electronics Co., Ltd.
@@ -23,7 +23,7 @@
 
 // INTERNAL INCLUDES
 #include <base/thread-synchronization-base.h>
-#include <base/render-request.h>
+#include <base/render-thread.h>
 
 namespace Dali
 {
@@ -36,14 +36,13 @@ namespace Internal
 namespace Adaptor
 {
 
+class AdaptorInternalServices;
+
 /**
- * This object is used to synchronize the event, update, render and vsync threads.
- * This assumes that the update and render methods in Core are called from different threads.
- * The Core::GetMaximumUpdateCount() method determines how many frames may be prepared, ahead of the rendering.
- * For example if the maximum update count is 2, then Core::Update() for frame N+1 may be processed whilst frame N is being rendered.
- * However the Core::Update() for frame N+2 may not be called, until the Core::Render() method for frame N has returned.
+ * This object is used to synchronize the event, a combined update-render and vsync threads.
+ * This assumes that the Update and Render functions are called from the combined update-render thread.
  */
-class ThreadSynchronization : public ThreadSynchronizationBase
+class BasicThreadSynchronization : public ThreadSynchronizationBase
 {
 public:
 
@@ -52,138 +51,87 @@ public:
    * @param[in] adaptorInterfaces base adaptor interface
    * @param[in] numberOfVSyncsPerRender The number of frames per render
   */
-  ThreadSynchronization( AdaptorInternalServices& adaptorInterfaces, unsigned int numberOfVSyncsPerRender );
+  BasicThreadSynchronization( AdaptorInternalServices& adaptorInterfaces, unsigned int numberOfVSyncsPerRender );
 
   /**
    * Non virtual destructor. Not intended as base class.
    */
-  ~ThreadSynchronization();
+  ~BasicThreadSynchronization();
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // Called by the Event Thread
   /////////////////////////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Initialises the ThreadSynchronisation class. The expectation is that this function will be
-   * called when all threads are about to be set up and that Start will be called when
-   * the the scene is actually prepared and ready to be displayed. This way our first update
-   * will have the actual scene we require.
-   *
-   * @note Should only be called by the Event Thread.
+   * @copydoc ThreadSynchronization::Initialise
    */
   void Initialise();
 
   /**
-   * Starts running all threads. This waits until all threads are up and running.
-   *
-   * @pre A call to Initialise has been made.
-   *
-   * @note Should only be called by the Event Thread.
+   * @copydoc ThreadSynchronization::Start
    */
   void Start();
 
   /**
-   * Stop the threads.
-   *
-   * @note Should only be called by the Event Thread.
+   * @copydoc ThreadSynchronization::Stop
    */
   void Stop();
 
   /**
-   * Pause the controller (and threads).
-   *
-   * @note Should only be called by the Event Thread.
+   * @copydoc ThreadSynchronization::Pause
    */
   void Pause();
 
   /**
-   * Resume the controller (and threads).
-   *
-   * @note Should only be called by the Event Thread.
+   * @copydoc ThreadSynchronization::Resume
    */
   void Resume();
 
   /**
-   * Wake update thread if sleeping. If the update thread is not sleeping
-   * this becomes a no-op.
-   * Called when an update is requested by Core.
-   * i.e. when a batch of messages have been queued for the next update.
-   *
-   * @note Should only be called by the Event Thread.
+   * @copydoc ThreadSynchronization::UpdateRequest
    */
   void UpdateRequest();
 
   /**
-   * Update once (even if paused)
-   *
-   * @note Should only be called by the Event Thread.
+   * @copydoc ThreadSynchronization::UpdateOnce
    */
   void UpdateOnce();
 
   /**
-   * Inform the render thread that there is a new surface, and that
-   * it should replace the current surface.
-   *
-   * @param[in] newSurface The new surface for rendering.
-   *
-   * @note Should only be called by the Event Thread.
+   * @copydoc ThreadSynchronization::ReplaceSurface
    */
   void ReplaceSurface( RenderSurface* newSurface );
 
   /**
-   * Set the refresh rate for rendering
-   *
-   * @param[in] numberOfVSyncsPerRender The number of vsync frames per render
-   *
-   * @note Should only be called by the Event Thread.
+   * @copydoc ThreadSynchronization::SetRenderRefreshRate
    */
   void SetRenderRefreshRate( unsigned int numberOfVSyncsPerRender );
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
-  // Called by the Update Thread
+  // Called by the UpdateRender Thread
   /////////////////////////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Called by Update thread when it is ready to run the update.
+   * Called by the combined Update & Render thread when it is ready to run the update and render.
    *
    * @param[in] notifyEvent Whether the event thread should be woken up.
    * @param[in] runUpdate Whether to run another update. If false, then the update-thread will attempt to sleep.
    * @param[out] lastFrameDeltaSeconds The delta, in seconds (with float precision), between the last two renders.
    * @param[out] lastSyncTimeMilliseconds The time, in milliseconds, of the last Sync.
    * @param[out] nextSyncTimeMilliseconds The estimated time, in milliseconds, at the next Sync.
-   * @return true if updating should continue, false if the update-thread should quit.
+   * @param[in] request Pointer to set if there are any requests. This does not need to be freed by the caller.
+   * @return true if updating & rendering should continue, false if the update-render-thread should quit.
    *
    * @note Should only be called by the Update thread.
    */
-  bool UpdateReady( bool notifyEvent, bool runUpdate, float& lastFrameDeltaSeconds, unsigned int& lastSyncTimeMilliseconds, unsigned int& nextSyncTimeMilliseconds );
-
-  /////////////////////////////////////////////////////////////////////////////////////////////////
-  // Called by the Render Thread
-  /////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /**
-   * Called by the Render thread when it is ready to render.
-   *
-   * @param[in] request Pointer to set if there are any requests. This does not need to be freed by the caller.
-   *
-   * @note Should only be called by the Render thread.
-   * @note If there is a request, then the Render thread should NOT perform a Render and only process the request
-   */
-  bool RenderReady( RenderRequest*& request );
-
-  /**
-   * Called by the render thread after it renders a frame.
-   * Used to notify the update-thread that a frame has been rendered.
-   * @pre Called by render thread only.
-   */
-  void RenderFinished();
+  bool UpdateRenderReady( bool notifyEvent, bool runUpdate, float& lastFrameDeltaSeconds, unsigned int& lastSyncTimeMilliseconds, unsigned int& nextSyncTimeMilliseconds, RenderRequest*& requestPtr );
 
   /**
    * Called by the Render thread to inform the synchronization class that the surface has been replaced.
    *
    * @note Should only be called by the Render thread.
    */
-  void RenderInformSurfaceReplaced();
+  void UpdateRenderInformSurfaceReplaced();
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // Called by the V-Sync Thread
@@ -218,7 +166,7 @@ public:
   void PostRenderComplete();
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
-  //// Called by the Render Thread if post-rendering is required
+  //// Called by the UpdateRender Thread if post-rendering is required
   /////////////////////////////////////////////////////////////////////////////////////////////////
 
   /**
@@ -234,10 +182,10 @@ public:
 private:
 
   // Undefined copy constructor.
-  ThreadSynchronization( const ThreadSynchronization& );
+  BasicThreadSynchronization( const BasicThreadSynchronization& );
 
   // Undefined assignment operator.
-  ThreadSynchronization& operator=( const ThreadSynchronization& );
+  BasicThreadSynchronization& operator=( const BasicThreadSynchronization& );
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // Called by ALL Threads
@@ -266,38 +214,26 @@ private:
   void UpdateTryToSleep( bool runUpdate );
 
   /**
-   * Called by the update thread to wait while the render-surface is being replaced.
-   * Calls methods that lock and locks itself so should NOT be called while a scoped-lock is held.
-   */
-  void UpdateWaitIfReplacingSurface();
-
-  /**
    * Called by the update thread to check if we're just resuming.
-   * This will lock the mutex in mUpdateThreadWaitCondition.
+   * This will lock the mutex in mUpdateRenderThreadWaitCondition.
    */
-  inline bool IsUpdateThreadResuming();
+  inline bool IsUpdateRenderThreadResuming();
 
   /**
    * Called by the update thread to check if the update thread should be running.
-   * This will lock the mutex in mUpdateThreadWaitCondition.
+   * This will lock the mutex in mUpdateRenderThreadWaitCondition.
    *
    * @return True if we're stopping, false otherwise.
    */
-  inline bool IsUpdateThreadStopping();
+  inline bool IsUpdateRenderThreadStopping();
 
   /**
-   * Called by the update thread to check if we've filled all update buffers.
-   * This will lock the mutex in mRenderThreadWaitCondition.
+   * Called by the update-render thread to check if we are supposed to be replacing the surface.
+   * This will lock the mutex in mUpdateRenderThreadWaitCondition.
    *
-   * @return True if all update buffers are full.
+   * @return True if we're replacing the surface, false otherwise.
    */
-  inline bool MaximumUpdateAheadOfRenderReached();
-
-  /**
-   * Called by the update thread when we are about to stop.
-   * This will call other functions which lock various conditional wait mutexes.
-   */
-  inline void StopAllThreads();
+  inline bool IsUpdateRenderReplacingSurface();
 
   /**
    * Runs the V-Sync Thread.
@@ -317,12 +253,6 @@ private:
    */
   inline void StopVSyncThread();
 
-  /**
-   * Stops the Render Thread.
-   * This will lock the mutex in mRenderThreadWaitCondition.
-   */
-  inline void StopRenderThread();
-
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // Called by V-Sync Thread
   /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -334,26 +264,6 @@ private:
    * @return true if running, false otherwise.
    */
   inline bool IsVSyncThreadRunning();
-
-  /////////////////////////////////////////////////////////////////////////////////////////////////
-  // Called by Render Thread
-  /////////////////////////////////////////////////////////////////////////////////////////////////
-
-  /**
-   * Checks if the Render thread should be running.
-   * This will lock the mutex in mRenderThreadWaitCondition.
-   *
-   * @return true if running, false otherwise.
-   */
-  inline bool IsRenderThreadRunning();
-
-  /**
-   * Checks if the render thread should be replacing the surface
-   * This will lock the mutex in mRenderThreadWaitCondition.
-   *
-   * @return true if the render thread should be replacing the surface, false otherwise.
-   */
-  inline bool IsRenderThreadReplacingSurface();
 
 private:
 
@@ -372,12 +282,10 @@ private:
 
   ReplaceSurfaceRequest mReplaceSurfaceRequest;       ///< Holder for a replace surface request
 
-  ConditionalWait mUpdateThreadWaitCondition;         ///< The wait condition for the update-thread.
-  ConditionalWait mRenderThreadWaitCondition;         ///< The wait condition for the render-thread.
+  ConditionalWait mUpdateRenderThreadWaitCondition;   ///< The wait condition for the update-render-thread.
   ConditionalWait mVSyncThreadWaitCondition;          ///< The wait condition for the v-sync-thread.
   ConditionalWait mEventThreadWaitCondition;          ///< The wait condition for the event-thread.
 
-  const int mMaximumUpdateCount;                      ///< How many frames may be prepared, ahead of the rendering.
   unsigned int mNumberOfVSyncsPerRender;              ///< How many frames for each update/render cycle.
 
   unsigned int mTryToSleepCount;                      ///< Count to ensure we don't go to sleep too early
@@ -385,29 +293,24 @@ private:
   volatile State::Type mState;                        ///< The current state of synchronisation (set & read by both the event & update threads).
 
   volatile int mVSyncAheadOfUpdate;                   ///< The number of frames vsync is ahead of update (set & read by both the v-sync & update threads).
-  volatile int mUpdateAheadOfRender;                  ///< The number of frames update is ahead of render (set & read by both the update & render threads).
   volatile int mNumberOfThreadsStarted;               ///< The number of threads that are initialised and running (set by update, v-sync & render threads, read by event-thread).
 
   //
   // NOTE: cannot use booleans as these are used from multiple threads, must use variable with machine word size for atomic read/write
   //
 
-  volatile unsigned int mUpdateThreadResuming;        ///< Whether the update-thread is resuming.
+  volatile unsigned int mUpdateRenderThreadResuming;  ///< Whether the update-thread is resuming.
 
   volatile unsigned int mVSyncThreadRunning;          ///< Whether the V-Sync thread is running (set by the update-thread, read by v-sync-thread).
   volatile unsigned int mVSyncThreadStop;             ///< Whether the V-Sync thread should be stopped (set by the update-thread, read by the v-sync-thread).
-
-  volatile unsigned int mRenderThreadStop;            ///< Whether the render-thread should be stopped (set by the update-thread, read by the render-thread).
-  volatile unsigned int mRenderThreadReplacingSurface;///< Whether the render-thread should replace the surface (set by the event & render threads, read by the render-thread).
 
   volatile unsigned int mRenderThreadPostRendering;   ///< Whether post-rendering is taking place (set by the event & render threads, read by the render-thread).
 
   volatile unsigned int mEventThreadSurfaceReplaced;  ///< Checked by the event-thread & set by the render-thread when the surface has been replaced (set by the event & render threads, read by the event-thread).
 
   unsigned int mVSyncThreadInitialised;               ///< Whether the V-Sync thread has been initialised (only used by v-sync-thread).
-  unsigned int mRenderThreadInitialised;              ///< Whether the render-thread has been initialised (only used by the render-thread).
   unsigned int mRenderThreadSurfaceReplaced;          ///< Whether the render-thread has replaced the surface (only used by render-thread).
-}; // class ThreadSynchronization
+};
 
 } // namespace Adaptor
 
@@ -415,4 +318,4 @@ private:
 
 } // namespace Dali
 
-#endif // __DALI_INTERNAL_THREAD_SYNCHRONIZATION_H__
+#endif // __DALI_INTERNAL_BASIC_THREAD_SYNCHRONIZATION_H__

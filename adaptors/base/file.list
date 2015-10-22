@@ -1,6 +1,7 @@
 # Add local source files here
 
 base_adaptor_src_files = \
+  $(base_adaptor_src_dir)/basic-thread-synchronization.cpp \
   $(base_adaptor_src_dir)/display-connection.cpp \
   $(base_adaptor_src_dir)/environment-options.cpp \
   $(base_adaptor_src_dir)/fps-tracker.cpp \
@@ -9,6 +10,8 @@ base_adaptor_src_files = \
   $(base_adaptor_src_dir)/render-thread.cpp \
   $(base_adaptor_src_dir)/thread-controller.cpp \
   $(base_adaptor_src_dir)/thread-synchronization.cpp \
+  $(base_adaptor_src_dir)/thread-synchronization-base.cpp \
+  $(base_adaptor_src_dir)/update-render-thread.cpp \
   $(base_adaptor_src_dir)/update-status-logger.cpp \
   $(base_adaptor_src_dir)/update-thread.cpp \
   $(base_adaptor_src_dir)/vsync-notifier.cpp \

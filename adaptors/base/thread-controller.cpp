@@ -19,6 +19,8 @@
 #include "thread-controller.h"
 
 // INTERNAL INCLUDES
+#include <base/basic-thread-synchronization.h>
+#include <base/update-render-thread.h>
 #include <base/update-thread.h>
 #include <base/render-thread.h>
 #include <base/thread-synchronization.h>
@@ -37,17 +39,22 @@ namespace Adaptor
 
 ThreadController::ThreadController( AdaptorInternalServices& adaptorInterfaces, const EnvironmentOptions& environmentOptions )
 : mAdaptorInterfaces( adaptorInterfaces ),
+  mUpdateRenderThread( NULL ),
   mUpdateThread( NULL ),
   mRenderThread( NULL ),
   mVSyncNotifier( NULL ),
   mThreadSync( NULL ),
   mNumberOfVSyncsPerRender( 1 )
 {
-  mThreadSync = new ThreadSynchronization( adaptorInterfaces, mNumberOfVSyncsPerRender );
+  mThreadSync = new BasicThreadSynchronization( adaptorInterfaces, mNumberOfVSyncsPerRender );
 
-  mUpdateThread = new UpdateThread( *mThreadSync, adaptorInterfaces, environmentOptions );
+  mUpdateRenderThread = new UpdateRenderThread( (BasicThreadSynchronization&)*mThreadSync, adaptorInterfaces, environmentOptions );
 
-  mRenderThread = new RenderThread( *mThreadSync, adaptorInterfaces, environmentOptions );
+//  mThreadSync = new ThreadSynchronization( adaptorInterfaces, mNumberOfVSyncsPerRender );
+
+//  mUpdateThread = new UpdateThread( *mThreadSync, adaptorInterfaces, environmentOptions );
+
+//  mRenderThread = new RenderThread( *mThreadSync, adaptorInterfaces, environmentOptions );
 
   mVSyncNotifier = new VSyncNotifier( *mThreadSync, adaptorInterfaces, environmentOptions );
 
@@ -64,6 +71,7 @@ ThreadController::~ThreadController()
   delete mVSyncNotifier;
   delete mRenderThread;
   delete mUpdateThread;
+  delete mUpdateRenderThread;
   delete mThreadSync;
 }
 
@@ -73,8 +81,15 @@ void ThreadController::Initialize()
   mThreadSync->Initialise();
 
   // We want to the threads to be set up before they start
-  mUpdateThread->Start();
-  mRenderThread->Start();
+  if( mUpdateRenderThread )
+  {
+    mUpdateRenderThread->Start();
+  }
+  else if( mUpdateThread && mRenderThread )
+  {
+    mUpdateThread->Start();
+    mRenderThread->Start();
+  }
   mVSyncNotifier->Start();
 }
 
@@ -99,8 +114,16 @@ void ThreadController::Stop()
   mThreadSync->Stop();
 
   mVSyncNotifier->Stop();
-  mUpdateThread->Stop();
-  mRenderThread->Stop();
+
+  if( mUpdateRenderThread )
+  {
+    mUpdateRenderThread->Stop();
+  }
+  else if( mUpdateThread && mRenderThread )
+  {
+    mUpdateThread->Stop();
+    mRenderThread->Stop();
+  }
 }
 
 void ThreadController::RequestUpdate()

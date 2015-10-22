@@ -29,10 +29,11 @@ namespace Internal
 namespace Adaptor
 {
 
+class UpdateRenderThread;
 class UpdateThread;
 class RenderThread;
 class VSyncNotifier;
-class ThreadSynchronization;
+class ThreadSynchronizationBase;
 class AdaptorInternalServices;
 class EnvironmentOptions;
 
@@ -110,10 +111,11 @@ private:
 
   AdaptorInternalServices&     mAdaptorInterfaces;
 
-  UpdateThread*                mUpdateThread;     ///< The update-thread owned by ThreadController
-  RenderThread*                mRenderThread;     ///< The render-thread owned by ThreadController
-  VSyncNotifier*               mVSyncNotifier;    ///< The vsync-thread owned by ThreadController
-  ThreadSynchronization*       mThreadSync;       ///< Used to synchronize all the threads; owned by ThreadController
+  UpdateRenderThread*          mUpdateRenderThread;      ///< The update-thread owned by ThreadController
+  UpdateThread*                mUpdateThread;            ///< The update-thread owned by ThreadController
+  RenderThread*                mRenderThread;            ///< The render-thread owned by ThreadController
+  VSyncNotifier*               mVSyncNotifier;           ///< The vsync-thread owned by ThreadController
+  ThreadSynchronizationBase*   mThreadSync;              ///< Used to synchronize all the threads; owned by ThreadController
   unsigned int                 mNumberOfVSyncsPerRender; ///< Frame skipping count
 };
 

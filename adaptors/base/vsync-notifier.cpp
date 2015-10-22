@@ -25,7 +25,7 @@
 
 // INTERNAL INCLUDES
 #include <base/interfaces/adaptor-internal-services.h>
-#include <base/thread-synchronization.h>
+#include <base/thread-synchronization-base.h>
 #include <base/environment-options.h>
 
 namespace Dali
@@ -49,7 +49,7 @@ Integration::Log::Filter* gSyncLogFilter = Integration::Log::Filter::New(Debug::
 
 } // unnamed namespace
 
-VSyncNotifier::VSyncNotifier( ThreadSynchronization& sync,
+VSyncNotifier::VSyncNotifier( ThreadSynchronizationBase& sync,
                               AdaptorInternalServices& adaptorInterfaces,
                               const EnvironmentOptions& environmentOptions )
 : mThreadSynchronization( sync ),
