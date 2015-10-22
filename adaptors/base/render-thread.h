@@ -22,6 +22,7 @@
 #include <pthread.h>
 
 // INTERNAL INCLUDES
+#include <base/render-request.h>
 #include <egl-interface.h>
 #include <render-surface.h> // needed for Dali::RenderSurface
 
@@ -46,65 +47,6 @@ class AdaptorInternalServices;
 class ThreadSynchronization;
 class EglFactoryInterface;
 class EnvironmentOptions;
-
-class RenderRequest
-{
-public:
-  enum Request
-  {
-    REPLACE_SURFACE, // Request to replace surface
-  };
-
-  /**
-   * Constructor.
-   * @param[in] type The type of the request
-   */
-  RenderRequest( Request type );
-
-  /**
-   * @return the type of the request
-   */
-  Request GetType();
-
-private:
-  Request mRequestType;
-};
-
-class ReplaceSurfaceRequest : public RenderRequest
-{
-public:
-
-  /**
-   * Constructor
-   */
-  ReplaceSurfaceRequest();
-
-  /**
-   * Set the new surface
-   * @param[in] newSurface The new surface to use
-   */
-  void SetSurface(RenderSurface* newSurface);
-
-  /**
-   * @return the new surface
-   */
-  RenderSurface* GetSurface();
-
-  /**
-   * Called when the request has been completed to set the result.
-   */
-  void ReplaceCompleted();
-
-  /**
-   * @return true if the replace has completed.
-   */
-  bool GetReplaceCompleted();
-
-private:
-  RenderSurface* mNewSurface;     ///< The new surface to use.
-  unsigned int mReplaceCompleted; ///< Set to true when the replace has completed.
-};
-
 
 /**
  * The render-thread is responsible for calling Core::Render() after each update.

@@ -43,44 +43,6 @@ Integration::Log::Filter* gRenderLogFilter = Integration::Log::Filter::New(Debug
 #endif
 }
 
-RenderRequest::RenderRequest(RenderRequest::Request type)
-: mRequestType(type)
-{
-}
-
-RenderRequest::Request RenderRequest::GetType()
-{
-  return mRequestType;
-}
-
-ReplaceSurfaceRequest::ReplaceSurfaceRequest()
-: RenderRequest(RenderRequest::REPLACE_SURFACE),
-  mNewSurface( NULL ),
-  mReplaceCompleted(false)
-{
-}
-
-void ReplaceSurfaceRequest::SetSurface(RenderSurface* newSurface)
-{
-  mNewSurface = newSurface;
-}
-
-RenderSurface* ReplaceSurfaceRequest::GetSurface()
-{
-  return mNewSurface;
-}
-
-void ReplaceSurfaceRequest::ReplaceCompleted()
-{
-  mReplaceCompleted = true;
-}
-
-bool ReplaceSurfaceRequest::GetReplaceCompleted()
-{
-  return mReplaceCompleted != 0u;
-}
-
-
 RenderThread::RenderThread( ThreadSynchronization& sync,
                             AdaptorInternalServices& adaptorInterfaces,
                             const EnvironmentOptions& environmentOptions )
