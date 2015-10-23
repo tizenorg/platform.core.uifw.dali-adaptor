@@ -90,7 +90,7 @@ void ImfManager::Reset()
 {
 }
 
-Ecore_IMF_Context* ImfManager::GetContext()
+Ecore_IMF_Context* ImfManager::GetContext() const
 {
   return mIMFContext;
 }
@@ -126,22 +126,22 @@ void ImfManager::NotifyCursorPosition()
 {
 }
 
-int ImfManager::GetCursorPosition()
-{
-  return mIMFCursorPosition;
-}
-
 void ImfManager::SetCursorPosition( unsigned int cursorPosition )
 {
-  mIMFCursorPosition = ( int )cursorPosition;
+  mIMFCursorPosition = static_cast<int>( cursorPosition );
 }
 
-void ImfManager::SetSurroundingText( std::string text )
+unsigned int ImfManager::GetCursorPosition() const
+{
+  return static_cast<unsigned int>( mIMFCursorPosition );
+}
+
+void ImfManager::SetSurroundingText( const std::string& text )
 {
   mSurroundingText = text;
 }
 
-std::string ImfManager::GetSurroundingText()
+const std::string& ImfManager::GetSurroundingText() const
 {
   return mSurroundingText;
 }

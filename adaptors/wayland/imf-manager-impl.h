@@ -92,7 +92,7 @@ public:
   /**
    * @copydoc Dali::ImfManager::GetContext()
    */
-  Ecore_IMF_Context* GetContext();
+  Ecore_IMF_Context* GetContext() const;
 
   /**
    * @copydoc Dali::ImfManager::RestoreAfterFocusLost()
@@ -131,24 +131,24 @@ public:
   void NotifyCursorPosition();
 
   /**
-   * @copydoc Dali::ImfManager::GetCursorPosition()
-   */
-  int GetCursorPosition();
-
-  /**
    * @copydoc Dali::ImfManager::SetCursorPosition()
    */
   void SetCursorPosition( unsigned int cursorPosition );
 
   /**
+   * @copydoc Dali::ImfManager::GetCursorPosition()
+   */
+  unsigned int GetCursorPosition() const;
+
+  /**
    * @copydoc Dali::ImfManager::SetSurroundingText()
    */
-  void SetSurroundingText( std::string text );
+  void SetSurroundingText( const std::string& text );
 
   /**
    * @copydoc Dali::ImfManager::GetSurroundingText()
    */
-  std::string GetSurroundingText();
+  const std::string& GetSurroundingText() const;
 
 public:  // Signals
 
