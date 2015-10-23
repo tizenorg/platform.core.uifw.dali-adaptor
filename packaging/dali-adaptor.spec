@@ -11,6 +11,8 @@ Source0:    %{name}-%{version}.tar.gz
 
 %define profile %{tizen_profile_name}
 
+%define enable_ttrace 1
+
 %if "%{profile}" == "mobile"
 %define dali_profile MOBILE
 %define dali_feedback_plugin 0
@@ -62,8 +64,7 @@ BuildRequires:  libdrm-devel
 BuildRequires:  pkgconfig(libexif)
 BuildRequires:  pkgconfig(capi-system-system-settings)
 BuildRequires:  pkgconfig(libpng)
-BuildRequires:  pkgconfig(glesv2)
-BuildRequires:  pkgconfig(egl)
+BuildRequires:  pkgconfig(gles20)
 BuildRequires:  libcurl-devel
 
 
@@ -85,6 +86,10 @@ BuildRequires:  pkgconfig(utilX)
 
 BuildRequires:  pkgconfig(harfbuzz)
 BuildRequires:  fribidi-devel
+
+%if 0%{?enable_ttrace}
+BuildRequires:  pkgconfig(ttrace)
+%endif
 
 %description
 The DALi Tizen Adaptor provides a Tizen specific implementation of the dali-core
@@ -168,6 +173,10 @@ CFLAGS+=" -DOVER_TIZEN_SDK_2_2"
 CXXFLAGS+=" -DOVER_TIZEN_SDK_2_2"
 %endif
 
+%if 0%{?enable_ttrace}
+CXXFLAGS+=" -DENABLE_TTRACE"
+%endif
+
 libtoolize --force
 cd %{_builddir}/%{name}-%{version}/build/tizen
 autoreconf --install
@@ -185,6 +194,9 @@ FONT_CONFIGURATION_FILE="%{font_configuration_file}" ; export FONT_CONFIGURATION
 %endif
 %if 0%{?over_tizen_2_2}
            --with-over-tizen_2_2 \
+%endif
+%if 0%{?enable_ttrace}
+           --enable-networklogging \
 %endif
            $configure_flags --libdir=%{_libdir}
 

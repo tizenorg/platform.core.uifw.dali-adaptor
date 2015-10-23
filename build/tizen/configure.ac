@@ -194,7 +194,7 @@ AM_CONDITIONAL([ENABLE_NETWORK_LOGGING], [test x$enable_networklogging = xyes])
 # should not disable features. This allows the developer to override
 # features through the command line.
 
-PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
+PKG_CHECK_MODULES(OPENGLES20, gles20)
 
 if test "x$enable_profile" != "xUBUNTU"; then
 PKG_CHECK_MODULES(CAPI_APPFW_APPLICATION, capi-appfw-application)
