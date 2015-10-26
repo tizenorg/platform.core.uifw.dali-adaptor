@@ -103,7 +103,8 @@ EnvironmentOptions::EnvironmentOptions()
   mPanMinimumEvents(-1),
   mGlesCallTime(0),
   mWindowWidth( 0 ),
-  mWindowHeight( 0 )
+  mWindowHeight( 0 ),
+  mThreadingMode( ThreadingMode::MULTI_THREADED )
 {
   ParseEnvironmentOptions();
 }
@@ -234,6 +235,11 @@ const std::string& EnvironmentOptions::GetWindowClassName() const
   return mWindowClassName;
 }
 
+ThreadingMode::Type EnvironmentOptions::GetThreadingMode() const
+{
+  return mThreadingMode;
+}
+
 bool EnvironmentOptions::PerformanceServerRequired() const
 {
   return ( ( GetPerformanceStatsLoggingOptions() > 0) ||
@@ -345,6 +351,21 @@ void EnvironmentOptions::ParseEnvironmentOptions()
   if ( windowClassName )
   {
     mWindowClassName = windowClassName;
+  }
+
+  int threadingMode(0);
+  if ( GetIntegerEnvironmentVariable( DALI_THREADING_MODE, threadingMode ) )
+  {
+    switch( threadingMode )
+    {
+      case ThreadingMode::MULTI_THREADED:
+      case ThreadingMode::SINGLE_THREADED:
+      case ThreadingMode::COMBINED_UPDATE_RENDER:
+      {
+        mThreadingMode = static_cast< ThreadingMode::Type >( threadingMode );
+        break;
+      }
+    }
   }
 }
 
