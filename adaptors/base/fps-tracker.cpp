@@ -72,6 +72,11 @@ void FpsTracker::Track( float secondsFromLastFrame )
   }
 }
 
+bool FpsTracker::Enabled() const
+{
+  return mFpsTrackingSeconds > 0.0f;
+}
+
 void FpsTracker::OutputFPSRecord()
 {
   float fps = mFrameCount / mElapsedTime;

@@ -136,7 +136,10 @@ void RenderHelper::ShutdownEgl()
 
 bool RenderHelper::PreRender()
 {
-  mSurface->PreRender( *mEGL, mGLES );
+  if( mSurface )
+  {
+    mSurface->PreRender( *mEGL, mGLES );
+  }
   mGLES.PreRender();
   return true;
 }

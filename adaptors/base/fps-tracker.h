@@ -54,6 +54,11 @@ public:
    */
   void Track(float secondsFromLastFrame);
 
+  /**
+   * @return Whether FPS tracking is enabled.
+   */
+  bool Enabled() const;
+
 private:
 
   /**
