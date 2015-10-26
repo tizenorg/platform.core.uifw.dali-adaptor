@@ -22,7 +22,6 @@
 #include <pthread.h>
 
 // INTERNAL INCLUDES
-#include <base/render-request.h>
 #include <egl-interface.h>
 #include <render-surface.h> // needed for Dali::RenderSurface
 
