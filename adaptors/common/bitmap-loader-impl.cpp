@@ -42,9 +42,8 @@ BitmapLoader::BitmapLoader(const std::string& url,
              SamplingMode::Type samplingMode,
              bool orientationCorrection)
 : mResourceType( size, fittingMode, samplingMode, orientationCorrection ),
-  mBitmap(NULL),
-  mUrl(url),
-  mIsLoaded( false )
+  mBitmap(),
+  mUrl(url)
 {
 }
 
@@ -56,18 +55,20 @@ void BitmapLoader::Load()
 {
   IntrusivePtr<Dali::RefObject> resource = TizenPlatform::ImageLoader::LoadResourceSynchronously( mResourceType, mUrl );
 
-  mBitmap = static_cast<Integration::Bitmap*>(resource.Get());
-  mIsLoaded = true;
+  if( resource )
+  {
+    mBitmap = static_cast<Integration::Bitmap*>(resource.Get());
+  }
 }
 
 bool BitmapLoader::IsLoaded()
 {
-  return mIsLoaded;
+  return mBitmap ? true : false ;
 }
 
 unsigned char* BitmapLoader::GetPixelData() const
 {
-  if( mIsLoaded )
+  if( mBitmap )
   {
     return mBitmap->GetBuffer();
   }
@@ -75,9 +76,25 @@ unsigned char* BitmapLoader::GetPixelData() const
   return NULL;
 }
 
+Dali::Atlas::PixelDataPtr BitmapLoader::GetPixelDataOwnership() const
+{
+  Dali::Atlas::PixelDataPtr pixelData;
+  if( mBitmap )
+  {
+    pixelData = new  Dali::Atlas::PixelData( mBitmap->GetBufferOwnership() );
+  }
+  else
+  {
+    pixelData = new  Dali::Atlas::PixelData( NULL );
+  }
+
+  return pixelData;
+}
+
+
 unsigned int BitmapLoader::GetImageHeight() const
 {
-  if( mIsLoaded )
+  if( mBitmap )
   {
     return mBitmap->GetImageHeight();
   }
@@ -87,7 +104,7 @@ unsigned int BitmapLoader::GetImageHeight() const
 
 unsigned int BitmapLoader::GetImageWidth() const
 {
-  if( mIsLoaded )
+  if( mBitmap )
   {
     return mBitmap->GetImageWidth();
   }
@@ -97,7 +114,7 @@ unsigned int BitmapLoader::GetImageWidth() const
 
 Pixel::Format BitmapLoader::GetPixelFormat() const
 {
-  if( mIsLoaded )
+  if( mBitmap )
   {
     return mBitmap->GetPixelFormat();
   }

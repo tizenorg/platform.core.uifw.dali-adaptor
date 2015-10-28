@@ -23,6 +23,7 @@
 #include <dali/public-api/images/pixel.h>
 #include <dali/public-api/images/image-operations.h>
 #include <dali/public-api/object/base-handle.h>
+#include <dali/devel-api/images/atlas.h>
 
 namespace Dali
 {
@@ -101,11 +102,17 @@ public:
   bool IsLoaded();
 
   /**
-   * Get the raw pixel data.
-   * @return The pixel data. Use the GetHeight(), GetWidth(), GetStride() and GetPixelFormat() methods
-   * to decode the data.
+   * Get the pixel data.
+   * @return The pixel data. Use the GetHeight(), GetWidth(), and GetPixelFormat() methods to decode the data.
    */
   unsigned char* GetPixelData() const;
+
+  /**
+   * Get the pixel data and take over the ownership.
+   * @note With this function called, the bitmap loader loses the ownership and is no longer responsible for the release of pixel buffer.
+   * @return The pixel data.Use the GetHeight(), GetWidth(), GetStride() and GetPixelFormat() methods to decode the data.
+   */
+  Atlas::PixelDataPtr GetPixelDataOwnership() const;
 
   /**
    * Get the buffer height in pixels
