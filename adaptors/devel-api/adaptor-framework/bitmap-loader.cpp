@@ -75,6 +75,11 @@ unsigned char* BitmapLoader::GetPixelData() const
   return GetImplementation(*this).GetPixelData();
 }
 
+Atlas::PixelDataPtr BitmapLoader::GetPixelDataOwnership() const
+{
+  return GetImplementation(*this).GetPixelDataOwnership();
+}
+
 unsigned int BitmapLoader::GetImageHeight() const
 {
   return GetImplementation(*this).GetImageHeight();
