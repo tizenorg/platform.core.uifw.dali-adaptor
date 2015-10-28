@@ -37,14 +37,13 @@ IntrusivePtr<BitmapLoader> BitmapLoader::New(const std::string& url,
 }
 
 BitmapLoader::BitmapLoader(const std::string& url,
-             ImageDimensions size,
-             FittingMode::Type fittingMode,
-             SamplingMode::Type samplingMode,
-             bool orientationCorrection)
+                           ImageDimensions size,
+                           FittingMode::Type fittingMode,
+                           SamplingMode::Type samplingMode,
+                           bool orientationCorrection)
 : mResourceType( size, fittingMode, samplingMode, orientationCorrection ),
-  mBitmap(NULL),
-  mUrl(url),
-  mIsLoaded( false )
+  mPixelData(),
+  mUrl(url)
 {
 }
 
@@ -56,20 +55,37 @@ void BitmapLoader::Load()
 {
   IntrusivePtr<Dali::RefObject> resource = TizenPlatform::ImageLoader::LoadResourceSynchronously( mResourceType, mUrl );
 
-  mBitmap = static_cast<Integration::Bitmap*>(resource.Get());
-  mIsLoaded = true;
+  if( resource )
+  {
+    Integration::Bitmap* bitmap = static_cast<Integration::Bitmap*>(resource.Get());
+    mPixelData = new PixelData( bitmap->GetBufferOwnership(),
+                                bitmap->GetImageWidth(),
+                                bitmap->GetImageHeight(),
+                                bitmap->GetPixelFormat(),
+                                PixelData::FREE);
+  }
 }
 
 bool BitmapLoader::IsLoaded()
 {
-  return mIsLoaded;
+  return mPixelData ? true : false ;
 }
 
-unsigned char* BitmapLoader::GetPixelData() const
+const std::string& BitmapLoader::GetUrl() const
 {
-  if( mIsLoaded )
+  return mUrl;
+}
+
+PixelDataPtr BitmapLoader::GetPixelData() const
+{
+  return mPixelData;
+}
+
+unsigned char* BitmapLoader::GetPixelBuffer() const
+{
+  if( mPixelData )
   {
-    return mBitmap->GetBuffer();
+    return mPixelData->GetBuffer();
   }
 
   return NULL;
@@ -77,9 +93,9 @@ unsigned char* BitmapLoader::GetPixelData() const
 
 unsigned int BitmapLoader::GetImageHeight() const
 {
-  if( mIsLoaded )
+  if( mPixelData )
   {
-    return mBitmap->GetImageHeight();
+    return mPixelData->GetHeight();
   }
 
   return 0u;
@@ -87,9 +103,9 @@ unsigned int BitmapLoader::GetImageHeight() const
 
 unsigned int BitmapLoader::GetImageWidth() const
 {
-  if( mIsLoaded )
+  if( mPixelData )
   {
-    return mBitmap->GetImageWidth();
+    return mPixelData->GetWidth();
   }
 
   return 0u;
@@ -97,9 +113,9 @@ unsigned int BitmapLoader::GetImageWidth() const
 
 Pixel::Format BitmapLoader::GetPixelFormat() const
 {
-  if( mIsLoaded )
+  if( mPixelData )
   {
-    return mBitmap->GetPixelFormat();
+    return mPixelData->GetPixelFormat();
   }
 
   return Pixel::RGBA8888;

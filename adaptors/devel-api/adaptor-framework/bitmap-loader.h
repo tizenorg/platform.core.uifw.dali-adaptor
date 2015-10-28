@@ -23,6 +23,7 @@
 #include <dali/public-api/images/pixel.h>
 #include <dali/public-api/images/image-operations.h>
 #include <dali/public-api/object/base-handle.h>
+#include <dali/devel-api/images/pixel-data.h>
 
 namespace Dali
 {
@@ -101,11 +102,23 @@ public:
   bool IsLoaded();
 
   /**
-   * Get the raw pixel data.
-   * @return The pixel data. Use the GetHeight(), GetWidth(), GetStride() and GetPixelFormat() methods
-   * to decode the data.
+   * @brief Returns the URL of the image.
+   *
+   * @return The URL of the image file.
    */
-  unsigned char* GetPixelData() const;
+  std::string GetUrl() const;
+
+  /**
+   * Get the pixel data.
+   * @return The pixel data.
+   */
+  PixelDataPtr GetPixelData() const;
+
+  /**
+   * Get the pixel buffer.
+   * @return The pixel buffer. Use the GetHeight(), GetWidth(), and GetPixelFormat() methods to decode the data.
+   */
+  unsigned char* GetPixelBuffer() const;
 
   /**
    * Get the buffer height in pixels

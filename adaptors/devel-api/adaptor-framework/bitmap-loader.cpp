@@ -70,9 +70,19 @@ bool BitmapLoader::IsLoaded()
   return GetImplementation(*this).IsLoaded();
 }
 
-unsigned char* BitmapLoader::GetPixelData() const
+std::string BitmapLoader::GetUrl() const
+{
+  return GetImplementation(*this).GetUrl();
+}
+
+PixelDataPtr BitmapLoader::GetPixelData() const
 {
   return GetImplementation(*this).GetPixelData();
+}
+
+unsigned char* BitmapLoader::GetPixelBuffer() const
+{
+  return GetImplementation(*this).GetPixelBuffer();
 }
 
 unsigned int BitmapLoader::GetImageHeight() const
