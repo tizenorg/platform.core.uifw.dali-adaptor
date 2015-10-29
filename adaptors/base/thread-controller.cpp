@@ -21,6 +21,7 @@
 // INTERNAL INCLUDES
 #include <base/environment-options.h>
 #include <base/thread-controller-interface.h>
+#include <base/combined-update-render/combined-update-render-controller.h>
 #include <base/multi-threaded/multi-thread-controller.h>
 #include <base/single-threaded/single-thread-controller.h>
 
@@ -39,7 +40,6 @@ ThreadController::ThreadController( AdaptorInternalServices& adaptorInterfaces, 
   switch( environmentOptions.GetThreadingMode() )
   {
     case ThreadingMode::MULTI_THREADED:
-    case ThreadingMode::COMBINED_UPDATE_RENDER:
     {
       mThreadControllerInterface = new MultiThreadController( adaptorInterfaces, environmentOptions );
       break;
@@ -49,6 +49,11 @@ ThreadController::ThreadController( AdaptorInternalServices& adaptorInterfaces, 
     {
       mThreadControllerInterface = new SingleThreadController( adaptorInterfaces, environmentOptions );
       break;
+    }
+
+    case ThreadingMode::COMBINED_UPDATE_RENDER:
+    {
+      mThreadControllerInterface = new CombinedUpdateRenderController( adaptorInterfaces, environmentOptions );
     }
   }
 }
