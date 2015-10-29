@@ -51,99 +51,94 @@ public: // Construction & Destruction
   TizenPlatformAbstraction();
 
   /**
-   * Destructor
+   * Non Virtual Destructor.
    */
-  virtual ~TizenPlatformAbstraction();
+  ~TizenPlatformAbstraction();
 
 public: // PlatformAbstraction overrides
 
   /**
-   * @copydoc PlatformAbstraction::GetTimeNanoseconds()
-   */
-  virtual void GetTimeNanoseconds( uint64_t& seconds, uint64_t& nanoseconds );
-
-  /**
    * @copydoc PlatformAbstraction::Suspend()
    */
-  virtual void Suspend();
+  void Suspend();
 
   /**
    * @copydoc PlatformAbstraction::Resume()
    */
-  virtual void Resume();
+  void Resume();
 
   /**
    * @copydoc PlatformAbstraction::GetClosestImageSize()
    */
-  virtual ImageDimensions GetClosestImageSize( const std::string& filename,
-                                               ImageDimensions size,
-                                               FittingMode::Type fittingMode,
-                                               SamplingMode::Type samplingMode,
-                                               bool orientationCorrection );
+  ImageDimensions GetClosestImageSize( const std::string& filename,
+                                       ImageDimensions size,
+                                       FittingMode::Type fittingMode,
+                                       SamplingMode::Type samplingMode,
+                                       bool orientationCorrection );
 
   /**
    * @copydoc PlatformAbstraction::GetClosestImageSize()
    */
-  virtual ImageDimensions GetClosestImageSize( Integration::ResourcePointer resourceBuffer,
-                                               ImageDimensions size,
-                                               FittingMode::Type fittingMode,
-                                               SamplingMode::Type samplingMode,
-                                               bool orientationCorrection );
+  ImageDimensions GetClosestImageSize( Integration::ResourcePointer resourceBuffer,
+                                       ImageDimensions size,
+                                       FittingMode::Type fittingMode,
+                                       SamplingMode::Type samplingMode,
+                                       bool orientationCorrection );
 
   /**
    * @copydoc PlatformAbstraction::LoadResource()
    */
-  virtual void LoadResource(const Integration::ResourceRequest& request);
+  void LoadResource(const Integration::ResourceRequest& request);
 
   /**
    * @copydoc PlatformAbstraction::LoadResourceSynchronously()
    */
-  virtual Integration::ResourcePointer LoadResourceSynchronously(const Integration::ResourceType& resourceType, const std::string& resourcePath);
+  Integration::ResourcePointer LoadResourceSynchronously(const Integration::ResourceType& resourceType, const std::string& resourcePath);
 
   /**
    * @copydoc PlatformAbstraction::DecodeBuffer()
    */
-  virtual Integration::BitmapPtr DecodeBuffer( const Integration::ResourceType& resourceType, uint8_t * buffer, size_t size );
+  Integration::BitmapPtr DecodeBuffer( const Integration::ResourceType& resourceType, uint8_t * buffer, size_t size );
 
   /**
    * @copydoc PlatformAbstraction::CancelLoad()
    */
-  virtual void CancelLoad(Integration::ResourceId id, Integration::ResourceTypeId typeId);
+  void CancelLoad(Integration::ResourceId id, Integration::ResourceTypeId typeId);
 
   /**
    * @copydoc PlatformAbstraction::GetResources()
    */
-  virtual void GetResources(Integration::ResourceCache& cache);
+  void GetResources(Integration::ResourceCache& cache);
 
   /**
    * @copydoc PlatformAbstraction::JoinLoaderThreads()
    */
-  virtual void JoinLoaderThreads();
+  void JoinLoaderThreads();
 
   /**
    * @copydoc PlatformAbstraction::GetDefaultFontSize()
    */
-  virtual int GetDefaultFontSize() const;
+  int GetDefaultFontSize() const;
 
   /**
    * @copydoc PlatformAbstraction::LoadFile()
    */
-  virtual bool LoadFile( const std::string& filename, Dali::Vector< unsigned char >& buffer ) const;
+  bool LoadFile( const std::string& filename, Dali::Vector< unsigned char >& buffer ) const;
 
   /**
    * @copydoc PlatformAbstraction::LoadFile()
    */
-  virtual std::string LoadFile( const std::string& filename );
+  std::string LoadFile( const std::string& filename );
 
   /**
    * @copydoc PlatformAbstraction::LoadShaderBinaryFile()
    */
-  virtual bool LoadShaderBinaryFile( const std::string& filename, Dali::Vector< unsigned char >& buffer ) const;
+  bool LoadShaderBinaryFile( const std::string& filename, Dali::Vector< unsigned char >& buffer ) const;
 
   /**
    * @copydoc PlatformAbstraction::SaveShaderBinaryFile()
    */
-  virtual bool SaveShaderBinaryFile( const std::string& filename, const unsigned char * buffer, unsigned int numBytes ) const;
+  bool SaveShaderBinaryFile( const std::string& filename, const unsigned char * buffer, unsigned int numBytes ) const;
 
   /**
    * Sets path for data/resource storage.
