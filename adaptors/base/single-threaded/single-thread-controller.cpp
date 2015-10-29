@@ -25,6 +25,7 @@
 // INTERNAL INCLUDES
 #include <base/interfaces/adaptor-internal-services.h>
 #include <base/environment-options.h>
+#include <base/time-service.h>
 
 namespace Dali
 {
@@ -58,7 +59,6 @@ SingleThreadController::SingleThreadController( AdaptorInternalServices& adaptor
   mUpdateStatusLogger( environmentOptions ),
   mRenderHelper( adaptorInterfaces ),
   mCore( adaptorInterfaces.GetCore()),
-  mPlatformAbstraction( adaptorInterfaces.GetPlatformAbstractionInterface() ),
   mPerformanceInterface( adaptorInterfaces.GetPerformanceInterface() ),
   mLastUpdateRenderTime( 0 ),
   mSystemTime( 0 ),
@@ -293,13 +293,10 @@ float SingleThreadController::UpdateTimeSinceLastRender()
   // No need calculating if FPS tracking is NOT enabled
   if( mFpsTracker.Enabled() )
   {
-    uint64_t seconds = 0;
-    uint64_t microSeconds = 0;
+    uint64_t currentTime = 0;
 
-    mPlatformAbstraction.GetTimeNanoseconds( seconds, microSeconds );
-    microSeconds /= NANOSECONDS_PER_MICROSECOND;
-
-    uint64_t currentTime = ( seconds * MICROSECONDS_PER_SECOND ) + microSeconds;
+    TimeService::GetNanoseconds( currentTime );
+    currentTime /= NANOSECONDS_PER_MICROSECOND; // Convert to microseconds
 
     uint64_t delta = currentTime - mSystemTime;
     mSystemTime = currentTime;
