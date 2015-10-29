@@ -104,7 +104,8 @@ EnvironmentOptions::EnvironmentOptions()
   mGlesCallTime(0),
   mWindowWidth( 0 ),
   mWindowHeight( 0 ),
-  mThreadingMode( ThreadingMode::SEPARATE_UPDATE_RENDER )
+  mThreadingMode( ThreadingMode::SEPARATE_UPDATE_RENDER ),
+  mRenderRefreshRate( 1 )
 {
   ParseEnvironmentOptions();
 }
@@ -240,6 +241,11 @@ ThreadingMode::Type EnvironmentOptions::GetThreadingMode() const
   return mThreadingMode;
 }
 
+unsigned int EnvironmentOptions::GetRenderRefreshRate() const
+{
+  return mRenderRefreshRate;
+}
+
 bool EnvironmentOptions::PerformanceServerRequired() const
 {
   return ( ( GetPerformanceStatsLoggingOptions() > 0) ||
@@ -366,6 +372,12 @@ void EnvironmentOptions::ParseEnvironmentOptions()
         break;
       }
     }
+  }
+
+  int renderRefreshRate(0);
+  if ( GetIntegerEnvironmentVariable( DALI_REFRESH_RATE, renderRefreshRate ) )
+  {
+    mRenderRefreshRate = renderRefreshRate;
   }
 }
 
