@@ -59,12 +59,12 @@ TizenPlatformAbstraction::~TizenPlatformAbstraction()
   delete mResourceLoader;
 }
 
-void TizenPlatformAbstraction::GetTimeMicroseconds(unsigned int &seconds, unsigned int &microSeconds)
+void TizenPlatformAbstraction::GetTimeNanoseconds( uint64_t& seconds, uint64_t& nanoseconds )
 {
   timespec time;
-  clock_gettime(CLOCK_MONOTONIC, &time);
+  clock_gettime( CLOCK_MONOTONIC, &time );
   seconds = time.tv_sec;
-  microSeconds = time.tv_nsec / NANOSECS_TO_MICROSECS;
+  nanoseconds = time.tv_nsec;
 }
 
 void TizenPlatformAbstraction::Suspend()
