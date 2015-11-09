@@ -61,8 +61,7 @@ BuildRequires:  libdrm-devel
 BuildRequires:  pkgconfig(libexif)
 BuildRequires:  pkgconfig(capi-system-system-settings)
 BuildRequires:  pkgconfig(libpng)
-BuildRequires:  pkgconfig(glesv2)
-BuildRequires:  pkgconfig(egl)
+BuildRequires:  pkgconfig(gles20)
 BuildRequires:  libcurl-devel
 
 
