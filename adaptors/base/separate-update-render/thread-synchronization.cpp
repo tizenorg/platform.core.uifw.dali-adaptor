@@ -253,6 +253,8 @@ void ThreadSynchronization::ReplaceSurface( RenderSurface* newSurface )
 {
   LOG_EVENT_TRACE;
 
+  // RENDER SWAP, COUNT - 1
+
   State::Type previousState( State::STOPPED );
   {
     ConditionalWait::ScopedLock lock( mUpdateThreadWaitCondition );

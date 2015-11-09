@@ -119,9 +119,14 @@ bool RenderThread::Run()
     // Check if we've got a request from the main thread (e.g. replace surface)
     if( request )
     {
+      mCore.Render( renderStatus, skip );
+
+	  // Decrement the count of how far update is ahead of render
+	  mThreadSynchronization.RenderFinished()
+
       // Process the request, we should NOT render when we have a request
       DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run. 3 - Process requests\n");
-      ProcessRequest( request );
+      ProcessRequest( request );;
     }
     else
     {
