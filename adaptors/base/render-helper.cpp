@@ -110,6 +110,8 @@ void RenderHelper::ReplaceSurface( RenderSurface* newSurface )
   // If the new surface has a different display connection, then the context will be lost
   DALI_ASSERT_ALWAYS(newSurface && "NULL surface");
 
+  mSurface->DestroyEglSurface(*mEGL);
+
   mDisplayConnection->InitializeEgl(*mEGL);
 
   newSurface->ReplaceEGLSurface(*mEGL);
