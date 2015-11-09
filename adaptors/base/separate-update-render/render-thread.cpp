@@ -121,7 +121,7 @@ bool RenderThread::Run()
     {
       // Process the request, we should NOT render when we have a request
       DALI_LOG_INFO( gRenderLogFilter, Debug::Verbose, "RenderThread::Run. 3 - Process requests\n");
-      ProcessRequest( request );
+      ProcessRequest( request );;
     }
     else
     {
