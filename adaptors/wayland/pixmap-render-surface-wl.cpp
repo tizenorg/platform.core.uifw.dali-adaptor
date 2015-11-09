@@ -110,7 +110,11 @@ void PixmapRenderSurface::StartRender()
 
 bool PixmapRenderSurface::PreRender( EglInterface&, Integration::GlAbstraction& )
 {
-  // nothing to do for pixmaps
+  if ( mPreRenderNotification )
+  {
+    mPreRenderNotification->Trigger();
+  }
+
   return true;
 }
 
@@ -120,11 +124,11 @@ void PixmapRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstract
   glAbstraction.Flush();
 
  // create damage for client applications which wish to know the update timing
-  if( mRenderNotification )
+  if( mPostRenderNotification )
   {
     // use notification trigger
     // Tell the event-thread to render the pixmap
-    mRenderNotification->Trigger();
+    mPostRenderNotification->Trigger();
   }
   else
   {
