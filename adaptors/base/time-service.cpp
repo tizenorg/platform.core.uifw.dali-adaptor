@@ -42,7 +42,9 @@ void GetNanoseconds( uint64_t& time )
 {
   timespec timeSpec;
   clock_gettime( CLOCK_MONOTONIC, &timeSpec );
-  time = ( timeSpec.tv_sec * NANOSECONDS_PER_SECOND ) + timeSpec.tv_nsec;
+
+  // Convert all values to uint64_t to match our return type
+  time = ( static_cast< uint64_t >( timeSpec.tv_sec ) * NANOSECONDS_PER_SECOND ) + static_cast< uint64_t >( timeSpec.tv_nsec );
 }
 
 } // namespace TimeService

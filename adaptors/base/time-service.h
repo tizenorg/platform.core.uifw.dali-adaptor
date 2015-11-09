@@ -33,9 +33,11 @@ namespace TimeService
 {
 
 /**
- * @brief Get the monotonic time since some unspecified starting point.
+ * @brief Get the monotonic time since some unspecified starting point (usually the boot time).
  *
  * @param[out]  nanoseconds  The time in nanoseconds since the reference point.
+ *
+ * @note The maximum value this can hold is 0xFFFFFFFFFFFFFFFF which is 1.844674407e+19. Therefore, this can overflow after approximately 584 years.
  */
 void GetNanoseconds( uint64_t& time );
 
