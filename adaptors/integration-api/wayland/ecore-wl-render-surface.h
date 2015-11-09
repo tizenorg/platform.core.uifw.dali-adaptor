@@ -69,13 +69,19 @@ protected:
   void Init( Any surface );
 
 public: // API
+  /**
+   * @brief Sets the render notification trigger to call when render thread prepares to draw a frame
+   *
+   * @param renderNotification to use
+   */
+  void SetPreRenderNotification(TriggerEventInterface* renderNotification);
 
   /**
    * @brief Sets the render notification trigger to call when render thread is completed a frame
    *
    * @param renderNotification to use
    */
-  void SetRenderNotification(TriggerEventInterface* renderNotification);
+  void SetPostRenderNotification(TriggerEventInterface* renderNotification);
 
   /**
    * @brief Get window handle
@@ -172,7 +178,8 @@ protected: // Data
 
   PositionSize                mPosition;           ///< Position
   std::string                 mTitle;              ///< Title of window which shows from "xinfo -topvwins" command
-  TriggerEventInterface*      mRenderNotification; ///< Render notification trigger
+  TriggerEventInterface*      mPreRenderNotification;  ///< Render notification trigger
+  TriggerEventInterface*      mPostRenderNotification; ///< Render notification trigger
   ColorDepth                  mColorDepth;         ///< Color depth of surface (32 bit or 24 bit)
   bool                        mOwnSurface;         ///< Whether we own the surface (responsible for deleting it)
 };
