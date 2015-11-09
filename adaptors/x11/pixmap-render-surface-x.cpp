@@ -48,9 +48,31 @@ extern Debug::Filter* gRenderSurfaceLogFilter;
 namespace ECore
 {
 
+namespace
+{
+static const int INITIAL_PRODUCE_BUFFER_INDEX = 0;
+static const int INITIAL_CONSUME_BUFFER_INDEX = 1;
+static const int BUFFER_COUNT = 2;
+}
+
 struct PixmapRenderSurface::Impl
 {
-  Ecore_X_Pixmap                  mX11Pixmap;             ///< X-Pixmap
+  Impl()
+  : mProduceBufferIndex( INITIAL_PRODUCE_BUFFER_INDEX )
+  , mConsumeBufferIndex( INITIAL_CONSUME_BUFFER_INDEX )
+  , mThreadSynchronization(NULL)
+  {
+    for (int i = 0; i != BUFFER_COUNT; ++i)
+    {
+      mX11Pixmaps[i] = 0;
+      mEglSurfaces[i] = 0;
+    }
+  }
+
+  int                             mProduceBufferIndex;
+  int                             mConsumeBufferIndex;
+  Ecore_X_Pixmap                  mX11Pixmaps[BUFFER_COUNT];             ///< X-Pixmap
+  EGLSurface                      mEglSurfaces[BUFFER_COUNT];
   ThreadSynchronizationInterface* mThreadSynchronization; ///< A pointer to the thread-synchronization
 };
 
@@ -61,7 +83,6 @@ PixmapRenderSurface::PixmapRenderSurface(Dali::PositionSize positionSize,
 : EcoreXRenderSurface( positionSize, surface, name, isTransparent ),
   mImpl( new Impl )
 {
-  mImpl->mThreadSynchronization = NULL;
   Init( surface );
 }
 
@@ -70,9 +91,14 @@ PixmapRenderSurface::~PixmapRenderSurface()
   // release the surface if we own one
   if( mOwnSurface )
   {
-    // if we did create the pixmap, delete the pixmap
-    DALI_LOG_INFO( gRenderSurfaceLogFilter, Debug::General, "Own pixmap (%x) freed\n", mImpl->mX11Pixmap );
-    ecore_x_pixmap_free( mImpl->mX11Pixmap );
+    for (int i = 0; i != BUFFER_COUNT; ++i)
+    {
+      Ecore_X_Pixmap pixmap = mImpl->mX11Pixmaps[i];
+
+      // if we did create the pixmap, delete the pixmap
+      DALI_LOG_INFO( gRenderSurfaceLogFilter, Debug::General, "Own pixmap (%x) freed\n", pixmap );
+      ecore_x_pixmap_free( pixmap );
+    }
   }
 
   delete mImpl;
@@ -80,12 +106,12 @@ PixmapRenderSurface::~PixmapRenderSurface()
 
 Ecore_X_Drawable PixmapRenderSurface::GetDrawable()
 {
-  return (Ecore_X_Drawable) mImpl->mX11Pixmap;
+  return Ecore_X_Drawable( mImpl->mX11Pixmaps[mImpl->mConsumeBufferIndex] );
 }
 
 Any PixmapRenderSurface::GetSurface()
 {
-  return Any( mImpl->mX11Pixmap );
+  return Any( mImpl->mX11Pixmaps[mImpl->mProduceBufferIndex] );
 }
 
 void PixmapRenderSurface::InitializeEgl( EglInterface& egl )
@@ -103,10 +129,11 @@ void PixmapRenderSurface::CreateEglSurface( EglInterface& egl )
 
   Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( egl );
 
-  // create the EGL surface
-  // need to cast to X handle as in 64bit system ECore handle is 32 bit whereas EGLnative and XWindow are 64 bit
-  XPixmap pixmap = static_cast<XPixmap>( mImpl->mX11Pixmap );
-  eglImpl.CreateSurfacePixmap( (EGLNativePixmapType)pixmap, mColorDepth ); // reinterpret_cast does not compile
+  for (int i = 0; i != BUFFER_COUNT; ++i)
+  {
+    // create the EGL surface
+    mImpl->mEglSurfaces[i] = eglImpl.CreateSurfacePixmap( EGLNativePixmapType( mImpl->mX11Pixmaps[i] ), mColorDepth ); // reinterpret_cast does not compile
+  }
 }
 
 void PixmapRenderSurface::DestroyEglSurface( EglInterface& egl )
@@ -114,29 +141,50 @@ void PixmapRenderSurface::DestroyEglSurface( EglInterface& egl )
   DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
   Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( egl );
-  eglImpl.DestroySurface();
+
+  for (int i = 0; i != BUFFER_COUNT; ++i)
+  {
+    eglImpl.MakeCurrent( EGLNativePixmapType( mImpl->mX11Pixmaps[i] ), mImpl->mEglSurfaces[i] );
+    eglImpl.DestroySurface();
+  }
 }
 
 bool PixmapRenderSurface::ReplaceEGLSurface( EglInterface& egl )
 {
   DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
-  // a new surface for the new pixmap
-  // need to cast to X handle as in 64bit system ECore handle is 32 bit whereas EGLnative and XWindow are 64 bit
-  XPixmap pixmap = static_cast<XPixmap>( mImpl->mX11Pixmap );
+  bool contextLost = false;
+
   Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( egl );
 
-  return eglImpl.ReplaceSurfacePixmap( (EGLNativePixmapType)pixmap ); // reinterpret_cast does not compile
+  for (int i = 0; i != BUFFER_COUNT; ++i)
+  {
+    // a new surface for the new pixmap
+    contextLost = eglImpl.ReplaceSurfacePixmap( EGLNativePixmapType( mImpl->mX11Pixmaps[i] ), mImpl->mEglSurfaces[i] ); // reinterpret_cast does not compile
+  }
 
+  eglImpl.MakeCurrent( EGLNativePixmapType( mImpl->mX11Pixmaps[mImpl->mProduceBufferIndex] ), mImpl->mEglSurfaces[mImpl->mProduceBufferIndex] );
+
+  return contextLost;
 }
 
 void PixmapRenderSurface::StartRender()
 {
 }
 
-bool PixmapRenderSurface::PreRender( EglInterface&, Integration::GlAbstraction& )
+bool PixmapRenderSurface::PreRender( EglInterface& egl, Integration::GlAbstraction& )
 {
-  // nothing to do for pixmaps
+  mImpl->mConsumeBufferIndex = __sync_fetch_and_xor( &mImpl->mProduceBufferIndex, 1 ); // Swap buffer indexes.
+
+  Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( egl );
+
+  eglImpl.MakeCurrent( EGLNativePixmapType( mImpl->mX11Pixmaps[mImpl->mProduceBufferIndex] ), mImpl->mEglSurfaces[mImpl->mProduceBufferIndex] );
+
+  if ( mPreRenderNotification )
+  {
+    mPreRenderNotification->Trigger();
+  }
+
   return true;
 }
 
@@ -151,16 +199,16 @@ void PixmapRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstract
   }
 
   // create damage for client applications which wish to know the update timing
-  if( mRenderNotification )
+  if( mPostRenderNotification )
   {
     // use notification trigger
     // Tell the event-thread to render the pixmap
-    mRenderNotification->Trigger();
+    mPostRenderNotification->Trigger();
   }
   else
   {
     // as a fallback, send damage event.
-    Ecore_X_Drawable drawable = GetDrawable();
+    Ecore_X_Drawable drawable = AnyCast<Ecore_X_Drawable>( GetSurface() );
 
     if( drawable )
     {
@@ -205,32 +253,34 @@ void PixmapRenderSurface::CreateXRenderable()
   // check we're creating one with a valid size
   DALI_ASSERT_ALWAYS( mPosition.width > 0 && mPosition.height > 0 && "Pixmap size is invalid" );
 
-  // create the pixmap
-  mImpl->mX11Pixmap = ecore_x_pixmap_new(0, mPosition.width, mPosition.height, mColorDepth);
+  for (int i = 0; i != BUFFER_COUNT; ++i)
+  {
+    // create the pixmap
+    mImpl->mX11Pixmaps[i] = ecore_x_pixmap_new(0, mPosition.width, mPosition.height, mColorDepth);
 
-  // clear the pixmap
-  unsigned int foreground;
-  Ecore_X_GC gc;
-  foreground = 0;
-  gc = ecore_x_gc_new( mImpl->mX11Pixmap,
-                       ECORE_X_GC_VALUE_MASK_FOREGROUND,
-                       &foreground );
+    // clear the pixmap
+    unsigned int foreground;
+    Ecore_X_GC gc;
+    foreground = 0;
+    gc = ecore_x_gc_new( mImpl->mX11Pixmaps[i],
+                         ECORE_X_GC_VALUE_MASK_FOREGROUND,
+                         &foreground );
 
-  DALI_ASSERT_ALWAYS( gc && "CreateXRenderable(): failed to get gc" );
+    DALI_ASSERT_ALWAYS( gc && "CreateXRenderable(): failed to get gc" );
 
-  ecore_x_drawable_rectangle_fill( mImpl->mX11Pixmap, gc, 0, 0, mPosition.width, mPosition.height );
+    ecore_x_drawable_rectangle_fill( mImpl->mX11Pixmaps[i], gc, 0, 0, mPosition.width, mPosition.height );
 
-  DALI_ASSERT_ALWAYS( mImpl->mX11Pixmap && "Failed to create X pixmap" );
+    DALI_ASSERT_ALWAYS( mImpl->mX11Pixmaps[i] && "Failed to create X pixmap" );
 
-  // we SHOULD guarantee the xpixmap/x11 window was created in x server.
-  ecore_x_sync();
+    // we SHOULD guarantee the xpixmap/x11 window was created in x server.
+    ecore_x_sync();
 
-  ecore_x_gc_free(gc);
+    ecore_x_gc_free(gc);
+  }
 }
 
 void PixmapRenderSurface::UseExistingRenderable( unsigned int surfaceId )
 {
-  mImpl->mX11Pixmap = static_cast< Ecore_X_Pixmap >( surfaceId );
 }
 
 void PixmapRenderSurface::ReleaseLock()

@@ -43,7 +43,8 @@ EcoreWlRenderSurface::EcoreWlRenderSurface(Dali::PositionSize positionSize,
                                            bool isTransparent)
 : mPosition(positionSize),
   mTitle(name),
-  mRenderNotification(NULL),
+  mPreRenderNotification(NULL),
+  mPostRenderNotification(NULL),
   mColorDepth(isTransparent ? COLOR_DEPTH_32 : COLOR_DEPTH_24),
   mOwnSurface(false)
 {
@@ -74,7 +75,7 @@ void EcoreWlRenderSurface::Init( Any surface )
   printf( "INFO: DALI: new EcoreWlRenderSurface, %s %s surface %X \n",
           mOwnSurface?"created":"used existing",
           Dali::RenderSurface::PIXMAP==mType?" pixmap" :"window",
-          GetDrawable() );
+          AnyCast<Ecore_X_Drawable>( GetSurface() ) );
 #endif
 }
 
@@ -82,9 +83,14 @@ EcoreWlRenderSurface::~EcoreWlRenderSurface()
 {
 }
 
-void EcoreWlRenderSurface::SetRenderNotification(TriggerEventInterface* renderNotification)
+void EcoreWlRenderSurface::SetPreRenderNotification(TriggerEventInterface* renderNotification)
 {
-  mRenderNotification = renderNotification;
+  mPreRenderNotification = renderNotification;
+}
+
+void EcoreWlRenderSurface::SetPostRenderNotification(TriggerEventInterface* renderNotification)
+{
+  mPostRenderNotification = renderNotification;
 }
 
 Ecore_Wl_Window* EcoreWlRenderSurface::GetWlWindow()
