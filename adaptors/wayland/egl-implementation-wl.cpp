@@ -425,7 +425,7 @@ void EglImplementation::CreateSurfaceWindow( EGLNativeWindowType window, ColorDe
   DALI_ASSERT_ALWAYS( mEglSurface && "Create window surface failed" );
 }
 
-void EglImplementation::CreateSurfacePixmap( EGLNativePixmapType pixmap, ColorDepth depth )
+EGLSurface EglImplementation::CreateSurfacePixmap( EGLNativePixmapType pixmap, ColorDepth depth )
 {
   DALI_ASSERT_ALWAYS( mEglSurface == 0 && "Cannot create more than one instance of surface pixmap" );
 
@@ -440,6 +440,8 @@ void EglImplementation::CreateSurfacePixmap( EGLNativePixmapType pixmap, ColorDe
   TEST_EGL_ERROR("eglCreatePixmapSurface");
 
   DALI_ASSERT_ALWAYS( mEglSurface && "Create pixmap surface failed" );
+
+  return mEglSurface
 }
 
 bool EglImplementation::ReplaceSurfaceWindow( EGLNativeWindowType window )
@@ -462,22 +464,16 @@ bool EglImplementation::ReplaceSurfaceWindow( EGLNativeWindowType window )
   return contextLost;
 }
 
-bool EglImplementation::ReplaceSurfacePixmap( EGLNativePixmapType pixmap )
+bool EglImplementation::ReplaceSurfacePixmap( EGLNativePixmapType pixmap, EGLSurface& eglSurface )
 {
   bool contextLost = false;
 
-  //  the surface is bound to the context, so set the context to null
-  MakeContextNull();
-
-  // destroy the surface
-  DestroySurface();
-
   // display connection has not changed, then we can just create a new surface
   // create the EGL surface
-  CreateSurfacePixmap( pixmap, mColorDepth );
+  eglSurface = CreateSurfacePixmap( pixmap, mColorDepth );
 
-  // set the context to be current with the new surface
-  MakeContextCurrent();
+  // set the eglSurface to be current
+  MakeCurrent( pixmap, eglSurface );
 
   return contextLost;
 }

@@ -50,7 +50,8 @@ EcoreXRenderSurface::EcoreXRenderSurface(Dali::PositionSize positionSize,
                                          bool isTransparent)
 : mPosition(positionSize),
   mTitle(name),
-  mRenderNotification(NULL),
+  mPreRenderNotification(NULL),
+  mPostRenderNotification(NULL),
   mColorDepth(isTransparent ? COLOR_DEPTH_32 : COLOR_DEPTH_24),
   mOwnSurface(false)
 {
@@ -79,7 +80,7 @@ void EcoreXRenderSurface::Init( Any surface )
   // we can not use LOG_INFO because the surface can be created before Dali Core is created.
   printf( "INFO: DALI: new EcoreXRenderSurface, %s surface %X \n",
           mOwnSurface?"created":"used existing",
-          GetDrawable() );
+          AnyCast<Ecore_X_Drawable>( GetSurface() ) );
 #endif
 }
 
@@ -87,9 +88,14 @@ EcoreXRenderSurface::~EcoreXRenderSurface()
 {
 }
 
-void EcoreXRenderSurface::SetRenderNotification(TriggerEventInterface* renderNotification)
+void EcoreXRenderSurface::SetPreRenderNotification(TriggerEventInterface* renderNotification)
 {
-  mRenderNotification = renderNotification;
+  mPreRenderNotification = renderNotification;
+}
+
+void EcoreXRenderSurface::SetPostRenderNotification(TriggerEventInterface* renderNotification)
+{
+  mPostRenderNotification = renderNotification;
 }
 
 Ecore_X_Window EcoreXRenderSurface::GetXWindow()
