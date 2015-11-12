@@ -36,6 +36,10 @@
 #include <gl/egl-implementation.h>
 #include <base/display-connection.h>
 
+#include <iostream>
+#include <sys/time.h>
+using namespace std;
+
 namespace Dali
 {
 
@@ -188,10 +192,28 @@ bool WindowRenderSurface::PreRender( EglInterface&, Integration::GlAbstraction& 
   return true;
 }
 
+bool gFirstSwapBuffer = false;
 void WindowRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, DisplayConnection* displayConnection, bool replacingSurface )
 {
+  if( !gFirstSwapBuffer)
+  {
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+    cout << "(time-logger)Begin first SwapBuffers() call: " << ms << endl;
+  }
+
   Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( egl );
   eglImpl.SwapBuffers();
+
+  if( !gFirstSwapBuffer)
+  {
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    long int ms = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+    cout << "(time-logger)End__ first SwapBuffers() call: " << ms << endl;
+    gFirstSwapBuffer = true;
+  }
 
   // When the window is deiconified, it approves the deiconify operation to window manager after rendering
   if(mNeedToApproveDeiconify)
