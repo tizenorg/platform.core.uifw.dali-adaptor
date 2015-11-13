@@ -305,9 +305,11 @@ void ThreadSynchronization::SetRenderRefreshRate( unsigned int numberOfVSyncsPer
 // UPDATE THREAD
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool ThreadSynchronization::UpdateReady( bool notifyEvent, bool runUpdate, float& lastFrameDeltaSeconds, unsigned int& lastSyncTimeMilliseconds, unsigned int& nextSyncTimeMilliseconds )
+bool ThreadSynchronization::UpdateReady( bool notifyEvent, bool runUpdate, float& lastFrameDeltaSeconds, unsigned int& lastSyncTimeMilliseconds, unsigned int& nextSyncTimeMilliseconds, bool& surfaceReplaced)
 {
   LOG_UPDATE_TRACE;
+
+  surfaceReplaced = false;
 
   State::Type state = State::STOPPED;
   {
@@ -417,8 +419,13 @@ bool ThreadSynchronization::UpdateReady( bool notifyEvent, bool runUpdate, float
     }
 
     case State::SLEEPING:
+    {
+      break;
+    }
+
     case State::REPLACING_SURFACE:
     {
+      surfaceReplaced = true;
       break;
     }
   }

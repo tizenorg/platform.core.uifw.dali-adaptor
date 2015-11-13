@@ -98,16 +98,21 @@ bool UpdateThread::Run()
   unsigned int lastSyncTime( 0 );
   unsigned int nextSyncTime( 0 );
 
+  bool surfaceReplaced = false;
+
   // Update loop, we stay inside here while the update-thread is running
   // We also get the last delta and the predict when this update will be rendered
-  while ( mThreadSynchronization.UpdateReady( status.NeedsNotification(), runUpdate, lastFrameDelta, lastSyncTime, nextSyncTime ) )
+  while ( mThreadSynchronization.UpdateReady( status.NeedsNotification(), runUpdate, lastFrameDelta, lastSyncTime, nextSyncTime, surfaceReplaced ) )
   {
     DALI_LOG_INFO( gUpdateLogFilter, Debug::Verbose, "UpdateThread::Run. 1 - UpdateReady(delta:%f, lastSync:%u, nextSync:%u)\n", lastFrameDelta, lastSyncTime, nextSyncTime);
 
     DALI_LOG_INFO( gUpdateLogFilter, Debug::Verbose, "UpdateThread::Run. 2 - Core.Update()\n");
 
     mThreadSynchronization.AddPerformanceMarker( PerformanceInterface::UPDATE_START );
-    mCore.Update( lastFrameDelta, lastSyncTime, nextSyncTime, status );
+    if (!surfaceReplaced)
+    {
+      mCore.Update( lastFrameDelta, lastSyncTime, nextSyncTime, status );
+    }
     mThreadSynchronization.AddPerformanceMarker( PerformanceInterface::UPDATE_END );
 
     mFpsTracker.Track( status.SecondsFromLastFrame() );

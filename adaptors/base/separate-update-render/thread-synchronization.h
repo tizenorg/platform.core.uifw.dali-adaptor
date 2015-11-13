@@ -156,11 +156,12 @@ public:
    * @param[out] lastFrameDeltaSeconds The delta, in seconds (with float precision), between the last two renders.
    * @param[out] lastSyncTimeMilliseconds The time, in milliseconds, of the last Sync.
    * @param[out] nextSyncTimeMilliseconds The estimated time, in milliseconds, at the next Sync.
+   * @param[out] surfaceReplaced if surface is replaced
    * @return true if updating should continue, false if the update-thread should quit.
    *
    * @note Should only be called by the Update thread.
    */
-  bool UpdateReady( bool notifyEvent, bool runUpdate, float& lastFrameDeltaSeconds, unsigned int& lastSyncTimeMilliseconds, unsigned int& nextSyncTimeMilliseconds );
+  bool UpdateReady( bool notifyEvent, bool runUpdate, float& lastFrameDeltaSeconds, unsigned int& lastSyncTimeMilliseconds, unsigned int& nextSyncTimeMilliseconds, bool& surfaceReplaced );
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // Called by the Render Thread
