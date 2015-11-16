@@ -398,7 +398,7 @@ private:
                      FontDescriptionId& validatedFontId );
 
   /**
-   * Helper for SetDefaultFont etc.
+   * Helper for GetDefaultFonts etc.
    *
    * @param[in] fontDescription A font description.
    * @param[out] fontList A list of the fonts which are a close match for fontDescription.
@@ -409,6 +409,8 @@ private:
 
   unsigned int mDpiHorizontal; ///< Horizontal dpi.
   unsigned int mDpiVertical;   ///< Vertical dpi.
+
+  FontDescription mDefaultFontDescription; ///< The cached default font from the system
 
   FontList mSystemFonts;       ///< Cached system fonts.
   FontList mDefaultFonts;      ///< Cached default fonts.
@@ -421,6 +423,8 @@ private:
   std::vector<FontIdCacheItem>          mFontIdCache;          ///< Caches font ids for the pairs of font point size and the index to the vector with font descriptions of the validated fonts.
 
   Vector<EllipsisItem> mEllipsisCache;      ///< Caches ellipsis glyphs for a particular point size.
+
+  bool mDefaultFontDescriptionCached : 1; ///< Whether the default font is cached or not
 };
 
 } // namespace Internal

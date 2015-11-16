@@ -63,11 +63,6 @@ void FontClient::GetDpi( unsigned int& horizontalDpi, unsigned int& verticalDpi 
   GetImplementation(*this).GetDpi( horizontalDpi, verticalDpi );
 }
 
-void FontClient::SetDefaultFont( const FontDescription& fontDescription )
-{
-  GetImplementation(*this).SetDefaultFont( fontDescription );
-}
-
 void FontClient::GetDefaultFonts( FontList& defaultFonts )
 {
   GetImplementation(*this).GetDefaultFonts( defaultFonts );
