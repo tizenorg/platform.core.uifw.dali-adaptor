@@ -253,6 +253,7 @@ void ThreadSynchronization::ReplaceSurface( RenderSurface* newSurface )
 {
   LOG_EVENT_TRACE;
 
+  // Change the update state to REPLACING_SURFACE.
   State::Type previousState( State::STOPPED );
   {
     ConditionalWait::ScopedLock lock( mUpdateThreadWaitCondition );
@@ -261,35 +262,33 @@ void ThreadSynchronization::ReplaceSurface( RenderSurface* newSurface )
   }
 
   {
-    ConditionalWait::ScopedLock lock( mEventThreadWaitCondition );
-    mEventThreadSurfaceReplaced = FALSE;
-  }
-
-  {
     ConditionalWait::ScopedLock lock( mRenderThreadWaitCondition );
     mReplaceSurfaceRequest.SetSurface( newSurface );
-    mRenderThreadReplacingSurface = TRUE;
   }
 
-  // Notify the RenderThread in case it's waiting
-  mRenderThreadWaitCondition.Notify();
+  // Wake up the update thread for replacing surface.
+  mUpdateThreadWaitCondition.Notify();
 
+  // Stop event thread till the surface is replaced.
   {
     ConditionalWait::ScopedLock lock( mEventThreadWaitCondition );
+    mEventThreadSurfaceReplaced = FALSE;
 
     // Wait for RenderThread to replace the surface
     while( ! mEventThreadSurfaceReplaced )
     {
       LOG_EVENT( "Waiting for Surface to be Replaced" );
-
       mEventThreadWaitCondition.Wait( lock );
     }
   }
 
+  // Recovery the update state.
   {
     ConditionalWait::ScopedLock lock( mUpdateThreadWaitCondition );
     mState = previousState;
   }
+
+  // Notify that the replacing surface is finished to the update thread.
   mUpdateThreadWaitCondition.Notify();
 }
 
@@ -415,9 +414,54 @@ bool ThreadSynchronization::UpdateReady( bool notifyEvent, bool runUpdate, float
 
       break;
     }
+    case State::REPLACING_SURFACE:
+    {
+      // Replacing surface is happend while the update thread is running. (This update ahead of render is NOT replacing surface)
+      {
+        ConditionalWait::ScopedLock renderLock( mRenderThreadWaitCondition );
+        ++mUpdateAheadOfRender;
+        DALI_ASSERT_ALWAYS( mUpdateAheadOfRender >= 0 );
+        DALI_ASSERT_ALWAYS( mUpdateAheadOfRender <= mMaximumUpdateCount );
+        LOG_UPDATE_COUNTER_UPDATE( "updateAheadOfRender(%d)", mUpdateAheadOfRender );
+
+        mRenderThreadSurfaceReplaced = FALSE;  // Ensure to skip the post render because the event thread is stopping.
+      }
+      mRenderThreadWaitCondition.Notify();
+
+      // Wait untill all update buffers are consumed.
+      while( MaximumUpdateAheadOfRenderReached() || !IsUpdateAheadOfRenderZero() )
+      {
+        LOG_UPDATE( "Maximum Update Ahead of Render: WAIT or Update Buffer Is Not Empty." );
+
+        mRenderThreadWaitCondition.Notify(); // Notify the render thread in case it was waiting
+
+        {
+          // Ensure we did not stop while we were waiting previously.
+          ConditionalWait::ScopedLock updateLock( mUpdateThreadWaitCondition );
+          if( mState == State::STOPPED )
+          {
+            break; // Break out of while loop
+          }
+          mUpdateThreadWaitCondition.Wait( updateLock );
+        }
+      }
+
+      // Locks so should not be called while we have a scoped-lock
+      PauseVSyncThread();
+
+      // for replace surface
+      {
+        ConditionalWait::ScopedLock renderLock( mRenderThreadWaitCondition );
+        mRenderThreadReplacingSurface = TRUE;  // Render thread works for replacing surface.
+      }
+      mRenderThreadWaitCondition.Notify();
+
+      UpdateWaitIfReplacingSurface();
+
+      break;
+    }
 
     case State::SLEEPING:
-    case State::REPLACING_SURFACE:
     {
       break;
     }
@@ -430,9 +474,6 @@ bool ThreadSynchronization::UpdateReady( bool notifyEvent, bool runUpdate, float
     StopAllThreads();
     return false; // Stop update-thread
   }
-
-  // Just wait if we're replacing the surface as the render-thread is busy
-  UpdateWaitIfReplacingSurface();
 
   mFrameTime.PredictNextSyncTime( lastFrameDeltaSeconds, lastSyncTimeMilliseconds, nextSyncTimeMilliseconds );
 
@@ -447,54 +488,31 @@ bool ThreadSynchronization::RenderReady( RenderRequest*& requestPtr )
 {
   LOG_RENDER_TRACE;
 
-  if( ! IsRenderThreadReplacingSurface() ) // Call to this function locks so should not be called if we have a scoped-lock
+  if( ! mRenderThreadInitialised )
   {
-    if( ! mRenderThreadInitialised )
-    {
-      LOG_RENDER( "Initialised" );
+    LOG_RENDER( "Initialised" );
 
-      mRenderThreadInitialised = TRUE;
+    mRenderThreadInitialised = TRUE;
 
-      // Notify event thread that this thread is up and running, this locks so we should have a scoped-lock
-      NotifyThreadInitialised();
-    }
-    else
-    {
-      if( mRenderThreadSurfaceReplaced )
-      {
-        mRenderThreadSurfaceReplaced = FALSE;
-      }
-    }
+    // Notify event thread that this thread is up and running, this locks so we should have a scoped-lock
+    NotifyThreadInitialised();
+  }
 
-    // Check if we've had an update, if we haven't then we just wait
-    // Ensure we do not wait if we're supposed to stop
+  // Check if we've had an update, if we haven't then we just wait
+  // Ensure we do not wait if we're supposed to stop
+  {
+    ConditionalWait::ScopedLock renderLock( mRenderThreadWaitCondition );
+    while( mUpdateAheadOfRender <= 0 && ! mRenderThreadStop && ! mRenderThreadReplacingSurface )
     {
-      ConditionalWait::ScopedLock renderLock( mRenderThreadWaitCondition );
-      if( mUpdateAheadOfRender <= 0 && ! mRenderThreadStop )
-      {
-        do
-        {
-          LOG_UPDATE_COUNTER_RENDER( "updateAheadOfRender(%d) WAIT", mUpdateAheadOfRender );
-          mRenderThreadWaitCondition.Wait( renderLock );
-        } while( mUpdateAheadOfRender <= 0 && ! mRenderThreadStop && ! mRenderThreadReplacingSurface );
-      }
-      else
-      {
-        LOG_UPDATE_COUNTER_RENDER( "updateAheadOfRender(%d)", mUpdateAheadOfRender );
-      }
+      LOG_UPDATE_COUNTER_RENDER( "updateAheadOfRender(%d) WAIT", mUpdateAheadOfRender );
+      mRenderThreadWaitCondition.Wait( renderLock );
     }
   }
 
-  // We may have been asked to replace the surface while we were waiting so check again here
   if( IsRenderThreadReplacingSurface() )
   {
-    // Replacing surface
-    LOG_RENDER( "REPLACE SURFACE" );
-
     ConditionalWait::ScopedLock renderLock( mRenderThreadWaitCondition );
     requestPtr = &mReplaceSurfaceRequest;
-    mRenderThreadReplacingSurface = FALSE;
-    mRenderThreadSurfaceReplaced = FALSE;
   }
 
   return IsRenderThreadRunning(); // Call to this function locks so should not be called if we have a scoped-lock
@@ -515,7 +533,20 @@ void ThreadSynchronization::RenderInformSurfaceReplaced()
 {
   LOG_RENDER_TRACE;
 
-  mRenderThreadSurfaceReplaced = TRUE;
+  {
+    ConditionalWait::ScopedLock renderLock( mRenderThreadWaitCondition );
+    mRenderThreadReplacingSurface = FALSE;
+    mRenderThreadSurfaceReplaced = TRUE;
+  }
+
+  {
+    ConditionalWait::ScopedLock updateLock( mUpdateThreadWaitCondition );
+    mVSyncAheadOfUpdate = 0;
+  }
+
+  // Locks so should not be called while we have a scoped-lock
+  RunVSyncThread();
+
   {
     ConditionalWait::ScopedLock lock( mEventThreadWaitCondition );
     mEventThreadSurfaceReplaced = TRUE;
@@ -625,10 +656,16 @@ void ThreadSynchronization::PostRenderWaitForCompletion()
 
   ConditionalWait::ScopedLock lock( mRenderThreadWaitCondition );
   while( mRenderThreadPostRendering &&
-         ! mRenderThreadReplacingSurface ) // We should NOT wait if we're replacing the surface
+         ! mRenderThreadReplacingSurface && // We should NOT wait if we're replacing the surface
+         mRenderThreadSurfaceReplaced )
   {
     LOG_RENDER( "WAIT" );
     mRenderThreadWaitCondition.Wait( lock );
+  }
+
+  if( ! mRenderThreadReplacingSurface && ! mRenderThreadSurfaceReplaced )
+  {
+    mUpdateThreadWaitCondition.Notify();  // No one can't wake up the update thread becase the event thread is sleeping.
   }
 }
 
@@ -768,9 +805,6 @@ void ThreadSynchronization::UpdateWaitIfReplacingSurface()
   {
     LOG_UPDATE_TRACE_FMT( "REPLACING SURFACE" );
 
-    // Locks so should not be called while we have a scoped-lock
-    PauseVSyncThread();
-
     // One last check before we actually wait in case the state has changed since we checked earlier
     {
       ConditionalWait::ScopedLock updateLock( mUpdateThreadWaitCondition );
@@ -780,14 +814,6 @@ void ThreadSynchronization::UpdateWaitIfReplacingSurface()
         mUpdateThreadWaitCondition.Wait( updateLock );
       }
     }
-
-    {
-      ConditionalWait::ScopedLock updateLock( mUpdateThreadWaitCondition );
-      mVSyncAheadOfUpdate = 0;
-    }
-
-    // Locks so should not be called while we have a scoped-lock
-    RunVSyncThread();
   }
 }
 
@@ -807,6 +833,12 @@ bool ThreadSynchronization::MaximumUpdateAheadOfRenderReached()
 {
   ConditionalWait::ScopedLock lock( mRenderThreadWaitCondition );
   return mUpdateAheadOfRender >= mMaximumUpdateCount;
+}
+
+bool ThreadSynchronization::IsUpdateAheadOfRenderZero()
+{
+  ConditionalWait::ScopedLock lock( mRenderThreadWaitCondition );
+  return mUpdateAheadOfRender == 0;
 }
 
 void ThreadSynchronization::StopAllThreads()
