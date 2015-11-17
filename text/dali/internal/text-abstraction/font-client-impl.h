@@ -163,6 +163,11 @@ public:
    */
   const GlyphInfo& GetEllipsisGlyph( PointSize26Dot6 pointSize );
 
+  /**
+   * @copydoc Dali::FontClient::CreateGlyphyBlob()
+   */
+  void CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, unsigned int requiredWidth, double tolerancePerEm, GlyphyBlob& blob );
+
 private:
 
   /**

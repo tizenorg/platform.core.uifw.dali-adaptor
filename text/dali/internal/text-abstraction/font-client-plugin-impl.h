@@ -22,6 +22,7 @@
 #include <dali/devel-api/text-abstraction/font-metrics.h>
 #include <dali/devel-api/text-abstraction/glyph-info.h>
 #include <dali/internal/text-abstraction/font-client-impl.h>
+#include <dali/internal/glyphy/glyphy.h>
 
 // EXTERNAL INCLUDES
 #include <ft2build.h>
@@ -428,6 +429,8 @@ private:
   std::vector<FontIdCacheItem>          mFontIdCache;          ///< Caches font ids for the pairs of font point size and the index to the vector with font descriptions of the validated fonts.
 
   Vector<EllipsisItem> mEllipsisCache;      ///< Caches ellipsis glyphs for a particular point size.
+
+  glyphy_arc_accumulator_t* mGlyphyAccumulator;
 
   bool mDefaultFontDescriptionCached : 1; ///< Whether the default font is cached or not
 };

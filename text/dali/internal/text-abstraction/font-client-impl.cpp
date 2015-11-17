@@ -224,6 +224,13 @@ const GlyphInfo& FontClient::GetEllipsisGlyph( PointSize26Dot6 pointSize )
   return mPlugin->GetEllipsisGlyph( pointSize );
 }
 
+void FontClient::CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, unsigned int requiredWidth, double tolerancePerEm, GlyphyBlob& blob )
+{
+  CreatePlugin();
+
+  return mPlugin->CreateGlyphyBlob( fontId, glyphIndex, requiredWidth, tolerancePerEm, blob );
+}
+
 void FontClient::CreatePlugin()
 {
   if( !mPlugin )

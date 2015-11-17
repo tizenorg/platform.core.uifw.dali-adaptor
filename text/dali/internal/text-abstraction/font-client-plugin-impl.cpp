@@ -843,6 +843,22 @@ BufferImage FontClient::Plugin::CreateBitmap( FontId fontId,
   return bitmap;
 }
 
+void FontClient::Plugin::CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, unsigned int requiredWidth, double tolerancePerEm, GlyphyBlob& blob )
+{
+  if( fontId > 0 &&
+      fontId-1 < mFontCache.size() )
+  {
+    FT_Face ftFace = mFontCache[fontId-1].mFreeTypeFace;
+
+    if( !mGlyphyAccumulator )
+    {
+      mGlyphyAccumulator = glyphy_arc_accumulator_create();
+    }
+
+    GetGlyphyBlob( ftFace, glyphIndex, requiredWidth, mGlyphyAccumulator, tolerancePerEm, blob );
+  }
+}
+
 const GlyphInfo& FontClient::Plugin::GetEllipsisGlyph( PointSize26Dot6 pointSize )
 {
   // First look into the cache if there is an ellipsis glyph for the requested point size.
