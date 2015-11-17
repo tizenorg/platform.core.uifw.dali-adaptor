@@ -309,6 +309,14 @@ private:
   inline bool MaximumUpdateAheadOfRenderReached();
 
   /**
+   * Called by the update thread to check if we've used all updated buffers.
+   * This will lock the mutex in mRenderThreadWaitCondition.
+   *
+   * @return True if all update buffers are full.
+   */
+  inline bool IsUpdateAheadOfRenderZero();
+
+  /**
    * Called by the update thread when we are about to stop.
    * This will call other functions which lock various conditional wait mutexes.
    */
