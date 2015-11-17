@@ -39,6 +39,8 @@ namespace Internal DALI_INTERNAL
 class FontClient;
 }
 
+struct GlyphyBlob;
+
 /**
  * @brief FontClient provides access to font information and resources.
  *
@@ -313,6 +315,17 @@ public:
    * @return The ellipsis glyph.
    */
   const GlyphInfo& GetEllipsisGlyph( PointSize26Dot6 pointSize );
+
+  /**
+   * @brief Create a GLyphy blob representation of a glyph.
+   *
+   * @param[in] fontId The ID of the font.
+   * @param[in] glyphIndex The index of a glyph within the specified font.
+   * @param[in] requiredWidth The required width of the bitmap (this is arbitrary).
+   * @param[in] tolerancePerEm The tolerance for the arc accumulator in font design units.
+   * @return A BitmapImage and related blob metadata.
+   */
+  GlyphyBlob CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, unsigned int requiredWidth, double tolerancePerEm = 1.0/2048.0 );
 
 public: // Not intended for application developers
   /**

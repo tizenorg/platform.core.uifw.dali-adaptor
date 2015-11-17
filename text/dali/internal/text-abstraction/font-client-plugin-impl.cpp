@@ -24,6 +24,7 @@
 #include <dali/public-api/common/vector-wrapper.h>
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/platform-abstraction.h>
+#include <dali/internal/glyphy/glyphy-helper.h>
 #include <dali/internal/text-abstraction/font-client-helper.h>
 #include <adaptor-impl.h>
 
@@ -841,6 +842,22 @@ BufferImage FontClient::Plugin::CreateBitmap( FontId fontId,
   }
 
   return bitmap;
+}
+
+void FontClient::Plugin::CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, unsigned int requiredWidth, double tolerancePerEm, GlyphyBlob& blob )
+{
+  if( fontId > 0 &&
+      fontId-1 < mFontCache.size() )
+  {
+    FT_Face ftFace = mFontCache[fontId-1].mFreeTypeFace;
+
+    if( !mGlyphyAccumulator )
+    {
+      mGlyphyAccumulator = glyphy_arc_accumulator_create();
+    }
+
+    GetGlyphyBlob( ftFace, glyphIndex, requiredWidth, mGlyphyAccumulator, tolerancePerEm, blob );
+  }
 }
 
 const GlyphInfo& FontClient::Plugin::GetEllipsisGlyph( PointSize26Dot6 pointSize )
