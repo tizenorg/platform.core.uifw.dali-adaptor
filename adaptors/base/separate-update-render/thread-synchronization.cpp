@@ -415,9 +415,19 @@ bool ThreadSynchronization::UpdateReady( bool notifyEvent, bool runUpdate, float
 
       break;
     }
+    case State::REPLACING_SURFACE:
+    {
+      {
+        ConditionalWait::ScopedLock lock( mRenderThreadWaitCondition );
+        ++mUpdateAheadOfRender;
+        DALI_ASSERT_ALWAYS( mUpdateAheadOfRender >= 0 );
+        DALI_ASSERT_ALWAYS( mUpdateAheadOfRender <= mMaximumUpdateCount );
+        LOG_UPDATE_COUNTER_UPDATE( "updateAheadOfRender(%d)", mUpdateAheadOfRender );
+      }
+      break;
+    }
 
     case State::SLEEPING:
-    case State::REPLACING_SURFACE:
     {
       break;
     }
