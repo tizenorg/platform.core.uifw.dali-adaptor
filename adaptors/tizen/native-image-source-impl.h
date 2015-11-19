@@ -19,6 +19,7 @@
  */
 
 // EXTERNAL INCLUDES
+#include <tbm_surface.h>
 
 // INTERNAL INCLUDES
 #include <native-image-source.h>
@@ -68,6 +69,8 @@ public:
    * @copydoc Dali::NativeImageSource::EncodeToFile(const std::string& )
    */
   bool EncodeToFile(const std::string& filename) const;
+
+  void SetNativeImageSource( Any nativeImageSource );
 
   /**
    * destructor
@@ -127,22 +130,18 @@ private:
               Dali::NativeImageSource::ColorDepth depth,
               Any nativeImageSource);
 
-  /**
-   * 2nd phase construction.
-   */
   void Initialize();
 
-  /**
-   * Decide whether blending is required based on the color depth.
-   * @param depth the PixelImage depth enum
-   */
-  void SetBlending(Dali::NativeImageSource::ColorDepth depth);
+  int GetPixelDepth(Dali::NativeImageSource::ColorDepth depth) const;
+
+  tbm_surface_h GetSurfaceFromAny( Any source ) const;
 
 private:
 
   unsigned int mWidth;                        ///< image width
   unsigned int mHeight;                       ///< image heights
-  bool mOwnPixmap;                            ///< Whether we created pixmap or not
+  bool mOwnTbmsurface;                            ///< Whether we created pixmap or not
+  tbm_surface_h mTbmsurface;
   bool mBlendingRequired;                      ///< Whether blending is required
   Dali::NativeImageSource::ColorDepth mColorDepth;  ///< color depth of image
   void* mEglImageKHR;                         ///< From EGL extension

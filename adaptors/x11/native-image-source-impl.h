@@ -69,6 +69,8 @@ public:
    */
   bool EncodeToFile(const std::string& filename) const;
 
+  void SetNativeImageSource( Any nativeImageSource );
+
   /**
    * destructor
    */

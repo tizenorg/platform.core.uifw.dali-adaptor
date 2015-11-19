@@ -30,6 +30,7 @@
 #include "resource-loader/resource-loader.h"
 #include "image-loaders/image-loader.h"
 #include "portable/file-closer.h"
+#include <native-image-source-impl.h>
 
 namespace Dali
 {
@@ -45,7 +46,9 @@ namespace TizenPlatform
 
 TizenPlatformAbstraction::TizenPlatformAbstraction()
 : mResourceLoader(new ResourceLoader),
-  mDataStoragePath( "" )
+  mDataStoragePath( "" ),
+  mNativeSourceVertexShaderCode( "" ),
+  mNativeSourceFragmentShaderCode( "" )
 {
 }
 
@@ -226,6 +229,25 @@ bool TizenPlatformAbstraction::SaveShaderBinaryFile( const std::string& filename
 void TizenPlatformAbstraction::SetDataStoragePath( const std::string& path )
 {
   mDataStoragePath = path;
+}
+
+void TizenPlatformAbstraction::SetNativeSourceVertexShaderCode( const std::string& code )
+{
+  mNativeSourceVertexShaderCode = code;
+}
+void TizenPlatformAbstraction::SetNativeSourceFragmentShaderCode( const std::string& code )
+{
+  mNativeSourceFragmentShaderCode = code;
+}
+
+const char* TizenPlatformAbstraction::GetNativeSourceVertexShaderCode()
+{
+  return mNativeSourceVertexShaderCode.c_str();
+}
+
+const char* TizenPlatformAbstraction::GetNativeSourceFragmentShaderCode()
+{
+  return mNativeSourceFragmentShaderCode.c_str();
 }
 
 }  // namespace TizenPlatform
