@@ -26,6 +26,8 @@ Source0:    %{name}-%{version}.tar.gz
 %define profile %{tizen_profile_name}
 %endif
 
+%define profile mobile
+
 %if "%{profile}" == "mobile"
 %define dali_profile MOBILE
 %define dali_feedback_plugin 0
@@ -99,10 +101,14 @@ BuildRequires:  nodejs-devel
 BuildRequires:  pkgconfig(wayland-egl)
 BuildRequires:  pkgconfig(wayland-client)
 BuildRequires:  wayland-devel
+BuildRequires:  pkgconfig(libtbm)
+BuildRequires:  libxkbcommon-devel
+
 # Currently Tizen Common we use does not have wayland extensions like xdg-shell
 %if "%{profile}" != "common"
 BuildRequires:  wayland-extension-client-devel
 %endif
+
 %if %{build_with_libuv}
 ####### BUILDING FOR PURE WAYLAND #######
 # if we're building with wayland and runnning under node.js then we are using libuv mainloop
@@ -110,11 +116,11 @@ BuildRequires:  wayland-extension-client-devel
 # EFL libraries and APP Framework libraries are not required in this case
 %define dali_needs_efl_libraries 0
 %define dali_needs_appfw_libraries 0
-BuildRequires:  libxkbcommon-devel
 %else
 ####### BUILDING FOR ECORE WAYLAND #######
 BuildRequires:  pkgconfig(ecore-wayland)
 %endif
+
 ####### BUILDING FOR X11#######
 %else
 BuildRequires:  pkgconfig(egl)
