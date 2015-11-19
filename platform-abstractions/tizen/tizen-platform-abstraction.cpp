@@ -30,6 +30,7 @@
 #include "resource-loader/resource-loader.h"
 #include "image-loaders/image-loader.h"
 #include "portable/file-closer.h"
+#include <native-image-source-impl.h>
 
 namespace Dali
 {
