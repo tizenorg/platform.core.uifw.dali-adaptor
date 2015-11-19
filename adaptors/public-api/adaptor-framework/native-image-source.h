@@ -51,7 +51,7 @@ typedef IntrusivePtr<NativeImageSource> NativeImageSourcePtr;
  * @brief Used for displaying native images.
  *
  * The native image source can be created internally or
- * externally by X11 or ECORE-X11.
+ * externally by native image source.
  *
  * @since DALi 1.1.4
  */
@@ -85,7 +85,7 @@ public:
   /**
    * @brief Create a new NativeImageSource from an existing native image.
    *
-   * @param[in] nativeImageSource must be a X11 pixmap or a Ecore_X_Pixmap
+   * @param[in] nativeImageSource must be a any handle with native image source
    * @return A smart-pointer to a newly allocated image.
    */
   static NativeImageSourcePtr New( Any nativeImageSource );
@@ -120,6 +120,13 @@ public:
    * @return    True if the pixels were written, and false otherwise.
    */
   bool EncodeToFile(const std::string& filename) const;
+
+  /**
+   * @brief Set native image source
+   *
+   * @param[in] source Any handle with native image source
+   */
+  void SetNativeImageSource( Any source );
 
 private:   // native image
 
@@ -158,6 +165,11 @@ private:   // native image
    */
   virtual bool RequiresBlending() const;
 
+  /**
+   * @copydoc Dali::NativeImageInterface::GetExtension()
+   */
+  NativeImageInterface::Extension* GetExtension();
+
 private:
 
   /**
@@ -165,7 +177,7 @@ private:
    * @param[in] width The width of the image.
    * @param[in] height The height of the image.
    * @param[in] depth color depth of the image.
-   * @param[in] nativeImageSource contains either: pixmap of type X11 Pixmap , a Ecore_X_Pixmap or is empty
+   * @param[in] nativeImageSource contains either: native image source or is empty
    */
   DALI_INTERNAL NativeImageSource( unsigned int width, unsigned int height, ColorDepth depth, Any nativeImageSource );
 
