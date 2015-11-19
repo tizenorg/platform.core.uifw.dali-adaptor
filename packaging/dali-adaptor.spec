@@ -81,7 +81,10 @@ BuildRequires:  pkgconfig(dlog)
 BuildRequires:  libdrm-devel
 BuildRequires:  pkgconfig(libexif)
 BuildRequires:  pkgconfig(libpng)
-BuildRequires:  pkgconfig(egl)
+#BuildRequires:  pkgconfig(egl)#remove for mcd
+#BuildRequires:  pkgconfig(glesv2)#remove for mcd
+BuildRequires:  pkgconfig(gles20)
+BuildRequires:  pkgconfig(efl-assist)
 BuildRequires:  libcurl-devel
 BuildRequires:  pkgconfig(harfbuzz)
 BuildRequires:  fribidi-devel
