@@ -70,6 +70,11 @@ public:
   bool EncodeToFile(const std::string& filename) const;
 
   /**
+   * @copydoc Dali::NativeImageSource::SetNativeImageSource( Any nativeImageSource )
+   */
+  void SetNativeImageSource( Any nativeImageSource );
+
+  /**
    * destructor
    */
   ~NativeImageSource();
