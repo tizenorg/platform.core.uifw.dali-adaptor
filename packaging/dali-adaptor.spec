@@ -14,6 +14,8 @@ Source0:    %{name}-%{version}.tar.gz
 %define profile %{tizen_profile_name}
 %endif
 
+%define profile mobile
+
 %if "%{profile}" == "mobile"
 %define dali_profile MOBILE
 %define dali_feedback_plugin 0
@@ -74,6 +76,7 @@ BuildRequires:  pkgconfig(capi-system-info)
 BuildRequires:  pkgconfig(ecore-wayland)
 BuildRequires:  pkgconfig(wayland-egl)
 BuildRequires:  pkgconfig(wayland-client)
+BuildRequires:  pkgconfig(libtbm)
 %else
 BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(xi)
