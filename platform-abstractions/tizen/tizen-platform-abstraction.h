@@ -27,6 +27,8 @@
 namespace Dali
 {
 
+class NativeImageInterface;
+
 /**
  * Construct a platform abstraction and return it.
  */
