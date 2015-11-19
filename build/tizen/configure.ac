@@ -199,7 +199,8 @@ PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
 fi
 
 if test "x$enable_profile" = "xMOBILE"; then
-PKG_CHECK_MODULES(OPENGLES20, gles20)
+PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
+#PKG_CHECK_MODULES(OPENGLES20, gles20)
 enable_assimp=no
 fi
 

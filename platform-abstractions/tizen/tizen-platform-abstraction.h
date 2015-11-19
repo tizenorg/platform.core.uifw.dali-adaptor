@@ -27,6 +27,8 @@
 namespace Dali
 {
 
+class NativeImageInterface;
+
 /**
  * Construct a platform abstraction and return it.
  */
@@ -146,9 +148,19 @@ public: // PlatformAbstraction overrides
    */
   void SetDataStoragePath( const std::string& path );
 
+  void SetNativeSourceVertexShaderCode( const std::string& code );
+
+  void SetNativeSourceFragmentShaderCode( const std::string& code );
+
+  virtual const char* GetNativeSourceVertexShaderCode();
+
+  virtual const char* GetNativeSourceFragmentShaderCode();
+
 private:
   ResourceLoader* mResourceLoader;
   std::string mDataStoragePath;
+  std::string mNativeSourceVertexShaderCode;
+  std::string mNativeSourceFragmentShaderCode;
 };
 
 }  // namespace TizenPlatform
