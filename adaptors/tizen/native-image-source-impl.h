@@ -19,7 +19,7 @@
  */
 
 // EXTERNAL INCLUDES
-#include <Ecore_X.h>
+#include <tbm_surface.h>
 
 // INTERNAL INCLUDES
 #include <native-image-source.h>
@@ -54,6 +54,7 @@ public:
                           unsigned int height,
                           Dali::NativeImageSource::ColorDepth depth,
                           Any nativeImageSource);
+
   /**
    * @copydoc Dali::NativeImageSource::GetNativeImageSource()
    */
@@ -129,41 +130,21 @@ private:
               Dali::NativeImageSource::ColorDepth depth,
               Any nativeImageSource);
 
-  /**
-   * 2nd phase construction.
-   */
-  void Initialize();
 
-  /**
-   * Uses X11 to get the default depth.
-   * @param depth the PixelImage depth enum
-   * @return default x11 pixel depth
-   */
   int GetPixelDepth(Dali::NativeImageSource::ColorDepth depth) const;
 
-  /**
-   * Gets the pixmap from the Any parameter
-   * @param pixmap contains either: pixmap of type X11 Pixmap , a Ecore_X_Pixmap or is empty
-   * @return pixmap x11 pixmap
-   */
-  Ecore_X_Pixmap GetPixmapFromAny(Any pixmap) const;
-
-  /**
-   * Given an existing pixmap, the function uses X to find out
-   * the width, heigth and depth of that pixmap.
-   */
-  void GetPixmapDetails();
+  tbm_surface GetSurfaceFromAny( Any source ) const;
 
 private:
 
   unsigned int mWidth;                        ///< image width
   unsigned int mHeight;                       ///< image heights
   bool mOwnPixmap;                            ///< Whether we created pixmap or not
-  Ecore_X_Pixmap mPixmap;                     ///< From Xlib
   bool mBlendingRequired;                      ///< Whether blending is required
   Dali::NativeImageSource::ColorDepth mColorDepth;  ///< color depth of image
   void* mEglImageKHR;                         ///< From EGL extension
   EglImageExtensions* mEglImageExtensions;    ///< The EGL Image Extensions
+  tbm_surface_h* mTbmsurfacePtr;
 };
 
 } // namespace Adaptor

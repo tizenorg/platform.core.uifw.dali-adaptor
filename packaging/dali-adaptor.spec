@@ -14,6 +14,8 @@ Source0:    %{name}-%{version}.tar.gz
 %define profile %{tizen_profile_name}
 %endif
 
+%define profile mobile
+
 %if "%{profile}" == "mobile"
 %define dali_profile MOBILE
 %define dali_feedback_plugin 0
