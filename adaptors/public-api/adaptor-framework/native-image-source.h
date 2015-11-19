@@ -121,6 +121,13 @@ public:
    */
   bool EncodeToFile(const std::string& filename) const;
 
+  /**
+   * @brief Set native image source
+   *
+   * @param[in] nativeImageSource Any handle with native image source
+   */
+  void SetNativeImageSource( Any nativeImageSource );
+
 private:   // native image
 
   /**

@@ -223,7 +223,8 @@ libdali_adaptor_la_includes = \
 if WAYLAND
 libdali_adaptor_la_includes += \
                       -I../../../adaptors/wayland \
-                      -I../../../adaptors/integration-api/wayland
+                      -I../../../adaptors/integration-api/wayland \
+                      -I../../../adaptors/tizen
 else
 libdali_adaptor_la_includes += \
                       -I../../../adaptors/x11 \
