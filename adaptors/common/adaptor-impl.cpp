@@ -29,7 +29,7 @@
 
 // INTERNAL INCLUDES
 #include <base/thread-controller.h>
-#  include <base/performance-logging/performance-interface-factory.h>
+#include <base/performance-logging/performance-interface-factory.h>
 #include <base/lifecycle-observer.h>
 
 #include <dali/devel-api/text-abstraction/font-client.h>
@@ -41,6 +41,7 @@
 #include <events/gesture-manager.h>
 #include <events/event-handler.h>
 #include <gl/gl-proxy-implementation.h>
+#include <gl/gl-proxy-timed-implementation.h>
 #include <gl/gl-implementation.h>
 #include <gl/egl-sync-implementation.h>
 #include <gl/egl-image-extensions.h>
@@ -123,7 +124,12 @@ void Adaptor::Initialize( Dali::Configuration::ContextLoss configuration )
 
   mGestureManager = new GestureManager(*this, Vector2(size.width, size.height), mCallbackManager, *mEnvironmentOptions);
 
-  if( mEnvironmentOptions->GetGlesCallTime() > 0 )
+  if( mPerformanceInterface )
+  {
+    // proxy for time stamped markers
+    mGLES = new GlProxyTimedImplementation(*mPerformanceInterface);
+  }
+  else if( mEnvironmentOptions->GetGlesCallTime() > 0 )
   {
     mGLES = new GlProxyImplementation( *mEnvironmentOptions );
   }
