@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <dali/public-api/dali-core.h>
 #include <dali/integration-api/debug.h>
+#include <dali/devel-api/rendering/renderer.h>
 
 
 namespace  // un-named namespace
@@ -243,6 +244,53 @@ bool ExcludeProperty( int propIndex )
       || propIndex == Dali::Actor::Property::SCALE_Z || propIndex == Dali::Actor::Property::SIZE_DEPTH);
 }
 
+
+void dumpAllProperties(const Dali::Handle& handle, std::ostringstream& msg)
+{
+  Dali::Property::IndexContainer indices;
+  if (handle)
+  {
+  	handle.GetPropertyIndices( indices );
+
+  	Dali::Property::IndexContainer::Iterator iter = indices.Begin();
+  	int numCustom = 0;
+  	for( ; iter != indices.End() ; iter++ )
+  	{
+    	int i = *iter;
+    	if( numCustom++ != 0 )
+    	{
+      	msg << ", ";
+    	}
+    	msg << "[";
+
+    	AppendPropertyNameAndValue( handle, i,msg );
+
+    	msg << "]";
+  	}
+  }
+}
+
+
+void dumpRenderer(Dali::Renderer renderer, std::ostringstream& msg)
+{
+  msg << Quote("renderer") << " : [";	
+  dumpAllProperties( renderer, msg);
+  //msg << "," << Quote("geometry") << " : [";	
+  //Dali::Geometry geometry = renderer.GetGeometry();  
+  //dumpAllProperties( geometry, msg);
+  //msg << "],";
+  //Dali::Material material = renderer.GetMaterial();  
+	//msg << "," << Quote("material") << " : [";	
+  //dumpAllProperties( material, msg);
+	//msg << "," << Quote("shader") << " : [";	
+  //Dali::Shader shader = material.GetShader();
+  //dumpAllProperties( shader, msg);
+  //msg << "]";
+  //msg << "]";
+  msg << "]";
+}
+
+
 std::string DumpJson( Dali::Actor actor, int level )
 {
   // All the information about this actor
@@ -273,8 +321,18 @@ std::string DumpJson( Dali::Actor actor, int level )
       msg << "]";
     }
   }
-  msg << "]";
-  msg << ", " << Quote( "children" ) << " : [ ";
+
+  msg << "],";
+	int rendererCount = actor.GetRendererCount();
+  for (int i = 0; i < rendererCount; i++)
+  {
+    msg << ",";
+    Dali::Renderer renderer = actor.GetRendererAt(i);
+		dumpRenderer(renderer, msg);
+  }
+
+  msg << "],";
+  msg << Quote( "children" ) << " : [ ";
 
   // Recursively dump all the children as well
   for( unsigned int i = 0 ; i < actor.GetChildCount() ; ++i )
