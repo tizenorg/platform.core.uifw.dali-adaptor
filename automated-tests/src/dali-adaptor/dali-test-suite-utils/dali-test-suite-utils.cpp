@@ -19,8 +19,7 @@
 #include "dali-test-suite-utils.h"
 
 // EXTERNAL INCLUDES
-#include <cstdio>
-#include <cstdarg>
+#include <ostream>
 
 // INTERNAL INCLUDES
 #include <dali/public-api/dali-core.h>
@@ -55,22 +54,6 @@ void tet_printf(const char *format, ...)
   va_end(arg);
 }
 
-/**
- * DALI_TEST_CHECK is a wrapper for tet_result.
- * If the condition evaluates to false, then the function & line number is printed.
- * @param[in] The boolean expression to check
- */
-#define DALI_TEST_CHECK(condition)                                                        \
-if ( (condition) )                                                                        \
-{                                                                                         \
-  tet_result(TET_PASS);                                                                   \
-}                                                                                         \
-else                                                                                      \
-{                                                                                         \
-  fprintf(stderr, "%s Failed in %s at line %d\n", __PRETTY_FUNCTION__, __FILE__, __LINE__);    \
-  tet_result(TET_FAIL);                                                                   \
-}
-
 bool operator==(TimePeriod a, TimePeriod b)
 {
   return Equals(a.durationSeconds, b.durationSeconds) && Equals(a.delaySeconds, b.delaySeconds) ;
@@ -101,10 +84,13 @@ void DALI_TEST_EQUALS( const Matrix3& matrix1, const Matrix3& matrix2, const cha
 
   for (int i=0;i<9;++i)
   {
-    equivalent &= (fabsf(m1[i] - m2[i])< GetRangedEpsilon(m1[i], m2[i]));
+    if( ! (fabsf(m1[i] - m2[i])< GetRangedEpsilon(m1[i], m2[i])) )
+    {
+      equivalent = false;
+    }
   }
 
-  if (!equivalent)
+  if( !equivalent )
   {
     fprintf(stderr, "%s, checking\n"
                "(%f, %f, %f)    (%f, %f, %f)\n"
@@ -172,10 +158,10 @@ void DALI_TEST_EQUALS( const Matrix& matrix1, const Matrix& matrix2, const char*
   if (!identical)
   {
     fprintf(stderr, "%s, checking\n"
+               "(%f, %f, %f, %f)    (%f, %f, %f, %f)\n"
                "(%f, %f, %f, %f) == (%f, %f, %f, %f)\n"
-               "(%f, %f, %f, %f) == (%f, %f, %f, %f)\n"
-               "(%f, %f, %f, %f) == (%f, %f, %f, %f)\n"
-               "(%f, %f, %f, %f) == (%f, %f, %f, %f)\n", location,
+               "(%f, %f, %f, %f)    (%f, %f, %f, %f)\n"
+               "(%f, %f, %f, %f)    (%f, %f, %f, %f)\n", location,
                m1[0],  m1[1],  m1[2],  m1[3],   m2[0],  m2[1],  m2[2],  m2[3],
                m1[4],  m1[5],  m1[6],  m1[7],   m2[4],  m2[5],  m2[6],  m2[7],
                m1[8],  m1[9], m1[10], m1[11],   m2[8],  m2[9], m2[10], m2[11],
@@ -203,10 +189,10 @@ void DALI_TEST_EQUALS( const Matrix& matrix1, const Matrix& matrix2, float epsil
   if (!equivalent)
   {
     fprintf(stderr, "%s, checking\n"
+               "(%f, %f, %f, %f)    (%f, %f, %f, %f)\n"
                "(%f, %f, %f, %f) == (%f, %f, %f, %f)\n"
-               "(%f, %f, %f, %f) == (%f, %f, %f, %f)\n"
-               "(%f, %f, %f, %f) == (%f, %f, %f, %f)\n"
-               "(%f, %f, %f, %f) == (%f, %f, %f, %f)\n", location,
+               "(%f, %f, %f, %f)    (%f, %f, %f, %f)\n"
+               "(%f, %f, %f, %f)    (%f, %f, %f, %f)\n", location,
                m1[0],  m1[1],  m1[2],  m1[3],   m2[0],  m2[1],  m2[2],  m2[3],
                m1[4],  m1[5],  m1[6],  m1[7],   m2[4],  m2[5],  m2[6],  m2[7],
                m1[8],  m1[9], m1[10], m1[11],   m2[8],  m2[9], m2[10], m2[11],
