@@ -151,7 +151,7 @@ public:
   /**
    * @copydoc Dali::FontClient::GetGlyphMetrics()
    */
-  bool GetGlyphMetrics( GlyphInfo* array, uint32_t size, bool horizontal, int maxFixedSize );
+  bool GetGlyphMetrics( GlyphInfo* array, uint32_t size, GlyphType type, bool horizontal, int maxFixedSize );
 
   /**
    * @copydoc Dali::FontClient::CreateBitmap()
