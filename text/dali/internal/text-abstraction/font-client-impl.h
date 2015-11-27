@@ -151,12 +151,17 @@ public:
   /**
    * @copydoc Dali::FontClient::GetGlyphMetrics()
    */
-  bool GetGlyphMetrics( GlyphInfo* array, uint32_t size, bool horizontal, int maxFixedSize );
+  bool GetGlyphMetrics( GlyphInfo* array, uint32_t size, GlyphType type, bool horizontal, int maxFixedSize );
 
   /**
    * @copydoc Dali::FontClient::CreateBitmap()
    */
   BufferImage CreateBitmap( FontId fontId, GlyphIndex glyphIndex );
+
+  /**
+   * @copydoc Dali::FontClient::CreateGlyphyBlob()
+   */
+  void CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, GlyphyBlob*& blob, unsigned int& blobLength, unsigned int& nominalWidth, unsigned int& nominalHeight );
 
   /**
    * @copydoc Dali::FontClient::GetEllipsisGlyph()
