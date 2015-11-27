@@ -39,6 +39,12 @@ namespace Internal DALI_INTERNAL
 class FontClient;
 }
 
+enum GlyphType
+{
+  BITMAP_GLYPH,
+  GLYPHY_GLYPH
+};
+
 /**
  * @brief FontClient provides access to font information and resources.
  *
@@ -294,7 +300,7 @@ public:
    * @param[in] maxFixedSize The metrics for fixed-size fonts will be down-scaled, when exceeding this maximum value in pixels.
    * @return True if all of the requested metrics were found.
    */
-  bool GetGlyphMetrics( GlyphInfo* array, uint32_t size, bool horizontal = true, int maxFixedSize = 0 );
+  bool GetGlyphMetrics( GlyphInfo* array, uint32_t size, GlyphType type, bool horizontal = true, int maxFixedSize = 0 );
 
   /**
    * @brief Render a bitmap representation of a glyph.

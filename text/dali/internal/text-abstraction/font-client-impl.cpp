@@ -203,11 +203,11 @@ GlyphIndex FontClient::GetGlyphIndex( FontId fontId, Character charcode )
   return mPlugin->GetGlyphIndex( fontId, charcode );
 }
 
-bool FontClient::GetGlyphMetrics( GlyphInfo* array, uint32_t size, bool horizontal, int maxFixedSize )
+bool FontClient::GetGlyphMetrics( GlyphInfo* array, uint32_t size, GlyphType type, bool horizontal, int maxFixedSize )
 {
   CreatePlugin();
 
-  return mPlugin->GetGlyphMetrics( array, size, horizontal, maxFixedSize );
+  return mPlugin->GetGlyphMetrics( array, size, type, horizontal, maxFixedSize );
 }
 
 BufferImage FontClient::CreateBitmap( FontId fontId, GlyphIndex glyphIndex )
