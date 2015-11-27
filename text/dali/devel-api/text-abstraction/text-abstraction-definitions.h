@@ -58,6 +58,20 @@ enum
   WORD_NO_BREAK = 1u, ///< Text can't be broken into a new word.
 };
 
+enum GlyphType
+{
+  BITMAP_GLYPH,
+  GLYPHY_GLYPH
+};
+
+struct GlyphBlob
+{
+  unsigned char r;
+  unsigned char g;
+  unsigned char b;
+  unsigned char a;
+};
+
 } // namespace TextAbstraction
 
 } // namespace Dali
