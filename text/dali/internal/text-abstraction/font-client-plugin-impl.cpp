@@ -25,6 +25,7 @@
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/platform-abstraction.h>
 #include <dali/internal/text-abstraction/font-client-helper.h>
+#include <dali/internal/glyphy/demo-font.h>
 #include <adaptor-impl.h>
 
 // EXTERNAL INCLUDES
@@ -696,8 +697,22 @@ GlyphIndex FontClient::Plugin::GetGlyphIndex( FontId fontId,
 
 bool FontClient::Plugin::GetGlyphMetrics( GlyphInfo* array,
                                           uint32_t size,
+                                          GlyphType type,
                                           bool horizontal,
                                           int maxFixedSize )
+{
+  if( GLYPHY_GLYPH == type )
+  {
+    return GetGlyphyGlyphMetrics( array, size, horizontal, maxFixedSize );
+  }
+
+  return GetBitmapGlyphMetrics( array, size, horizontal, maxFixedSize );
+}
+
+bool FontClient::Plugin::GetBitmapGlyphMetrics( GlyphInfo* array,
+                                                uint32_t size,
+                                                bool horizontal,
+                                                int maxFixedSize )
 {
   bool success( true );
 
@@ -781,6 +796,40 @@ bool FontClient::Plugin::GetGlyphMetrics( GlyphInfo* array,
   return success;
 }
 
+bool FontClient::Plugin::GetGlyphyGlyphMetrics( GlyphInfo* array,
+                                                uint32_t size,
+                                                bool horizontal,
+                                                int maxFixedSize )
+{
+  bool success( true );
+
+  for( unsigned int i=0; i<size; ++i )
+  {
+    FontId fontId = array[i].fontId;
+
+    if( fontId > 0 &&
+        fontId-1 < mFontCache.size() )
+    {
+      CacheItem& font = mFontCache[fontId-1];
+
+      if( ! font.mGlyphyData )
+      {
+        float scale = (static_cast<float>(font.mPointSize)/64.0f) * mDpiVertical/72.0f;
+
+        font.mGlyphyData = demo_font_create( font.mFreeTypeFace, scale );
+      }
+
+      demo_font_lookup_glyph( font.mGlyphyData, array[i] );
+    }
+    else
+    {
+      success = false;
+    }
+  }
+
+  return success;
+}
+
 BufferImage FontClient::Plugin::CreateBitmap( FontId fontId,
                                               GlyphIndex glyphIndex )
 {
@@ -843,6 +892,29 @@ BufferImage FontClient::Plugin::CreateBitmap( FontId fontId,
   return bitmap;
 }
 
+void FontClient::Plugin::CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, GlyphyBlob*& blob, unsigned int& blobLength, unsigned int& nominalWidth, unsigned int& nominalHeight )
+{
+  if( fontId > 0 &&
+      fontId-1 < mFontCache.size() )
+  {
+    CacheItem& font = mFontCache[fontId-1];
+
+    if( ! font.mGlyphyData )
+    {
+      float scale = (static_cast<float>(font.mPointSize)/64.0f) * mDpiVertical/72.0f;
+
+      font.mGlyphyData = demo_font_create( font.mFreeTypeFace, scale );
+    }
+
+    demo_font_lookup_blob( font.mGlyphyData, fontId, glyphIndex, &blob, &blobLength, &nominalWidth, &nominalHeight );
+  }
+  else
+  {
+    blob = NULL;
+    blobLength = 0;
+  }
+}
+
 const GlyphInfo& FontClient::Plugin::GetEllipsisGlyph( PointSize26Dot6 pointSize )
 {
   // First look into the cache if there is an ellipsis glyph for the requested point size.
@@ -875,7 +947,7 @@ const GlyphInfo& FontClient::Plugin::GetEllipsisGlyph( PointSize26Dot6 pointSize
   item.glyph.index = FT_Get_Char_Index( mFontCache[item.glyph.fontId-1].mFreeTypeFace,
                                         ELLIPSIS_CHARACTER );
 
-  GetGlyphMetrics( &item.glyph, 1u, true, 0 );
+  GetBitmapGlyphMetrics( &item.glyph, 1u, true, 0 );
 
   return item.glyph;
 }
