@@ -25,6 +25,7 @@
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/platform-abstraction.h>
 #include <dali/internal/text-abstraction/font-client-helper.h>
+#include <dali/internal/glyphy/demo-font.h>
 #include <adaptor-impl.h>
 
 // EXTERNAL INCLUDES
@@ -696,8 +697,22 @@ GlyphIndex FontClient::Plugin::GetGlyphIndex( FontId fontId,
 
 bool FontClient::Plugin::GetGlyphMetrics( GlyphInfo* array,
                                           uint32_t size,
+                                          GlyphType type,
                                           bool horizontal,
                                           int maxFixedSize )
+{
+  if( GLYPHY_GLYPH == type )
+  {
+    return GetGlyphyGlyphMetrics( array, size, horizontal, maxFixedSize );
+  }
+
+  return GetBitmapGlyphMetrics( array, size, horizontal, maxFixedSize );
+}
+
+bool FontClient::Plugin::GetBitmapMetrics( GlyphInfo* array,
+                                           uint32_t size,
+                                           bool horizontal,
+                                           int maxFixedSize )
 {
   bool success( true );
 
@@ -779,6 +794,36 @@ bool FontClient::Plugin::GetGlyphMetrics( GlyphInfo* array,
   }
 
   return success;
+}
+
+bool FontClient::Plugin::GetGlyphyGlyphMetrics( GlyphInfo* array,
+                                                uint32_t size,
+                                                bool horizontal,
+                                                int maxFixedSize )
+{
+  bool success( true );
+
+  for( unsigned int i=0; i<size; ++i )
+  {
+    FontId fontId = array[i].fontId;
+
+    if( fontId > 0 &&
+        fontId-1 < mFontCache.size() )
+    {
+      const CacheItem& font = mFontCache[fontId-1];
+
+      if( ! font.mGlyphyData )
+      {
+        font.mGlyphyData = demo_font_create( font.mFreeTypeFace );
+      }
+
+      demo_font_lookup_glyph( font.mGlyphyData, array[i] );
+    }
+    else
+    {
+      success = false;
+    }
+  }
 }
 
 BufferImage FontClient::Plugin::CreateBitmap( FontId fontId,
