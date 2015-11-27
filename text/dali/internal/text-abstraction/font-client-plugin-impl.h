@@ -32,6 +32,8 @@
 struct _FcFontSet;
 struct _FcPattern;
 
+struct demo_font_t;
+
 namespace Dali
 {
 
@@ -114,6 +116,7 @@ struct FontClient::Plugin
     FontMetrics mMetrics;        ///< The font metrics.
     FT_Short mFixedWidthPixels;  ///< The height in pixels (fixed size bitmaps only)
     FT_Short mFixedHeightPixels; ///< The height in pixels (fixed size bitmaps only)
+    demo_font_t* mGlyphyData;    ///< Extra data for GLphy
     bool mIsFixedSizeBitmap;     ///< Whether the font has fixed size bitmaps.
   };
 
@@ -247,12 +250,27 @@ struct FontClient::Plugin
   /**
    * @copydoc Dali::FontClient::GetGlyphMetrics()
    */
-  bool GetGlyphMetrics( GlyphInfo* array, uint32_t size, bool horizontal, int maxFixedSize );
+  bool GetGlyphMetrics( GlyphInfo* array, uint32_t size, GlyphType type, bool horizontal, int maxFixedSize );
+
+  /**
+   * Helper for GetGlyphMetrics when using bitmaps
+   */
+  bool GetBitmapGlyphMetrics( GlyphInfo* array, uint32_t size, bool horizontal, int maxFixedSize );
+
+  /**
+   * Helper for GetGlyphMetrics when using GLyphy blobs
+   */
+  bool GetGlyphyGlyphMetrics( GlyphInfo* array, uint32_t size, bool horizontal, int maxFixedSize );
 
   /**
    * @copydoc Dali::FontClient::CreateBitmap()
    */
   BufferImage CreateBitmap( FontId fontId, GlyphIndex glyphIndex );
+
+  /**
+   * @copydoc Dali::FontClient::CreateGlyphyBlob()
+   */
+  void CreateGlyphyBlob( FontId fontId, GlyphIndex glyphIndex, GlyphyBlob*& blob, unsigned int& blobLength );
 
   /**
    * @copydoc Dali::FontClient::GetEllipsisGlyph()
