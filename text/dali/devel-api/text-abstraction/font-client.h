@@ -294,7 +294,7 @@ public:
    * @param[in] maxFixedSize The metrics for fixed-size fonts will be down-scaled, when exceeding this maximum value in pixels.
    * @return True if all of the requested metrics were found.
    */
-  bool GetGlyphMetrics( GlyphInfo* array, uint32_t size, bool horizontal = true, int maxFixedSize = 0 );
+  bool GetGlyphMetrics( GlyphInfo* array, uint32_t size, GlyphType type, bool horizontal = true, int maxFixedSize = 0 );
 
   /**
    * @brief Render a bitmap representation of a glyph.
@@ -304,6 +304,21 @@ public:
    * @return A valid BufferImage, or an empty handle if the glyph could not be rendered.
    */
   BufferImage CreateBitmap( FontId fontId, GlyphIndex glyphIndex );
+
+  /**
+   * @brief Create a GLyphy blob representation of a glyph.
+   *
+   * @param[in] fontId The ID of the font.
+   * @param[in] glyphIndex The index of a glyph within the specified font.
+   * @param[out] blob The blob data; this is owned by FontClient and should be copied by the caller of CreateGlyphyBlob().
+   * @param[out] blobLength The length of the blob data, or zero if the blob creation failed.
+   */
+  void CreateGlyphyBlob( FontId fontId,
+                         GlyphIndex glyphIndex,
+                         GlyphyBlob*& blob,
+                         unsigned int& blobLength,
+                         unsigned int& nominalWidth,
+                         unsigned int& nominalHeight );
 
   /**
    * @brief Retrieves the ellipsis glyph for a requested point size.
