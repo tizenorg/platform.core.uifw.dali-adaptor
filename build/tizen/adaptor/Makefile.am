@@ -101,6 +101,9 @@ include ../../../adaptors/devel-api/file.list
 static_libraries_libunibreak_src_dir = ../../../text/dali/internal/libunibreak
 include ../../../text/dali/internal/libunibreak/file.list
 
+static_libraries_glyphy_src_dir = ../../../text/dali/internal/glyphy
+include ../../../text/dali/internal/glyphy/file.list
+
 # Package doc
 package_doxy_dir = ../../../doc
 include ../../../doc/file.list
@@ -124,7 +127,8 @@ adaptor_internal_src_files += $(adaptor_common_internal_src_files) \
                               $(adaptor_common_internal_default_profile_src_files) \
                               $(adaptor_tizen_internal_src_files) \
                               $(adaptor_tizen_internal_non_mobile_src_files) \
-                              $(static_libraries_libunibreak_src_files)
+                              $(static_libraries_libunibreak_src_files) \
+                              $(static_libraries_glyphy_src_files)
 
 if WAYLAND
 if USE_ECORE_WAYLAND
@@ -148,7 +152,8 @@ adaptor_internal_src_files += $(adaptor_common_internal_src_files) \
                              $(adaptor_ubuntu_internal_src_files) \
                              $(adaptor_x11_ubuntu_internal_src_files) \
                              $(adaptor_x11_internal_default_profile_src_files) \
-                             $(static_libraries_libunibreak_src_files)
+                             $(static_libraries_libunibreak_src_files) \
+                             $(static_libraries_glyphy_src_files)
 
 endif # UBUNTU_PROFILE
 
@@ -159,7 +164,8 @@ if MOBILE_PROFILE
 adaptor_internal_src_files += $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_mobile_profile_src_files) \
                              $(adaptor_tizen_internal_src_files) \
-                             $(static_libraries_libunibreak_src_files)
+                             $(static_libraries_libunibreak_src_files) \
+                             $(static_libraries_glyphy_src_files)
 
 if WAYLAND
 if USE_ECORE_WAYLAND
@@ -179,7 +185,8 @@ if WEARABLE_PROFILE
 adaptor_internal_src_files += $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_mobile_profile_src_files) \
                              $(adaptor_tizen_internal_src_files) \
-                             $(static_libraries_libunibreak_src_files)
+                             $(static_libraries_libunibreak_src_files) \
+                             $(static_libraries_glyphy_src_files)
 if WAYLAND
 if USE_ECORE_WAYLAND
 adaptor_internal_src_files += $(adaptor_ecore_wayland_tizen_internal_src_files)
@@ -200,7 +207,9 @@ adaptor_internal_src_files += $(adaptor_common_internal_src_files) \
                              $(adaptor_common_internal_tv_profile_src_files) \
                              $(adaptor_tizen_internal_src_files) \
                              $(adaptor_tizen_internal_non_mobile_src_files) \
-                             $(static_libraries_libunibreak_src_files)
+                             $(static_libraries_libunibreak_src_files) \
+                             $(static_libraries_glyphy_src_files)
+
 if WAYLAND
 if USE_ECORE_WAYLAND
 adaptor_internal_src_files += $(adaptor_ecore_wayland_tizen_internal_src_files)
