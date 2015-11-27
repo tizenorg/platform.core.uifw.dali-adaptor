@@ -14,7 +14,8 @@ text_abstraction_src_files = \
    $(text_src_dir)/dali/internal/text-abstraction/font-client-impl.cpp \
    $(text_src_dir)/dali/internal/text-abstraction/font-client-plugin-impl.cpp \
    $(text_src_dir)/dali/internal/text-abstraction/segmentation-impl.cpp \
-   $(text_src_dir)/dali/internal/text-abstraction/shaping-impl.cpp
+   $(text_src_dir)/dali/internal/text-abstraction/shaping-impl.cpp \
+   $(text_src_dir)/dali/internal/text-abstraction/vector-font-cache.cpp
 
 text_abstraction_header_files = \
    $(text_src_dir)/dali/devel-api/text-abstraction/bidirectional-support.h \
