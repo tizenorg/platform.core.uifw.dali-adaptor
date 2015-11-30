@@ -362,14 +362,16 @@ void CombinedUpdateRenderController::UpdateRenderThread()
     uint64_t currentFrameStartTime = 0;
     TimeService::GetNanoseconds( currentFrameStartTime );
 
+    const uint64_t timeSinceLastFrame = currentFrameStartTime - lastFrameTime;
+
     // Optional FPS Tracking
     if( mFpsTracker.Enabled() )
     {
-      uint64_t timeSinceLastFrame = currentFrameStartTime - lastFrameTime;
       float absoluteTimeSinceLastRender = timeSinceLastFrame * NANOSECONDS_TO_SECOND;
       mFpsTracker.Track( absoluteTimeSinceLastRender );
-      lastFrameTime = currentFrameStartTime; // Store frame start time
     }
+
+    lastFrameTime = currentFrameStartTime; // Store frame start time
 
     //////////////////////////////
     // REPLACE SURFACE
@@ -387,13 +389,18 @@ void CombinedUpdateRenderController::UpdateRenderThread()
     // UPDATE
     //////////////////////////////
 
-    unsigned int currentTime = currentFrameStartTime / NANOSECONDS_PER_MILLISECOND;
-    unsigned int nextFrameTime = currentTime + mDefaultFrameDurationMilliseconds;
+    const unsigned int currentTime = currentFrameStartTime / NANOSECONDS_PER_MILLISECOND;
+    const unsigned int nextFrameTime = currentTime + mDefaultFrameDurationMilliseconds;
+
+    // Calculate frameDelta as a multiple of mDefaultFrameDelta
+    const uint64_t noOfFramesSinceLastUpdate = std::max( timeSinceLastFrame / mDefaultFrameDurationNanoseconds, static_cast< uint64_t >( 1 ) );
+    const float frameDelta = mDefaultFrameDelta * noOfFramesSinceLastUpdate;
+    LOG_UPDATE_RENDER( "noOfFramesSinceLastUpdate(%u), frameDelta(%.6f)", noOfFramesSinceLastUpdate, frameDelta );
 
     Integration::UpdateStatus updateStatus;
 
     AddPerformanceMarker( PerformanceInterface::UPDATE_START );
-    mCore.Update( mDefaultFrameDelta, currentTime, nextFrameTime, updateStatus );
+    mCore.Update( frameDelta, currentTime, nextFrameTime, updateStatus );
     AddPerformanceMarker( PerformanceInterface::UPDATE_END );
 
     unsigned int keepUpdatingStatus = updateStatus.KeepUpdating();
@@ -401,6 +408,7 @@ void CombinedUpdateRenderController::UpdateRenderThread()
     // Tell the event-thread to wake up (if asleep) and send a notification event to Core if required
     if( updateStatus.NeedsNotification() )
     {
+      LOG_UPDATE_RENDER( "NeedsNotification Triggered" );
       mNotificationTrigger.Trigger();
     }
 
