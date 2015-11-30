@@ -278,6 +278,7 @@ private:
   const EnvironmentOptions&         mEnvironmentOptions;               ///< Environment options
   TriggerEventInterface&            mNotificationTrigger;              ///< Reference to notification event trigger
   TriggerEventInterface*            mSleepTrigger;                     ///< Used by the update-render thread to trigger the event thread when it no longer needs to do any updates
+  TriggerEventInterface*            mCancelSleepTrigger;               ///< Used by the update-render thread to trigger the event thread to cancel a sleep request in the previous frame
 
   pthread_t*                        mUpdateRenderThread;               ///< The Update/Render thread.
 
