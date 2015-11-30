@@ -120,6 +120,31 @@ CombinedUpdateRenderController::CombinedUpdateRenderController( AdaptorInternalS
   TriggerEventFactoryInterface& triggerFactory = mAdaptorInterfaces.GetTriggerEventFactoryInterface();
   mSleepTrigger = triggerFactory.CreateTriggerEvent( MakeCallback( this, &CombinedUpdateRenderController::ProcessSleepRequest ), TriggerEventInterface::KEEP_ALIVE_AFTER_TRIGGER );
 
+  /**
+   * Need a cancel-sleep-trigger to handle the use-case which can happen when update/render takes a long time and we want to start another animation when
+   * a previous animation ends.
+   *
+   *   1) UPDATE/RENDER THREAD:  Do Update/Render, Updates required
+   *   2) UPDATE/RENDER THREAD:  Do Update/Render, Updates required, notification to event-thread (animation finished etc.)
+   *   3) UPDATE/RENDER THREAD:  Do Update/Render, then no Updates required -> Sleep Trigger
+   *   4) MAIN THREAD:           Update Request: COUNTER = 2
+   *   5) UPDATE/RENDER THREAD:  Do Update/Render, then no Updates required -> Sleep Trigger
+   *   6) MAIN THREAD:           Sleep Request (from 3): COUNTER = 1
+   *   7) MAIN THREAD:           Sleep Request (from 5): COUNTER = 0 -> Go to sleep
+   *   8) UPDATE/RENDER THREAD:  Do Update/Render, Updates required (Without the cancel-sleep-trigger, we would not do any more updates after this)
+   *                                               Now, we do a cancel-sleep-trigger
+   *   9) MAIN THREAD:           Update Request (Cancel Sleep Trigger): COUNTER = 1
+   *  10) UPDATE/RENDER THREAD:  Do Update/Render, Updates required
+   *  ...
+   *
+   * A cancel-sleep-trigger is only triggered if ALL of the following are satisfied:
+   *   - We triggered a sleep-request in the previous frame
+   *   - We have determined that another update is required.
+   *
+   * Ensures we preserve battery life as we do a cancel sleep trigger ONLY if updates are required.
+   */
+  mCancelSleepTrigger = triggerFactory.CreateTriggerEvent( MakeCallback( this, &CombinedUpdateRenderController::RequestUpdate ), TriggerEventInterface::KEEP_ALIVE_AFTER_TRIGGER );
+
   sem_init( &mEventThreadSemaphore, 0, 0 ); // Initialize to 0 so that it just waits if sem_post has not been called
 }
 
@@ -355,6 +380,8 @@ void CombinedUpdateRenderController::UpdateRenderThread()
 
   LOG_UPDATE_RENDER( "THREAD INITIALISED" );
 
+  bool sleepRequestedLastFrame = false;
+
   while( UpdateRenderReady() )
   {
     LOG_UPDATE_RENDER_TRACE;
@@ -362,14 +389,16 @@ void CombinedUpdateRenderController::UpdateRenderThread()
     uint64_t currentFrameStartTime = 0;
     TimeService::GetNanoseconds( currentFrameStartTime );
 
+    uint64_t timeSinceLastFrame = currentFrameStartTime - lastFrameTime;
+
     // Optional FPS Tracking
     if( mFpsTracker.Enabled() )
     {
-      uint64_t timeSinceLastFrame = currentFrameStartTime - lastFrameTime;
       float absoluteTimeSinceLastRender = timeSinceLastFrame * NANOSECONDS_TO_SECOND;
       mFpsTracker.Track( absoluteTimeSinceLastRender );
-      lastFrameTime = currentFrameStartTime; // Store frame start time
     }
+
+    lastFrameTime = currentFrameStartTime; // Store frame start time
 
     //////////////////////////////
     // REPLACE SURFACE
@@ -390,10 +419,15 @@ void CombinedUpdateRenderController::UpdateRenderThread()
     unsigned int currentTime = currentFrameStartTime / NANOSECONDS_PER_MILLISECOND;
     unsigned int nextFrameTime = currentTime + mDefaultFrameDurationMilliseconds;
 
+    // Calculate frameDelta as a multiple of mDefaultFrameDelta
+    const uint64_t noOfFramesSinceLastUpdate = std::max( timeSinceLastFrame / mDefaultFrameDurationNanoseconds, static_cast< uint64_t >( 1 ) );
+    const float frameDelta = mDefaultFrameDelta * noOfFramesSinceLastUpdate;
+    LOG_UPDATE_RENDER( "noOfFramesSinceLastUpdate(%u), frameDelta(%.6f)", noOfFramesSinceLastUpdate, frameDelta );
+
     Integration::UpdateStatus updateStatus;
 
     AddPerformanceMarker( PerformanceInterface::UPDATE_START );
-    mCore.Update( mDefaultFrameDelta, currentTime, nextFrameTime, updateStatus );
+    mCore.Update( frameDelta, currentTime, nextFrameTime, updateStatus );
     AddPerformanceMarker( PerformanceInterface::UPDATE_END );
 
     unsigned int keepUpdatingStatus = updateStatus.KeepUpdating();
@@ -401,6 +435,7 @@ void CombinedUpdateRenderController::UpdateRenderThread()
     // Tell the event-thread to wake up (if asleep) and send a notification event to Core if required
     if( updateStatus.NeedsNotification() )
     {
+      LOG_UPDATE_RENDER( "NeedsNotification Triggered" );
       mNotificationTrigger.Trigger();
     }
 
@@ -430,6 +465,19 @@ void CombinedUpdateRenderController::UpdateRenderThread()
         ! renderStatus.NeedsUpdate() )
     {
       mSleepTrigger->Trigger();
+      sleepRequestedLastFrame = true;
+    }
+    else
+    {
+      // We want to carry on updating.
+
+      if( sleepRequestedLastFrame )
+      {
+        // If we triggered a sleep-request in the previous frame, then we should cancel that
+        LOG_UPDATE_RENDER( "CancelSleep Triggered" );
+        mCancelSleepTrigger->Trigger();
+      }
+      sleepRequestedLastFrame = false;
     }
 
     //////////////////////////////
