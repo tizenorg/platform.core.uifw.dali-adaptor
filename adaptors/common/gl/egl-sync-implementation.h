@@ -54,10 +54,10 @@ public:
 private:
 #ifdef _ARCH_ARM_
   EGLSyncKHR mEglSync;
-#else
+#elif !defined(EMSCRIPTEN)
   int mPollCounter; // Implementations without fence sync use a 3 frame counter
-#endif
   EglImplementation& mEglImplementation;
+#endif
 };
 
 
@@ -108,10 +108,11 @@ private:
   typedef Vector<EglSyncObject*>   SyncContainer;
   typedef SyncContainer::Iterator  SyncIter;
 
+#if !defined(EMSCRIPTEN)
   EglImplementation* mEglImplementation; ///< Egl implementation (to get display)
   bool mSyncInitialized;        ///< Flag to perform initialization on first use
   bool mSyncInitializeFailed;   ///< Flag to avoid reloading functions if failed once
-
+#endif
   SyncContainer mSyncObjects;
 };
 

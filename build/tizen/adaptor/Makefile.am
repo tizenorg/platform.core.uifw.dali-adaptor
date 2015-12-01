@@ -22,11 +22,16 @@
 # Base Adaptor
 base_adaptor_src_dir = ../../../adaptors/base
 include ../../../adaptors/base/file.list
-
 # Platform Abstraction
+if !EMSCRIPTEN_PROFILE
 tizen_platform_abstraction_src_dir = ../../../platform-abstractions/tizen
 portable_platform_abstraction_src_dir = ../../../platform-abstractions/portable
 include ../../../platform-abstractions/tizen/file.list
+else
+tizen_platform_abstraction_src_dir = ../../../platform-abstractions/emscripten
+include ../../../platform-abstractions/emscripten/file.list
+endif
+
 
 # Text Abstraction
 text_src_dir = ../../../text
@@ -69,6 +74,10 @@ if TV_PROFILE
 adaptor_tv_dir = ../../../adaptors/tv
 include ../../../adaptors/tv/file.list
 endif
+
+# Emscripten
+adaptor_emscripten_dir = ../../../adaptors/emscripten
+include ../../../adaptors/emscripten/file.list # adaptor_emscripten_src_files
 
 # Public API
 adaptor_public_api_dir = ../../../adaptors/public-api
@@ -166,6 +175,14 @@ adaptor_internal_src_files += $(adaptor_x11_tv_internal_src_files) \
                              $(adaptor_x11_internal_tv_profile_key_src_files)
 endif # WAYLAND
 
+
+# EMSCRIPTEN
+if EMSCRIPTEN_PROFILE
+# tizen_platform_abstraction_src_files 	+= $(slp_assimp_stubs_src_files)
+
+adaptor_internal_src_files += $(adaptor_emscripten_common_internal_src_files) \
+										$(adaptor_emscripten_src_files)
+
 endif
 
 # Node JS support for using an external libuv main loop. If not enabled then just use e-core as normal
@@ -177,6 +194,7 @@ else
 main_loop_integration_src_files = $(adaptor_common_internal_ecore_src_files)
 input_event_handler_src_files = $(adaptor_ecore_x_event_handler_internal_src_files)
 endif
+endif
 
 
 
@@ -185,6 +203,13 @@ pkgconfig_DATA = dali-adaptor-integration.pc
 
 lib_LTLIBRARIES = libdali-adaptor.la
 
+if EMSCRIPTEN_PROFILE
+libdali_adaptor_la_SOURCES = \
+                     $(emscripten_base_adaptor_src_files) \
+                     $(slp_platform_abstraction_src_files) \
+                     $(emscripten_public_api_src_files) \
+                     $(adaptor_internal_src_files)
+else
 libdali_adaptor_la_SOURCES = \
                      $(base_adaptor_src_files) \
                      $(main_loop_integration_src_files) \
@@ -194,7 +219,7 @@ libdali_adaptor_la_SOURCES = \
                      $(public_api_src_files) \
                      $(adaptor_internal_src_files) \
                      $(input_event_handler_src_files)
-
+endif
 
 if ENABLE_NETWORK_LOGGING
 libdali_adaptor_la_SOURCES += \
@@ -225,9 +250,13 @@ libdali_adaptor_la_includes += \
                       -I../../../adaptors/wayland \
                       -I../../../adaptors/integration-api/wayland
 else
+if EMSCRIPTEN_PROFILE
 libdali_adaptor_la_includes += \
-                      -I../../../adaptors/x11 \
-                      -I../../../adaptors/integration-api/x11
+                      -I../../../adaptors/emscripten
+else
+libdali_adaptor_la_includes += \
+                      -I../../../adaptors/x11
+endif
 endif
 
 if UBUNTU_PROFILE
@@ -307,13 +336,18 @@ libdali_adaptor_la_LIBADD = \
                       -lpthread \
                       -lturbojpeg
 
+
 if WAYLAND
 libdali_adaptor_la_CXXFLAGS += $(WAYLAND_CFLAGS)
 libdali_adaptor_la_LIBADD += $(WAYLAND_LIBS)
 else
+
+if !EMSCRIPTEN_PROFILE
 libdali_adaptor_la_CXXFLAGS += $(X11_CFLAGS)
 libdali_adaptor_la_LIBADD += $(X11_LIBS)
 libdali_adaptor_la_LIBADD += $(ECORE_X_LIBS)
+endif
+
 endif
 
 if COMMON_PROFILE
@@ -343,6 +377,10 @@ if TV_PROFILE
 libdali_adaptor_la_CXXFLAGS += $(HAPTIC_CFLAGS)
 libdali_adaptor_la_LIBADD +=
 endif
+
+#if EMSCRIPTEN_PROFILE
+#libdali_adaptor_common_la_CXXFLAGS += "-Wall -g -O1 -std=c++11"
+#endif
 
 if UBUNTU_PROFILE
 libdali_adaptor_la_LIBADD += -ljpeg

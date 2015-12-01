@@ -1,0 +1,14 @@
+# Add local source files here:
+
+tizen_platform_abstraction_src_files = \
+  $(tizen_platform_abstraction_src_dir)/sdl-platform-abstraction.cpp \
+  $(tizen_platform_abstraction_src_dir)/emscripten-callbacks.cpp \
+  $(tizen_platform_abstraction_src_dir)/dali-wrapper.cpp
+
+tizen_assimp_src_files =
+
+tizen_assimp_stub_src_files =
+
+# Add public headers here:
+
+# platform_abstraction_header_files =

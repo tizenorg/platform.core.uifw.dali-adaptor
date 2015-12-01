@@ -35,28 +35,48 @@ FREETYPE_REQUIRED=9.16.3
 # 17.1.11 = Freetype version 2.5.2
 FREETYPE_BITMAP_SUPPORT_VERSION=17.1.11
 
-PKG_CHECK_MODULES(DALICORE, dali-core)
-PKG_CHECK_MODULES(ELEMENTARY, elementary)
-PKG_CHECK_MODULES(ECORE, ecore)
-PKG_CHECK_MODULES(ECORE_IPC, ecore-ipc)
-PKG_CHECK_MODULES(EXIF, libexif)
-PKG_CHECK_MODULES(FREETYPE, [freetype2 >= $FREETYPE_REQUIRED])
-PKG_CHECK_MODULES(FREETYPE_BITMAP_SUPPORT, [freetype2 >= $FREETYPE_BITMAP_SUPPORT_VERSION], [ freetype_bitmap_support=yes  ], [ freetype_bitmap_support=no ] )
-PKG_CHECK_MODULES(FONTCONFIG, fontconfig)
-PKG_CHECK_MODULES(PNG, libpng)
-PKG_CHECK_MODULES(LIBEXIF, libexif)
-PKG_CHECK_MODULES(LIBDRM, libdrm)
-PKG_CHECK_MODULES(LIBCURL, libcurl)
-PKG_CHECK_MODULES(HARFBUZZ, harfbuzz)
-PKG_CHECK_MODULES(FRIBIDI, fribidi)
-PKG_CHECK_MODULES(TTRACE,  ttrace, AC_DEFINE(ENABLE_TTRACE, 1, [ttrace available]),
-                  [ AC_MSG_NOTICE([Tizen Trace not avaiable]) ]
-                  )
-PKG_CHECK_MODULES(ECORE_IMF, [ecore-imf >= 1.13], [ecore_imf_1_13=yes], [ecore_imf_1_13=no])
+# Tizen Profile options
+AC_ARG_ENABLE([profile],
+              [AC_HELP_STRING([--enable-profile=COMMON,MOBILE,WEARABLE,TV,UBUNTU,EMSCRIPTEN],
+                            [Select the variant of tizen])],
+              [enable_profile=$enableval],
+              [enable_profile=COMMON])
+
+# Ensure valid profile selected
+AS_IF([test "x$enable_profile" != "xCOMMON" -a "x$enable_profile" != "xMOBILE" -a "x$enable_profile" != "xWEARABLE" -a "x$enable_profile" != "xTV" -a "x$enable_profile" != "xUBUNTU"  -a "x$enable_profile" != "xEMSCRIPTEN"], [
+  AC_MSG_ERROR([$enable_profile is an invalid profile])
+])
+
+AS_IF([test "x$enable_profile" = "xEMSCRIPTEN"], [
+  AC_MSG_ERROR([aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaargprofile])
+  PKG_CHECK_MODULES(DALICORE, dali-core)
+  # gles2 library in emscripten
+  # DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -std=c+11"
+  #AC_MSG_ERROR([profile])
+],[
+  PKG_CHECK_MODULES(DALICORE, dali-core)
+  PKG_CHECK_MODULES(ELEMENTARY, elementary)
+  PKG_CHECK_MODULES(ECORE, ecore)
+  PKG_CHECK_MODULES(ECORE_IPC, ecore-ipc)
+  PKG_CHECK_MODULES(EXIF, libexif)
+  PKG_CHECK_MODULES(FREETYPE, [freetype2 >= $FREETYPE_REQUIRED])
+  PKG_CHECK_MODULES(FREETYPE_BITMAP_SUPPORT, [freetype2 >= $FREETYPE_BITMAP_SUPPORT_VERSION], [ freetype_bitmap_support=yes  ], [ freetype_bitmap_support=no ] )
+  PKG_CHECK_MODULES(FONTCONFIG, fontconfig)
+  PKG_CHECK_MODULES(PNG, libpng)
+  PKG_CHECK_MODULES(LIBEXIF, libexif)
+  PKG_CHECK_MODULES(LIBDRM, libdrm)
+  PKG_CHECK_MODULES(LIBCURL, libcurl)
+  PKG_CHECK_MODULES(HARFBUZZ, harfbuzz)
+  PKG_CHECK_MODULES(FRIBIDI, fribidi)
+  PKG_CHECK_MODULES(TTRACE,  ttrace, AC_DEFINE(ENABLE_TTRACE, 1, [ttrace available]),
+                    [ AC_MSG_NOTICE([Tizen Trace not avaiable]) ]
+                    )
+  PKG_CHECK_MODULES(ECORE_IMF, [ecore-imf >= 1.13], [ecore_imf_1_13=yes], [ecore_imf_1_13=no])
 
 
-# Check for EldBus.h in ECore
-PKG_CHECK_MODULES(ELDBUS, eldbus, [ eldbus_available=yes ],  [ eldbus_available=no ] )
+  # Check for EldBus.h in ECore
+  PKG_CHECK_MODULES(ELDBUS, eldbus, [ eldbus_available=yes ],  [ eldbus_available=no ] )
+])
 
 DALI_ELDBUS_AVAILABLE=
 if test "x$eldbus_available" = "xyes"; then
@@ -103,11 +123,11 @@ AC_ARG_ENABLE(networklogging,
 
 if test "x$enable_debug" = "xyes"; then
   DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DDEBUG_ENABLED"
-fi
+])
 
-if test "x$enable_debug" = "xno" -a "x$enable_exportall" = "xno"; then
+AS_IF([test "x$enable_debug" = "xno" -a "x$enable_exportall" = "xno"], [
   DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -fvisibility=hidden -DHIDE_DALI_INTERNALS"
-fi
+])
 
 if test "x$enable_shaderbincache" = "xENABLE"; then
   DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DSHADERBIN_CACHE_ENABLED"
@@ -186,6 +206,7 @@ AM_CONDITIONAL([MOBILE_PROFILE], [test x$enable_profile = xMOBILE])
 AM_CONDITIONAL([WEARABLE_PROFILE], [test x$enable_profile = xWEARABLE])
 AM_CONDITIONAL([TV_PROFILE], [test x$enable_profile = xTV])
 AM_CONDITIONAL([UBUNTU_PROFILE], [test x$enable_profile = xUBUNTU])
+AM_CONDITIONAL([EMSCRIPTEN_PROFILE], [test x$enable_profile = xEMSCRIPTEN])
 AM_CONDITIONAL([WAYLAND], [test x$enable_wayland = xyes])
 
 AM_CONDITIONAL([ENABLE_NETWORK_LOGGING], [test x$enable_networklogging = xyes])
@@ -198,26 +219,32 @@ if test "x$enable_profile" = "xCOMMON"; then
 PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
 fi
 
+AS_IF([test "x$enable_profile" = "xEMSCRIPTEN"], [
+ PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
+])
+
 if test "x$enable_profile" = "xMOBILE"; then
 PKG_CHECK_MODULES(OPENGLES20, gles20)
 enable_assimp=no
 fi
 
-if test "x$enable_profile" = "xLITE"; then
+AS_IF([test "x$enable_profile" = "xLITE"], [
 PKG_CHECK_MODULES(OPENGLES20, gles20)
-fi
+])
 
-if test "x$enable_profile" = "xWEARABLE"; then
+AS_IF([test "x$enable_profile" = "xWEARABLE"], [
 PKG_CHECK_MODULES(OPENGLES20, gles20)
-fi
+])
 
 if test "x$enable_profile" = "xTV"; then
 PKG_CHECK_MODULES(OPENGLES20, glesv2)
 fi
 
-if test "x$enable_profile" = "xUBUNTU"; then
+AS_IF([test "x$enable_profile" = "xUBUNTU"], [
 PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
-else
+], [
+
+AS_IF([test "x$enable_profile" != "xEMSCRIPTEN"], [
 PKG_CHECK_MODULES(CAPI_APPFW_APPLICATION, capi-appfw-application)
 PKG_CHECK_MODULES(DLOG, dlog)
 PKG_CHECK_MODULES(SENSOR, sensor)
@@ -229,20 +256,26 @@ if test "x$with_tizen_2_2_compatibility" = "xno"; then
 PKG_CHECK_MODULES(CAPI_SYSTEM_INFO, capi-system-info)
 fi
 
-fi # ubuntu profile test
+])
 
-if test "x$enable_wayland" = "xyes"; then
+])
+
+AS_IF([test "x$enable_wayland" = "xyes"], [
 PKG_CHECK_MODULES(WAYLAND, [ecore-wayland egl wayland-egl wayland-client >= 1.2.0 xkbcommon],
                   [DALI_HAS_ECOREWL=yes],
                   [DALI_HAS_ECOREWL=no])
-else
+], [
+
+AS_IF([test "x$enable_profile" != "xEMSCRIPTEN"], [
 PKG_CHECK_MODULES(ECORE_X, [ecore-x],
                   [DALI_HAS_ECOREX=yes],
                   [DALI_HAS_ECOREX=no])
 PKG_CHECK_MODULES(X11, [x11],
                   [DALI_HAS_X11=yes],
                   [DALI_HAS_X11=no])
-fi
+])
+
+])
 
 if test "x$enable_feedback" = "xyes"; then
 
@@ -258,17 +291,17 @@ PKG_CHECK_MODULES(FEEDBACK, feedback)
 PKG_CHECK_MODULES(MMFSOUND, mm-sound)
 fi
 
-if test x$DALI_DATA_RW_DIR != x; then
+AS_IF([test x$DALI_DATA_RW_DIR != x], [
   dataReadWriteDir=$DALI_DATA_RW_DIR
-else
+], [
   dataReadWriteDir=${prefix}/share/dali/
-fi
+])
 
-if test x$DALI_DATA_RO_DIR != x; then
+AS_IF([test x$DALI_DATA_RO_DIR != x], [
   dataReadOnlyDir=$DALI_DATA_RO_DIR
-else
+], [
   dataReadOnlyDir=${prefix}/share/dali/
-fi
+])
 
 if test x$FONT_CONFIGURATION_FILE != x; then
   fontConfigurationFile=$FONT_CONFIGURATION_FILE
@@ -299,7 +332,7 @@ if test "x$enable_feedback" = "xyes"; then
 AC_CONFIG_FILES([
  plugins/Makefile
 ])
-fi
+])
 
 if test "x$freetype_bitmap_support" = "xyes"; then
 DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DFREETYPE_BITMAP_SUPPORT"

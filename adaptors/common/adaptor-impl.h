@@ -24,6 +24,7 @@
 #include <dali/public-api/math/rect.h>
 #include <dali/public-api/signals/callback.h>
 #include <dali/integration-api/render-controller.h>
+#include <dali/integration-api/platform-abstraction.h>
 
 // INTERNAL INCLUDES
 #include <adaptor.h>
@@ -31,6 +32,7 @@
 #include <tts-player.h>
 #include <imf-manager.h>
 #include <clipboard.h>
+#include <vsync-monitor.h>
 
 #include <tizen-platform-abstraction.h>
 #include <base/interfaces/adaptor-internal-services.h>
@@ -43,6 +45,10 @@
 #include <system-trace.h>
 #include <trigger-event-factory.h>
 #include <networking/socket-factory.h>
+
+#if defined(EMSCRIPTEN)
+#include <base/frame-time.h>
+#endif
 
 namespace Dali
 {
@@ -72,7 +78,7 @@ class CallbackManager;
 class FeedbackPluginProxy;
 class FeedbackController;
 class RotationObserver;
-class VSyncMonitor;
+class VSyncMonitorInterface;
 class PerformanceInterface;
 class LifeCycleObserver;
 class ObjectProfiler;

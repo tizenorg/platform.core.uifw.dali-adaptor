@@ -30,3 +30,5 @@ base_adaptor_networking_src_files = \
   $(base_adaptor_src_dir)/performance-logging/networking/network-performance-client.cpp \
   $(base_adaptor_src_dir)/performance-logging/networking/network-performance-server.cpp \
   $(base_adaptor_src_dir)/performance-logging/networking/event/automation.cpp
+
+emscripten_base_adaptor_src_files =

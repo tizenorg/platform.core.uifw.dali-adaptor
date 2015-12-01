@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <vconf.h>
 #include <vconf-keys.h>
+#include <xf86drm.h>
 
 #include <dali/integration-api/debug.h>
 
@@ -71,11 +72,23 @@ void ScreenStatusChanged(keynode_t* node, void* data)
 
 } // unnamed namespace
 
-VSyncMonitor::VSyncMonitor()
-: mFileDescriptor( FD_NONE ),
-  mUseHardwareVSync( TRUE ),
-  mHardwareVSyncAvailable( FALSE )
+struct VSyncMonitor::Impl
 {
+  int       mFileDescriptor;  ///< DRM dev node file descriptor
+  drmVBlank mVBlankInfo;
+  bool      mUseHardware;     ///< Hardware VSyncs available flag
+
+  Impl()
+    : mFileDescriptor( FD_NONE ),
+      mUseHardware( true )
+  {}
+};
+
+
+VSyncMonitor::VSyncMonitor()
+{
+  mImpl = new VSyncMonitor::Impl();
+
   vconf_notify_key_changed( VCONFKEY_PM_STATE, ScreenStatusChanged, this );
 }
 
@@ -84,69 +97,81 @@ VSyncMonitor::~VSyncMonitor()
   Terminate();
 
   vconf_ignore_key_changed( VCONFKEY_PM_STATE, ScreenStatusChanged );
+
+  delete mImpl;
 }
 
 void VSyncMonitor::SetUseHardwareVSync( bool useHardware )
 {
-  mUseHardwareVSync = useHardware;
-}
-
-void VSyncMonitor::SetHardwareVSyncAvailable( bool hardwareVSyncAvailable )
-{
-  mHardwareVSyncAvailable = hardwareVSyncAvailable;
+  mImpl->mUseHardware = useHardware;
 }
 
 void VSyncMonitor::Initialize()
 {
-  DALI_ASSERT_DEBUG( mFileDescriptor == FD_NONE && "VSyncMonitor::Initialize() called twice" );
+  DALI_ASSERT_DEBUG( mImpl->mFileDescriptor == FD_NONE && "VSyncMonitor::Initialize() called twice" );
 
   // Read initial 'use hardware' status
   ScreenStatusChanged( NULL, this );
 
   // open /dev node
-  mFileDescriptor = open( DRM_DEVICE, O_RDWR );
+  mImpl->mFileDescriptor = open( DRM_DEVICE, O_RDWR );
 
   // setup vblank request - block and wait for next vblank
-  mVBlankInfo.request.type = DRM_VBLANK_NEXTONMISS;
-  mVBlankInfo.request.sequence = 0;
-  mVBlankInfo.request.signal = 0;
+  mImpl->mVBlankInfo.request.type = DRM_VBLANK_NEXTONMISS;
+  mImpl->mVBlankInfo.request.sequence = 0;
+  mImpl->mVBlankInfo.request.signal = 0;
 
   // setup vblank reply - block and wait for next vblank
-  mVBlankInfo.reply.type = DRM_VBLANK_NEXTONMISS;
-  mVBlankInfo.reply.sequence = 0;
-  mVBlankInfo.reply.tval_sec = 0;
-  mVBlankInfo.reply.tval_usec = 0;
+  mImpl->mVBlankInfo.reply.type = DRM_VBLANK_NEXTONMISS;
+  mImpl->mVBlankInfo.reply.sequence = 0;
+  mImpl->mVBlankInfo.reply.tval_sec = 0;
+  mImpl->mVBlankInfo.reply.tval_usec = 0;
 }
 
 void VSyncMonitor::Terminate()
 {
-  if( mFileDescriptor != FD_NONE )
+  if( mImpl->mFileDescriptor != FD_NONE )
   {
-    close( mFileDescriptor );
-    mFileDescriptor = FD_NONE;
+    close( mImpl->mFileDescriptor );
+    mImpl->mFileDescriptor = FD_NONE;
   }
 }
 
 bool VSyncMonitor::UseHardware()
 {
-  return mUseHardwareVSync && mHardwareVSyncAvailable && (FD_NONE != mFileDescriptor );
+  return mImpl->mUseHardware && (FD_NONE != mImpl->mFileDescriptor );
 }
 
 bool VSyncMonitor::DoSync( unsigned int& frameNumber, unsigned int& seconds, unsigned int& microseconds )
 {
-  DALI_ASSERT_DEBUG( mFileDescriptor != FD_NONE && "ECoreX::VSyncMonitor is not initialized" );
+  DALI_ASSERT_DEBUG( mImpl->mFileDescriptor != FD_NONE && "ECoreX::VSyncMonitor is not initialized" );
 
-  if( 0 == drmWaitVBlank( mFileDescriptor, &mVBlankInfo ) )
+  if( 0 == drmWaitVBlank( mImpl->mFileDescriptor, &mImpl->mVBlankInfo ) )
   {
-    frameNumber = mVBlankInfo.reply.sequence;
-    seconds = mVBlankInfo.reply.tval_sec;
-    microseconds = mVBlankInfo.reply.tval_usec;
+    frameNumber = mImpl->mVBlankInfo.reply.sequence;
+    seconds = mImpl->mVBlankInfo.reply.tval_sec;
+    microseconds = mImpl->mVBlankInfo.reply.tval_usec;
 
     return true;
   }
 
   return false;
 }
+
+// drmWaitVBlank is a wrapper around this? so to keep in common build profile (for wayland & tizen) we could just use ioctl?
+//
+// {
+//     int ret;
+
+//     do
+//     {
+//       ret = ioctl(mImpl->mFileDescriptor, DRM_IOCTL_WAIT_VBLANK, &mImpl->mVBlankInfo);
+//       mImpl->mVBlankInfo->request.type &= ~DRM_VBLANK_RELATIVE;
+//     } while (ret && errno == EINTR);
+
+//     return ret;
+// }
+
 
 } // namespace Adaptor
 
