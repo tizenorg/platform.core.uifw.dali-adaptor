@@ -23,6 +23,7 @@
 #include <unistd.h>
 
 #include <dali/integration-api/debug.h>
+#include <boost/bind.hpp>
 
 // INTERNAL INCLUDES
 

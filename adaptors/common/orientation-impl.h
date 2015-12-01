@@ -36,10 +36,30 @@ namespace Internal
 
 namespace Adaptor
 {
-class Window;
 class Orientation;
 
 typedef IntrusivePtr<Orientation> OrientationPtr;
+
+class OrientationObserver
+{
+public:
+  virtual void RotationDone( int orientation, int width, int height ) = 0;
+protected:
+
+  /**
+   * Protected Constructor.
+   */
+  OrientationObserver()
+  {
+  }
+
+  /**
+   * Protected virtual destructor.
+   */
+  virtual ~OrientationObserver()
+  {
+  }
+};
 
 class Orientation : public BaseObject, public RotationObserver
 {
@@ -47,12 +67,12 @@ public:
 
   typedef Dali::Orientation::OrientationSignalType OrientationSignalType;
 
-  static Orientation* New(Window* window);
+  static Orientation* New(OrientationObserver* window);
 
   /**
    * Constructor
    */
-  Orientation(Window* window);
+  Orientation(OrientationObserver* window);
 
 protected:
   /**
@@ -109,7 +129,7 @@ private:
 
 private:
 
-  Window*                                  mWindow;
+  OrientationObserver*                     mObserver;
 
   OrientationSignalType mChangedSignal;
 

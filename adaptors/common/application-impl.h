@@ -40,7 +40,7 @@ namespace Internal
 
 namespace Adaptor
 {
-class CommandLineOptions;
+struct CommandLineOptions;
 class EventLoop;
 
 typedef Dali::Rect<int> PositionSize;

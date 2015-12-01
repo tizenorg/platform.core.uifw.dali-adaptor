@@ -19,7 +19,9 @@
  */
 
 // EXTERNAL INCLUDES
+#if !defined(EMSCRIPTEN)
 #include <Ecore_IMF.h>
+#endif
 
 // INTERNAL INCLUDES
 #include <virtual-keyboard.h>
@@ -38,7 +40,7 @@ namespace Adaptor
  */
 namespace VirtualKeyboard
 {
-
+#if !defined(EMSCRIPTEN)
 /**
  * Connect the virtual keyboard callbacks.
  * To get the virtual keyboard callbacks then you have to connect these callback.
@@ -52,6 +54,7 @@ void ConnectCallbacks( Ecore_IMF_Context *imfContext );
  * The signals are StatusChangedSignal, ResizedSignal and LanguageChangedSignal.
  */
 void DisconnectCallbacks( Ecore_IMF_Context *imfContext );
+#endif
 
 /**
  * @copydoc Dali::VirtualKeyboard::Show()

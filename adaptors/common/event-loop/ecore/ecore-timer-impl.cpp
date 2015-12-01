@@ -19,6 +19,119 @@
 #include "timer-impl.h"
 
 // EXTERNAL INCLUDES
+#if defined(EMSCRIPTEN)
+
+namespace Dali
+{
+
+namespace Internal
+{
+
+namespace Adaptor
+{
+
+struct Timer::Impl
+{
+  Impl( unsigned int milliSec )
+  : mInterval(milliSec)
+  {
+  }
+
+  unsigned int mInterval;
+};
+
+TimerPtr Timer::New( unsigned int milliSec )
+{
+  TimerPtr timer( new Timer( milliSec ) );
+  return timer;
+}
+
+Timer::Timer( unsigned int milliSec )
+: mImpl(new Impl(milliSec))
+{
+}
+
+Timer::~Timer()
+{
+  // stop timers
+  Stop();
+
+  delete mImpl;
+}
+
+void Timer::Start()
+{
+}
+
+void Timer::Stop()
+{
+}
+
+void Timer::SetInterval( unsigned int interval )
+{
+  // stop existing timer
+  Stop();
+  mImpl->mInterval = interval;
+  // start new tick
+  Start();
+}
+
+unsigned int Timer::GetInterval() const
+{
+  return mImpl->mInterval;
+}
+
+bool Timer::Tick()
+{
+  // Guard against destruction during signal emission
+  Dali::Timer handle( this );
+
+  bool retVal( false );
+
+  // Override with new signal if used
+  if( !mTickSignal.Empty() )
+  {
+    retVal = mTickSignal.Emit();
+
+    // Timer stops if return value is false
+    if (retVal == false)
+    {
+      Stop();
+    }
+    else
+    {
+      retVal = true;   // continue emission
+    }
+  }
+  else // no callbacks registered
+  {
+    // periodic timer is started but nobody listens, continue
+    retVal = true;
+  }
+
+  return retVal;
+}
+
+Dali::Timer::TimerSignalV2& Timer::TickSignal()
+{
+  return mTickSignal;
+}
+
+bool Timer::IsRunning() const
+{
+  return false;
+}
+
+
+} // namespace Adaptor
+
+} // namespace Internal
+
+} // namespace Dali
+
+
+#else
+
 #include <Ecore.h>
 
 namespace Dali
@@ -150,8 +263,11 @@ bool Timer::IsRunning() const
   return mImpl->mId != NULL;
 }
 
+
 } // namespace Adaptor
 
 } // namespace Internal
 
 } // namespace Dali
+
+#endif

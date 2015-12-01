@@ -33,7 +33,7 @@
 #include <dali/integration-api/gl-abstraction.h>
 
 // INTERNAL INCLUDES
-#include <gl/gl-extensions.h>
+#include "gl-extensions.h"
 
 namespace Dali
 {

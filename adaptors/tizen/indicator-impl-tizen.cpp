@@ -20,6 +20,7 @@
 
 // EXTERNAL INCLUDES
 #include <Ecore.h>
+#include <Ecore_Ipc.h>  // Ecore_Ipc_Event_Server_Data
 #include <Evas.h>
 
 #include <sys/types.h>
