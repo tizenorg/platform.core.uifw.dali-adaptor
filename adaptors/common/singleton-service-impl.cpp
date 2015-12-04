@@ -22,13 +22,13 @@
 #include <dali/integration-api/debug.h>
 
 // INTERNAL INCLUDES
-#if defined(DEBUG_ENABLED)
-#include <tizen-logging.h>
+#if 0 //defined(DEBUG_ENABLED)
+#include <slp-logging.h>
 Debug::Filter* gSingletonServiceLogFilter = Debug::Filter::New( Debug::NoLogging, false, "LOG_SINGLETON_SERVICE" );
 
 // Need to define own macro as the log function is not installed when this object is created so no logging is shown with DALI_LOG_INFO at construction and destruction
 #define DALI_LOG_SINGLETON_SERVICE_DIRECT(level, message)                        \
-    if(gSingletonServiceLogFilter && gSingletonServiceLogFilter->IsEnabledFor(level)) { std::string string(message); Dali::TizenPlatform::LogMessage( Debug::DebugInfo, string );  }
+    if(gSingletonServiceLogFilter && gSingletonServiceLogFilter->IsEnabledFor(level)) { std::string string(message); Dali::SlpPlatform::LogMessage( Debug::DebugInfo, string );  }
 
 #define DALI_LOG_SINGLETON_SERVICE(level, format, args...) DALI_LOG_INFO(gSingletonServiceLogFilter, level, format, ## args )
 

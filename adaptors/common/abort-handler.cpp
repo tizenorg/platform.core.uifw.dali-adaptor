@@ -42,8 +42,6 @@ AbortHandler::AbortHandler( CallbackBase* callback )
 
 AbortHandler::~AbortHandler()
 {
-  delete mCallback;
-
   int signum;
   for ( signum = 1; signum < _NSIG; signum++ )
   {

@@ -28,8 +28,6 @@
 #include <dali/integration-api/events/long-press-gesture-event.h>
 #include <dali/integration-api/events/touch-event-integ.h>
 
-#include <system-settings.h>
-
 // INTERNAL INCLUDES
 #include <base/core-event-interface.h>
 
@@ -239,7 +237,8 @@ void LongPressGestureDetector::EmitGesture(Gesture::State state)
 
 int LongPressGestureDetector::GetSystemValue()
 {
-  return GetLongPressTime( LONG_PRESS_TIME );
+  // This is hardcoded for now, on Tizen this value is read from the system settings.
+  return LONG_PRESS_TIME;
 }
 
 } // namespace Adaptor

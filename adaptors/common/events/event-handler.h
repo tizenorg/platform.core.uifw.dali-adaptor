@@ -27,14 +27,13 @@
 #include <drag-and-drop-detector-impl.h>
 #include <accessibility-adaptor-impl.h>
 #include <clipboard-event-notifier-impl.h>
-#include <imf-manager-impl.h>
+//#include <imf-manager-impl.h>
 #include <rotation-observer.h>
 
 namespace Dali
 {
 
 class RenderSurface;
-
 namespace Internal
 {
 
@@ -46,8 +45,9 @@ class GestureManager;
 class StyleMonitor;
 
 /**
- * The Event Handler class is responsible for setting up receiving of Ecore events and then converts them
- * to TouchEvents when it does receive them.
+ * The Event Handler class is responsible for setting up receiving of
+ * platform events and then converts them to TouchEvents when it does
+ * receive them.
  *
  * These TouchEvents are then passed on to Core.
  */
@@ -123,7 +123,7 @@ private:
    * @param[in]  point      The touch point information.
    * @param[in]  timeStamp  The time the touch occurred.
    */
-  void SendEvent(TouchPoint& point, unsigned long timeStamp);
+  void SendEvent( const TouchPoint& point, const unsigned long timeStamp);
 
   /**
    * Send key event to core.
@@ -184,11 +184,11 @@ private:
   RotationObserver* mRotationObserver; ///< Pointer to rotation observer, if present.
 
   DragAndDropDetectorPtr mDragAndDropDetector; ///< Pointer to the drag & drop detector, to send Drag & Drop events to.
-  Dali::AccessibilityAdaptor mAccessibilityAdaptor; ///< Pointer to the accessibility adaptor
+
   Dali::ClipboardEventNotifier mClipboardEventNotifier; ///< Pointer to the clipboard event notifier
   Dali::Clipboard mClipboard;///< Pointer to the clipboard
 
-  struct Impl; ///< Contains Ecore specific information
+  struct Impl; ///< Contains platform specific information
   Impl* mImpl; ///< Created on construction and destroyed on destruction.
 
   bool mPaused; ///< The paused state of the adaptor.

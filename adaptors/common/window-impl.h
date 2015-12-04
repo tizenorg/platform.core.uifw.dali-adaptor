@@ -2,7 +2,7 @@
 #define __DALI_INTERNAL_WINDOW_H__
 
 /*
- * Copyright (c) 2014 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@
 // INTERNAL INCLUDES
 #include <base/lifecycle-observer.h>
 #include <adaptor-impl.h>
-#include <indicator-impl.h>
 #include <window.h>
 #include <orientation.h>
 #include <render-surface.h>
@@ -33,12 +32,14 @@
 
 namespace Dali
 {
+class Orientation;
 class Adaptor;
 class RenderSurface;
 
 namespace Integration
 {
 class SystemOverlay;
+class Framework;
 }
 
 namespace Internal
@@ -55,21 +56,20 @@ typedef IntrusivePtr<Orientation> OrientationPtr;
 /**
  * Window provides a surface to render onto with orientation & indicator properties.
  */
-class Window : public Dali::BaseObject, public Indicator::Observer, public LifeCycleObserver
+class Window : public Dali::BaseObject, public LifeCycleObserver
 {
 public:
-  typedef Dali::Window::IndicatorSignalType IndicatorSignalType;
   typedef Signal< void () > SignalType;
-
   /**
    * Create a new Window. This should only be called once by the Application class
+   * @param[in] framework The application framework
    * @param[in] windowPosition The position and size of the window
    * @param[in] name The window title
    * @param[in] className The window class name
    * @param[in] isTransparent Whether window is transparent
    * @return A newly allocated Window
    */
-  static Window* New(const PositionSize& posSize, const std::string& name, const std::string& className, bool isTransparent = false);
+  static Window* New( Integration::Framework* framework, const PositionSize& posSize, const std::string& name, const std::string& className, bool isTransparent = false);
 
   /**
    * Pass the adaptor back to the overlay. This allows the window to access Core's overlay.
@@ -82,21 +82,6 @@ public:
    * @return The render surface
    */
   RenderSurface* GetSurface();
-
-  /**
-   * @copydoc Dali::Window::ShowIndicator()
-   */
-  void ShowIndicator( Dali::Window::IndicatorVisibleMode visibleMode );
-
-  /**
-   * @copydoc Dali::Window::SetIndicatorBgOpacity()
-   */
-  void SetIndicatorBgOpacity( Dali::Window::IndicatorBgOpacity opacity );
-
-  /**
-   * @copydoc Dali::Window::RotateIndicator()
-   */
-  void RotateIndicator( Dali::Window::WindowOrientation orientation );
 
   /**
    * @copydoc Dali::Window::SetClass()
@@ -154,14 +139,10 @@ public:
   Dali::DragAndDropDetector GetDragAndDropDetector() const;
 
   /**
-   * @copydoc Dali::Window::GetNativeHandle() const
-   */
-  Dali::Any GetNativeHandle() const;
-
-  /**
    * Called from Orientation after the Change signal has been sent
    */
   void RotationDone( int orientation, int width, int height );
+
 
 private:
   /**
@@ -178,7 +159,7 @@ private:
   /**
    * Second stage initialization
    */
-  void Initialize(const PositionSize& posSize, const std::string& name, const std::string& className);
+  void Initialize( Integration::Framework* framework, const PositionSize& posSize, const std::string& name, const std::string& className);
 
   /**
    * Shows / hides the indicator bar.
@@ -201,23 +182,6 @@ private:
    * Set the indicator properties on the window
    */
   void SetIndicatorProperties( bool isShown, Dali::Window::WindowOrientation lastOrientation );
-
-private: // Indicator::Observer interface
-
-  /**
-   * @copydoc Dali::Internal::Adaptor::Indicator::Observer::IndicatorTypeChanged()
-   */
-  virtual void IndicatorTypeChanged( Indicator::Type type );
-
-  /**
-   * @copydoc Dali::Internal::Adaptor::Indicator::Observer::IndicatorClosed()
-   */
-  virtual void IndicatorClosed(Indicator* indicator);
-
-  /**
-   * @copydoc Dali::Internal::Adaptor::Indicator::Observer::IndicatorVisibilityChanged()
-   */
-  virtual void IndicatorVisibilityChanged( bool isVisible );
 
 private: // Adaptor::Observer interface
 
@@ -246,12 +210,6 @@ private: // Adaptor::Observer interface
    */
   virtual void OnDestroy();
 
-public: // Signals
-
-  /**
-   * The user should connect to this signal to get a timing when indicator was shown / hidden.
-   */
-  IndicatorSignalType& IndicatorVisibilityChangedSignal() { return mIndicatorVisibilityChangedSignal; }
 
   /**
    * This signal is emitted when the window is requesting to be deleted
@@ -261,7 +219,7 @@ public: // Signals
 private:
 
   typedef std::vector<Indicator*> DiscardedIndicators;
-
+  Integration::Framework*          mFramework; ///< Application framework
   RenderSurface*                   mSurface;
   Dali::Window::IndicatorVisibleMode mIndicatorVisible; ///< public state
   bool                             mIndicatorIsShown:1; ///< private state
@@ -284,9 +242,6 @@ private:
   OrientationPtr                               mOrientation;
   std::vector<Dali::Window::WindowOrientation> mAvailableOrientations;
   Dali::Window::WindowOrientation              mPreferredOrientation;
-
-  // Signals
-  IndicatorSignalType mIndicatorVisibilityChangedSignal;
   SignalType          mDeleteRequestSignal;
 };
 

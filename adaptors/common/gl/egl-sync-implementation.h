@@ -52,7 +52,7 @@ public:
   virtual bool IsSynced();
 
 private:
-#ifdef _ARCH_ARM_
+#ifdef __ARM_EABI__
   EGLSyncKHR mEglSync;
 #else
   int mPollCounter; // Implementations without fence sync use a 3 frame counter

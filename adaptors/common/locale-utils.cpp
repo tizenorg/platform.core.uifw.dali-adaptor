@@ -147,6 +147,7 @@ const LocaleDirection LOCALE_DIRECTION_LOOKUP_TABLE[] =
 
 } // unnamed namespace
 
+#if 0
 TextDirection GetTextDirection( std::string locale )
 {
   TextDirection direction( LeftToRight );
@@ -168,6 +169,7 @@ TextDirection GetTextDirection( std::string locale )
 
   return direction;
 }
+#endif
 
 } // namespace Locale
 

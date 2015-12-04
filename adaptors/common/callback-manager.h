@@ -24,6 +24,10 @@
 
 namespace Dali
 {
+namespace Integration
+{
+class Framework;
+}
 
 namespace Internal
 {
@@ -38,53 +42,60 @@ class CallbackManager
 {
 
 public:
+  /**
+   * Create a new call back interface
+   */
+  static CallbackManager* New();
 
-    /**
-     * Create a new call back interface
-     */
-    static CallbackManager* New();
+  /**
+   * Virtual destructor
+   */
+  virtual ~CallbackManager() {}
 
-    /**
-     * Virtual destructor
-     */
-    virtual ~CallbackManager() {}
+  /**
+   * Set the framework. (Used to access the framework layer in some implementations)
+   *
+   * @param[in] framework A pointer to the framework
+   */
+  virtual void SetFramework( Integration::Framework* framework )
+  {
+  }
 
-    /**
-     * Adds a call back to be run on idle.
-     * Must be call from main thread only.
-     * @param callback custom call back function
-     * @param priority call back priority
-     * @return true on success
-     */
-    virtual bool AddIdleCallback( CallbackBase* callback ) = 0;
+  /**
+   * Adds a call back to be run on idle.
+   * Must be call from main thread only.
+   * @param callback custom call back function
+   * @param priority call back priority
+   * @return true on success
+   */
+  virtual bool AddIdleCallback( CallbackBase* callback ) = 0;
 
-    /**
-     * Starts the callback manager.
-     */
-    virtual void Start() = 0;
+  /**
+   * Starts the callback manager.
+   */
+  virtual void Start() = 0;
 
-    /**
-     * Stop the callback manager and can remove all pending callbacks synchronously.
-     * This call will synchronise with the main loop and not return
-     * until all call backs have been deleted.
-     */
-    virtual void Stop() = 0;
+  /**
+   * Stop the callback manager and can remove all pending callbacks synchronously.
+   * This call will synchronise with the main loop and not return
+   * until all call backs have been deleted.
+   */
+  virtual void Stop() = 0;
 
 protected:
 
-    /**
-     * constructor
-     */
-    CallbackManager() {}
+  /**
+   * constructor
+   */
+  CallbackManager() {}
 
 private:
 
-    // Undefined copy constructor.
-    CallbackManager( const CallbackManager& );
+  // Undefined copy constructor.
+  CallbackManager( const CallbackManager& );
 
-    // Undefined assignment operator.
-    CallbackManager& operator=( const CallbackManager& );
-
+  // Undefined assignment operator.
+  CallbackManager& operator=( const CallbackManager& );
 };
 
 } // namespace Adaptor

@@ -34,7 +34,6 @@ namespace Adaptor
 /**
  * This class provides the environment options which define settings as well as
  * the ability to install a log function.
- *
  */
 class EnvironmentOptions
 {
@@ -159,35 +158,90 @@ public:
   int GetMinimumPanEvents() const;
 
   /**
-   * @return The width of the window
+   * @brief Sets the mode used to predict pan gesture movement
+   *
+   * @param[in] mode The prediction mode to use
    */
-  unsigned int GetWindowWidth() const;
+  void SetPanGesturePredictionMode( unsigned int mode );
 
   /**
-   * @return The height of the window
+   * @brief Sets the prediction amount of the pan gesture
+   *
+   * @param[in] amount The prediction amount in milliseconds
    */
-  unsigned int GetWindowHeight() const;
+  void SetPanGesturePredictionAmount( unsigned int amount );
+
+  /**
+   * @brief Sets the upper bound of the prediction amount for clamping
+   *
+   * @param[in] amount The prediction amount in milliseconds
+   */
+  void SetPanGestureMaximumPredictionAmount( unsigned int amount );
+
+  /**
+   * @brief Sets the lower bound of the prediction amount for clamping
+   *
+   * @param[in] amount The prediction amount in milliseconds
+   */
+  void SetPanGestureMinimumPredictionAmount( unsigned int amount );
+
+  /**
+   * @brief Sets the prediction amount to adjust when the pan velocity is changed.
+   * If the pan velocity is accelerating, the prediction amount will be increased
+   * by the specified amount until it reaches the upper bound. If the pan velocity
+   * is decelerating, the prediction amount will be decreased by the specified
+   * amount until it reaches the lower bound.
+   *
+   * @param[in] amount The prediction amount in milliseconds
+   */
+  void SetPanGesturePredictionAmountAdjustment( unsigned int amount );
+
+  /**
+   * @brief Called to set how pan gestures smooth input
+   *
+   * @param[in] mode The smoothing mode to use
+   */
+  void SetPanGestureSmoothingMode( unsigned int mode );
+
+  /**
+   * @brief Sets the mode used to smooth pan gesture movement properties calculated on the Update thread
+   *
+   * @param[in] amount The smoothing amount [0.0f,1.0f] - 0.0f would be no smoothing, 1.0f maximum smoothing
+   */
+  void SetPanGestureSmoothingAmount( float amount );
+
+  /**
+   * @brief Sets the minimum distance required before a pan starts
+   *
+   * @param[in] distance The minimum distance before a pan starts
+   */
+  void SetMinimumPanDistance( int distance );
+
+  /**
+   * @brief Sets the minimum number of events required before a pan starts
+   *
+   * @param[in] events The minimum events before a pan starts
+   */
+  void SetMinimumPanEvents( int events );
+
+  /**
+   * @brief Sets how often the gles call logging occurs
+   *
+   * @param[in] time the number of seconds between logging output
+   */
+  void SetGlesCallTime( int time );
 
   /**
    * @brief Get the graphics status time
    */
   int GetGlesCallTime() const;
 
+
+
   /**
    * @return true if performance server is required
    */
   bool PerformanceServerRequired() const;
-
-  /**
-   * @return Gets the window name.
-   */
-  const std::string& GetWindowName() const;
-
-  /**
-   * @return Gets the window class.
-   */
-  const std::string& GetWindowClassName() const;
-
   /**
    * @return The thread mode that DALi should use.
    */
@@ -223,8 +277,6 @@ private: // Data
   int mPanMinimumDistance;                        ///< minimum distance required before pan starts
   int mPanMinimumEvents;                          ///< minimum events required before pan starts
   int mGlesCallTime;                              ///< time in seconds between status updates
-  unsigned int mWindowWidth;                      ///< width of the window
-  unsigned int mWindowHeight;                     ///< height of the window
   ThreadingMode::Type mThreadingMode;             ///< threading mode
 
   Dali::Integration::Log::LogFunction mLogFunction;

@@ -2,7 +2,7 @@
 #define __DALI_INTERNAL_VSYNC_NOTIFIER_H__
 
 /*
- * Copyright (c) 2015 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@
  *
  */
 
-// EXTERNAL INCLUDES
 #include <pthread.h>
 
 namespace Dali
@@ -39,7 +38,7 @@ namespace Adaptor
 {
 
 class VSyncMonitorInterface;
-class ThreadSynchronization;
+class UpdateRenderSynchronization;
 class EnvironmentOptions;
 class AdaptorInternalServices;
 
@@ -58,7 +57,7 @@ public:
    * @param[in] adaptorInterfaces base adaptor interface
    * @param[in] environmentOptions environment options
    */
-  VSyncNotifier( ThreadSynchronization& sync,
+  VSyncNotifier( UpdateRenderSynchronization& sync,
                  AdaptorInternalServices& adaptorInterfaces,
                  const EnvironmentOptions& environmentOptions);
 
@@ -87,7 +86,7 @@ private:
 
   /**
    * Helper for the thread calling the entry function
-   * @param[in] This A pointer to the current VSyncNotifier object
+   * @param[in] This A pointer to the current VsyncNotifier object
    */
   static inline void* InternalThreadEntryFunc( void* This )
   {
@@ -97,12 +96,13 @@ private:
 
 private:
 
-  ThreadSynchronization&              mThreadSynchronization;   ///< Used to synchronize all the threads
-  Dali::Integration::Core&            mCore;                    ///< Dali core reference
-  VSyncMonitorInterface*              mVSyncMonitor;            ///< VSyncMonitor interface
-  pthread_t*                          mThread;                  ///< The actual thread.
-  const EnvironmentOptions&           mEnvironmentOptions;      ///< Environment options
-  unsigned int                        mNumberOfVSyncsPerRender; ///< How many frames for each update/render cycle.
+  UpdateRenderSynchronization&        mUpdateRenderSync;    ///< Used to synchronize the update, render & vsync threads
+  Dali::Integration::Core&            mCore;                ///< Dali core reference
+  Integration::PlatformAbstraction&   mPlatformAbstraction; ///< The platform abstraction for retrieving the current time etc.
+  VSyncMonitorInterface*              mVSyncMonitor;        ///< VSyncMonitor interface
+  pthread_t*                          mThread;              ///< The actual thread.
+  const EnvironmentOptions&           mEnvironmentOptions;  ///< Environment options
+  unsigned int                        mNumberOfVSyncsPerRender;///< How many frames for each update/render cycle.
 
 }; // class VSyncNotifier
 

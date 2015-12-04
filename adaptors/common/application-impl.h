@@ -29,6 +29,7 @@
 #include <framework.h>
 #include <window-impl.h>
 #include <base/environment-options.h>
+#include <adaptors/integration-api/framework.h>
 
 namespace Dali
 {
@@ -51,7 +52,7 @@ typedef IntrusivePtr<Application> ApplicationPtr;
 /**
  * Implementation of the Application class.
  */
-class Application : public BaseObject, public Framework::Observer
+class Application : public BaseObject, public Integration::Framework::Observer
 {
 public:
 
@@ -61,14 +62,20 @@ public:
 
   /**
    * Create a new application
+   * @param[in]  framework   A pointer to the application framework
    * @param[in]  argc        A pointer to the number of arguments
    * @param[in]  argv        A pointer to the argument list
    * @param[in]  stylesheet  The path to user defined theme file
    * @param[in]  windowMode  A member of Dali::Application::WINDOW_MODE
    */
-  static ApplicationPtr New( int* argc, char **argv[], const std::string& stylesheet, WINDOW_MODE windowMode );
+  static ApplicationPtr New( Integration::Framework* framework, int* argc, char **argv[], const std::string& stylesheet, WINDOW_MODE windowMode );
 
 public:
+
+  /**
+   * @copydoc Dali::Application::MainLoop()
+   */
+  void Start(Dali::Configuration::ContextLoss configuration);
 
   /**
    * @copydoc Dali::Application::MainLoop()
@@ -84,6 +91,11 @@ public:
    * @copydoc Dali::Application::Quit()
    */
   void Quit();
+
+  /**
+   * @copydoc Dali::Application::GetOrientation()
+   */
+  Dali::Orientation& GetOrientation();
 
   /**
    * @copydoc Dali::Application::AddIdle()
@@ -150,10 +162,14 @@ public: // From Framework::Observer
   virtual void OnResume();
 
   /**
-  * Called when the framework received AppControlSignal.
-  * @param[in] The bundle data of AppControl event.
-  */
-  virtual void OnAppControl(void *data);
+   * Called when surface created.
+   */
+  virtual void OnSurfaceCreated();
+
+  /**
+   * Called when surface destroyed.
+   */
+  virtual void OnSurfaceDestroyed();
 
   /**
    * Called when the framework informs the application that it should reset itself.
@@ -166,19 +182,9 @@ public: // From Framework::Observer
   virtual void OnLanguageChanged();
 
   /**
-  * Called when the framework informs the application that the region of the device has changed.
-  */
-  virtual void OnRegionChanged();
-
-  /**
-  * Called when the framework informs the application that the battery level of the device is low.
-  */
-  virtual void OnBatteryLow();
-
-  /**
-  * Called when the framework informs the application that the memory level of the device is low.
-  */
-  virtual void OnMemoryLow();
+   * Called when the framework requests an update.
+   */
+  virtual void OnNotificationRequested();
 
 public:
 
@@ -216,11 +222,6 @@ public:  // Signals
   Dali::Application::AppSignalType& ResetSignal() { return mResetSignal; }
 
   /**
-  * @copydoc Dali::Application::AppControlSignal()
-  */
-  Dali::Application::AppControlSignalType& AppControlSignal() { return mAppControlSignal; }
-
-  /**
    * @copydoc Dali::Application::ResizeSignal()
    */
   Dali::Application::AppSignalType& ResizeSignal() { return mResizeSignal; }
@@ -231,30 +232,26 @@ public:  // Signals
   Dali::Application::AppSignalType& LanguageChangedSignal() { return mLanguageChangedSignal; }
 
   /**
-  * @copydoc Dali::Application::RegionChangedSignal()
-  */
-  Dali::Application::AppSignalType& RegionChangedSignal() { return mRegionChangedSignal; }
+   * @copydoc Dali::Application::SurfaceCreatedSignal()
+   */
+  Dali::Application::AppSignalType& SurfaceCreatedSignal() { return mSurfaceCreatedSignal; }
 
   /**
-  * @copydoc Dali::Application::BatteryLowSignal()
-  */
-  Dali::Application::AppSignalType& BatteryLowSignal() { return mBatteryLowSignal; }
-
-  /**
-  * @copydoc Dali::Application::MemoryLowSignal()
-  */
-  Dali::Application::AppSignalType& MemoryLowSignal() { return mMemoryLowSignal; }
+   * @copydoc Dali::Application::SurfaceDestroyedSignal()
+   */
+  Dali::Application::AppSignalType& SurfaceDestroyedSignal() { return mSurfaceDestroyedSignal; }
 
 private:
 
   /**
    * Private Constructor
+   * @param[in]  framework   A pointer to the application framework
    * @param[in]  argc        A pointer to the number of arguments
    * @param[in]  argv        A pointer to the argument list
    * @param[in]  stylesheet  The path to user defined theme file
    * @param[in]  windowMode  A member of Dali::Application::WINDOW_MODE
    */
-  Application( int* argc, char **argv[], const std::string& stylesheet, WINDOW_MODE windowMode );
+  Application( Integration::Framework* framework, int* argc, char **argv[], const std::string& stylesheet, WINDOW_MODE windowMode );
 
   /**
    * Destructor
@@ -283,20 +280,19 @@ private:
 
 private:
 
-  AppSignalType                           mInitSignal;
-  AppSignalType                           mTerminateSignal;
-  AppSignalType                           mPauseSignal;
-  AppSignalType                           mResumeSignal;
-  AppSignalType                           mResetSignal;
-  AppSignalType                           mResizeSignal;
-  AppControlSignalType                    mAppControlSignal;
-  AppSignalType                           mLanguageChangedSignal;
-  AppSignalType                           mRegionChangedSignal;
-  AppSignalType                           mBatteryLowSignal;
-  AppSignalType                           mMemoryLowSignal;
+  AppSignalType                         mInitSignal;
+  AppSignalType                         mTerminateSignal;
+  AppSignalType                         mPauseSignal;
+  AppSignalType                         mResumeSignal;
+  AppSignalType                         mResetSignal;
+  AppSignalType                         mResizeSignal;
+  AppSignalType                         mLanguageChangedSignal;
+  AppSignalType                         mSurfaceCreatedSignal;
+  AppSignalType                         mSurfaceDestroyedSignal;
 
+  Dali::Orientation*                    mOrientation;
   EventLoop*                            mEventLoop;
-  Framework*                            mFramework;
+  Integration::Framework*               mFramework;
 
   Dali::Configuration::ContextLoss      mContextLossConfiguration;
   CommandLineOptions*                   mCommandLineOptions;
@@ -304,10 +300,14 @@ private:
   Dali::SingletonService                mSingletonService;
   Dali::Adaptor*                        mAdaptor;
   Dali::Window                          mWindow;
+  void*                                 mSurface;
+
   Dali::Application::WINDOW_MODE        mWindowMode;
   std::string                           mName;
   std::string                           mStylesheet;
   EnvironmentOptions                    mEnvironmentOptions;
+  bool                                  mInitialized;
+  bool                                  mAdaptorStarted;
 
   SlotDelegate< Application >           mSlotDelegate;
 };

@@ -22,17 +22,15 @@
 #include <dali/public-api/common/vector-wrapper.h>
 #include <dali/public-api/common/view-mode.h>
 #include <dali/public-api/math/rect.h>
-#include <dali/public-api/signals/callback.h>
 #include <dali/integration-api/render-controller.h>
 
 // INTERNAL INCLUDES
 #include <adaptor.h>
 #include <render-surface.h>
-#include <tts-player.h>
 #include <imf-manager.h>
 #include <clipboard.h>
 
-#include <tizen-platform-abstraction.h>
+#include <slp-platform-abstraction.h>
 #include <base/interfaces/adaptor-internal-services.h>
 #include <base/environment-options.h>
 #include <base/core-event-interface.h>
@@ -54,6 +52,7 @@ namespace Integration
 {
 class Core;
 class GlAbstraction;
+class Framework;
 }
 
 namespace Internal
@@ -66,7 +65,7 @@ class EglFactory;
 class GestureManager;
 class GlImplementation;
 class GlSyncImplementation;
-class ThreadController;
+class UpdateRenderController;
 class TriggerEvent;
 class CallbackManager;
 class FeedbackPluginProxy;
@@ -92,25 +91,17 @@ public:
 
   /**
    * Creates a New Adaptor
-   * @param[in]  nativeWindow        Native window handle
    * @param[in]  surface             A render surface can be one of the following
    *                                  - Pixmap, adaptor will use existing Pixmap to draw on to
    *                                  - Window, adaptor will use existing Window to draw on to
    * @param[in]  configuration       The context loss configuration ( to choose resource discard policy )
    * @param[in]  environmentOptions  A pointer to the environment options. If NULL then one is created.
+   * @param[in]  framework           A pointer to the framework (for handling idle functions and timers)
    */
-  static Dali::Adaptor* New( Any nativeWindow,
-                             RenderSurface* surface,
+  static Dali::Adaptor* New( RenderSurface* surface,
                              Dali::Configuration::ContextLoss configuration,
-                             EnvironmentOptions* environmentOptions );
-
-  /**
-   * Creates a New Adaptor
-   * @param[in]  nativeWindow        native window handle
-   * @param[in]  configuration       The context loss configuration ( to choose resource discard policy )
-   * @param[in]  environmentOptions  A pointer to the environment options. If NULL then one is created.
-   */
-  static Dali::Adaptor* New( Dali::Window window, Dali::Configuration::ContextLoss configuration, EnvironmentOptions* environmentOptions );
+                             EnvironmentOptions* environmentOptions,
+                             Integration::Framework* framework );
 
   /**
    * 2-step initialisation, this should be called after creating an adaptor instance.
@@ -196,7 +187,8 @@ public: // AdaptorInternalServices implementation
   /**
    * @copydoc AdaptorInterface::ReplaceSurface()
    */
-  virtual void ReplaceSurface( Any nativeWindow, RenderSurface& surface );
+
+  virtual void ReplaceSurface( RenderSurface& surface );
 
   /**
    * @copydoc Dali::Adaptor::GetSurface()
@@ -209,16 +201,19 @@ public: // AdaptorInternalServices implementation
   virtual void ReleaseSurfaceLock();
 
   /**
-   * Retrieve the TtsPlayer.
-   * @param[in] mode The mode of TtsPlayer
-   * @return A handle to the TtsPlayer.
-   */
-  virtual Dali::TtsPlayer GetTtsPlayer(Dali::TtsPlayer::Mode mode);
-
-  /**
    * @copydoc Dali::Adaptor::AddIdle()
    */
   virtual bool AddIdle( CallbackBase* callback );
+
+  /**
+   * @copydoc Dali::Adaptor::SurfaceLost()
+   */
+  void SurfaceLost();
+
+  /**
+   * @copydoc Dali::Adaptor::SurfaceCreated()
+   */
+  void SurfaceCreated();
 
 public:
 
@@ -255,6 +250,12 @@ public:
   Integration::PlatformAbstraction& GetPlatformAbstraction() const;
 
   /**
+   * Return the application framework
+   * @return The application framework
+   */
+  Integration::Framework& GetFramework();
+
+  /**
    * Sets the Drag & Drop Listener.
    * @param[in] detector The detector to send Drag & Drop events to.
    */
@@ -268,12 +269,6 @@ public:
   void SetRotationObserver( RotationObserver* observer );
 
   /**
-   * Destroy the TtsPlayer of sepcific mode.
-   * @param[in] mode The mode of TtsPlayer to destroy
-   */
-  void DestroyTtsPlayer(Dali::TtsPlayer::Mode mode);
-
-  /**
    * @brief Sets minimum distance in pixels that the fingers must move towards/away from each other in order to
    * trigger a pinch gesture
    *
@@ -281,12 +276,8 @@ public:
    */
   void SetMinimumPinchDistance(float distance);
 
-  /**
-   * Gets native window handle
-   *
-   * @return native window handle
-   */
-  Any GetNativeWindowHandle();
+
+  void ResizeSurface(int width, int height);
 
 public:
 
@@ -499,14 +490,15 @@ private:
 
   /**
    * Constructor
-   * @param[in]  nativeWindow native window handle
    * @param[in]  adaptor      The public adaptor
    * @param[in]  surface      A render surface can be one of the following
    *                          - Pixmap, adaptor will use existing Pixmap to draw on to
    *                          - Window, adaptor will use existing Window to draw on to
    * @param[in]  environmentOptions  A pointer to the environment options. If NULL then one is created.
+   * @param[in]  framework    A pointer to the framework ( for handling timers and idle functions )
    */
-  Adaptor( Any nativeWindow, Dali::Adaptor& adaptor, RenderSurface* surface, EnvironmentOptions* environmentOptions );
+  Adaptor( Dali::Adaptor& adaptor, RenderSurface* surface, EnvironmentOptions* environmentOptions, Integration::Framework* framework );
+
 
 private: // Types
 
@@ -528,16 +520,16 @@ private: // Data
 
   Dali::Adaptor&                        mAdaptor;                     ///< Reference to public adaptor instance.
   State                                 mState;                       ///< Current state of the adaptor
+  Integration::Framework*               mFramework;                   ///< Framework class for idlers
   Dali::Integration::Core*              mCore;                        ///< Dali Core
-  ThreadController*                     mThreadController;            ///< Controls the threads
+  UpdateRenderController*               mThreadController;            ///< Controls the threads
   VSyncMonitor*                         mVSyncMonitor;                ///< Monitors VSync events
   GlImplementation*                     mGLES;                        ///< GL implementation
   GlSyncImplementation*                 mGlSync;                      ///< GL Sync implementation
   EglFactory*                           mEglFactory;                  ///< EGL Factory
 
-  Any                                   mNativeWindow;                ///< window identifier
   RenderSurface*                        mSurface;                     ///< Current surface
-  TizenPlatform::TizenPlatformAbstraction*  mPlatformAbstraction;         ///< Platform abstraction
+  SlpPlatform::SlpPlatformAbstraction*  mPlatformAbstraction;         ///< Platform abstraction
 
   EventHandler*                         mEventHandler;                ///< event handler
   CallbackManager*                      mCallbackManager;             ///< Used to install callbacks
@@ -546,7 +538,6 @@ private: // Data
   GestureManager*                       mGestureManager;              ///< Gesture manager
   FeedbackPluginProxy*                  mDaliFeedbackPlugin;          ///< Used to access feedback support
   FeedbackController*                   mFeedbackController;          ///< Plays feedback effects for Dali-Toolkit UI Controls.
-  Dali::TtsPlayer                       mTtsPlayers[Dali::TtsPlayer::MODE_NUM];                   ///< Provides TTS support
   ObserverContainer                     mObservers;                   ///< A list of adaptor observer pointers
   DragAndDropDetectorPtr                mDragAndDropDetector;         ///< The Drag & Drop detector
   RotationObserver*                     mDeferredRotationObserver;    ///< deferred Rotation observer needs event handler
@@ -562,9 +553,9 @@ public:
   inline static Adaptor& GetImplementation(Dali::Adaptor& adaptor) {return *adaptor.mImpl;}
 };
 
-} // namespace Internal
-
 } // namespace Adaptor
+
+} // namespace Internal
 
 } // namespace Dali
 

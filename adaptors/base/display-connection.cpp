@@ -35,7 +35,7 @@ DisplayConnection* DisplayConnection::New()
 }
 
 DisplayConnection::DisplayConnection()
-: mImpl( NULL )
+: mImpl(NULL)
 {
 }
 

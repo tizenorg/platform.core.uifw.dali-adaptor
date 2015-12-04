@@ -23,15 +23,13 @@
 #include <dali/integration-api/gl-abstraction.h>
 
 // INTERNAL INCLUDES
-#include <trigger-event-interface.h>
-#include <trigger-event-factory-interface.h>
+#include <integration-api/trigger-event-factory-interface.h>
 #include <base/interfaces/egl-factory-interface.h>
 #include <base/interfaces/socket-factory-interface.h>
 #include <base/interfaces/performance-interface.h>
 #include <base/interfaces/vsync-monitor-interface.h>
 #include <base/interfaces/trace-interface.h>
 #include <render-surface.h>
-
 
 namespace Dali
 {

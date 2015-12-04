@@ -36,7 +36,7 @@ class ImfManager;
 /**
  * @brief The ImfManager class
  *
- * Specifically manages the ecore input method framework which enables the virtual or hardware keyboards.
+ * Specifically manages the input method framework which enables the virtual or hardware keyboards on platforms that require it.
  */
 class DALI_IMPORT_API ImfManager : public BaseHandle
 {

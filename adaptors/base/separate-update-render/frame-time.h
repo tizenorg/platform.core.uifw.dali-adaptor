@@ -46,8 +46,9 @@ public:
 
   /**
    * Constructor
+   * @param[in]  platform  The platform used to retrieve the current time
    */
-  FrameTime();
+  FrameTime( Integration::PlatformAbstraction& platform );
 
   /**
    * Destructor, non virtual
@@ -112,6 +113,8 @@ private:
   inline void SetLastSyncTime();
 
 private:
+
+  Integration::PlatformAbstraction& mPlatform; ///< The platform abstraction.
 
   unsigned int mMinimumFrameTimeInterval; ///< The minimum frame time interval, set by Adaptor.
 

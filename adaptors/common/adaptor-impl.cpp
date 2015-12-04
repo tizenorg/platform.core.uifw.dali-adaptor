@@ -28,17 +28,14 @@
 #include <dali/integration-api/events/touch-event-integ.h>
 
 // INTERNAL INCLUDES
-#include <base/thread-controller.h>
+#include <base/separate-update-render/update-render-controller.h>
 #if defined(NETWORK_LOGGING_ENABLED)
 #  include <base/performance-logging/performance-interface-factory.h>
 #endif
 #include <base/lifecycle-observer.h>
 
-#include <dali/devel-api/text-abstraction/font-client.h>
-
 #include <callback-manager.h>
 #include <render-surface.h>
-#include <tts-player-impl.h>
 #include <accessibility-adaptor-impl.h>
 #include <events/gesture-manager.h>
 #include <events/event-handler.h>
@@ -47,16 +44,13 @@
 #include <gl/egl-sync-implementation.h>
 #include <gl/egl-image-extensions.h>
 #include <gl/egl-factory.h>
-#include <imf-manager-impl.h>
 #include <clipboard-impl.h>
 #include <vsync-monitor.h>
 #include <object-profiler.h>
 #include <base/display-connection.h>
 #include <window-impl.h>
 
-#include <tizen-logging.h>
-
-using Dali::TextAbstraction::FontClient;
+#include <android-logging.h>
 
 namespace Dali
 {
@@ -67,15 +61,22 @@ namespace Internal
 namespace Adaptor
 {
 
+#if defined(DEBUG_ENABLED)
+Debug::Filter* gAdaptorLogFilter = Debug::Filter::New(Debug::Concise, false, "LOG_ADAPTOR");
+#endif
+
+
 namespace
 {
 __thread Adaptor* gThreadLocalAdaptor = NULL; // raw thread specific pointer to allow Adaptor::Get
 } // unnamed namespace
 
-Dali::Adaptor* Adaptor::New( Any nativeWindow, RenderSurface *surface, Dali::Configuration::ContextLoss configuration, EnvironmentOptions* environmentOptions )
+Dali::Adaptor* Adaptor::New( RenderSurface *surface, Dali::Configuration::ContextLoss configuration, EnvironmentOptions* environmentOptions, Integration::Framework* framework )
 {
+  DALI_ASSERT_ALWAYS( surface->GetType() != Dali::RenderSurface::NO_SURFACE && "No surface for adaptor" );
+
   Dali::Adaptor* adaptor = new Dali::Adaptor;
-  Adaptor* impl = new Adaptor( nativeWindow, *adaptor, surface, environmentOptions );
+  Adaptor* impl = new Adaptor( *adaptor, surface, environmentOptions, framework );
   adaptor->mImpl = impl;
 
   impl->Initialize(configuration);
@@ -83,24 +84,14 @@ Dali::Adaptor* Adaptor::New( Any nativeWindow, RenderSurface *surface, Dali::Con
   return adaptor;
 }
 
-Dali::Adaptor* Adaptor::New( Dali::Window window, Dali::Configuration::ContextLoss configuration, EnvironmentOptions* environmentOptions )
-{
-  Any winId = window.GetNativeHandle();
-
-  Window& windowImpl = Dali::GetImplementation(window);
-  Dali::Adaptor* adaptor = New( winId, windowImpl.GetSurface(), configuration, environmentOptions );
-  windowImpl.SetAdaptor(*adaptor);
-  return adaptor;
-}
-
 void Adaptor::Initialize( Dali::Configuration::ContextLoss configuration )
 {
-  // all threads here (event, update, and render) will send their logs to TIZEN Platform's LogMessage handler.
-  Dali::Integration::Log::LogFunction logFunction( Dali::TizenPlatform::LogMessage );
+  // all threads here (event, update, and render) will send their logs to SLP Platform's LogMessage handler.
+  Dali::Integration::Log::LogFunction  logFunction(Dali::SlpPlatform::LogMessage);
   mEnvironmentOptions->SetLogFunction( logFunction );
   mEnvironmentOptions->InstallLogFunction(); // install logging for main thread
 
-  mPlatformAbstraction = new TizenPlatform::TizenPlatformAbstraction;
+  mPlatformAbstraction = new SlpPlatform::SlpPlatformAbstraction;
 
   std::string path;
   GetDataStoragePath( path );
@@ -122,6 +113,7 @@ void Adaptor::Initialize( Dali::Configuration::ContextLoss configuration )
 #endif
 
   mCallbackManager = CallbackManager::New();
+  mCallbackManager->SetFramework( mFramework );
 
   PositionSize size = mSurface->GetPositionSize();
 
@@ -152,7 +144,7 @@ void Adaptor::Initialize( Dali::Configuration::ContextLoss configuration )
 
   mVSyncMonitor = new VSyncMonitor;
 
-  mThreadController = new ThreadController( *this, *mEnvironmentOptions );
+  mThreadController = new UpdateRenderController( *this, *mEnvironmentOptions );
 
   // Should be called after Core creation
   if( mEnvironmentOptions->GetPanGestureLoggingLevel() )
@@ -188,6 +180,7 @@ void Adaptor::Initialize( Dali::Configuration::ContextLoss configuration )
     Integration::SetPanGestureSmoothingAmount(mEnvironmentOptions->GetPanGestureSmoothingAmount());
   }
 }
+
 
 Adaptor::~Adaptor()
 {
@@ -227,6 +220,8 @@ Adaptor::~Adaptor()
 
 void Adaptor::Start()
 {
+  DALI_LOG_INFO( gAdaptorLogFilter, Debug::General, __PRETTY_FUNCTION__);
+
   // it doesn't support restart after stop at this moment
   // to support restarting, need more testing
   if( READY != mState )
@@ -253,16 +248,12 @@ void Adaptor::Start()
   // tell core about the DPI value
   mCore->SetDpi(dpiHor, dpiVer);
 
-  // set the DPI value for font rendering
-  FontClient fontClient = FontClient::Get();
-  fontClient.SetDpi( dpiHor, dpiVer );
-
   // Tell the core the size of the surface just before we start the render-thread
   PositionSize size = mSurface->GetPositionSize();
   mCore->SurfaceResized( size.width, size.height );
 
   // Initialize the thread controller
-  mThreadController->Initialize();
+  mThreadController->Start();
 
   mState = RUNNING;
 
@@ -274,9 +265,27 @@ void Adaptor::Start()
   }
 }
 
+void Adaptor::SurfaceLost()
+{
+  DALI_LOG_INFO( gAdaptorLogFilter, Debug::General, __PRETTY_FUNCTION__);
+
+  // Pause the adaptor if its running
+  mThreadController->SurfaceLost();
+}
+
+void Adaptor::SurfaceCreated()
+{
+  DALI_LOG_INFO( gAdaptorLogFilter, Debug::General, __PRETTY_FUNCTION__);
+
+  // Start the render thread
+  mThreadController->Resume();
+}
+
 // Dali::Internal::Adaptor::Adaptor::Pause
 void Adaptor::Pause()
 {
+  DALI_LOG_INFO( gAdaptorLogFilter, Debug::General, __PRETTY_FUNCTION__);
+
   // Only pause the adaptor if we're actually running.
   if( RUNNING == mState )
   {
@@ -301,9 +310,23 @@ void Adaptor::Pause()
 // Dali::Internal::Adaptor::Adaptor::Resume
 void Adaptor::Resume()
 {
+  DALI_LOG_INFO( gAdaptorLogFilter, Debug::General, __PRETTY_FUNCTION__);
+
   // Only resume the adaptor if we are in the suspended state.
   if( PAUSED == mState )
   {
+    // We put ResumeFrameTime first, as this was originally called at the start of mCore->Resume()
+    // If there were events pending, mCore->Resume() will call
+    //   RenderController->RequestUpdate()
+    //     UpdateRenderController->RequestUpdate()
+    //       UpdateRenderSynchronization->RequestUpdate()
+    // and we should have reset the frame timers before allowing Core->Update() to be called.
+    //@todo Should we call UpdateRenderController->Resume before mCore->Resume()?
+
+    mThreadController->ResumeFrameTime();
+    mCore->Resume();
+    mThreadController->Resume();
+
     mState = RUNNING;
 
     // Reset the event handler when adaptor resumed
@@ -318,16 +341,14 @@ void Adaptor::Resume()
       (*iter)->OnResume();
     }
 
-    // Resume core so it processes any requests as well
-    mCore->Resume();
-
-    // Do at end to ensure our first update/render after resumption includes the processed messages as well
-    mThreadController->Resume();
+    ProcessCoreEvents(); // Ensure any outstanding messages are processed
   }
 }
 
 void Adaptor::Stop()
 {
+  DALI_LOG_INFO( gAdaptorLogFilter, Debug::General, __PRETTY_FUNCTION__);
+
   if( RUNNING == mState ||
       PAUSED  == mState ||
       PAUSED_WHILE_HIDDEN == mState )
@@ -339,15 +360,6 @@ void Adaptor::Stop()
 
     mThreadController->Stop();
     mCore->Suspend();
-
-    // Delete the TTS player
-    for(int i =0; i < Dali::TtsPlayer::MODE_NUM; i++)
-    {
-      if(mTtsPlayers[i])
-      {
-        mTtsPlayers[i].Reset();
-      }
-    }
 
     delete mEventHandler;
     mEventHandler = NULL;
@@ -363,11 +375,15 @@ void Adaptor::Stop()
 
 void Adaptor::ContextLost()
 {
+  DALI_LOG_INFO( gAdaptorLogFilter, Debug::General, __PRETTY_FUNCTION__);
+
   mCore->GetContextNotifier()->NotifyContextLost(); // Inform stage
 }
 
 void Adaptor::ContextRegained()
 {
+  DALI_LOG_INFO( gAdaptorLogFilter, Debug::General, __PRETTY_FUNCTION__);
+
   // Inform core, so that texture resources can be reloaded
   mCore->RecoverFromContextLoss();
 
@@ -376,17 +392,18 @@ void Adaptor::ContextRegained()
 
 void Adaptor::FeedTouchPoint( TouchPoint& point, int timeStamp )
 {
+  DALI_LOG_WARNING("TPOINT");
   mEventHandler->FeedTouchPoint( point, timeStamp );
 }
 
 void Adaptor::FeedWheelEvent( WheelEvent& wheelEvent )
 {
-  mEventHandler->FeedWheelEvent( wheelEvent );
+  // mEventHandler->FeedWheelEvent( wheelEvent );
 }
 
 void Adaptor::FeedKeyEvent( KeyEvent& keyEvent )
 {
-  mEventHandler->FeedKeyEvent( keyEvent );
+  // mEventHandler->FeedKeyEvent( keyEvent );
 }
 
 bool Adaptor::MoveResize( const PositionSize& positionSize )
@@ -409,6 +426,8 @@ bool Adaptor::MoveResize( const PositionSize& positionSize )
 
 void Adaptor::SurfaceResized( const PositionSize& positionSize )
 {
+  DALI_LOG_INFO( gAdaptorLogFilter, Debug::General, __PRETTY_FUNCTION__);
+
   PositionSize old = mSurface->GetPositionSize();
 
   // Called by an application, when it has resized a window outside of Dali.
@@ -422,10 +441,12 @@ void Adaptor::SurfaceResized( const PositionSize& positionSize )
   }
 }
 
-void Adaptor::ReplaceSurface( Any nativeWindow, RenderSurface& surface )
+void Adaptor::ReplaceSurface( RenderSurface& surface )
 {
-  mNativeWindow = nativeWindow;
+  DALI_LOG_INFO( gAdaptorLogFilter, Debug::General, __PRETTY_FUNCTION__);
+
   mSurface = &surface;
+  DALI_LOG_INFO( gAdaptorLogFilter, Debug::General, "Adaptor::ReplaceSurface() mSurface=%p", mSurface);
 
   SurfaceSizeChanged(mSurface->GetPositionSize());
 
@@ -433,8 +454,11 @@ void Adaptor::ReplaceSurface( Any nativeWindow, RenderSurface& surface )
   // to start processing messages for new camera setup etc as soon as possible
   ProcessCoreEvents();
 
+  ContextLost();
   // this method blocks until the render thread has completed the replace.
   mThreadController->ReplaceSurface(mSurface);
+
+  ContextRegained();
 }
 
 RenderSurface& Adaptor::GetSurface() const
@@ -445,17 +469,6 @@ RenderSurface& Adaptor::GetSurface() const
 void Adaptor::ReleaseSurfaceLock()
 {
   mSurface->ReleaseLock();
-}
-
-Dali::TtsPlayer Adaptor::GetTtsPlayer(Dali::TtsPlayer::Mode mode)
-{
-  if(!mTtsPlayers[mode])
-  {
-    // Create the TTS player when it needed, because it can reduce launching time.
-    mTtsPlayers[mode] = TtsPlayer::New(mode);
-  }
-
-  return mTtsPlayers[mode];
 }
 
 bool Adaptor::AddIdle( CallbackBase* callback )
@@ -576,6 +589,12 @@ Integration::PlatformAbstraction& Adaptor::GetPlatformAbstraction() const
   return *mPlatformAbstraction;
 }
 
+Integration::Framework& Adaptor::GetFramework()
+{
+  DALI_ASSERT_DEBUG( mFramework && "Framework not created" );
+  return *mFramework;
+}
+
 void Adaptor::SetDragAndDropDetector( DragAndDropDetectorPtr detector )
 {
   mDragAndDropDetector = detector;
@@ -599,14 +618,6 @@ void Adaptor::SetRotationObserver( RotationObserver* observer )
   }
 }
 
-void Adaptor::DestroyTtsPlayer(Dali::TtsPlayer::Mode mode)
-{
-  if(mTtsPlayers[mode])
-  {
-    mTtsPlayers[mode].Reset();
-  }
-}
-
 void Adaptor::SetMinimumPinchDistance(float distance)
 {
   if( mGestureManager )
@@ -615,10 +626,6 @@ void Adaptor::SetMinimumPinchDistance(float distance)
   }
 }
 
-Any Adaptor::GetNativeWindowHandle()
-{
-  return mNativeWindow;
-}
 
 void Adaptor::AddObserver( LifeCycleObserver& observer )
 {
@@ -719,6 +726,12 @@ void Adaptor::OnDamaged( const DamageArea& area )
   RequestUpdate();
 }
 
+void Adaptor::ResizeSurface(int width, int height)
+{
+  mCore->SurfaceResized(width, height);
+  mResizedSignal.Emit( mAdaptor );
+}
+
 void Adaptor::SurfaceSizeChanged(const PositionSize& positionSize)
 {
   // let the core know the surface size has changed
@@ -730,9 +743,6 @@ void Adaptor::SurfaceSizeChanged(const PositionSize& positionSize)
 void Adaptor::NotifySceneCreated()
 {
   GetCore().SceneCreated();
-
-  // Start thread controller after the scene has been created
-  mThreadController->Start();
 }
 
 void Adaptor::NotifyLanguageChanged()
@@ -759,18 +769,18 @@ void Adaptor::ProcessCoreEventsFromIdle()
   mNotificationOnIdleInstalled = false;
 }
 
-Adaptor::Adaptor(Any nativeWindow, Dali::Adaptor& adaptor, RenderSurface* surface, EnvironmentOptions* environmentOptions)
+Adaptor::Adaptor( Dali::Adaptor& adaptor, RenderSurface* surface, EnvironmentOptions* environmentOptions, Integration::Framework* framework )
 : mResizedSignal(),
   mLanguageChangedSignal(),
   mAdaptor( adaptor ),
   mState( READY ),
+  mFramework( framework ),
   mCore( NULL ),
   mThreadController( NULL ),
   mVSyncMonitor( NULL ),
   mGLES( NULL ),
   mGlSync( NULL ),
   mEglFactory( NULL ),
-  mNativeWindow( nativeWindow ),
   mSurface( surface ),
   mPlatformAbstraction( NULL ),
   mEventHandler( NULL ),
@@ -780,7 +790,6 @@ Adaptor::Adaptor(Any nativeWindow, Dali::Adaptor& adaptor, RenderSurface* surfac
   mGestureManager( NULL ),
   mDaliFeedbackPlugin(),
   mFeedbackController( NULL ),
-  mTtsPlayers(),
   mObservers(),
   mDragAndDropDetector(),
   mDeferredRotationObserver( NULL ),

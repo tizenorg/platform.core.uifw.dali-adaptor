@@ -65,6 +65,16 @@ void PixmapImage::GlExtensionDestroy()
   mImpl->GlExtensionDestroy();
 }
 
+void PixmapImage::GlContextDestroyed()
+{
+  mImpl->GlContextDestroyed();
+}
+
+void PixmapImage::TextureCreated(unsigned id)
+{
+  mImpl->TextureCreated(id);
+}
+
 unsigned int PixmapImage::TargetTexture()
 {
   return mImpl->TargetTexture();

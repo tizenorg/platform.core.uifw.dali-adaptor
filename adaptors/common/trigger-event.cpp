@@ -27,6 +27,7 @@
 // INTERNAL INCLUDES
 
 #include <file-descriptor-monitor.h>
+#include <dali/public-api/signals/callback.h>
 
 namespace Dali
 {

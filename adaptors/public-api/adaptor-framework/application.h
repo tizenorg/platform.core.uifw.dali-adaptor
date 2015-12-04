@@ -23,11 +23,12 @@
 #include <dali/public-api/common/view-mode.h>
 #include <dali/public-api/object/base-handle.h>
 #include <dali/public-api/signals/callback.h>
+#include <dali/public-api/signals/dali-signal.h>
 
 
 // INTERNAL INCLUDES
-#include "application-configuration.h"
-#include "window.h"
+#include <dali/public-api/adaptor-framework/application-configuration.h>
+#include <dali/public-api/adaptor-framework/window.h>
 
 namespace Dali
 {
@@ -35,6 +36,11 @@ namespace Dali
  * @addtogroup dali_adaptor_framework
  * @{
  */
+
+namespace Integration
+{
+class Framework;
+}
 
 namespace Internal DALI_INTERNAL
 {
@@ -114,30 +120,39 @@ public:
 
   /**
    * This is the constructor for applications.
+   * @param[in] framework        A pointer to an optional Framework implementation. Application takes ownership.
+   */
+  static Application New( Integration::Framework* framework );
+
+  /**
+   * This is the constructor for applications.
    *
+   * @param[in] framework        A pointer to an optional Framework implementation. Application takes ownership.
    * @param[in,out]  argc        A pointer to the number of arguments
    * @param[in,out]  argv        A pointer the the argument list
    */
-  static Application New( int* argc, char **argv[] );
+  static Application New( Integration::Framework* framework, int* argc, char **argv[] );
 
   /**
    * This is the constructor for applications with a name
    *
+   * @param[in] framework        A pointer to an optional Framework implementation. Application takes ownership.
    * @param[in,out]  argc        A pointer to the number of arguments
    * @param[in,out]  argv        A pointer the the argument list
    * @param[in]      stylesheet  The path to user defined theme file
    */
-  static Application New( int* argc, char **argv[], const std::string& stylesheet );
+  static Application New( Integration::Framework* framework, int* argc, char **argv[], const std::string& stylesheet );
 
   /**
    * This is the constructor for applications with a name
    *
+   * @param[in] framework        A pointer to an optional Framework implementation. Application takes ownership.
    * @param[in,out]  argc        A pointer to the number of arguments
    * @param[in,out]  argv        A pointer the the argument list
    * @param[in]      stylesheet  The path to user defined theme file
    * @param[in]      windowMode  A member of WINDOW_MODE
    */
-  static Application New( int* argc, char **argv[], const std::string& stylesheet, WINDOW_MODE windowMode );
+  static Application New( Integration::Framework* framework, int* argc, char **argv[], const std::string& stylesheet, WINDOW_MODE windowMode );
 
   /**
    * Construct an empty handle
@@ -162,6 +177,28 @@ public:
   ~Application();
 
 public:
+
+  /**
+   * This starts the application. It should only be used on a
+   * framework that does not have a main-loop at the C/C++ layer
+   * internally, and should be used instead of MainLoop, below.
+   *
+   * Choosing this form of Start indicates that the default
+   * application configuration of APPLICATION_HANDLES_CONTEXT_LOSS is
+   * used.  On platforms where context loss can occur, the application
+   * is responsible for tearing down and re-loading UI. The
+   * application should listen to Stage::ContextLostSignal and
+   * Stage::ContextRegainedSignal.
+   */
+  void Start();
+
+  /**
+   * This starts the application. It should only be used on a
+   * framework that does not have a main-loop internally, and should be
+   * used instead of MainLoop below.
+   */
+  void Start(Configuration::ContextLoss configuration);
+
   /**
    * This starts the application. Choosing this form of main loop indicates that the default
    * application configuration of APPLICATION_HANDLES_CONTEXT_LOSS is used. On platforms where
@@ -197,12 +234,10 @@ public:
    *   void MyFunction();
    * @endcode
    *
-   * @param[in]  callback  The function to call.
+   * @param[in]  callBack  The function to call.
    * @return true if added successfully, false otherwise
-   *
-   * @note Ownership of the callback is passed onto this class.
    */
-  bool AddIdle( CallbackBase* callback );
+  bool AddIdle( CallbackBase* callBack);
 
   /**
    * Retrieves the window used by the Application class.
@@ -287,31 +322,19 @@ public:  // Signals
   AppSignalType& ResizeSignal();
 
   /**
-  * This signal is emitted when another application sends a launch request to the application.
-  * When the application is launched, this signal is emitted after the main loop of the application starts up.
-  * The passed parameter describes the launch request and contains the information about why the application is launched.
-  */
-  AppControlSignalType& AppControlSignal();
-
-  /**
    * This signal is emitted when the language is changed on the device.
    */
   AppSignalType& LanguageChangedSignal();
 
   /**
-  * This signal is emitted when the region of the device is changed.
-  */
-  AppSignalType& RegionChangedSignal();
+   * This signal is emitted when the surface is created on the device.
+   */
+  AppSignalType& SurfaceCreatedSignal();
 
   /**
-  * This signal is emitted when the battery level of the device is low.
-  */
-  AppSignalType& BatteryLowSignal();
-
-  /**
-  * This signal is emitted when the memory level of the device is low.
-  */
-  AppSignalType& MemoryLowSignal();
+   * This signal is emitted when the surface is created on the device.
+   */
+  AppSignalType& SurfaceDestroyedSignal();
 
 public: // Not intended for application developers
   /**

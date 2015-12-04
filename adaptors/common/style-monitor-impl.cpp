@@ -64,21 +64,6 @@ BaseHandle Create()
 }
 TypeRegistration STYLE_MONITOR_TYPE( typeid(Dali::StyleMonitor), typeid(Dali::BaseHandle), Create, true /* Create Instance At Startup */ );
 
-/**
- * Use font client to get the system default font family
- * @param[in] fontClient handle to font client
- * @param[out] fontFamily string representing font family
- */
-void GetSystemDefaultFontFamily( TextAbstraction::FontClient& fontClient, std::string& fontFamily )
-{
-  TextAbstraction::FontDescription defaultFontDescription;
-  if ( fontClient )
-  {
-    fontClient.GetDefaultPlatformFontDescription( defaultFontDescription );
-    fontFamily = defaultFontDescription.family;
-  }
-}
-
 } // unnamed namespace
 
 Dali::StyleMonitor StyleMonitor::Get()
@@ -104,10 +89,10 @@ StyleMonitor::StyleMonitor(Integration::PlatformAbstraction& platformAbstraction
 : mPlatformAbstraction(platformAbstraction),
   mDefaultFontSize(-1)
 {
-  mfontClient = TextAbstraction::FontClient::Get();
-  GetSystemDefaultFontFamily( mfontClient, mDefaultFontFamily );
-  DALI_LOG_INFO( gLogFilter, Debug::Verbose, "StyleMonitor::StyleMonitor::DefaultFontFamily(%s)\n", mDefaultFontFamily.c_str() );
-  mDefaultFontSize = mPlatformAbstraction.GetDefaultFontSize();
+  //mfontClient = TextAbstraction::FontClient::Get();
+  //GetSystemDefaultFontFamily( mfontClient, mDefaultFontFamily );
+  //DALI_LOG_INFO( gLogFilter, Debug::Verbose, "StyleMonitor::StyleMonitor::DefaultFontFamily(%s)\n", mDefaultFontFamily.c_str() );
+  //mDefaultFontSize = mPlatformAbstraction.GetDefaultFontSize();
 }
 
 StyleMonitor::~StyleMonitor()
@@ -120,8 +105,8 @@ void StyleMonitor::StyleChanged( StyleChange::Type styleChange )
   {
     case StyleChange::DEFAULT_FONT_CHANGE:
     {
-      GetSystemDefaultFontFamily( mfontClient, mDefaultFontFamily );
-      DALI_LOG_INFO( gLogFilter, Debug::Verbose, "StyleMonitor::StyleChanged::DefaultFontFamily(%s)\n", mDefaultFontFamily.c_str() );
+      //GetSystemDefaultFontFamily( mfontClient, mDefaultFontFamily );
+      //DALI_LOG_INFO( gLogFilter, Debug::Verbose, "StyleMonitor::StyleChanged::DefaultFontFamily(%s)\n", mDefaultFontFamily.c_str() );
       break;
     }
 

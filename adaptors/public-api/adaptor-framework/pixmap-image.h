@@ -25,6 +25,7 @@
 #include <dali/public-api/images/native-image-interface.h>
 #include <dali/public-api/images/pixel.h>
 #include <dali/public-api/object/any.h>
+#include <dali/public-api/math/vector2.h>
 
 namespace Dali
 {
@@ -50,9 +51,7 @@ typedef IntrusivePtr<PixmapImage> PixmapImagePtr;
 /**
  * @brief Used for displaying native Pixmap images.
  *
- * The native pixmap can be created internally or
- * externally by X11 or ECORE-X11.
- *
+ * The native pixmap can be created internally or externally by the windowing platform.
  * @since DALi 1.1.4
  */
 class DALI_IMPORT_API PixmapImage : public NativeImageInterface
@@ -85,7 +84,7 @@ public:
   /**
    * @brief Create a new PixmapImage from an existing pixmap.
    *
-   * @param[in] pixmap must be a X11 pixmap or a Ecore_X_Pixmap
+   * @param[in] pixmap must be a windowing platform pixmap
    * @return A smart-pointer to a newly allocated image.
    */
   static PixmapImagePtr New( Any pixmap );
@@ -134,6 +133,17 @@ private:   // native image
   virtual void GlExtensionDestroy();
 
   /**
+   * @copydoc Dali::NativeImageInterface::GlContextDestroyed()
+   */
+  virtual void GlContextDestroyed();
+
+ /**
+   * @copydoc Dali::NativeImageInterface::TextureCreated()
+   */
+  virtual void TextureCreated(unsigned);
+
+
+  /**
    * @copydoc Dali::NativeImageInterface::TargetTexture()
    */
   virtual unsigned int TargetTexture();
@@ -158,6 +168,11 @@ private:   // native image
    */
   virtual bool RequiresBlending() const;
 
+
+  virtual void Resize( const Vector2& newSize ){;}
+
+  virtual bool IsReady(){ return true;}
+
 private:
 
   /**
@@ -165,7 +180,7 @@ private:
    * @param[in] width The width of the image.
    * @param[in] height The height of the image.
    * @param[in] depth color depth of the pixmap
-   * @param[in] pixmap contains either: pixmap of type X11 Pixmap , a Ecore_X_Pixmap or is empty
+   * @param[in] pixmap Is either empty or a windowing platform pixmap
    */
   DALI_INTERNAL PixmapImage( unsigned int width, unsigned int height, ColorDepth depth, Any pixmap );
 

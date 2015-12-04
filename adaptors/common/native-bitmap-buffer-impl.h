@@ -91,6 +91,11 @@ public:
   virtual void PrepareTexture();
 
   /**
+   * @copydoc Dali::NativeImage::GlContextDestroyed()
+   */
+  virtual void GlContextDestroyed();
+
+  /**
    * @copydoc Dali::NativeImageInterface::GetWidth()
    */
   virtual unsigned int GetWidth() const;
@@ -104,6 +109,21 @@ public:
    * @copydoc Dali::NativeImageInterface::RequiresBlending()
    */
   virtual bool RequiresBlending() const;
+
+  /**
+   * From NativeImage
+   * @param[in] textureId the texture id used from the native texture.
+   */
+  virtual void TextureCreated(unsigned textureId);
+
+  /**
+   * @brief Called after the corresponding call to Image::ResizeNativeImage( const Vector2& )
+   *
+   * @param[in] newSize The new size.
+   */
+  virtual void Resize( const Vector2&){;}
+
+  virtual bool IsReady() {return true;}
 
 private:
   NativeBitmapBuffer( const NativeBitmapBuffer& );             ///< not defined

@@ -21,6 +21,7 @@
 // EXTERNAL INCLUDES
 #include <stdio.h>
 #include <string>
+#include <dali/public-api/signals/callback.h>
 
 // INTERNAL INCLUDES
 #include <base/interfaces/socket-interface.h>
@@ -46,7 +47,7 @@ const char UNKNOWN_CMD[]= "Command or parameter invalid, type help for list of c
 /**
  * helper class to store data along with the automation callback.
  */
-class AutomationCallback: public CallbackBase
+class AutomationCallback : public CallbackBase
 {
 public:
 

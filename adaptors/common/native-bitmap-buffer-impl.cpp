@@ -83,6 +83,14 @@ void NativeBitmapBuffer::GlExtensionDestroy()
 {
 }
 
+void NativeBitmapBuffer::TextureCreated(unsigned)
+{
+}
+
+void NativeBitmapBuffer::GlContextDestroyed()
+{
+}
+
 unsigned int NativeBitmapBuffer::TargetTexture()
 {
   return 0;

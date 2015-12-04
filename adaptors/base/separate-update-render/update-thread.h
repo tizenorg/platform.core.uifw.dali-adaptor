@@ -2,7 +2,7 @@
 #define __DALI_INTERNAL_UPDATE_THREAD_H__
 
 /*
- * Copyright (c) 2015 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,8 @@
  */
 
 // EXTERNAL INCLUDES
+#include <dali/public-api/common/vector-wrapper.h>
 #include <pthread.h>
-
-// INTERNAL INCLUDES
-#include <base/fps-tracker.h>
-#include <base/update-status-logger.h>
 
 namespace Dali
 {
@@ -39,7 +36,7 @@ namespace Internal
 namespace Adaptor
 {
 
-class ThreadSynchronization;
+class UpdateRenderSynchronization;
 class AdaptorInternalServices;
 class EnvironmentOptions;
 
@@ -57,7 +54,7 @@ public:
    * @param[in] adaptorInterfaces base adaptor interface
    * @param[in] environmentOptions environment options
    */
-  UpdateThread(ThreadSynchronization& sync,
+  UpdateThread(UpdateRenderSynchronization& sync,
                AdaptorInternalServices& adaptorInterfaces,
                const EnvironmentOptions& environmentOptions );
 
@@ -85,6 +82,25 @@ private:
   bool Run();
 
   /**
+   * When DALI_FPS_TRACKING is enabled, this method calculates the frame rates for the specified time period
+   */
+  void FPSTracking(float secondsFromLastFrame);
+
+  /**
+   * Output the FPS information
+   * when the FSP tracking is enabled,
+   * it is called when the specified tracking period is elapsed or in the destructor when the process finished beforehand
+   */
+  void OutputFPSRecord();
+
+  /**
+   * Optionally output the update thread status.
+   * @param[in] keepUpdatingStatus Whether the update-thread requested further updates.
+   * @param[in] renderNeedsUpdate Whether the render-thread requested another update.
+   */
+  void UpdateStatusLogging( unsigned int keepUpdatingStatus, bool renderNeedsUpdate );
+
+  /**
    * Helper for the thread calling the entry function
    * @param[in] This A pointer to the current UpdateThread object
    */
@@ -96,12 +112,17 @@ private:
 
 private: // Data
 
-  ThreadSynchronization&              mThreadSynchronization; ///< Used to synchronize all the threads
+  UpdateRenderSynchronization&        mUpdateRenderSync;    ///< Used to synchronize the update & render threads
 
   Dali::Integration::Core&            mCore;                ///< Dali core reference
 
-  FpsTracker                          mFpsTracker;          ///< Object that tracks the FPS
-  UpdateStatusLogger                  mUpdateStatusLogger;  ///< Object that logs the update-status as required.
+  unsigned int                        mFpsTrackingSeconds;  ///< fps tracking time length in seconds
+  std::vector<float>                  mFpsRecord;           ///< Record of frame rate
+  float                               mElapsedTime;         ///< time elapsed within current second
+  unsigned int                        mElapsedSeconds;      ///< seconds elapsed since the fps tracking started
+
+  unsigned int                        mStatusLogInterval;   ///< Interval in frames between status debug prints
+  unsigned int                        mStatusLogCount;      ///< Used to count frames between status debug prints
 
   pthread_t*                          mThread;              ///< The actual update-thread.
   const EnvironmentOptions&           mEnvironmentOptions;  ///< environment options

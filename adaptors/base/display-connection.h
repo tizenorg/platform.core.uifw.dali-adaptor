@@ -1,5 +1,5 @@
-#ifndef __DALI_DISPLAY_CONNECTION_H__
-#define __DALI_DISPLAY_CONNECTION_H__
+#ifndef __DALI_BASE_DISPLAY_CONNECTION_H__
+#define __DALI_BASE_DISPLAY_CONNECTION_H__
 
 /*
  * Copyright (c) 2015 Samsung Electronics Co., Ltd.
@@ -104,4 +104,4 @@ private:
 
 }
 
-#endif // __DALI_DISPLAY_CONNECTION_H__
+#endif // __DALI_BASE_DISPLAY_CONNECTION_H__

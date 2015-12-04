@@ -19,7 +19,8 @@
 #include "object-profiler.h"
 
 // EXTERNAL INCLUDES
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstring>
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/profiling.h>
 #include <dali/public-api/actors/image-actor.h>
@@ -27,6 +28,8 @@
 #include <dali/public-api/object/ref-object.h>
 #include <dali/public-api/object/base-object.h>
 #include <dali/public-api/object/type-registry.h>
+
+#include <sys/system_properties.h>
 
 using std::string;
 using namespace Dali::Integration::Profiling;

@@ -34,6 +34,12 @@ namespace Internal
 namespace Adaptor
 {
 
+enum ColorDepth
+{
+  COLOR_DEPTH_24 = 24,
+  COLOR_DEPTH_32 = 32
+};
+
 /**
  * EglImplementation class provides an EGL implementation.
  */
@@ -52,8 +58,8 @@ public:
 
 public:
 
-  /**
-   * (Called from  ECoreX::RenderSurface, not RenderThread, so not in i/f, hence, not virtual)
+ /**
+   * (Called from  Android::RenderSurface, not RenderThread, so not in i/f, hence, not virtual)
    * Initialize GL
    * @param display The display
    * @param isOwnSurface whether the surface is own or not
@@ -139,18 +145,20 @@ public:
   /**
    * Replaces the render surface
    * @param[in] window, the window to create the new surface on
+   * @param[in] display, the display
    * @return true if the context was lost due to a change in display
    *         between old surface and new surface
    */
-  bool ReplaceSurfaceWindow( EGLNativeWindowType window );
+  bool ReplaceSurfaceWindow( EGLNativeWindowType window, EGLNativeDisplayType display );
 
   /**
    * Replaces the render surface
    * @param[in] pixmap, the pixmap to create the new surface on
+   * @param[in] display, the display
    * @return true if the context was lost due to a change in x-display
    *         between old surface and new surface
    */
-  bool ReplaceSurfacePixmap( EGLNativePixmapType pixmap );
+  bool ReplaceSurfacePixmap( EGLNativePixmapType pixmap, EGLNativeDisplayType display );
 
   /**
    * returns the display with which this object was initialized

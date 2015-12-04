@@ -26,6 +26,15 @@
 // INTERNAL INCLUDES
 #include <base/environment-variables.h>
 
+#include <cstdlib>
+#include <string>
+
+// For Android:
+#if defined(ANDROID)
+#include <sys/system_properties.h>
+#endif
+
+
 namespace Dali
 {
 
@@ -39,44 +48,66 @@ namespace
 {
 const unsigned int DEFAULT_STATISTICS_LOG_FREQUENCY = 2;
 
+std::string GetEnv( const char* variable )
+{
+  std::string valueStr;
+
+#if defined(ANDROID)
+  char value[PROP_VALUE_MAX]="\0";
+  __system_property_get(variable, value);
+  if( strlen(value) > 0 )
+  {
+    valueStr = value;
+  }
+#else
+  char* value = getenv(variable);
+  if( value != NULL )
+  {
+    valueStr = value;
+  }
+#endif
+
+  return valueStr;
+}
+
+
 unsigned int GetIntegerEnvironmentVariable( const char* variable, unsigned int defaultValue )
 {
-  const char* variableParameter = std::getenv(variable);
+  unsigned int value = defaultValue;
+
+  std::string variableParameter = GetEnv(variable);
 
   // if the parameter exists convert it to an integer, else return the default value
-  unsigned int intValue = variableParameter ? std::atoi(variableParameter) : defaultValue;
-  return intValue;
+  if( ! variableParameter.empty() )
+  {
+    value = atoi(variableParameter.c_str());
+  }
+
+  return value;
 }
 
 bool GetIntegerEnvironmentVariable( const char* variable, int& intValue )
 {
-  const char* variableParameter = std::getenv(variable);
+  std::string variableParameter = GetEnv(variable);
 
-  if( !variableParameter )
+  if( ! variableParameter.empty() )
   {
-    return false;
+    intValue = atoi(variableParameter.c_str());
+    return true;
   }
-  // if the parameter exists convert it to an integer, else return the default value
-  intValue = std::atoi(variableParameter);
-  return true;
+  return false;
 }
 
 bool GetFloatEnvironmentVariable( const char* variable, float& floatValue )
 {
-  const char* variableParameter = std::getenv(variable);
+  std::string variableParameter = GetEnv(variable);
 
-  if( !variableParameter )
+  if( ! variableParameter.empty() )
   {
-    return false;
+    floatValue = atof(variableParameter.c_str());
+    return true;
   }
-  // if the parameter exists convert it to an integer, else return the default value
-  floatValue = std::atof(variableParameter);
-  return true;
-}
-
-const char * GetCharEnvironmentVariable( const char * variable )
-{
-  return std::getenv( variable );
+  return false;
 }
 
 } // unnamed namespace
@@ -84,7 +115,7 @@ const char * GetCharEnvironmentVariable( const char * variable )
 EnvironmentOptions::EnvironmentOptions()
 : mWindowName(),
   mWindowClassName(),
-  mNetworkControl(0),
+  mNetworkControl(1),
   mFpsFrequency(0),
   mUpdateStatusFrequency(0),
   mObjectProfilerInterval( 0 ),
@@ -102,8 +133,6 @@ EnvironmentOptions::EnvironmentOptions()
   mPanMinimumDistance(-1),
   mPanMinimumEvents(-1),
   mGlesCallTime(0),
-  mWindowWidth( 0 ),
-  mWindowHeight( 0 ),
   mThreadingMode( ThreadingMode::SEPARATE_UPDATE_RENDER ),
   mLogFunction( NULL )
 {
@@ -211,14 +240,55 @@ int EnvironmentOptions::GetMinimumPanEvents() const
   return mPanMinimumEvents;
 }
 
-unsigned int EnvironmentOptions::GetWindowWidth() const
+
+void EnvironmentOptions::SetPanGesturePredictionMode( unsigned int mode )
 {
-  return mWindowWidth;
+  mPanGesturePredictionMode = mode;
 }
 
-unsigned int EnvironmentOptions::GetWindowHeight() const
+void EnvironmentOptions::SetPanGesturePredictionAmount( unsigned int amount )
 {
-  return mWindowHeight;
+  mPanGesturePredictionAmount = amount;
+}
+
+void EnvironmentOptions::SetPanGestureMaximumPredictionAmount( unsigned int amount )
+{
+  mPanGestureMaxPredictionAmount = amount;
+}
+
+void EnvironmentOptions::SetPanGestureMinimumPredictionAmount( unsigned int amount )
+{
+  mPanGestureMinPredictionAmount = amount;
+}
+
+void EnvironmentOptions::SetPanGesturePredictionAmountAdjustment( unsigned int amount )
+{
+  mPanGesturePredictionAmountAdjustment = amount;
+}
+
+void EnvironmentOptions::SetPanGestureSmoothingMode( unsigned int mode )
+{
+  mPanGestureSmoothingMode = mode;
+}
+
+void EnvironmentOptions::SetPanGestureSmoothingAmount( float amount )
+{
+  mPanGestureSmoothingAmount = amount;
+}
+
+void EnvironmentOptions::SetMinimumPanDistance( int distance )
+{
+  mPanMinimumDistance = distance;
+}
+
+void EnvironmentOptions::SetMinimumPanEvents( int events )
+{
+  mPanMinimumEvents = events;
+}
+
+void EnvironmentOptions::SetGlesCallTime( int time )
+{
+  mGlesCallTime = time;
 }
 
 int EnvironmentOptions::GetGlesCallTime() const
@@ -226,15 +296,6 @@ int EnvironmentOptions::GetGlesCallTime() const
   return mGlesCallTime;
 }
 
-const std::string& EnvironmentOptions::GetWindowName() const
-{
-  return mWindowName;
-}
-
-const std::string& EnvironmentOptions::GetWindowClassName() const
-{
-  return mWindowClassName;
-}
 
 ThreadingMode::Type EnvironmentOptions::GetThreadingMode() const
 {
@@ -332,26 +393,7 @@ void EnvironmentOptions::ParseEnvironmentOptions()
   int glesCallTime(0);
   if ( GetIntegerEnvironmentVariable(DALI_GLES_CALL_TIME, glesCallTime ))
   {
-    mGlesCallTime = glesCallTime;
-  }
-
-  int windowWidth(0), windowHeight(0);
-  if ( GetIntegerEnvironmentVariable( DALI_WINDOW_WIDTH, windowWidth ) && GetIntegerEnvironmentVariable( DALI_WINDOW_HEIGHT, windowHeight ) )
-  {
-    mWindowWidth = windowWidth;
-    mWindowHeight = windowHeight;
-  }
-
-  const char * windowName = GetCharEnvironmentVariable( DALI_WINDOW_NAME );
-  if ( windowName )
-  {
-    mWindowName = windowName;
-  }
-
-  const char * windowClassName = GetCharEnvironmentVariable( DALI_WINDOW_CLASS_NAME );
-  if ( windowClassName )
-  {
-    mWindowClassName = windowClassName;
+    SetGlesCallTime( glesCallTime );
   }
 
   int threadingMode(0);

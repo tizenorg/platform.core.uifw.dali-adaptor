@@ -1,0 +1,18 @@
+adaptor_android_internal_src_files = \
+  $(adaptor_android_dir)/adaptor-impl-android.cpp \
+  $(adaptor_android_dir)/android-framework-timer-factory.cpp \
+  $(adaptor_android_dir)/android-framework-input-handlers.cpp \
+  $(adaptor_android_dir)/android-callback-manager.cpp \
+  $(adaptor_android_dir)/android-render-surface.cpp \
+  $(adaptor_android_dir)/android-render-surface-factory.cpp \
+  $(adaptor_android_dir)/clipboard-impl.cpp \
+  $(adaptor_android_dir)/display-connection-impl-android.cpp \
+  $(adaptor_android_dir)/egl-implementation.cpp \
+  $(adaptor_android_dir)/event-handler.cpp \
+  $(adaptor_android_dir)/framework.cpp \
+  $(adaptor_android_dir)/key-impl-android.cpp \
+  $(adaptor_android_dir)/vsync-monitor.cpp \
+  $(adaptor_android_dir)/window-impl.cpp
+
+#adaptor_dali_header_file = \
+#  $(adaptor_android_dir)/dali/dali.h

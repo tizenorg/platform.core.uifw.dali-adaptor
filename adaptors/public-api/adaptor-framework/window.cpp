@@ -25,18 +25,6 @@
 namespace Dali
 {
 
-Window Window::New(PositionSize posSize, const std::string& name, bool isTransparent)
-{
-  Internal::Adaptor::Window* window = Internal::Adaptor::Window::New(posSize, name, "", isTransparent);
-  return Window(window);
-}
-
-Window Window::New(PositionSize posSize, const std::string& name, const std::string& className, bool isTransparent)
-{
-  Internal::Adaptor::Window* window = Internal::Adaptor::Window::New(posSize, name, className, isTransparent);
-  return Window(window);
-}
-
 Window::Window()
 {
 }
@@ -58,22 +46,14 @@ Window& Window::operator=(const Window& rhs)
 
 void Window::ShowIndicator( IndicatorVisibleMode visibleMode )
 {
-  GetImplementation(*this).ShowIndicator( visibleMode );
-}
-
-Window::IndicatorSignalType& Window::IndicatorVisibilityChangedSignal()
-{
-  return GetImplementation(*this).IndicatorVisibilityChangedSignal();
 }
 
 void Window::SetIndicatorBgOpacity( IndicatorBgOpacity opacity )
 {
-  GetImplementation(*this).SetIndicatorBgOpacity( opacity );
 }
 
 void Window::RotateIndicator( WindowOrientation orientation )
 {
-  GetImplementation(*this).RotateIndicator( orientation );
 }
 
 void Window::SetClass( std::string name, std::string klass )
@@ -119,11 +99,6 @@ Dali::Window::WindowOrientation Window::GetPreferredOrientation()
 DragAndDropDetector Window::GetDragAndDropDetector() const
 {
   return GetImplementation(*this).GetDragAndDropDetector();
-}
-
-Any Window::GetNativeHandle() const
-{
-  return GetImplementation(*this).GetNativeHandle();
 }
 
 Window::Window( Internal::Adaptor::Window* window )
