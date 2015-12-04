@@ -161,7 +161,7 @@ DALI_IMPORT_API TextDirection GetTextDirection();
  * has just been hidden.
  * @return The signal to connect to.
  */
-DALI_IMPORT_API StatusSignalType& StatusChangedSignal();
+//DALI_IMPORT_API StatusSignalType& StatusChangedSignal();
 
 /**
  * @brief Connect to this signal to be notified when the virtual keyboard is resized.
@@ -173,7 +173,7 @@ DALI_IMPORT_API StatusSignalType& StatusChangedSignal();
  * User can get changed size by using GetSizeAndPosition() in the callback
  * @return The signal to connect to.
  */
-DALI_IMPORT_API VoidSignalType& ResizedSignal();
+//DALI_IMPORT_API VoidSignalType& ResizedSignal();
 
 /**
  * @brief Connect to this signal to be notified when the virtual keyboard's language is changed.
@@ -185,7 +185,7 @@ DALI_IMPORT_API VoidSignalType& ResizedSignal();
  * User can get the text direction of the language by calling GetTextDirection() in the callback.
  * @return The signal to connect to.
  */
-DALI_IMPORT_API VoidSignalType& LanguageChangedSignal();
+//DALI_IMPORT_API VoidSignalType& LanguageChangedSignal();
 
 } // namespace VirtualKeyboard
 

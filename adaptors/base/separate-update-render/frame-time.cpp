@@ -22,9 +22,6 @@
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/platform-abstraction.h>
 
-// INTERNAL INCLUDES
-#include <base/time-service.h>
-
 namespace Dali
 {
 
@@ -45,7 +42,6 @@ const unsigned int DEFAULT_MINIMUM_FRAME_TIME_INTERVAL( 16667u );
 
 const unsigned int MICROSECONDS_PER_SECOND( 1000000u );
 const unsigned int MICROSECONDS_PER_MILLISECOND( 1000u );
-const unsigned int NANOSECONDS_PER_MICROSECOND( 1000u);
 
 const float        MICROSECONDS_TO_SECONDS( 0.000001f );
 
@@ -57,8 +53,9 @@ const unsigned int FALSE = 0u;
 } // unnamed namespace
 
 
-FrameTime::FrameTime()
-: mMinimumFrameTimeInterval( DEFAULT_MINIMUM_FRAME_TIME_INTERVAL ),
+FrameTime::FrameTime( PlatformAbstraction& platform )
+: mPlatform( platform ),
+  mMinimumFrameTimeInterval( DEFAULT_MINIMUM_FRAME_TIME_INTERVAL ),
   mLastSyncTime( 0u ),
   mLastSyncTimeAtUpdate( 0u ),
   mLastSyncFrameNumber( 0u ),
@@ -223,10 +220,16 @@ void FrameTime::PredictNextSyncTime( float& lastFrameDeltaSeconds, unsigned int&
 
 inline void FrameTime::SetLastSyncTime()
 {
-  uint64_t nanoseconds( 0u );
-  TimeService::GetNanoseconds( nanoseconds );
+  unsigned int seconds( 0u );
+  unsigned int microseconds( 0u );
 
-  mLastSyncTime = nanoseconds / NANOSECONDS_PER_MICROSECOND;
+  timespec time;
+  clock_gettime(CLOCK_MONOTONIC, &time);
+  seconds = time.tv_sec;
+  microseconds = time.tv_nsec / 1000;
+
+  mLastSyncTime = seconds; // Promote from 32 bit to 64 bit value
+  mLastSyncTime = ( mLastSyncTime * MICROSECONDS_PER_SECOND ) + microseconds;
 }
 
 } // namespace Adaptor

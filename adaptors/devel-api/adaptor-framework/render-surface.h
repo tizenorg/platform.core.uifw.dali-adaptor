@@ -19,6 +19,7 @@
  */
 
 // EXTERNAL INCLUDES
+#include <string>
 #include <dali/public-api/math/rect.h>
 #include <dali/public-api/object/any.h>
 #include <dali/public-api/common/dali-common.h>
@@ -57,10 +58,19 @@ typedef Dali::Rect<int> PositionSize;
  * The implementation of the factory method below should choose an appropriate
  * implementation of RenderSurface for the given platform
  */
-
 class RenderSurface
 {
 public:
+  /**
+   * @brief enumeration of surface types
+   */
+  enum SurfaceType
+  {
+    NO_SURFACE,     ///< not configured
+    PIXMAP,         ///< Pixmap
+    WINDOW,         ///< Window
+    NATIVE_BUFFER   ///< Native Buffer
+  };
 
   /**
    * @brief Constructor
@@ -73,6 +83,24 @@ public:
    * Inlined as this is a pure abstract interface
    */
   virtual ~RenderSurface() {}
+
+  /**
+   * @brief returns the surface type.
+   * @return the surface type
+   */
+  virtual SurfaceType GetType() = 0;
+
+  /**
+   * @brief Returns the window or pixmap surface.
+   * @return surface
+   */
+  virtual Any GetSurface() = 0;
+
+  /**
+   * @brief Returns the display.
+   * @return display
+   */
+  virtual Any GetDisplay() = 0;
 
   /**
    * @brief Return the size and position of the surface.
@@ -111,6 +139,24 @@ public:
   virtual void MoveResize( Dali::PositionSize positionSize ) = 0;
 
   /**
+   * Get DPI
+   * @param dpiHorizontal set to the horizontal dpi
+   * @param dpiVertical set to the vertical dpi
+   */
+  virtual void GetDpi( unsigned int& dpiHorizontal, unsigned int& dpiVertical ) const = 0;
+
+  /**
+   * Transfers the ownership of a display
+   * @param newSurface to transfer
+   */
+  virtual void TransferDisplayOwner( RenderSurface& newSurface ) = 0;
+
+  /**
+   *  Consumes any possible events on the queue so that there is no leaking between frames
+   */
+  virtual void ConsumeEvents() = 0;
+
+  /**
    * @brief Set the stereoscopic 3D view mode
    * @param[in] viewMode The new view mode
    */
@@ -136,9 +182,10 @@ public:
    * @param[in] egl The Egl interface
    * @param[in] glAbstraction OpenGLES abstraction interface
    * @param[in] displayConnection display connection
+   * @param[in] deltaTime Time (in microseconds) since PostRender was last called.
    * @param[in] replacingSurface True if the surface is being replaced.
    */
-  virtual void PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, DisplayConnection* displayConnection, bool replacingSurface ) = 0;
+  virtual void PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, DisplayConnection* displayConnection, unsigned int deltaTime, bool replacingSurface ) = 0;
 
   /**
    * @brief Invoked by render thread when the thread should be stop
@@ -156,6 +203,11 @@ public:
    * @param threadSynchronization The thread-synchronization implementation.
    */
   virtual void SetThreadSynchronization( ThreadSynchronizationInterface& threadSynchronization ) = 0;
+
+  /**
+   * Invoked by Event Thread when the compositor lock should be released
+   */
+  virtual void SurfaceLost() = 0;
 
 private:
 

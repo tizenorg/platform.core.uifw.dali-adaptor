@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,19 @@
  *
  */
 
-// CLASS HEADER
-#include "vsync-notifier.h"
-
 // EXTERNAL INCLUDES
+#include <sys/prctl.h>
+#include <time.h>
 #include <unistd.h>
+
 #include <dali/integration-api/core.h>
 #include <dali/integration-api/platform-abstraction.h>
 
 // INTERNAL INCLUDES
+#include "vsync-notifier.h"
 #include <base/interfaces/adaptor-internal-services.h>
-#include <base/separate-update-render/thread-synchronization.h>
+#include <base/separate-update-render/update-render-synchronization.h>
 #include <base/environment-options.h>
-#include <base/time-service.h>
 
 namespace Dali
 {
@@ -41,8 +41,6 @@ namespace Adaptor
 namespace
 {
 
-const unsigned int NANOSECONDS_PER_SECOND( 1e+9 );
-const unsigned int NANOSECONDS_PER_MICROSECOND( 1000u );
 const unsigned int MICROSECONDS_PER_SECOND( 1000000u );
 const unsigned int TIME_PER_FRAME_IN_MICROSECONDS( 16667u );
 
@@ -52,11 +50,12 @@ Integration::Log::Filter* gSyncLogFilter = Integration::Log::Filter::New(Debug::
 
 } // unnamed namespace
 
-VSyncNotifier::VSyncNotifier( ThreadSynchronization& sync,
+VSyncNotifier::VSyncNotifier( UpdateRenderSynchronization& sync,
                               AdaptorInternalServices& adaptorInterfaces,
                               const EnvironmentOptions& environmentOptions )
-: mThreadSynchronization( sync ),
+: mUpdateRenderSync( sync ),
   mCore( adaptorInterfaces.GetCore() ),
+  mPlatformAbstraction( adaptorInterfaces.GetPlatformAbstractionInterface() ),
   mVSyncMonitor( adaptorInterfaces.GetVSyncMonitorInterface() ),
   mThread( NULL ),
   mEnvironmentOptions( environmentOptions ),
@@ -81,7 +80,7 @@ void VSyncNotifier::Start()
 
     mThread = new pthread_t();
     int error = pthread_create( mThread, NULL, InternalThreadEntryFunc, this );
-    DALI_ASSERT_ALWAYS( !error && "Return code from pthread_create() in VSyncNotifier" );
+    DALI_ASSERT_ALWAYS( !error && "Return code from pthread_create() in VsyncNotifier" );
   }
 }
 
@@ -92,7 +91,7 @@ void VSyncNotifier::Stop()
   if( mThread )
   {
     // wait for the thread to finish
-    pthread_join(*mThread, NULL);
+    pthread_join( *mThread, NULL );
 
     delete mThread;
     mThread = NULL;
@@ -109,20 +108,24 @@ void VSyncNotifier::Stop()
 
 void VSyncNotifier::Run()
 {
+  prctl(PR_SET_NAME, "VSyncNotifier");
+  nice(-19);
   // install a function for logging
   mEnvironmentOptions.InstallLogFunction();
 
   unsigned int frameNumber( 0u );             // frameCount, updated when the thread is paused
   unsigned int currentSequenceNumber( 0u );   // platform specific vsync sequence number (increments with each vsync)
-  unsigned int currentSeconds( 0u );              // timestamp at latest sync
-  unsigned int currentMicroseconds( 0u );         // timestamp at latest sync
-  uint64_t seconds( 0u );
-  uint64_t microseconds( 0u );
+  unsigned int currentSeconds( 0u );          // timestamp at latest sync
+  unsigned int currentMicroseconds( 0u );     // timestamp at latest sync
+  unsigned int seconds( 0u );
+  unsigned int microseconds( 0u );
 
-  bool validSync( true );
-  while( mThreadSynchronization.VSyncReady( validSync, frameNumber++, currentSeconds, currentMicroseconds, mNumberOfVSyncsPerRender ) )
+  bool running( true );
+  while( running )
   {
-    DALI_LOG_INFO( gSyncLogFilter, Debug::General, "VSyncNotifier::Run. 1 SyncWithUpdateAndRender(frame#:%d, current Sec:%u current uSec:%u)\n", frameNumber-1, currentSeconds, currentMicroseconds);
+    DALI_LOG_INFO( gSyncLogFilter, Debug::General, "VSyncNotifier::Run. 1 Start loop \n");
+
+    bool validSync( true );
 
     // Hardware VSyncs available?
     if( mVSyncMonitor->UseHardware() )
@@ -138,12 +141,10 @@ void VSyncNotifier::Run()
     else
     {
       // No..use software timer
-      uint64_t nanoseconds = 0;
-      TimeService::GetNanoseconds( nanoseconds );
-
-      seconds = nanoseconds / NANOSECONDS_PER_SECOND; // Convert to seconds
-      nanoseconds -= seconds * NANOSECONDS_PER_SECOND; // Only want remainder nanoseconds
-      microseconds = nanoseconds / NANOSECONDS_PER_MICROSECOND; // Convert to microseconds
+      timespec time;
+      clock_gettime(CLOCK_MONOTONIC, &time);
+      seconds = time.tv_sec;
+      microseconds = time.tv_nsec / 1000;
 
       unsigned int timeDelta( MICROSECONDS_PER_SECOND * (seconds - currentSeconds) );
       if( microseconds < currentMicroseconds)
@@ -167,13 +168,13 @@ void VSyncNotifier::Run()
       sleepTimeInMicroseconds += mNumberOfVSyncsPerRender * TIME_PER_FRAME_IN_MICROSECONDS;
 
       DALI_LOG_INFO( gSyncLogFilter, Debug::General, "VSyncNotifier::Run. 2 Start software sync (%d frames, %u microseconds) \n", mNumberOfVSyncsPerRender, sleepTimeInMicroseconds);
-
-      timespec sleepTime;
-      sleepTime.tv_sec = 0;
-      sleepTime.tv_nsec = sleepTimeInMicroseconds * 1000;
-      nanosleep( &sleepTime, NULL );
+      usleep( sleepTimeInMicroseconds );
     }
-    mThreadSynchronization.AddPerformanceMarker( PerformanceInterface::VSYNC );
+
+    DALI_LOG_INFO( gSyncLogFilter, Debug::General, "VSyncNotifier::Run. 3 SyncWithUpdateAndRender(frame#:%d, current Sec:%u current uSec:%u)\n", frameNumber+1, currentSeconds, currentMicroseconds);
+
+    running = mUpdateRenderSync.VSyncNotifierSyncWithUpdateAndRender( validSync, ++frameNumber, currentSeconds, currentMicroseconds, mNumberOfVSyncsPerRender );
+    // The number of vsyncs per render may have been modified by this call.
   }
 
   // uninstall a function for logging

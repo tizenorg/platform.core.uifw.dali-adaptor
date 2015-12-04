@@ -29,24 +29,29 @@ namespace Dali
 
 Application Application::New()
 {
-  return New( NULL, NULL );
+  return New( NULL, NULL, NULL );
 }
 
-Application Application::New( int* argc, char **argv[] )
+Application Application::New( Integration::Framework* framework )
 {
-  Internal::Adaptor::ApplicationPtr internal = Internal::Adaptor::Application::New( argc, argv, "", OPAQUE );
+  return New( framework, NULL, NULL );
+}
+
+Application Application::New( Integration::Framework* framework, int* argc, char **argv[] )
+{
+  Internal::Adaptor::ApplicationPtr internal = Internal::Adaptor::Application::New( framework, argc, argv, "", OPAQUE );
   return Application(internal.Get());
 }
 
-Application Application::New( int* argc, char **argv[], const std::string& stylesheet )
+Application Application::New( Integration::Framework* framework, int* argc, char **argv[], const std::string& stylesheet )
 {
-  Internal::Adaptor::ApplicationPtr internal = Internal::Adaptor::Application::New( argc, argv, stylesheet, OPAQUE );
+  Internal::Adaptor::ApplicationPtr internal = Internal::Adaptor::Application::New( framework, argc, argv, stylesheet, OPAQUE );
   return Application(internal.Get());
 }
 
-Application Application::New( int* argc, char **argv[], const std::string& stylesheet, WINDOW_MODE windowMode )
+Application Application::New( Integration::Framework* framework, int* argc, char **argv[], const std::string& stylesheet, WINDOW_MODE windowMode )
 {
-  Internal::Adaptor::ApplicationPtr internal = Internal::Adaptor::Application::New( argc, argv, stylesheet, windowMode );
+  Internal::Adaptor::ApplicationPtr internal = Internal::Adaptor::Application::New( framework, argc, argv, stylesheet, windowMode );
   return Application(internal.Get());
 }
 
@@ -72,6 +77,16 @@ Application& Application::operator=(const Application& application)
   return *this;
 }
 
+void Application::Start()
+{
+  Internal::Adaptor::GetImplementation(*this).Start(Configuration::APPLICATION_HANDLES_CONTEXT_LOSS);
+}
+
+void Application::Start(Configuration::ContextLoss configuration)
+{
+  Internal::Adaptor::GetImplementation(*this).Start( configuration );
+}
+
 void Application::MainLoop()
 {
   Internal::Adaptor::GetImplementation(*this).MainLoop(Configuration::APPLICATION_HANDLES_CONTEXT_LOSS);
@@ -92,9 +107,9 @@ void Application::Quit()
   Internal::Adaptor::GetImplementation(*this).Quit();
 }
 
-bool Application::AddIdle( CallbackBase* callback )
+bool Application::AddIdle( CallbackBase* callBack )
 {
-  return Internal::Adaptor::GetImplementation(*this).AddIdle( callback );
+  return Internal::Adaptor::GetImplementation(*this).AddIdle( callBack );
 }
 
 Window Application::GetWindow()
@@ -157,29 +172,19 @@ Application::AppSignalType& Application::ResizeSignal()
   return Internal::Adaptor::GetImplementation(*this).ResizeSignal();
 }
 
-Application::AppControlSignalType & Application::AppControlSignal()
-{
-  return Internal::Adaptor::GetImplementation(*this).AppControlSignal();
-}
-
 Application::AppSignalType& Application::LanguageChangedSignal()
 {
   return Internal::Adaptor::GetImplementation(*this).LanguageChangedSignal();
 }
 
-Application::AppSignalType& Application::RegionChangedSignal()
+Application::AppSignalType& Application::SurfaceCreatedSignal()
 {
-  return Internal::Adaptor::GetImplementation(*this).RegionChangedSignal();
+  return Internal::Adaptor::GetImplementation(*this).SurfaceCreatedSignal();
 }
 
-Application::AppSignalType& Application::BatteryLowSignal()
+Application::AppSignalType& Application::SurfaceDestroyedSignal()
 {
-  return Internal::Adaptor::GetImplementation(*this).BatteryLowSignal();
-}
-
-Application::AppSignalType& Application::MemoryLowSignal()
-{
-  return Internal::Adaptor::GetImplementation(*this).MemoryLowSignal();
+  return Internal::Adaptor::GetImplementation(*this).SurfaceDestroyedSignal();
 }
 
 Application::Application(Internal::Adaptor::Application* application)

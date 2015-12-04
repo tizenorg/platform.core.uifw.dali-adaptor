@@ -20,7 +20,7 @@
 
 // EXTERNAL INCLUDES
 
-#ifdef _ARCH_ARM_
+#ifdef __ARM_EABI__
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
@@ -33,7 +33,7 @@
 // INTERNAL INCLUDES
 #include <gl/egl-implementation.h>
 
-#ifdef _ARCH_ARM_
+#ifdef __ARM_EABI__
 
 // function pointers
 static PFNEGLCREATESYNCKHRPROC     eglCreateSyncKHR = NULL;
@@ -49,7 +49,7 @@ namespace Internal
 namespace Adaptor
 {
 
-#ifdef _ARCH_ARM_
+#ifdef __ARM_EABI__
 
 EglSyncObject::EglSyncObject( EglImplementation& eglSyncImpl )
 : mEglSync(NULL),

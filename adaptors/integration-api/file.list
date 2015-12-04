@@ -4,8 +4,10 @@ adaptor_integration_api_header_files = \
   $(adaptor_integration_api_dir)/thread-synchronization-interface.h \
   $(adaptor_integration_api_dir)/trigger-event-interface.h \
   $(adaptor_integration_api_dir)/trigger-event-factory-interface.h \
-  $(adaptor_integration_api_dir)/trigger-event-factory.h \
-  $(adaptor_integration_api_dir)/pixmap-render-surface-factory.h
+  $(adaptor_integration_api_dir)/trigger-event-factory.h
+
+adaptor_integration_android_api_header_files = \
+  $(adaptor_integration_api_dir)/android-render-surface.h
 
 adaptor_integration_wayland_api_header_files = \
   $(adaptor_integration_api_dir)/wayland/ecore-wl-types.h \

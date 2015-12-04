@@ -39,6 +39,9 @@ public:
     */
   virtual bool CreateContext() = 0;
 
+
+  virtual void MakeSecondaryContextCurrent() = 0;
+
   /**
    * Make the OpenGL context current
    */

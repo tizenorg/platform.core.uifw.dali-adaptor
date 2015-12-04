@@ -1542,7 +1542,7 @@ public:
   }
 
 private:
-  ECoreX::GlExtensions mGlExtensions;
+  Android::GlExtensions mGlExtensions;
 
 };
 

@@ -1,0 +1,19 @@
+# Add local source files here:
+
+platform_abstraction_src_files = \
+  $(android_platform_abstraction_src_dir)/android-logging.cpp \
+  $(android_platform_abstraction_src_dir)/slp-platform-abstraction.cpp \
+  $(android_platform_abstraction_src_dir)/image-loaders/image-loader.cpp \
+  $(android_platform_abstraction_src_dir)/image-loaders/loader-png.cpp \
+  $(android_platform_abstraction_src_dir)/resource-loader/debug/resource-loader-debug.cpp \
+  $(android_platform_abstraction_src_dir)/resource-loader/resource-loader.cpp \
+  $(android_platform_abstraction_src_dir)/resource-loader/resource-thread-base.cpp \
+  $(android_platform_abstraction_src_dir)/resource-loader/resource-thread-image.cpp \
+  $(android_platform_abstraction_src_dir)/resource-loader/resource-requester-base.cpp \
+  $(android_platform_abstraction_src_dir)/resource-loader/resource-bitmap-requester.cpp \
+  $(android_platform_abstraction_src_dir)/resource-loader/resource-dummy-requester.cpp \
+  $(portable_platform_abstraction_src_dir)/image-operations.cpp
+
+# Add public headers here:
+
+# platform_abstraction_header_files =

@@ -53,7 +53,6 @@ public:
    */
   virtual TriggerEventInterface* CreateTriggerEvent(  CallbackBase* callback, TriggerEventInterface::Options options );
 
-
   /**
    * @copydoc TriggerEventFactoryInterface::DestroyTriggerEvent
    */

@@ -23,8 +23,6 @@
 #include <dali/public-api/math/rect.h>
 #include <dali/public-api/math/vector2.h>
 #include <dali/public-api/object/base-handle.h>
-#include <dali/public-api/object/any.h>
-#include <dali/public-api/signals/dali-signal.h>
 
 namespace Dali
 {
@@ -49,14 +47,13 @@ class Orientation;
 /**
  * @brief The window class is used internally for drawing.
  *
- * It has an orientation
- * and indicator properties.
+ * It has an orientation and indicator properties.
+ *
+ * It cannot be directly instantiated - you can get a handle to it
+ * using the Application::GetWindow() method.
  */
 class DALI_IMPORT_API Window : public BaseHandle
 {
-public:
-  typedef Signal< void (bool) > IndicatorSignalType;
-
 public:
 
   // Enumerations
@@ -92,32 +89,10 @@ public:
     AUTO = 2 // hide in default, will show when necessary
   };
 
-  // Methods
-
-  /**
-   * @brief Create an initialized handle to a new Window.
-   * @param[in] windowPosition The position and size of the window
-   * @param[in] name The window title
-   * @param[in] isTransparent Whether window is transparent
-   * @return a new window
-   */
-  static Window New(PositionSize windowPosition, const std::string& name, bool isTransparent = false);
-
-  /**
-   * @brief Create an initialized handle to a new Window.
-   * @param[in] windowPosition The position and size of the window
-   * @param[in] name The window title
-   * @param[in] className The window class name
-   * @param[in] isTransparent Whether window is transparent
-   * @return a new window
-   */
-  static Window New(PositionSize windowPosition, const std::string& name, const std::string& className, bool isTransparent = false);
-
   /**
    * @brief Create an uninitalized handle.
    *
-   * This can be initialized using Dali::Application::GetWindow() or
-   * Dali::Window::New()
+   * This can be initialized using Dali::Application::GetWindow()
    */
   Window();
 
@@ -214,18 +189,6 @@ public:
    * @return A handle to the DragAndDropDetector.
    */
   DragAndDropDetector GetDragAndDropDetector() const;
-
-  /**
-   * @brief Get the native handle of the window.
-   * @return The native handle of the window or an empty handle.
-   */
-  Any GetNativeHandle() const;
-
-public: // Signals
-  /**
-   * The user should connect to this signal to get a timing when indicator was shown / hidden.
-   */
-  IndicatorSignalType& IndicatorVisibilityChangedSignal();
 
 public: // Not intended for application developers
   /**

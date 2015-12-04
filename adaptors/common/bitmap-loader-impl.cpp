@@ -53,7 +53,7 @@ BitmapLoader::~BitmapLoader()
 
 void BitmapLoader::Load()
 {
-  IntrusivePtr<Dali::RefObject> resource = TizenPlatform::ImageLoader::LoadResourceSynchronously( mResourceType, mUrl );
+  IntrusivePtr<Dali::RefObject> resource = SlpPlatform::ImageLoader::LoadResourceSynchronously( mResourceType, mUrl );
 
   if( resource )
   {

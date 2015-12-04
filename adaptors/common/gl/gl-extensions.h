@@ -38,7 +38,7 @@ namespace Internal
 namespace Adaptor
 {
 
-namespace ECoreX
+namespace Android
 {
 
 /**
@@ -123,7 +123,7 @@ private:
 
 };
 
-} // namespace ECoreX
+} // namespace Android
 
 } // namespace Adaptor
 

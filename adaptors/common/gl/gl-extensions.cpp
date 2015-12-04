@@ -33,7 +33,7 @@ namespace Internal
 namespace Adaptor
 {
 
-namespace ECoreX
+namespace Android
 {
 
 GlExtensions::GlExtensions()
@@ -128,7 +128,7 @@ void GlExtensions::Initialize()
 
 #endif // DALI_GLES_VERSION < 30
 
-} // namespace ECoreX
+} // namespace Android
 
 } // namespace Adaptor
 

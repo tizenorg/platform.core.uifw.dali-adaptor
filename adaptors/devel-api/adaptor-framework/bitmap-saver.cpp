@@ -22,10 +22,10 @@
 #include <dali/public-api/common/dali-vector.h>
 
 // INTERNAL INCLUDES
-#include <platform-abstractions/tizen/resource-loader/resource-loader.h>
-#include <platform-abstractions/tizen/image-loaders/loader-jpeg.h>
-#include <platform-abstractions/tizen/image-loaders/loader-png.h>
-#include <image-encoder.h>
+#include <platform-abstractions/android/resource-loader/image-encoder.h>
+#include <platform-abstractions/android/resource-loader/resource-loader.h>
+#include <platform-abstractions/android/image-loaders/loader-jpeg.h>
+#include <platform-abstractions/android/image-loaders/loader-png.h>
 
 namespace Dali
 {
@@ -96,12 +96,12 @@ bool EncodeToFormat( const unsigned char* pixelBuffer,
   {
     case JPG_FORMAT:
     {
-      return TizenPlatform::EncodeToJpeg( pixelBuffer, encodedPixels, width, height, pixelFormat );
+      //return SlpPlatform::EncodeToJpeg( pixelBuffer, encodedPixels, width, height, pixelFormat );
       break;
     }
     case PNG_FORMAT:
     {
-      return TizenPlatform::EncodeToPng( pixelBuffer, encodedPixels, width, height, pixelFormat );
+      //return SlpPlatform::EncodeToPng( pixelBuffer, encodedPixels, width, height, pixelFormat );
       break;
     }
     default:
@@ -130,7 +130,7 @@ bool EncodeToFile(const unsigned char* const pixelBuffer,
     DALI_LOG_ERROR("Encoding pixels failed");
     return false;
   }
-  return TizenPlatform::ResourceLoader::SaveFile( filename, pixbufEncoded.Begin(), pixbufEncoded.Count() );
+  return SlpPlatform::ResourceLoader::SaveFile( filename, pixbufEncoded.Begin(), pixbufEncoded.Count() );
 }
 
 } // namespace Dali

@@ -29,17 +29,15 @@ namespace VirtualKeyboard
 
 void Show()
 {
-  Internal::Adaptor::VirtualKeyboard::Show();
 }
 
 void Hide()
 {
-  Internal::Adaptor::VirtualKeyboard::Hide();
 }
 
 bool IsVisible()
 {
-  return Internal::Adaptor::VirtualKeyboard::IsVisible();
+  return false;
 }
 
 void ApplySettings( const Property::Map& settingsMap )
@@ -49,52 +47,34 @@ void ApplySettings( const Property::Map& settingsMap )
 
 void SetReturnKeyType( const InputMethod::ActionButton type )
 {
-  Internal::Adaptor::VirtualKeyboard::SetReturnKeyType( type );
 }
 
 InputMethod::ActionButton  GetReturnKeyType()
 {
-  return Internal::Adaptor::VirtualKeyboard::GetReturnKeyType();
+  return DEFAULT;
 }
 
 void EnablePrediction(const bool enable)
 {
-  Internal::Adaptor::VirtualKeyboard::EnablePrediction(enable);
 }
 
 bool IsPredictionEnabled()
 {
-  return Internal::Adaptor::VirtualKeyboard::IsPredictionEnabled();
+  return false;
 }
 
 Rect<int> GetSizeAndPosition()
 {
-  return Internal::Adaptor::VirtualKeyboard::GetSizeAndPosition();
+  return Rect<int>();
 }
 
 void RotateTo(int angle)
 {
-  Internal::Adaptor::VirtualKeyboard::RotateTo(angle);
-}
-
-StatusSignalType& StatusChangedSignal()
-{
-  return Internal::Adaptor::VirtualKeyboard::StatusChangedSignal();
-}
-
-VoidSignalType& ResizedSignal()
-{
-  return Internal::Adaptor::VirtualKeyboard::ResizedSignal();
-}
-
-VoidSignalType& LanguageChangedSignal()
-{
-  return Internal::Adaptor::VirtualKeyboard::LanguageChangedSignal();
 }
 
 TextDirection GetTextDirection()
 {
-  return Internal::Adaptor::VirtualKeyboard::GetTextDirection();
+  return VirtualKeyboard::LeftToRight;
 }
 
 } // namespace VirtualKeyboard

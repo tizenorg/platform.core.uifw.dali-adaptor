@@ -38,14 +38,18 @@ namespace Internal
 namespace Adaptor
 {
 
+// Default const for motion distance
+const float MINIMUM_MOTION_DISTANCE_BEFORE_PAN( 15.0f );
+
+// This is also externed, but can be set by android_setPanMinimumMotion().
+float MINIMUM_MOTION_DISTANCE_BEFORE_PAN_SQUARED( MINIMUM_MOTION_DISTANCE_BEFORE_PAN * MINIMUM_MOTION_DISTANCE_BEFORE_PAN );
+
 namespace
 {
-const float MINIMUM_MOTION_DISTANCE_BEFORE_PAN( 15.0f );
-const float MINIMUM_MOTION_DISTANCE_BEFORE_PAN_SQUARED( MINIMUM_MOTION_DISTANCE_BEFORE_PAN * MINIMUM_MOTION_DISTANCE_BEFORE_PAN );
 const float MINIMUM_MOTION_DISTANCE_TO_THRESHOLD_ADJUSTMENTS_RATIO( 2.0f / 3.0f );
 const unsigned long MAXIMUM_TIME_DIFF_ALLOWED( 500 );
 const unsigned long MINIMUM_TIME_BEFORE_THRESHOLD_ADJUSTMENTS( 100 );
-const unsigned int MINIMUM_MOTION_EVENTS_BEFORE_PAN(2);
+const unsigned int MINIMUM_MOTION_EVENTS_BEFORE_PAN(1);
 } // unnamed namespace
 
 PanGestureDetectorBase::PanGestureDetectorBase(Vector2 screenSize, const Integration::PanGestureRequest& request, EnvironmentOptions* environmentOptions)

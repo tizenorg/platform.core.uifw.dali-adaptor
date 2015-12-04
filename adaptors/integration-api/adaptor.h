@@ -24,11 +24,11 @@
 #include <dali/public-api/math/rect.h>
 #include <dali/public-api/events/touch-event.h>
 #include <dali/public-api/common/view-mode.h>
+#include <dali/public-api/object/any.h>
 
 // INTERNAL INCLUDES
 
-
-#ifdef DALI_ADAPTOR_COMPILATION  // full path doesn't exist until adaptor is installed so we have to use relative
+#ifdef DALI_ADAPTOR_COMPILATION
 // @todo Make dali-adaptor code folder structure mirror the folder structure installed to dali-env
 #include <window.h>
 #include <application-configuration.h>
@@ -42,6 +42,11 @@ namespace Dali
 {
 
 class RenderSurface;
+
+namespace Integration
+{
+class Framework;
+}
 
 namespace Internal
 {
@@ -122,35 +127,17 @@ public:
    * @param[in] window The window to draw onto
    * @return a reference to the adaptor handle
    */
-  static Adaptor& New( Window window );
+  static Adaptor& New( Window window, Integration::Framework* framework );
 
   /**
    * @brief Create a new adaptor using the window.
    *
    * @param[in] window The window to draw onto
    * @param[in] configuration The context loss configuration.
+   * @param[in] framework The application framework
    * @return a reference to the adaptor handle
    */
-  static Adaptor& New( Window window, Configuration::ContextLoss configuration );
-
-  /**
-   * @brief Create a new adaptor using render surface.
-   *
-   * @param[in] nativeWindow native window handle
-   * @param[in] surface The surface to draw onto
-   * @return a reference to the adaptor handle
-   */
-  static Adaptor& New( Any nativeWindow, const Dali::RenderSurface& surface );
-
-  /**
-   * @brief Create a new adaptor using render surface.
-   *
-   * @param[in] nativeWindow native window handle
-   * @param[in] surface The surface to draw onto
-   * @param[in] configuration The context loss configuration.
-   * @return a reference to the adaptor handle
-   */
-  static Adaptor& New( Any nativeWindow, const Dali::RenderSurface& surface, Configuration::ContextLoss configuration = Configuration::APPLICATION_DOES_NOT_HANDLE_CONTEXT_LOSS);
+  static Adaptor& New( Window window, Configuration::ContextLoss configuration, Integration::Framework* framework );
 
   /**
    * @brief Virtual Destructor.
@@ -182,7 +169,19 @@ public:
   void Stop();
 
   /**
-   * @brief Ensures that the function passed in is called from the main loop when it is idle.
+   * Notifies the Adaptor that the rendering surface is lost.
+   * This will stop the renderthread.
+   */
+  void SurfaceLost();
+
+  /**
+   * Notifies the Adaptor that the rendering surface is created.
+   * This will start the renderthread.
+   */
+  void SurfaceCreated();
+
+  /**
+   * Ensures that the function passed in is called from the main loop when it is idle.
    * @note Function must be called from the main event thread only.
    *
    * A callback of the following type may be used:
@@ -284,26 +283,11 @@ public:
   void SetMinimumPinchDistance(float distance);
 
   /**
-   * @brief Feed a touch point to the adaptor.
-   *
-   * @param[in] point touch point
-   * @param[in] timeStamp time value of event
+   * Request that dali executes the update and render threads once, even when paused.
    */
-  void FeedTouchPoint( TouchPoint& point, int timeStamp );
+  void RequestUpdateOnce();
 
-  /**
-   * @brief Feed a wheel event to the adaptor.
-   *
-   * @param[in]  wheelEvent wheel event
-   */
-  void FeedWheelEvent( WheelEvent& wheelEvent );
-
-  /**
-   * @brief Feed a key event to the adaptor.
-   *
-   * @param[in] keyEvent The key event holding the key information.
-   */
-  void FeedKeyEvent( KeyEvent& keyEvent );
+  void ResizeSurface(int width, int height);
 
   /**
    * @copydoc Dali::Core::SceneCreated();

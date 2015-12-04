@@ -27,30 +27,22 @@
 #include <style-monitor.h>
 #include <render-surface.h>
 #include <adaptor-impl.h>
+#include <window-impl.h>
+#include <adaptors/integration-api/framework.h>
 
 namespace Dali
 {
 
-Adaptor& Adaptor::New( Window window )
+Adaptor& Adaptor::New( Window window, Integration::Framework* framework )
 {
-  return New( window, Configuration::APPLICATION_DOES_NOT_HANDLE_CONTEXT_LOSS );
+  return New( window, Configuration::APPLICATION_HANDLES_CONTEXT_LOSS, framework );
 }
 
-Adaptor& Adaptor::New( Window window, Configuration::ContextLoss configuration )
+Adaptor& Adaptor::New( Window window, Configuration::ContextLoss configuration, Integration::Framework* framework )
 {
-  Adaptor* adaptor = Internal::Adaptor::Adaptor::New( window, configuration, NULL );
-  return *adaptor;
-}
-
-Adaptor& Adaptor::New( Any nativeWindow, const Dali::RenderSurface& surface )
-{
-  return New( nativeWindow, surface, Configuration::APPLICATION_DOES_NOT_HANDLE_CONTEXT_LOSS );
-}
-
-Adaptor& Adaptor::New( Any nativeWindow, const Dali::RenderSurface& surface, Configuration::ContextLoss configuration )
-{
-  Dali::RenderSurface* pSurface = const_cast<Dali::RenderSurface *>(&surface);
-  Adaptor* adaptor = Internal::Adaptor::Adaptor::New( nativeWindow, pSurface, configuration, NULL );
+  Internal::Adaptor::Window& windowImpl = GetImplementation( window );
+  Adaptor* adaptor = Internal::Adaptor::Adaptor::New( windowImpl.GetSurface(), configuration, NULL, framework );
+  windowImpl.SetAdaptor(*adaptor);
   return *adaptor;
 }
 
@@ -62,6 +54,16 @@ Adaptor::~Adaptor()
 void Adaptor::Start()
 {
   mImpl->Start();
+}
+
+void Adaptor::SurfaceLost()
+{
+  mImpl->SurfaceLost();
+}
+
+void Adaptor::SurfaceCreated()
+{
+  mImpl->SurfaceCreated();
 }
 
 void Adaptor::Pause()
@@ -79,14 +81,9 @@ void Adaptor::Stop()
   mImpl->Stop();
 }
 
-bool Adaptor::AddIdle( CallbackBase* callback )
+bool Adaptor::AddIdle( CallbackBase* callBack )
 {
-  return mImpl->AddIdle( callback );
-}
-
-void Adaptor::ReplaceSurface( Any nativeWindow, Dali::RenderSurface& surface )
-{
-  mImpl->ReplaceSurface(nativeWindow, surface);
+  return mImpl->AddIdle(callBack);
 }
 
 Adaptor::AdaptorSignalType& Adaptor::ResizedSignal()
@@ -139,24 +136,19 @@ void Adaptor::NotifyLanguageChanged()
   mImpl->NotifyLanguageChanged();
 }
 
+void Adaptor::RequestUpdateOnce()
+{
+  mImpl->RequestUpdateOnce();
+}
+
+void Adaptor::ResizeSurface(int width, int height)
+{
+  mImpl->ResizeSurface(width, height);
+}
+
 void Adaptor::SetMinimumPinchDistance(float distance)
 {
   mImpl->SetMinimumPinchDistance(distance);
-}
-
-void Adaptor::FeedTouchPoint( TouchPoint& point, int timeStamp )
-{
-  mImpl->FeedTouchPoint(point, timeStamp);
-}
-
-void Adaptor::FeedWheelEvent( WheelEvent& wheelEvent )
-{
-  mImpl->FeedWheelEvent(wheelEvent);
-}
-
-void Adaptor::FeedKeyEvent( KeyEvent& keyEvent )
-{
-  mImpl->FeedKeyEvent(keyEvent);
 }
 
 void Adaptor::SceneCreated()

@@ -33,10 +33,10 @@ TtsPlayer TtsPlayer::Get(Dali::TtsPlayer::Mode mode)
 {
   TtsPlayer ttsPlayer;
 
-  if ( Adaptor::IsAvailable() )
-  {
-    ttsPlayer = Internal::Adaptor::Adaptor::GetImplementation( Adaptor::Get() ).GetTtsPlayer(mode);
-  }
+  //if ( Adaptor::IsAvailable() )
+  //{
+  //  ttsPlayer = Internal::Adaptor::Adaptor::GetImplementation( Adaptor::Get() ).GetTtsPlayer(mode);
+  //}
 
   return ttsPlayer;
 }

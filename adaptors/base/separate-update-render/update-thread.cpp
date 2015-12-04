@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,13 @@
 #include "update-thread.h"
 
 // EXTERNAL INCLUDES
-#include <cstdio>
+#include <sys/prctl.h>
+#include <unistd.h>
 
 // INTERNAL INCLUDES
 #include <dali/integration-api/debug.h>
 #include <base/interfaces/adaptor-internal-services.h>
-#include <base/separate-update-render/thread-synchronization.h>
+#include <base/separate-update-render/update-render-synchronization.h>
 #include <base/environment-options.h>
 
 namespace Dali
@@ -38,25 +39,39 @@ namespace Adaptor
 
 namespace
 {
+const char* DALI_TEMP_UPDATE_FPS_FILE( "/tmp/dalifps.txt" );
+const unsigned int MICROSECONDS_PER_MILLISECOND( 1000 );
+
 #if defined(DEBUG_ENABLED)
 Integration::Log::Filter* gUpdateLogFilter = Integration::Log::Filter::New(Debug::NoLogging, false, "LOG_UPDATE_THREAD");
 #endif
 } // unnamed namespace
 
-UpdateThread::UpdateThread( ThreadSynchronization& sync,
+UpdateThread::UpdateThread( UpdateRenderSynchronization& sync,
                             AdaptorInternalServices& adaptorInterfaces,
                             const EnvironmentOptions& environmentOptions )
-: mThreadSynchronization( sync ),
+: mUpdateRenderSync( sync ),
   mCore( adaptorInterfaces.GetCore()),
-  mFpsTracker( environmentOptions ),
-  mUpdateStatusLogger( environmentOptions ),
+  mFpsTrackingSeconds( environmentOptions.GetFrameRateLoggingFrequency() ),
+  mElapsedTime( 0.0f ),
+  mElapsedSeconds( 0u ),
+  mStatusLogInterval( environmentOptions.GetUpdateStatusLoggingFrequency() ),
+  mStatusLogCount( 0u ),
   mThread( NULL ),
   mEnvironmentOptions( environmentOptions )
 {
+  if( mFpsTrackingSeconds > 0 )
+  {
+    mFpsRecord.resize( mFpsTrackingSeconds, 0.0f );
+  }
 }
 
 UpdateThread::~UpdateThread()
 {
+  if(mFpsTrackingSeconds > 0)
+  {
+    OutputFPSRecord();
+  }
   Stop();
 }
 
@@ -66,7 +81,7 @@ void UpdateThread::Start()
   if ( !mThread )
   {
     // Create and run the update-thread
-    mThread =  new pthread_t();
+    mThread = new pthread_t();
     int error = pthread_create( mThread, NULL, InternalThreadEntryFunc, this );
     DALI_ASSERT_ALWAYS( !error && "Return code from pthread_create() in UpdateThread" );
   }
@@ -78,7 +93,7 @@ void UpdateThread::Stop()
   if( mThread )
   {
     // wait for the thread to finish
-    pthread_join(*mThread, NULL);
+    pthread_join( *mThread, NULL );
 
     delete mThread;
     mThread = NULL;
@@ -88,52 +103,190 @@ void UpdateThread::Stop()
 bool UpdateThread::Run()
 {
   DALI_LOG_INFO( gUpdateLogFilter, Debug::Verbose, "UpdateThread::Run()\n");
-
-  // Install a function for logging
-  mEnvironmentOptions.InstallLogFunction();
+  prctl(PR_SET_NAME, "update_thread");
+  nice(-18);
+#ifdef ACORE_DEBUG_ENABLED
+  LOGI("UpdateThread starting up\n");
+#endif
 
   Integration::UpdateStatus status;
-  bool runUpdate = true;
-  float lastFrameDelta( 0.0f );
-  unsigned int lastSyncTime( 0 );
-  unsigned int nextSyncTime( 0 );
+
+  // install a function for logging
+  mEnvironmentOptions.InstallLogFunction();
+
+  bool running( true );
 
   // Update loop, we stay inside here while the update-thread is running
-  // We also get the last delta and the predict when this update will be rendered
-  while ( mThreadSynchronization.UpdateReady( status.NeedsNotification(), runUpdate, lastFrameDelta, lastSyncTime, nextSyncTime ) )
+  while ( running )
   {
-    DALI_LOG_INFO( gUpdateLogFilter, Debug::Verbose, "UpdateThread::Run. 1 - UpdateReady(delta:%f, lastSync:%u, nextSync:%u)\n", lastFrameDelta, lastSyncTime, nextSyncTime);
+    DALI_LOG_INFO( gUpdateLogFilter, Debug::Verbose, "UpdateThread::Run. 1 - Sync()\n");
 
-    DALI_LOG_INFO( gUpdateLogFilter, Debug::Verbose, "UpdateThread::Run. 2 - Core.Update()\n");
+    // Inform synchronization object update is ready to run, this will pause update thread if required.
+    mUpdateRenderSync.UpdateReadyToRun();
+    DALI_LOG_INFO( gUpdateLogFilter, Debug::Verbose, "UpdateThread::Run. 2 - Ready()\n");
 
-    mThreadSynchronization.AddPerformanceMarker( PerformanceInterface::UPDATE_START );
+    // get the last delta and the predict when this update will be rendered
+    float lastFrameDelta( 0.0f );
+    unsigned int lastSyncTime( 0 );
+    unsigned int nextSyncTime( 0 );
+    mUpdateRenderSync.PredictNextSyncTime( lastFrameDelta, lastSyncTime, nextSyncTime );
+
+    DALI_LOG_INFO( gUpdateLogFilter, Debug::Verbose, "UpdateThread::Run. 3 - Update(delta:%f, lastSync:%u, nextSync:%u)\n", lastFrameDelta, lastSyncTime, nextSyncTime);
+
     mCore.Update( lastFrameDelta, lastSyncTime, nextSyncTime, status );
-    mThreadSynchronization.AddPerformanceMarker( PerformanceInterface::UPDATE_END );
 
-    mFpsTracker.Track( status.SecondsFromLastFrame() );
+    if( mFpsTrackingSeconds > 0 )
+    {
+      FPSTracking(status.SecondsFromLastFrame());
+    }
 
-    unsigned int keepUpdatingStatus = status.KeepUpdating();
+    bool renderNeedsUpdate;
 
-    // Optional logging of update/render status
-    mUpdateStatusLogger.Log( keepUpdatingStatus );
+    // tell the synchronisation class that a buffer has been written to,
+    // and to wait until there is a free buffer to write to
+    running = mUpdateRenderSync.UpdateSyncWithRender( status.NeedsNotification(), renderNeedsUpdate );
+    DALI_LOG_INFO( gUpdateLogFilter, Debug::Verbose, "UpdateThread::Run. 4 - UpdateSyncWithRender complete\n");
 
-    //  2 things can keep update running.
-    // - The status of the last update
-    // - The status of the last render
-    runUpdate = (Integration::KeepUpdating::NOT_REQUESTED != keepUpdatingStatus);
+    if( running )
+    {
+      unsigned int keepUpdatingStatus = status.KeepUpdating();
 
-    DALI_LOG_INFO( gUpdateLogFilter, Debug::Verbose, "UpdateThread::Run. 3 - runUpdate(%d)\n", runUpdate );
+      // Optional logging of update/render status
+      if ( mStatusLogInterval )
+      {
+        UpdateStatusLogging( keepUpdatingStatus, renderNeedsUpdate );
+      }
 
-    // Reset time variables
-    lastFrameDelta = 0.0f;
-    lastSyncTime = 0;
-    nextSyncTime = 0;
+      //  2 things can keep update running.
+      // - The status of the last update
+      // - The status of the last render
+      bool runUpdate = (Integration::KeepUpdating::NOT_REQUESTED != keepUpdatingStatus) || renderNeedsUpdate;
+
+      if( !runUpdate )
+      {
+        DALI_LOG_INFO( gUpdateLogFilter, Debug::Verbose, "UpdateThread::Run. 5 - Nothing to update, trying to sleep\n");
+
+        running = mUpdateRenderSync.UpdateTryToSleep();
+      }
+    }
   }
 
-  // Uninstall the logging function
+  // uninstall a function for logging
   mEnvironmentOptions.UnInstallLogFunction();
 
   return true;
+}
+
+void UpdateThread::FPSTracking(float secondsFromLastFrame)
+{
+  if (mElapsedSeconds < mFpsTrackingSeconds)
+  {
+    mElapsedTime += secondsFromLastFrame;
+    if( secondsFromLastFrame  > 1.0 )
+    {
+      int seconds = floor(mElapsedTime);
+      mElapsedSeconds += seconds;
+      mElapsedTime -= static_cast<float>(seconds);
+    }
+    else
+    {
+      if( mElapsedTime>=1.0f )
+      {
+        mElapsedTime -= 1.0f;
+        mFpsRecord[mElapsedSeconds] += 1.0f - mElapsedTime/secondsFromLastFrame;
+        mElapsedSeconds++;
+        mFpsRecord[mElapsedSeconds] += mElapsedTime/secondsFromLastFrame;
+      }
+      else
+      {
+        mFpsRecord[mElapsedSeconds] += 1.0f;
+      }
+    }
+  }
+  else
+  {
+    OutputFPSRecord();
+    mFpsRecord.clear();
+    mFpsTrackingSeconds = 0;
+  }
+}
+
+void UpdateThread::OutputFPSRecord()
+{
+  for(unsigned int i = 0; i < mElapsedSeconds; i++)
+  {
+    DALI_LOG_FPS("fps( %d ):%f\n",i ,mFpsRecord[i]);
+  }
+
+  // Dumps out the DALI_FPS_TRACKING worth of frame rates.
+  // E.g. if we run:   DALI_FPS_TRACKING=30  dali-demo
+  // it will dump out the first 30 seconds of FPS information to a temp file
+  FILE* outfile = fopen( DALI_TEMP_UPDATE_FPS_FILE, "w");
+  if( outfile )
+  {
+    for(unsigned int i = 0; i < mElapsedSeconds; i++)
+    {
+      char fpsString[10];
+      snprintf(fpsString,sizeof(fpsString),"%.2f \n",mFpsRecord[i]);
+      int ret = fputs( fpsString, outfile );
+      if( ret < 0)
+      {
+        break;
+      }
+    }
+
+  }
+  fclose( outfile );
+
+}
+
+void UpdateThread::UpdateStatusLogging( unsigned int keepUpdatingStatus, bool renderNeedsUpdate )
+{
+  DALI_ASSERT_ALWAYS( mStatusLogInterval );
+
+  std::string oss;
+
+  if ( !(++mStatusLogCount % mStatusLogInterval) )
+  {
+    oss = "UpdateStatusLogging keepUpdating: " + keepUpdatingStatus ? "true":"false";
+
+    if ( keepUpdatingStatus )
+    {
+      oss += " because: ";
+    }
+
+    if ( keepUpdatingStatus & Integration::KeepUpdating::STAGE_KEEP_RENDERING )
+    {
+      oss += "<Stage::KeepRendering() used> ";
+    }
+
+    if ( keepUpdatingStatus & Integration::KeepUpdating::ANIMATIONS_RUNNING )
+    {
+      oss  +=  "<Animations running> ";
+    }
+
+    if ( keepUpdatingStatus & Integration::KeepUpdating::LOADING_RESOURCES )
+    {
+      oss  +=  "<Resources loading> ";
+    }
+
+    if ( keepUpdatingStatus & Integration::KeepUpdating::MONITORING_PERFORMANCE )
+    {
+      oss += "<Monitoring performance> ";
+    }
+
+    if ( keepUpdatingStatus & Integration::KeepUpdating::RENDER_TASK_SYNC )
+    {
+      oss += "<Render task waiting for completion> ";
+    }
+
+    if ( renderNeedsUpdate )
+    {
+      oss  +=  "<Render needs Update> ";
+    }
+
+    DALI_LOG_UPDATE_STATUS( "%s\n", oss.c_str());
+  }
 }
 
 } // namespace Adaptor
