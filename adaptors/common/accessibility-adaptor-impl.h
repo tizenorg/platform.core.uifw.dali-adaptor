@@ -30,7 +30,6 @@
 #include <accessibility-adaptor.h>
 #include <accessibility-action-handler.h>
 #include <accessibility-gesture-handler.h>
-#include <indicator-impl.h>
 #include <accessibility-gesture-detector.h>
 
 namespace Dali
@@ -41,6 +40,8 @@ namespace Internal
 
 namespace Adaptor
 {
+
+class Indicator;
 
 /**
  * This class detects to accessibility action

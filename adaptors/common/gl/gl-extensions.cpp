@@ -33,9 +33,6 @@ namespace Internal
 namespace Adaptor
 {
 
-namespace ECoreX
-{
-
 GlExtensions::GlExtensions()
   : mInitialized( false )
 {
@@ -127,8 +124,6 @@ void GlExtensions::Initialize()
 }
 
 #endif // DALI_GLES_VERSION < 30
-
-} // namespace ECoreX
 
 } // namespace Adaptor
 
