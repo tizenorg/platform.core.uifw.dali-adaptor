@@ -1,0 +1,10 @@
+# ECore specific files
+
+adaptor_common_internal_ecore_src_files = \
+  $(adaptor_common_dir)/event-loop/ecore/ecore-callback-manager.cpp \
+  $(adaptor_common_dir)/event-loop/ecore/ecore-file-descriptor-monitor.cpp \
+  $(adaptor_common_dir)/event-loop/ecore/ecore-timer-impl.cpp \
+  $(adaptor_common_dir)/indicator-impl.cpp \
+  $(adaptor_common_dir)/indicator-buffer.cpp \
+  $(adaptor_common_dir)/server-connection.cpp \
+  $(adaptor_common_dir)/virtual-keyboard-impl.cpp
