@@ -40,14 +40,18 @@ include ../../../adaptors/integration-api/file.list
 adaptor_common_dir = ../../../adaptors/common
 include ../../../adaptors/common/file.list
 
+# ECore Common
+adaptor_ecore_common_dir = ../../../adaptors/ecore/common
+include ../../../adaptors/ecore/common/file.list
+
 # Wayland
 if WAYLAND
-adaptor_wayland_dir = ../../../adaptors/wayland
-include ../../../adaptors/wayland/file.list
+adaptor_ecore_wayland_dir = ../../../adaptors/wayland
+include ../../../adaptors/ecore/wayland/file.list
 else
 # X11
-adaptor_x11_dir = ../../../adaptors/x11
-include ../../../adaptors/x11/file.list
+adaptor_ecore_x11_dir = ../../../adaptors/x11
+include ../../../adaptors/ecore/x11/file.list
 endif
 
 # Ubuntu
