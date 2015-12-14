@@ -24,6 +24,7 @@
 #include <dali/integration-api/debug.h>
 
 // INTERNAL INCLUDES
+#include "ecore-virtual-keyboard.h"
 #include <adaptor.h>
 #include <locale-utils.h>
 #include <imf-manager-impl.h>
