@@ -26,8 +26,8 @@
 #include <dali/devel-api/rendering/renderer.h>
 
 // INTERNAL INCLUDES
-#include <indicator-buffer.h>
-#include <server-connection.h>
+#include "indicator-buffer.h"
+#include "server-connection.h"
 #include <shared-file.h>
 #include <timer.h>
 #include <window.h>

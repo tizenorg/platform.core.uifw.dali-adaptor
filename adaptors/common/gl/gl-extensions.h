@@ -38,9 +38,6 @@ namespace Internal
 namespace Adaptor
 {
 
-namespace ECoreX
-{
-
 /**
  * GlExtensions class provides GL extensions support
  */
@@ -122,8 +119,6 @@ private:
   bool mInitialized;
 
 };
-
-} // namespace ECoreX
 
 } // namespace Adaptor
 
