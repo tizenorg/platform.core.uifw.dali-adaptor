@@ -25,6 +25,8 @@
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/bitmap.h>
 #include <dali/public-api/images/pixel.h>
+//todor
+#include <iostream>
 
 namespace Dali
 {
@@ -51,6 +53,47 @@ const Byte FileIdentifier[] = {
    0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A
 };
 
+
+//todor
+#if 0
+    COMPRESSED_RGBA_ASTC_4x4_KHR            0x93B0
+    COMPRESSED_RGBA_ASTC_5x4_KHR            0x93B1
+    COMPRESSED_RGBA_ASTC_5x5_KHR            0x93B2
+    COMPRESSED_RGBA_ASTC_6x5_KHR            0x93B3
+    COMPRESSED_RGBA_ASTC_6x6_KHR            0x93B4
+    COMPRESSED_RGBA_ASTC_8x5_KHR            0x93B5
+    COMPRESSED_RGBA_ASTC_8x6_KHR            0x93B6
+    COMPRESSED_RGBA_ASTC_8x8_KHR            0x93B7
+    COMPRESSED_RGBA_ASTC_10x5_KHR           0x93B8
+    COMPRESSED_RGBA_ASTC_10x6_KHR           0x93B9
+    COMPRESSED_RGBA_ASTC_10x8_KHR           0x93BA
+    COMPRESSED_RGBA_ASTC_10x10_KHR          0x93BB
+    COMPRESSED_RGBA_ASTC_12x10_KHR          0x93BC
+    COMPRESSED_RGBA_ASTC_12x12_KHR          0x93BD
+
+    COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR    0x93D0
+    COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR    0x93D1
+    COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR    0x93D2
+    COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR    0x93D3
+    COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR    0x93D4
+    COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR    0x93D5
+    COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR    0x93D6
+    COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR    0x93D7
+    COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR   0x93D8
+    COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR   0x93D9
+    COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR   0x93DA
+    COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR  0x93DB
+    COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR  0x93DC
+    COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR  0x93DD
+#endif
+#if 0
+    +    LOGV(
+    +        "Using non-standard GLES 3.1 extension compressed pixel format "
+    +        "COMPRESSED_RGBA_ASTC_4x4.\n" );
+    +    internalFormat = GL_COMPRESSED_RGBA_ASTC_4x4_KHR;
+#endif
+
+
 /** The formats we support inside a KTX file container.
  *  Currently only compressed formats are allowed as we'd rather
  *  use a PNG or JPEG with their own compression for the general
@@ -58,6 +101,11 @@ const Byte FileIdentifier[] = {
 enum KtxInternalFormat
 {
   KTX_NOTEXIST = 0,
+
+  // GLES 2 EXTENSION FORMATS:
+  KTX_ETC1_RGB8_OES                               = 0x8D64,
+  KTX_COMPRESSED_RGB_PVRTC_4BPPV1_IMG             = 0x8C00,
+
   // GLES 3 Standard compressed formats (values same as in gl3.h):
   KTX_COMPRESSED_R11_EAC                          = 0x9270,
   KTX_COMPRESSED_SIGNED_R11_EAC                   = 0x9271,
@@ -70,14 +118,87 @@ enum KtxInternalFormat
   KTX_COMPRESSED_RGBA8_ETC2_EAC                   = 0x9278,
   KTX_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC            = 0x9279,
 
-  // GLES 2 EXTENSION FORMATS:
-  KTX_ETC1_RGB8_OES                               = 0x8D64,
-  KTX_COMPRESSED_RGB_PVRTC_4BPPV1_IMG             = 0x8C00,
-  KTX_SENTINEL = ~0u,
+  //todor:
+  //COMPRESSED_RGBA_ASTC_4x4_KHR                    = 0x93B0,
+  //COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR            = 0x93D0,
+
+  // GLES 3.1 compressed formats.
+  //KTX_COMPRESSED_ASTC_4x4_SRGB                    = 0x93B0,
+  //KTX_COMPRESSED_ASTC_4x4_LINEAR                  = 0x93D0,
+
+
+  KTX_COMPRESSED_RGBA_ASTC_4x4_KHR                = 0x93B0,
+  KTX_COMPRESSED_RGBA_ASTC_5x4_KHR                = 0x93B1,
+  KTX_COMPRESSED_RGBA_ASTC_5x5_KHR                = 0x93B2,
+  KTX_COMPRESSED_RGBA_ASTC_6x5_KHR                = 0x93B3,
+  KTX_COMPRESSED_RGBA_ASTC_6x6_KHR                = 0x93B4,
+  KTX_COMPRESSED_RGBA_ASTC_8x5_KHR                = 0x93B5,
+  KTX_COMPRESSED_RGBA_ASTC_8x6_KHR                = 0x93B6,
+  KTX_COMPRESSED_RGBA_ASTC_8x8_KHR                = 0x93B7,
+  KTX_COMPRESSED_RGBA_ASTC_10x5_KHR               = 0x93B8,
+  KTX_COMPRESSED_RGBA_ASTC_10x6_KHR               = 0x93B9,
+  KTX_COMPRESSED_RGBA_ASTC_10x8_KHR               = 0x93BA,
+  KTX_COMPRESSED_RGBA_ASTC_10x10_KHR              = 0x93BB,
+  KTX_COMPRESSED_RGBA_ASTC_12x10_KHR              = 0x93BC,
+  KTX_COMPRESSED_RGBA_ASTC_12x12_KHR              = 0x93BD,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR        = 0x93D0,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR        = 0x93D1,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR        = 0x93D2,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR        = 0x93D3,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR        = 0x93D4,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR        = 0x93D5,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR        = 0x93D6,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR        = 0x93D7,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR       = 0x93D8,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR       = 0x93D9,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR       = 0x93DA,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR      = 0x93DB,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR      = 0x93DC,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR      = 0x93DD,
+
+
+#if 0
+  +#define GL_COMPRESSED_RGBA_ASTC_4x4_KHR ( 0x93B0 )
+  +#define GL_COMPRESSED_RGBA_ASTC_5x4_KHR ( 0x93B1 )
+  +#define GL_COMPRESSED_RGBA_ASTC_5x5_KHR ( 0x93B2 )
+  +#define GL_COMPRESSED_RGBA_ASTC_6x5_KHR ( 0x93B3 )
+  +#define GL_COMPRESSED_RGBA_ASTC_6x6_KHR ( 0x93B4 )
+  +#define GL_COMPRESSED_RGBA_ASTC_8x5_KHR ( 0x93B5 )
+  +#define GL_COMPRESSED_RGBA_ASTC_8x6_KHR ( 0x93B6 )
+  +#define GL_COMPRESSED_RGBA_ASTC_8x8_KHR ( 0x93B7 )
+  +#define GL_COMPRESSED_RGBA_ASTC_10x5_KHR ( 0x93B8 )
+  +#define GL_COMPRESSED_RGBA_ASTC_10x6_KHR ( 0x93B9 )
+  +#define GL_COMPRESSED_RGBA_ASTC_10x8_KHR ( 0x93BA )
+  +#define GL_COMPRESSED_RGBA_ASTC_10x10_KHR ( 0x93BB )
+  +#define GL_COMPRESSED_RGBA_ASTC_12x10_KHR ( 0x93BC )
+  +#define GL_COMPRESSED_RGBA_ASTC_12x12_KHR ( 0x93BD )
+  +#define GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR ( 0x93D0 )
+  +#define GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR ( 0x93D1 )
+  +#define GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR ( 0x93D2 )
+  +#define GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR ( 0x93D3 )
+  +#define GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR ( 0x93D4 )
+  +#define GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR ( 0x93D5 )
+  +#define GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR ( 0x93D6 )
+  +#define GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR ( 0x93D7 )
+  +#define GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR ( 0x93D8 )
+  +#define GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR ( 0x93D9 )
+  +#define GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR ( 0x93DA )
+  +#define GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR ( 0x93DB )
+  +#define GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR ( 0x93DC )
+  +#define GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR ( 0x93DD )
+#endif
+
+
+
+  KTX_SENTINEL = ~0u
 };
 
 const unsigned KtxInternalFormats[] =
 {
+  // GLES 2 Extension formats:
+  KTX_ETC1_RGB8_OES,
+  KTX_COMPRESSED_RGB_PVRTC_4BPPV1_IMG,
+
   // GLES 3 Standard compressed formats:
   KTX_COMPRESSED_R11_EAC,
   KTX_COMPRESSED_SIGNED_R11_EAC,
@@ -89,9 +210,37 @@ const unsigned KtxInternalFormats[] =
   KTX_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2,
   KTX_COMPRESSED_RGBA8_ETC2_EAC,
   KTX_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC,
-  // GLES 2 EXTENSION FORMATS:
-  KTX_ETC1_RGB8_OES,
-  KTX_COMPRESSED_RGB_PVRTC_4BPPV1_IMG,
+
+  // GLES 3.1 Standard compressed formats:
+  KTX_COMPRESSED_RGBA_ASTC_4x4_KHR,
+  KTX_COMPRESSED_RGBA_ASTC_5x4_KHR,
+  KTX_COMPRESSED_RGBA_ASTC_5x5_KHR,
+  KTX_COMPRESSED_RGBA_ASTC_6x5_KHR,
+  KTX_COMPRESSED_RGBA_ASTC_6x6_KHR,
+  KTX_COMPRESSED_RGBA_ASTC_8x5_KHR,
+  KTX_COMPRESSED_RGBA_ASTC_8x6_KHR,
+  KTX_COMPRESSED_RGBA_ASTC_8x8_KHR,
+  KTX_COMPRESSED_RGBA_ASTC_10x5_KHR,
+  KTX_COMPRESSED_RGBA_ASTC_10x6_KHR,
+  KTX_COMPRESSED_RGBA_ASTC_10x8_KHR,
+  KTX_COMPRESSED_RGBA_ASTC_10x10_KHR,
+  KTX_COMPRESSED_RGBA_ASTC_12x10_KHR,
+  KTX_COMPRESSED_RGBA_ASTC_12x12_KHR,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR,
+  KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR,
+
   KTX_SENTINEL
 };
 
@@ -173,9 +322,22 @@ bool ConvertPixelFormat(const uint32_t ktxPixelFormat, Dali::Pixel::Format& form
   using namespace Dali::Pixel;
   switch(ktxPixelFormat)
   {
+    // GLES 2 extension compressed formats:
+    case KTX_ETC1_RGB8_OES:
+    {
+      format = COMPRESSED_RGB8_ETC1;
+      break;
+    }
+    case KTX_COMPRESSED_RGB_PVRTC_4BPPV1_IMG:
+    {
+      format = COMPRESSED_RGB_PVRTC_4BPPV1;
+      break;
+    }
+
+    // GLES 3 extension compressed formats:
     case KTX_COMPRESSED_R11_EAC:
     {
-      format = Dali::Pixel::COMPRESSED_R11_EAC;
+      format = COMPRESSED_R11_EAC;
       break;
     }
     case KTX_COMPRESSED_SIGNED_R11_EAC:
@@ -223,15 +385,146 @@ bool ConvertPixelFormat(const uint32_t ktxPixelFormat, Dali::Pixel::Format& form
       format = COMPRESSED_SRGB8_ALPHA8_ETC2_EAC;
       break;
     }
-    // GLES 2 extension compressed formats:
-    case KTX_ETC1_RGB8_OES:
+    //todor
+    // GLES 3.1 extension compressed formats:
+    case KTX_COMPRESSED_RGBA_ASTC_4x4_KHR:
     {
-      format = COMPRESSED_RGB8_ETC1;
+      format = COMPRESSED_RGBA_ASTC_4x4_KHR;
       break;
     }
-    case KTX_COMPRESSED_RGB_PVRTC_4BPPV1_IMG:
+    case KTX_COMPRESSED_RGBA_ASTC_5x4_KHR:
     {
-      format = COMPRESSED_RGB_PVRTC_4BPPV1;
+      format = COMPRESSED_RGBA_ASTC_5x4_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_RGBA_ASTC_5x5_KHR:
+    {
+      format = COMPRESSED_RGBA_ASTC_5x5_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_RGBA_ASTC_6x5_KHR:
+    {
+      format = COMPRESSED_RGBA_ASTC_6x5_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_RGBA_ASTC_6x6_KHR:
+    {
+      format = COMPRESSED_RGBA_ASTC_6x6_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_RGBA_ASTC_8x5_KHR:
+    {
+      format = COMPRESSED_RGBA_ASTC_8x5_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_RGBA_ASTC_8x6_KHR:
+    {
+      format = COMPRESSED_RGBA_ASTC_8x6_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_RGBA_ASTC_8x8_KHR:
+    {
+      format = COMPRESSED_RGBA_ASTC_8x8_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_RGBA_ASTC_10x5_KHR:
+    {
+      format = COMPRESSED_RGBA_ASTC_10x5_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_RGBA_ASTC_10x6_KHR:
+    {
+      format = COMPRESSED_RGBA_ASTC_10x6_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_RGBA_ASTC_10x8_KHR:
+    {
+      format = COMPRESSED_RGBA_ASTC_10x8_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_RGBA_ASTC_10x10_KHR:
+    {
+      format = COMPRESSED_RGBA_ASTC_10x10_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_RGBA_ASTC_12x10_KHR:
+    {
+      format = COMPRESSED_RGBA_ASTC_12x10_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_RGBA_ASTC_12x12_KHR:
+    {
+      format = COMPRESSED_RGBA_ASTC_12x12_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR:
+    {
+      format = COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR:
+    {
+      format = COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR:
+    {
+      format = COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR:
+    {
+      format = COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR:
+    {
+      format = COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR:
+    {
+      format = COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR:
+    {
+      format = COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR:
+    {
+      format = COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR:
+    {
+      format = COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR:
+    {
+      format = COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR:
+    {
+      format = COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR:
+    {
+      format = COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR:
+    {
+      format = COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR;
+      break;
+    }
+    case KTX_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR:
+    {
+      format = COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR;
       break;
     }
 
@@ -296,6 +589,7 @@ bool LoadKtxHeader(FILE * const fp, unsigned int &width, unsigned int &height, K
 // File loading API entry-point:
 bool LoadKtxHeader( const ImageLoader::Input& input, unsigned int& width, unsigned int& height )
 {
+  std::cout << "todor: LoadKtxHeader" << std::endl;
   KtxFileHeader fileHeader;
   FILE* const fp = input.file;
 
@@ -306,6 +600,7 @@ bool LoadKtxHeader( const ImageLoader::Input& input, unsigned int& width, unsign
 // File loading API entry-point:
 bool LoadBitmapFromKtx( const ResourceLoadingClient& client, const ImageLoader::Input& input, Integration::Bitmap& bitmap )
 {
+  std::cout << "todor: LoadBitmapFromKtx" << std::endl;
   DALI_COMPILE_TIME_ASSERT( sizeof(Byte) == 1);
   DALI_COMPILE_TIME_ASSERT( sizeof(uint32_t) == 4);
 
@@ -325,10 +620,26 @@ bool LoadBitmapFromKtx( const ResourceLoadingClient& client, const ImageLoader::
       return false;
   }
 
+  std::cout << "todor: LoadBitmapFromKtx: W: " << width << ", H: " << height << std::endl;
+  std::cout << "todor: details: pdepth:" << fileHeader.pixelDepth <<
+      " bytesOfKeyValueData:" << fileHeader.bytesOfKeyValueData <<
+      " endianness:" << fileHeader.endianness <<
+      " glBaseInternalFormat:" << fileHeader.glBaseInternalFormat <<
+      " glFormat:" << fileHeader.glFormat <<
+      " glInternalFormat:" << fileHeader.glInternalFormat <<
+      " glType:" << fileHeader.glType <<
+      " glTypeSize:" << fileHeader.glTypeSize <<
+      " numberOfArrayElements:" << fileHeader.numberOfArrayElements <<
+      " numberOfFaces:" << fileHeader.numberOfFaces <<
+      " numberOfMipmapLevels:" << fileHeader.numberOfMipmapLevels <<
+      " pixelWidth:" << fileHeader.pixelWidth <<
+      " pixelHeight:" << fileHeader.pixelHeight << std::endl;
+
   // Skip the key-values:
   const long int imageSizeOffset = sizeof(KtxFileHeader) + fileHeader.bytesOfKeyValueData;
   if(fseek(fp, imageSizeOffset, SEEK_SET))
   {
+    std::cout << "todor: LoadBitmapFromKtx: E:1" << std::endl;
     DALI_LOG_ERROR( "Seek past key/vals in KTX compressed bitmap file failed.\n" );
     return false;
   }
@@ -337,6 +648,7 @@ bool LoadBitmapFromKtx( const ResourceLoadingClient& client, const ImageLoader::
   uint32_t imageByteCount = 0;
   if (fread((void*)&imageByteCount, 1, 4, fp) != 4)
   {
+    std::cout << "todor: LoadBitmapFromKtx: E:1" << std::endl;
     DALI_LOG_ERROR( "Read of image size failed.\n" );
     return false;
   }
@@ -345,6 +657,7 @@ bool LoadBitmapFromKtx( const ResourceLoadingClient& client, const ImageLoader::
       // A compressed texture should certainly be less than 2 bytes per texel:
       imageByteCount > width * height * 2)
   {
+    std::cout << "todor: LoadBitmapFromKtx: E:2" << std::endl;
     DALI_LOG_ERROR( "KTX file with too-large image-data field.\n" );
     return false;
   }
@@ -353,6 +666,7 @@ bool LoadBitmapFromKtx( const ResourceLoadingClient& client, const ImageLoader::
   const bool pixelFormatKnown = ConvertPixelFormat(fileHeader.glInternalFormat, pixelFormat);
   if(!pixelFormatKnown)
   {
+    std::cout << "todor: LoadBitmapFromKtx: E:3" << std::endl;
     DALI_LOG_ERROR( "No internal pixel format supported for KTX file pixel format.\n" );
     return false;
   }
@@ -361,15 +675,18 @@ bool LoadBitmapFromKtx( const ResourceLoadingClient& client, const ImageLoader::
   PixelBuffer * const pixels = bitmap.GetCompressedProfile()->ReserveBufferOfSize( pixelFormat, width, height, (size_t) imageByteCount );
   if(!pixels)
   {
+    std::cout << "todor: LoadBitmapFromKtx: E:4" << std::endl;
     DALI_LOG_ERROR( "Unable to reserve a pixel buffer to load the requested bitmap into.\n" );
     return false;
   }
   const size_t bytesRead = fread(pixels, 1, imageByteCount, fp);
   if(bytesRead != imageByteCount)
   {
+    std::cout << "todor: LoadBitmapFromKtx: E:5" << std::endl;
     DALI_LOG_ERROR( "Read of image pixel data failed.\n" );
     return false;
   }
+  std::cout << "todor: READ " << bytesRead << " bytes of image data" << std::endl;
 
   return true;
 }

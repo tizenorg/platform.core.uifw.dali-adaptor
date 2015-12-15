@@ -30,6 +30,8 @@
 #include "image-operations.h"
 #include "image-loader-input.h"
 #include "portable/file-closer.h"
+//todor
+#include <iostream>
 
 using namespace Dali::Integration;
 
@@ -155,6 +157,7 @@ bool GetBitmapLoaderFunctions( FILE *fp,
                                LoadBitmapHeaderFunction& header,
                                Bitmap::Profile& profile )
 {
+  std::cout << "todor: FORMAT: " << format << ", gh1" << std::endl;
   unsigned char magic[MAGIC_LENGTH];
   size_t read = fread(magic, sizeof(unsigned char), MAGIC_LENGTH, fp);
 
@@ -173,13 +176,18 @@ bool GetBitmapLoaderFunctions( FILE *fp,
   const BitmapLoader *lookupPtr = BITMAP_LOADER_LOOKUP_TABLE;
   ImageLoader::Input defaultInput( fp );
 
+
+  std::cout << "todor: gh2" << std::endl;
+
   // try hinted format first
   if ( format != FORMAT_UNKNOWN )
   {
+    std::cout << "todor: gh3" << std::endl;
     lookupPtr = BITMAP_LOADER_LOOKUP_TABLE + format;
     if ( format >= FORMAT_MAGIC_BYTE_COUNT ||
          ( lookupPtr->magicByte1 == magic[0] && lookupPtr->magicByte2 == magic[1] ) )
     {
+      std::cout << "todor: gh4" << std::endl;
       unsigned int width = 0;
       unsigned int height = 0;
       loaderFound = lookupPtr->header( fp, width, height );
@@ -189,12 +197,15 @@ bool GetBitmapLoaderFunctions( FILE *fp,
   // then try to get a match with formats that have magic bytes
   if ( false == loaderFound )
   {
+    std::cout << "todor: gh5" << std::endl;
     for ( lookupPtr = BITMAP_LOADER_LOOKUP_TABLE;
           lookupPtr < BITMAP_LOADER_LOOKUP_TABLE + FORMAT_MAGIC_BYTE_COUNT;
           ++lookupPtr )
     {
+      std::cout << "todor: gh6" << std::endl;
       if ( lookupPtr->magicByte1 == magic[0] && lookupPtr->magicByte2 == magic[1] )
       {
+        std::cout << "todor: gh7" << std::endl;
         // to seperate ico file format and wbmp file format
         unsigned int width = 0;
         unsigned int height = 0;
@@ -202,6 +213,7 @@ bool GetBitmapLoaderFunctions( FILE *fp,
       }
       if (loaderFound)
       {
+        std::cout << "todor: gh8" << std::endl;
         break;
       }
     }
@@ -210,16 +222,19 @@ bool GetBitmapLoaderFunctions( FILE *fp,
   // finally try formats that do not use magic bytes
   if ( false == loaderFound )
   {
+    std::cout << "todor: gh9" << std::endl;
     for ( lookupPtr = BITMAP_LOADER_LOOKUP_TABLE + FORMAT_MAGIC_BYTE_COUNT;
           lookupPtr < BITMAP_LOADER_LOOKUP_TABLE + FORMAT_TOTAL_COUNT;
           ++lookupPtr )
     {
+      std::cout << "todor: gh10" << std::endl;
       // to seperate ico file format and wbmp file format
       unsigned int width = 0;
       unsigned int height = 0;
       loaderFound = lookupPtr->header(fp, width, height);
       if (loaderFound)
       {
+        std::cout << "todor: gh11" << std::endl;
         break;
       }
     }
@@ -228,6 +243,7 @@ bool GetBitmapLoaderFunctions( FILE *fp,
   // if a loader was found set the outputs
   if ( loaderFound )
   {
+    std::cout << "todor: gh12" << std::endl;
     loader  = lookupPtr->loader;
     header  = lookupPtr->header;
     profile = lookupPtr->profile;
@@ -236,6 +252,7 @@ bool GetBitmapLoaderFunctions( FILE *fp,
   // Reset to the start of the file.
   if( fseek(fp, 0, SEEK_SET) )
   {
+    std::cout << "todor: gh13" << std::endl;
     DALI_LOG_ERROR("Error seeking to start of file\n");
   }
 

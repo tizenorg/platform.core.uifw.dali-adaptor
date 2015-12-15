@@ -27,6 +27,8 @@
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/bitmap.h>
 #include <dali/public-api/common/dali-vector.h>
+//todor
+#include <iostream>
 
 namespace Dali
 {
@@ -94,6 +96,7 @@ int extractMultiByteInteger(unsigned int *data, void *map, size_t length, size_t
 
 bool LoadBitmapFromWbmp( const ResourceLoadingClient& client, const ImageLoader::Input& input, Integration::Bitmap& bitmap )
 {
+  std::cout << "todor: LoadBitmapFromWbmp" << std::endl;
   FILE* const fp = input.file;
   if(fp == NULL)
   {
@@ -216,6 +219,7 @@ bool LoadBitmapFromWbmp( const ResourceLoadingClient& client, const ImageLoader:
 
 bool LoadWbmpHeader( const ImageLoader::Input& input, unsigned int& width, unsigned int& height )
 {
+  std::cout << "todor: LoadWbmpHeader" << std::endl;
   FILE* const fp = input.file;
   if(fp == NULL)
   {

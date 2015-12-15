@@ -61,7 +61,8 @@ BuildRequires:  libdrm-devel
 BuildRequires:  pkgconfig(libexif)
 BuildRequires:  pkgconfig(capi-system-system-settings)
 BuildRequires:  pkgconfig(libpng)
-BuildRequires:  pkgconfig(glesv2)
+BuildRequires:  pkgconfig(gles20)
+#BuildRequires:  pkgconfig(glesv2)
 BuildRequires:  pkgconfig(egl)
 BuildRequires:  libcurl-devel
 
@@ -178,7 +179,7 @@ FONT_DOWNLOADED_PATH="%{font_downloaded_path}" ; export FONT_DOWNLOADED_PATH
 FONT_APPLICATION_PATH="%{font_application_path}"  ; export FONT_APPLICATION_PATH
 FONT_CONFIGURATION_FILE="%{font_configuration_file}" ; export FONT_CONFIGURATION_FILE
 
-%configure --prefix=$PREFIX --with-jpeg-turbo --enable-gles=20 --enable-shaderbincache=%{shaderbincache_flag} --enable-profile=%{dali_profile} \
+%configure --prefix=$PREFIX --with-jpeg-turbo --enable-gles=31 --enable-shaderbincache=%{shaderbincache_flag} --enable-profile=%{dali_profile} \
 %if 0%{?dali_feedback_plugin}
            --enable-feedback \
 %endif

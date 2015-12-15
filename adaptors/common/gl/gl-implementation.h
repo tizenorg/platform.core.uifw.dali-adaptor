@@ -23,14 +23,21 @@
 #error "OpenGL ES version not specified"
 #endif
 
-#if DALI_GLES_VERSION >= 30
+//todor
+#if DALI_GLES_VERSION >= 31
+#include <GLES3/gl31.h>
+#elif DALI_GLES_VERSION >= 30
 #include <GLES3/gl3.h>
+//#include <GLES3/gl31.h>
+//todor #include <GLES3/AstcTextures.h>
 #else
 #include <cstdlib>
 #include <GLES2/gl2.h>
 #endif
 
 #include <dali/integration-api/gl-abstraction.h>
+//todor
+#include <iostream>
 
 // INTERNAL INCLUDES
 #include <gl/gl-extensions.h>
@@ -174,6 +181,10 @@ public:
 
   void CompressedTexImage2D (GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void* data)
   {
+    std::cout << "todor GLIMPL::CompressedTexImage2D: f:" << internalformat << " ref:" << 1 << std::endl;
+    std::cout << "todor : gl: version:    " << glGetString( GL_VERSION ) << std::endl;
+    std::cout << "todor : gl: renderer:   " << glGetString( GL_RENDERER ) << std::endl;
+    std::cout << "todor : gl: extensions: " << glGetString( GL_EXTENSIONS ) << std::endl;
     glCompressedTexImage2D(target,level,internalformat,width,height,border,imageSize,data);
   }
 
