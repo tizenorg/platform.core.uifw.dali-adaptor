@@ -9,6 +9,10 @@ License:    Apache-2.0, BSD-2.0, MIT
 URL:        https://review.tizen.org/git/?p=platform/core/uifw/dali-adaptor.git;a=summary
 Source0:    %{name}-%{version}.tar.gz
 
+Requires(post): /sbin/ldconfig
+Requires(postun): /sbin/ldconfig
+Requires:       giflib
+
 # Get the profile from tizen_profile_name if it exists.
 %if 0%{?tizen_profile_name:1}
 %define profile %{tizen_profile_name}
@@ -18,18 +22,24 @@ Source0:    %{name}-%{version}.tar.gz
 %define dali_profile MOBILE
 %define dali_feedback_plugin 0
 %define shaderbincache_flag DISABLE
+BuildRequires:  pkgconfig(gles20)
+%define gles_requirement_setup 1
 %endif
 
 %if "%{profile}" == "tv"
 %define dali_profile TV
 %define dali_feedback_plugin 0
 %define shaderbincache_flag ENABLE
+BuildRequires:  pkgconfig(glesv2)
+%define gles_requirement_setup 1
 %endif
 
 %if "%{profile}" == "wearable"
 %define dali_profile WEARABLE
 %define dali_feedback_plugin 0
 %define shaderbincache_flag DISABLE
+BuildRequires:  pkgconfig(gles20)
+%define gles_requirement_setup 1
 %endif
 
 %if "%{profile}" == "common"
@@ -37,11 +47,13 @@ Source0:    %{name}-%{version}.tar.gz
 %define dali_feedback_plugin 0
 %define tizen_2_2_compatibility 1
 %define shaderbincache_flag DISABLE
+BuildRequires:  pkgconfig(glesv2)
+%define gles_requirement_setup 1
 %endif
 
-Requires(post): /sbin/ldconfig
-Requires(postun): /sbin/ldconfig
-Requires:       giflib
+# If we have not set a BuildRequires for the gles version, default it here.
+%{!?gles_requirement_setup: BuildRequires:  pkgconfig(glesv2)}
+
 BuildRequires:  pkgconfig
 BuildRequires:  gawk
 BuildRequires:  pkgconfig(sensor)
@@ -61,10 +73,8 @@ BuildRequires:  libdrm-devel
 BuildRequires:  pkgconfig(libexif)
 BuildRequires:  pkgconfig(capi-system-system-settings)
 BuildRequires:  pkgconfig(libpng)
-BuildRequires:  pkgconfig(glesv2)
 BuildRequires:  pkgconfig(egl)
 BuildRequires:  libcurl-devel
-
 
 %if 0%{?tizen_2_2_compatibility} != 1
 BuildRequires:  pkgconfig(capi-system-info)
@@ -178,7 +188,11 @@ FONT_DOWNLOADED_PATH="%{font_downloaded_path}" ; export FONT_DOWNLOADED_PATH
 FONT_APPLICATION_PATH="%{font_application_path}"  ; export FONT_APPLICATION_PATH
 FONT_CONFIGURATION_FILE="%{font_configuration_file}" ; export FONT_CONFIGURATION_FILE
 
-%configure --prefix=$PREFIX --with-jpeg-turbo --enable-gles=20 --enable-shaderbincache=%{shaderbincache_flag} --enable-profile=%{dali_profile} \
+# Default to GLES 2.0 if not specified.
+%{!?target_gles_version: %define target_gles_version 20}
+
+# Set up the build via configure.
+%configure --prefix=$PREFIX --with-jpeg-turbo --enable-gles=%{target_gles_version} --enable-shaderbincache=%{shaderbincache_flag} --enable-profile=%{dali_profile} \
 %if 0%{?dali_feedback_plugin}
            --enable-feedback \
 %endif
@@ -187,6 +201,7 @@ FONT_CONFIGURATION_FILE="%{font_configuration_file}" ; export FONT_CONFIGURATION
 %endif
            $configure_flags --libdir=%{_libdir}
 
+# Build.
 make %{?jobs:-j%jobs}
 
 ##############################
