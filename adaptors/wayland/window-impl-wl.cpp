@@ -296,7 +296,7 @@ void Window::IndicatorTypeChanged(Indicator::Type type)
 {
 }
 
-void Window::IndicatorClosed( Indicator* indicator )
+void Window::IndicatorClosed( IndicatorInterface* indicator )
 {
   DALI_LOG_TRACE_METHOD( gWindowLogFilter );
 
