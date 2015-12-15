@@ -23,7 +23,9 @@
 #error "OpenGL ES version not specified"
 #endif
 
-#if DALI_GLES_VERSION >= 30
+#if DALI_GLES_VERSION >= 31
+#include <GLES3/gl31.h>
+#elif DALI_GLES_VERSION >= 30
 #include <GLES3/gl3.h>
 #else
 #include <cstdlib>
