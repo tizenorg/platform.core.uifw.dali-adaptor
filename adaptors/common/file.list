@@ -50,13 +50,17 @@ adaptor_common_internal_src_files = \
   $(adaptor_common_dir)/gl/gl-proxy-implementation.cpp \
   $(adaptor_common_dir)/gl/gl-extensions.cpp
 
+# Only mobile on Tizen 2.4 uses indicator
+adaptor_common_no_indicator_support = \
+  $(adaptor_common_dir)/indicator-impl.cpp
+
 # Different files depending on the event loop being used
 adaptor_common_internal_ecore_src_files = \
   $(adaptor_common_dir)/event-loop/ecore/ecore-callback-manager.cpp \
   $(adaptor_common_dir)/event-loop/ecore/ecore-file-descriptor-monitor.cpp \
   $(adaptor_common_dir)/event-loop/ecore/ecore-timer-impl.cpp
 
- adaptor_common_internal_uv_src_files = \
+adaptor_common_internal_uv_src_files = \
   $(adaptor_common_dir)/event-loop/lib-uv/uv-callback-manager.cpp \
   $(adaptor_common_dir)/event-loop/lib-uv/uv-file-descriptor-monitor.cpp \
   $(adaptor_common_dir)/event-loop/lib-uv/uv-timer-impl.cpp
