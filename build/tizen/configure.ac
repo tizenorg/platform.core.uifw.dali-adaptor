@@ -217,6 +217,7 @@ fi
 
 if test "x$enable_profile" = "xUBUNTU"; then
 PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
+#PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
 else
 PKG_CHECK_MODULES(CAPI_APPFW_APPLICATION, capi-appfw-application)
 PKG_CHECK_MODULES(DLOG, dlog)
