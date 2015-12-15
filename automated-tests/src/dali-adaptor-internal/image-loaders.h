@@ -96,10 +96,11 @@ struct LoadFunctions
  * Use this method to test the header and and bitmap loading of each image.
  * The loaded bitmap is then checked with the reference bitmap in ImageDetails.
  *
- * @param[in]  image      The image details.
- * @param[in]  functions  The loader functions that need to be called.
+ * @param[in]  image         The image details.
+ * @param[in]  functions     The loader functions that need to be called.
+ * @param[in]  bitmapProfile Whether or not the bitmap is raw
  */
-void TestImageLoading( const ImageDetails& image, const LoadFunctions& functions );
+void TestImageLoading( const ImageDetails& image, const LoadFunctions& functions, Dali::Integration::Bitmap::Profile bitmapProfile = Dali::Integration::Bitmap::BITMAP_2D_PACKED_PIXELS );
 
 /**
  * Helper function which should be used when first creating a reference buffer file.
