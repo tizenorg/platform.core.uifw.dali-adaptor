@@ -49,20 +49,19 @@ class AccessibilityAdaptor : public Dali::BaseObject
 {
 public:
 
-  // Creation
-
   /**
    * Constructor.
    */
   AccessibilityAdaptor();
 
   /**
-   * Get an instance of the AccessibilityAdaptor.
+   * @brief Get an instance of the AccessibilityAdaptor.
+   *
+   * @note This singleton-style getter can be reimplemented for different platforms.
+   * The default implementation is in accessibility-adaptor-singleton-default.cpp.
    * @return The instance of the AccessibilityAdaptor.
    */
   static Dali::AccessibilityAdaptor Get();
-
-  // Public API
 
   /**
    * Turn on accessibility action
@@ -105,42 +104,42 @@ public:
   /**
    * @copydoc Dali::AccessibilityAdaptor::HandleActionNextEvent()
    */
-  bool HandleActionNextEvent(bool allowEndFeedback = true);
+  virtual bool HandleActionNextEvent( bool allowEndFeedback = true);
 
   /**
    * @copydoc Dali::AccessibilityAdaptor::HandleActionPreviousEvent()
    */
-  bool HandleActionPreviousEvent(bool allowEndFeedback = true);
+  virtual bool HandleActionPreviousEvent( bool allowEndFeedback = true);
 
   /**
    * @copydoc Dali::AccessibilityAdaptor::HandleActionActivateEvent()
    */
-  bool HandleActionActivateEvent();
+  virtual bool HandleActionActivateEvent();
 
   /**
    * @copydoc Dali::AccessibilityAdaptor::HandleActionReadEvent()
    */
-  bool HandleActionReadEvent(unsigned int x, unsigned int y, bool allowReadAgain);
+  virtual bool HandleActionReadEvent( unsigned int x, unsigned int y, bool allowReadAgain );
 
   /**
    * @copydoc Dali::AccessibilityAdaptor::HandleActionReadNextEvent()
    */
-  bool HandleActionReadNextEvent(bool allowEndFeedback = true);
+  virtual bool HandleActionReadNextEvent( bool allowEndFeedback = true);
 
   /**
    * @copydoc Dali::AccessibilityAdaptor::HandleActionReadPreviousEvent()
    */
-  bool HandleActionReadPreviousEvent(bool allowEndFeedback = true);
+  virtual bool HandleActionReadPreviousEvent( bool allowEndFeedback = true);
 
   /**
    * @copydoc Dali::AccessibilityAdaptor::HandleActionUpEvent()
    */
-  bool HandleActionUpEvent();
+  virtual bool HandleActionUpEvent();
 
   /**
    * @copydoc Dali::AccessibilityAdaptor::HandleActionDownEvent()
    */
-  bool HandleActionDownEvent();
+  virtual bool HandleActionDownEvent();
 
   /**
    * @copydoc Dali::AccessibilityAdaptor::HandleActionClearFocusEvent()
@@ -244,7 +243,14 @@ public:
 
 private:
 
-  // Destruction
+  /**
+   * @brief Called when the singleton is destroyed.
+   *
+   * @note This can be reimplemented for different platforms.
+   * The default implementation is in accessibility-adaptor-singleton-default.cpp.
+   * @return The instance of the AccessibilityAdaptor.
+   */
+  static void OnDestroy();
 
   /**
    * Destructor.
@@ -255,11 +261,10 @@ private:
   AccessibilityAdaptor( const AccessibilityAdaptor& );
   AccessibilityAdaptor& operator=( AccessibilityAdaptor& );
 
-private:
+protected:
 
   Dali::Integration::TouchEventCombiner mCombiner; ///< Combines multi-touch events.
 
-  bool mIsEnabled; ///< enable/disable the accessibility action
   Vector2 mReadPosition; ///< ActionRead position
 
   AccessibilityActionHandler* mActionHandler; ///< The pointer of accessibility action handler
@@ -267,7 +272,9 @@ private:
   AccessibilityGestureDetectorPtr mAccessibilityGestureDetector; ///< The accessibility gesture detector
 
   IndicatorInterface* mIndicator; ///< The indicator
-  bool mIndicatorFocused; ///< Whether the Indicator is focused
+
+  bool mIsEnabled        : 1; ///< enable/disable the accessibility action
+  bool mIndicatorFocused : 1; ///< Whether the Indicator is focused
 
 public:
 
