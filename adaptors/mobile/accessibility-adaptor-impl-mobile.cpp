@@ -16,17 +16,21 @@
  */
 
 // CLASS HEADER
-#include "accessibility-adaptor-impl.h"
+#include "accessibility-adaptor-impl-mobile.h"
 
 // EXTERNAL INCLUDES
 #include <vconf.h>
 #include <Ecore_X.h>
 #include <Elementary.h>
+#include <vconf.h>
 
+#include <dali/public-api/object/type-registry.h>
+#include <dali/integration-api/debug.h>
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/events/gesture-requests.h>
 
 // INTERNAL INCLUDES
+#include <singleton-service-impl.h>
 #include "system-settings.h"
 
 #define MSG_DOMAIN_CONTROL_ACCESS (int)ECORE_X_ATOM_E_ILLUME_ACCESS_CONTROL
@@ -40,13 +44,112 @@ namespace Internal
 namespace Adaptor
 {
 
-namespace {
+namespace // unnamed namespace
+{
+
 #if defined(DEBUG_ENABLED)
 Debug::Filter* gAccessibilityAdaptorLogFilter = Debug::Filter::New(Debug::NoLogging, false, "LOG_ACCESSIBILITY_ADAPTOR");
 #endif
+
+const char * DALI_VCONFKEY_SETAPPL_ACCESSIBILITY_DBUS_TTS = "db/setting/accessibility/atspi";
+
+bool GetEnabledVConf()
+{
+  int isEnabled = 0;
+  vconf_get_bool( DALI_VCONFKEY_SETAPPL_ACCESSIBILITY_DBUS_TTS, &isEnabled );
+
+  if( isEnabled == 0 )
+  {
+    vconf_get_bool( VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &isEnabled );
+  }
+
+  return (bool)isEnabled;
+}
+
+
+void AccessibilityOnOffNotification(keynode_t* node, void* data)
+{
+  AccessibilityAdaptor* adaptor = static_cast<AccessibilityAdaptor*>( data );
+
+  bool isEnabled = GetEnabledVConf();
+
+  DALI_LOG_INFO( gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, isEnabled ? "ENABLED" : "DISABLED" );
+
+  if( isEnabled )
+  {
+    adaptor->EnableAccessibility();
+  }
+  else
+  {
+    adaptor->DisableAccessibility();
+  }
+}
+
+BaseHandle Create()
+{
+  BaseHandle handle( AccessibilityAdaptor::Get() );
+
+  if ( !handle )
+  {
+    Dali::SingletonService service( SingletonService::Get() );
+    if ( service )
+    {
+      Dali::AccessibilityAdaptor adaptor = Dali::AccessibilityAdaptor( new AccessibilityAdaptorMobile() );
+      AccessibilityAdaptorMobile& adaptorImpl = AccessibilityAdaptorMobile::GetImplementation( adaptor );
+
+      bool isEnabled = GetEnabledVConf();
+
+      if( isEnabled )
+      {
+        adaptorImpl.EnableAccessibility();
+      }
+      DALI_LOG_INFO( gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, isEnabled ? "ENABLED" : "DISABLED" );
+
+      vconf_notify_key_changed( DALI_VCONFKEY_SETAPPL_ACCESSIBILITY_DBUS_TTS, AccessibilityOnOffNotification, &adaptorImpl );
+      vconf_notify_key_changed( VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, AccessibilityOnOffNotification, &adaptorImpl );
+
+      service.Register( typeid( adaptor ), adaptor );
+      handle = adaptor;
+    }
+  }
+
+  return handle;
+}
+
+TypeRegistration ACCESSIBILITY_ADAPTOR_TYPE( typeid(Dali::AccessibilityAdaptor), typeid(Dali::BaseHandle), Create, true /* Create Instance At Startup */ );
+
 } // unnamed namespace
 
-bool AccessibilityAdaptor::HandleActionNextEvent(bool allowEndFeedback)
+Dali::AccessibilityAdaptor AccessibilityAdaptor::Get()
+{
+  Dali::AccessibilityAdaptor adaptor;
+
+  Dali::SingletonService service( SingletonService::Get() );
+  if ( service )
+  {
+    // Check whether the singleton is already created
+    Dali::BaseHandle handle = service.GetSingleton( typeid( Dali::AccessibilityAdaptor ) );
+    if(handle)
+    {
+      // If so, downcast the handle
+      adaptor = Dali::AccessibilityAdaptor( dynamic_cast< AccessibilityAdaptor* >( handle.GetObjectPtr() ) );
+    }
+  }
+
+  return adaptor;
+}
+
+void AccessibilityAdaptor::OnDestroy()
+{
+  vconf_ignore_key_changed( VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, AccessibilityOnOffNotification );
+  vconf_ignore_key_changed( DALI_VCONFKEY_SETAPPL_ACCESSIBILITY_DBUS_TTS, AccessibilityOnOffNotification );
+}
+
+AccessibilityAdaptorMobile::AccessibilityAdaptorMobile()
+{
+}
+
+bool AccessibilityAdaptorMobile::HandleActionNextEvent(bool allowEndFeedback)
 {
   bool ret = false;
 
@@ -67,7 +170,7 @@ bool AccessibilityAdaptor::HandleActionNextEvent(bool allowEndFeedback)
   return ret;
 }
 
-bool AccessibilityAdaptor::HandleActionPreviousEvent(bool allowEndFeedback)
+bool AccessibilityAdaptorMobile::HandleActionPreviousEvent(bool allowEndFeedback)
 {
   bool ret = false;
 
@@ -88,7 +191,7 @@ bool AccessibilityAdaptor::HandleActionPreviousEvent(bool allowEndFeedback)
   return ret;
 }
 
-bool AccessibilityAdaptor::HandleActionActivateEvent()
+bool AccessibilityAdaptorMobile::HandleActionActivateEvent()
 {
   bool ret = false;
 
@@ -109,7 +212,7 @@ bool AccessibilityAdaptor::HandleActionActivateEvent()
   return ret;
 }
 
-bool AccessibilityAdaptor::HandleActionReadEvent(unsigned int x, unsigned int y, bool allowReadAgain)
+bool AccessibilityAdaptorMobile::HandleActionReadEvent(unsigned int x, unsigned int y, bool allowReadAgain)
 {
   bool ret = false;
 
@@ -195,7 +298,7 @@ bool AccessibilityAdaptor::HandleActionReadEvent(unsigned int x, unsigned int y,
   return ret;
 }
 
-bool AccessibilityAdaptor::HandleActionReadNextEvent(bool allowEndFeedback)
+bool AccessibilityAdaptorMobile::HandleActionReadNextEvent(bool allowEndFeedback)
 {
   bool ret = false;
 
@@ -216,7 +319,7 @@ bool AccessibilityAdaptor::HandleActionReadNextEvent(bool allowEndFeedback)
   return ret;
 }
 
-bool AccessibilityAdaptor::HandleActionReadPreviousEvent(bool allowEndFeedback)
+bool AccessibilityAdaptorMobile::HandleActionReadPreviousEvent(bool allowEndFeedback)
 {
   bool ret = false;
 
@@ -237,7 +340,7 @@ bool AccessibilityAdaptor::HandleActionReadPreviousEvent(bool allowEndFeedback)
   return ret;
 }
 
-bool AccessibilityAdaptor::HandleActionUpEvent()
+bool AccessibilityAdaptorMobile::HandleActionUpEvent()
 {
   bool ret = false;
 
@@ -258,7 +361,7 @@ bool AccessibilityAdaptor::HandleActionUpEvent()
   return ret;
 }
 
-bool AccessibilityAdaptor::HandleActionDownEvent()
+bool AccessibilityAdaptorMobile::HandleActionDownEvent()
 {
   bool ret = false;
 
@@ -279,257 +382,8 @@ bool AccessibilityAdaptor::HandleActionDownEvent()
   return ret;
 }
 
-bool AccessibilityAdaptor::HandleActionScrollUpEvent()
+AccessibilityAdaptorMobile::~AccessibilityAdaptorMobile()
 {
-  bool ret = false;
-
-  if( mIndicator && mIndicatorFocused )
-  {
-    // TODO: Send message to indicator with the correct action type
-  }
-  else if( mActionHandler )
-  {
-    ret = mActionHandler->AccessibilityActionScrollUp();
-  }
-
-  DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
-
-  return ret;
-}
-
-
-bool AccessibilityAdaptor::HandleActionScrollDownEvent()
-{
-  bool ret = false;
-
-  if( mIndicator && mIndicatorFocused )
-  {
-    // TODO: Send message to indicator with the correct action type
-  }
-  else if( mActionHandler )
-  {
-    ret = mActionHandler->AccessibilityActionScrollDown();
-  }
-
-  DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
-
-  return ret;
-}
-
-bool AccessibilityAdaptor::HandleActionPageLeftEvent()
-{
-  bool ret = false;
-
-  if( mIndicator && mIndicatorFocused )
-  {
-    // TODO: Send message to indicator with the correct action type
-  }
-  else if( mActionHandler )
-  {
-    ret = mActionHandler->AccessibilityActionPageLeft();
-  }
-
-  DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
-
-  return ret;
-}
-
-bool AccessibilityAdaptor::HandleActionPageRightEvent()
-{
-  bool ret = false;
-
-  if( mIndicator && mIndicatorFocused )
-  {
-    // TODO: Send message to indicator with the correct action type
-  }
-  else if( mActionHandler )
-  {
-    ret = mActionHandler->AccessibilityActionPageRight();
-  }
-
-  DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
-
-  return ret;
-}
-
-bool AccessibilityAdaptor::HandleActionPageUpEvent()
-{
-  bool ret = false;
-
-  if( mIndicator && mIndicatorFocused )
-  {
-    // TODO: Send message to indicator with the correct action type
-  }
-  else if( mActionHandler )
-  {
-    ret = mActionHandler->AccessibilityActionPageUp();
-  }
-
-  DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
-
-  return ret;
-}
-
-bool AccessibilityAdaptor::HandleActionPageDownEvent()
-{
-  bool ret = false;
-
-  if( mIndicator && mIndicatorFocused )
-  {
-    // TODO: Send message to indicator with the correct action type
-  }
-  else if( mActionHandler )
-  {
-    ret = mActionHandler->AccessibilityActionPageDown();
-  }
-
-  DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
-
-  return ret;
-}
-
-bool AccessibilityAdaptor::HandleActionMoveToFirstEvent()
-{
-  bool ret = false;
-
-  if( mIndicator && mIndicatorFocused )
-  {
-    // TODO: Send message to indicator with the correct action type
-  }
-  else if( mActionHandler )
-  {
-    ret = mActionHandler->AccessibilityActionMoveToFirst();
-  }
-
-  DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
-
-  return ret;
-}
-
-bool AccessibilityAdaptor::HandleActionMoveToLastEvent()
-{
-  bool ret = false;
-
-  if( mIndicator && mIndicatorFocused )
-  {
-    // TODO: Send message to indicator with the correct action type
-  }
-  else if( mActionHandler )
-  {
-    ret = mActionHandler->AccessibilityActionMoveToLast();
-  }
-
-  DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
-
-  return ret;
-}
-
-bool AccessibilityAdaptor::HandleActionReadFromTopEvent()
-{
-  bool ret = false;
-
-  if( mIndicator && mIndicatorFocused )
-  {
-    // TODO: Send message to indicator with the correct action type
-  }
-  else if( mActionHandler )
-  {
-    ret = mActionHandler->AccessibilityActionReadFromTop();
-  }
-
-  DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
-
-  return ret;
-}
-
-bool AccessibilityAdaptor::HandleActionReadFromNextEvent()
-{
-  bool ret = false;
-
-  if( mIndicator && mIndicatorFocused )
-  {
-    // TODO: Send message to indicator with the correct action type
-  }
-  else if( mActionHandler )
-  {
-    ret = mActionHandler->AccessibilityActionReadFromNext();
-  }
-
-  DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
-
-  return ret;
-}
-
-bool AccessibilityAdaptor::HandleActionZoomEvent()
-{
-  bool ret = false;
-
-  if( mIndicator && mIndicatorFocused )
-  {
-    // TODO: Send message to indicator with the correct action type
-  }
-  else if( mActionHandler )
-  {
-    ret = mActionHandler->AccessibilityActionZoom();
-  }
-
-  DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
-
-  return ret;
-}
-
-bool AccessibilityAdaptor::HandleActionReadIndicatorInformationEvent()
-{
-  bool ret = false;
-
-  if( mIndicator && mIndicatorFocused )
-  {
-    // TODO: Send message to indicator with the correct action type
-  }
-  else if( mActionHandler )
-  {
-    ret = mActionHandler->AccessibilityActionReadIndicatorInformation();
-  }
-
-  DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
-
-  return ret;
-}
-
-bool AccessibilityAdaptor::HandleActionReadPauseResumeEvent()
-{
-  bool ret = false;
-
-  if( mIndicator && mIndicatorFocused )
-  {
-    // TODO: Send message to indicator with the correct action type
-  }
-  else if( mActionHandler )
-  {
-    ret = mActionHandler->AccessibilityActionReadPauseResume();
-  }
-
-  DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
-
-  return ret;
-}
-
-bool AccessibilityAdaptor::HandleActionStartStopEvent()
-{
-  bool ret = false;
-
-  if( mIndicator && mIndicatorFocused )
-  {
-    // TODO: Send message to indicator with the correct action type
-  }
-  else if( mActionHandler )
-  {
-    ret = mActionHandler->AccessibilityActionStartStop();
-  }
-
-  DALI_LOG_INFO(gAccessibilityAdaptorLogFilter, Debug::General, "[%s:%d] %s\n", __FUNCTION__, __LINE__, ret?"TRUE":"FALSE");
-
-  return ret;
 }
 
 } // namespace Adaptor
