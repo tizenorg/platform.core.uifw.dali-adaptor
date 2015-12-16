@@ -49,20 +49,19 @@ class AccessibilityAdaptor : public Dali::BaseObject
 {
 public:
 
-  // Creation
-
   /**
    * Constructor.
    */
   AccessibilityAdaptor();
 
   /**
-   * Get an instance of the AccessibilityAdaptor.
+   * @brief Get an instance of the AccessibilityAdaptor.
+   *
+   * @note This singleton-style getter can be reimplemented for different platforms.
+   * The default implementation is in accessibility-adaptor-singleton-default.cpp.
    * @return The instance of the AccessibilityAdaptor.
    */
   static Dali::AccessibilityAdaptor Get();
-
-  // Public API
 
   /**
    * Turn on accessibility action
@@ -95,12 +94,6 @@ public:
    * @copydoc Dali::AccessibilityAdaptor::SetGestureHandler()
    */
   void SetGestureHandler(AccessibilityGestureHandler& handler);
-
-  /**
-   * @brief Set the Indicator
-   * @param[in] Indiciator interface
-   */
-  void SetIndicator( IndicatorInterface* indicator );
 
   /**
    * @copydoc Dali::AccessibilityAdaptor::HandleActionNextEvent()
@@ -243,8 +236,6 @@ public:
   bool HandleActionStartStopEvent();
 
 private:
-
-  // Destruction
 
   /**
    * Destructor.
