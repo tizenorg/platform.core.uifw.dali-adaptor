@@ -20,7 +20,6 @@
 
 // EXTERNAL INCLUDES
 #include <wayland-egl.h>
-#include <Ecore_Wayland.h>
 #include <wl-types.h>
 
 // INTERNAL INCLUDES

@@ -86,10 +86,30 @@ bool EglImplementation::InitializeGles( EGLNativeDisplayType display, bool isOwn
 
     EGLint majorVersion = 0;
     EGLint minorVersion = 0;
-    if ( !eglInitialize( mEglDisplay, &majorVersion, &minorVersion ) )
+    EGLBoolean ret = eglInitialize( mEglDisplay, &majorVersion, &minorVersion );
+    switch (ret)
     {
-      return false;
+      case EGL_FALSE:
+      {
+        DALI_ASSERT_ALWAYS( "eglInitialize failed EGL_FALSE" &&  0);
+        break;
+      }
+      case EGL_BAD_DISPLAY:
+      {
+        DALI_ASSERT_ALWAYS( "eglInitialize failed EGL_BAD_DISPLAY " &&  0);
+        break;
+      }
+      case EGL_NOT_INITIALIZED:
+      {
+        DALI_ASSERT_ALWAYS( "eglInitialize failed EGL_NOT_INITIALIZED " &&  0);
+        break;
+      }
+      default:
+      {
+         break;
+      }
     }
+
     eglBindAPI(EGL_OPENGL_ES_API);
 
     mContextAttribs.Clear();

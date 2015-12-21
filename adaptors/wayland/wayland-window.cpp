@@ -1,8 +1,5 @@
-#ifndef __DALI_WL_TYPES_H__
-#define __DALI_WL_TYPES_H__
-
 /*
- * Copyright (c) 2014 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2015 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +15,29 @@
  *
  */
 
-// EXTERNAL INCLUDES
-#include <wayland-client.h>
+// CLASS HEADER
+#include "wayland-window.h"
 
 namespace Dali
 {
 
-typedef ::wl_display WlDisplay;
-typedef ::wl_surface WlSurface;
+namespace Wayland
+{
+
+Window::Window()
+:mSurface( NULL ),
+ mShellSurface( NULL ),
+ mXdgSurface( NULL ),
+ mSurfaceId( 0 )
+{
+
+}
+
+Window::~Window()
+{
+}
+
+
+} // namespace Wayland
 
 } // namespace Dali
-
-#endif /* __DALI_WL_TYPES_H__ */
