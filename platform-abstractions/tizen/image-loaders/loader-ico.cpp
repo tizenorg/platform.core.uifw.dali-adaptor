@@ -57,6 +57,8 @@
 // INTERNAL INCLUDES
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/bitmap.h>
+//todor
+#include <iostream>
 
 namespace Dali
 {
@@ -168,6 +170,7 @@ bool LoadIcoHeaderHelper( FILE* fp,
                           Dali::Vector<unsigned char>& map,
                           unsigned int& fsize )
 {
+  std::cout << "todor: LoadIcoHeaderHelper" << std::endl;
   memset( &chosen, 0, sizeof(chosen) );
 
   if(fp == NULL)
@@ -266,10 +269,6 @@ bool LoadIcoHeaderHelper( FILE* fp,
       return false;
     }
     int cols = tcols;
-    if (cols <= 0)
-    {
-      cols = 256;
-    }
     if (!read_uchar(&map[0], fsize, &position, &byte))
     {
       return false;
@@ -293,6 +292,14 @@ bool LoadIcoHeaderHelper( FILE* fp,
     {
       bpp = word;
     }
+
+    // 0 colors means 256 for paletized modes.
+    // Note: We must not do this conversion for 32bpp or 24bpp as there is no palette.
+    if( bpp <= 8 && cols == 0 )
+    {
+      cols = 256;
+    }
+
     //else hot_y = word;
     unsigned int bmoffset, bmsize;
     if (!read_uint(&map[0], fsize, &position, &bmsize))
@@ -328,6 +335,10 @@ bool LoadIcoHeaderHelper( FILE* fp,
     }
   }
 
+  std::cout << "todor: pdelta:" << chosen.pdelta << " w:" << chosen.w << " h:" << chosen.h <<
+      " cols:" << chosen.cols << " bpp:" << chosen.bpp << " planes:" << chosen.planes <<
+      " bmsize:" << chosen.bmsize << " bmoffset:" << chosen.bmoffset << std::endl;
+
   if (chosen.bmoffset == 0)
   {
     return false;
@@ -340,6 +351,7 @@ bool LoadIcoHeaderHelper( FILE* fp,
 
 bool LoadIcoHeader( const ImageLoader::Input& input, unsigned int& width, unsigned int& height )
 {
+  std::cout << "todor: LoadIcoHeader" << std::endl;
   IcoData chosen;
   Dali::Vector<unsigned char> map;
   unsigned int fsize;
@@ -363,17 +375,22 @@ bool LoadBitmapFromIco( const ResourceLoadingClient& client, const ImageLoader::
   unsigned int fsize;
   FILE* const fp = input.file;
 
+  std::cout << "todor: LoadBitmapFromIco: gh1" << std::endl;
   if ( false == LoadIcoHeaderHelper(fp, chosen, map, fsize) )
   {
     return false;
   }
 
+  std::cout << "todor: LoadBitmapFromIco: gh2" << std::endl;
   Dali::Vector<unsigned int> pal;
   Dali::Vector<unsigned int> surface;
   Dali::Vector<unsigned char> maskbuf;
   Dali::Vector<unsigned char> pixbuf;
   pal.Resize(256 * 4);
+  std::cout << "todor: LoadBitmapFromIco: gh3" << std::endl;
 
+  //todor
+  //return false;
   unsigned int dword;
   unsigned short word;
 
@@ -416,6 +433,7 @@ bool LoadBitmapFromIco( const ResourceLoadingClient& client, const ImageLoader::
       diff_size = 1;
     }
   }
+  std::cout << "todor: LoadBitmapFromIco: gh4" << std::endl;
   if (diff_size)
   {
     DALI_LOG_WARNING("Broken ICO file!");
@@ -457,11 +475,14 @@ bool LoadBitmapFromIco( const ResourceLoadingClient& client, const ImageLoader::
   {
     return false; // colors important
   }
-  //colorsimportant = dword;
+
+  std::cout << "todor: LoadBitmapFromIco: gh5" << std::endl;
   surface.Resize(w * h * 4);
 
+  std::cout << "todor: LoadBitmapFromIco: gh6" << std::endl;
   memset(&surface[0], 0, w * h * 4);
 
+  std::cout << "todor: LoadBitmapFromIco: gh7: cols:" << cols << std::endl;
   for(int i = 0; i < cols ; i ++)
   {
     unsigned char a, r, g, b;
@@ -482,10 +503,10 @@ bool LoadBitmapFromIco( const ResourceLoadingClient& client, const ImageLoader::
     {
       return false;
     }
-    a = 0xff;
-    pal[i] = ARGB_JOIN(a, r, g, b);
+    pal[i] = ARGB_JOIN( 0xff, b, g, r );
   }
 
+  std::cout << "todor: LoadBitmapFromIco: gh8" << std::endl;
   if (!((bitcount == 1) || (bitcount == 4) || (bitcount == 8) ||
        (bitcount == 24) || (bitcount == 32)))
   {
@@ -496,9 +517,11 @@ bool LoadBitmapFromIco( const ResourceLoadingClient& client, const ImageLoader::
   maskbuf.Resize(stride * h);
   pixbuf.Resize(stride * 32 * 4); // more than enough
 
+  std::cout << "todor: LoadBitmapFromIco: gh9" << std::endl;
   unsigned int none_zero_alpha = 0;
   if (bitcount == 1)
   {
+    std::cout << "todor: LoadBitmapFromIco: bc=1" << std::endl;
     int pstride = stride * 4;
     for (int i = 0; i < h; i++)
     {
@@ -558,27 +581,20 @@ bool LoadBitmapFromIco( const ResourceLoadingClient& client, const ImageLoader::
   }
   else if (bitcount == 4)
   {
-    int pstride = ((w + 7) / 8) * 4;
-    for (int i = 0; i < h; i++)
+    std::cout << "todor: LoadBitmapFromIco: bc=4" << std::endl;
+    int pstride = ( ( w + 7 ) / 8 ) * 4;
+    for( int i = 0; i < h; i++ )
     {
-      pix = &surface[0] + ((h - 1 - i) * w);
+      pix = &surface[0] + ( ( h - 1 - i ) * w );
 
-      if (!read_mem(&map[0], fsize, &position, &pixbuf[0], pstride))
+      if( !read_mem( &map[0], fsize, &position, &pixbuf[0], pstride ) )
       {
         return false;
       }
       unsigned char* p = &pixbuf[0];
-      if (i >= (int)h)
+      for( int j = 0; j < w; j++ )
       {
-        continue;
-      }
-      for (int j = 0; j < w; j++)
-      {
-        if (j >= (int)w)
-        {
-          break;
-        }
-        if ((j & 0x1) == 0x1)
+        if( j & 0x1 )
         {
           *pix = pal[*p & 0x0f];
           p++;
@@ -591,107 +607,76 @@ bool LoadBitmapFromIco( const ResourceLoadingClient& client, const ImageLoader::
       }
     }
   }
-  else if (bitcount == 8)
+  else if( bitcount == 8 )
   {
-    int pstride = ((w + 3) / 4) * 4;
-    for (int i = 0; i < h; i++)
+    std::cout << "todor: LoadBitmapFromIco: bc=8: w:" << w << " h:" << h << std::endl;
+    int pstride = ( ( w + 3 ) / 4 ) * 4;
+    for( int i = 0; i < h; i++ )
     {
-      pix = &surface[0] + ((h - 1 - i) * w);
+      pix = &surface[0] + ( ( h - 1 - i ) * w );
 
-      if (!read_mem(&map[0], fsize, &position, &pixbuf[0], pstride))
+      if( !read_mem( &map[0], fsize, &position, &pixbuf[0], pstride ) )
       {
+        std::cout << "todor: LoadBitmapFromIco: bc=8: f" << std::endl;
         return false;
       }
       unsigned char* p = &pixbuf[0];
-      if (i >= (int)h)
+      for( int j = 0; j < w; j++ )
       {
-        continue;
-      }
-      for (int j = 0; j < w; j++)
-      {
-        if (j >= (int)w)
-        {
-          break;
-        }
-        *pix = pal[*p];
-        p++;
-        pix++;
+        *pix++ = pal[*p++];
       }
     }
   }
-  else if (bitcount == 24)
+  else if( bitcount == 24 )
   {
+    std::cout << "todor: LoadBitmapFromIco: bc=24" << std::endl;
+#if 1
     int pstride = w * 3;
-    for (int i = 0; i < h; i++)
+    for( int i = 0; i < h; i++ )
     {
-      pix = &surface[0] + ((h - 1 - i) * w);
+      pix = &surface[0] + ( ( h - 1 - i ) * w );
 
-      if (!read_mem(&map[0], fsize, &position, &pixbuf[0], pstride))
+      if( !read_mem( &map[0], fsize, &position, &pixbuf[0], pstride ) )
       {
         return false;
       }
       unsigned char* p = &pixbuf[0];
-      if (i >= (int)h)
+      for( int j = 0; j < w; j++ )
       {
-        continue;
-      }
-      for (int j = 0; j < w; j++)
-      {
-        unsigned char a, r, g, b;
-
-        if (j >= (int)w)
-        {
-          break;
-        }
-        b = p[0];
-        g = p[1];
-        r = p[2];
+        *pix++ = ARGB_JOIN( 0xff, p[0], p[1], p[2] );
         p += 3;
-        a = 0xff;
-        *pix = ARGB_JOIN(a, r, g, b);
-        pix++;
       }
     }
+#endif
   }
-  else if (bitcount == 32)
+  else if( bitcount == 32 )
   {
-    int pstride = w * 4;
-    for (int i = 0; i < h; i++)
-    {
-      pix = &surface[0] + ((h - 1 - i) * w);
+    std::cout << "todor: LoadBitmapFromIco: bc=32" << std::endl;
+    unsigned char* p = &map[position];
+    pix = &surface[0] + ( ( h - 1 ) * w );
+    unsigned char a = 0;
 
-      if (!read_mem(&map[0], fsize, &position, &pixbuf[0], pstride))
+    for( int i = 0; i < h; i++ )
+    {
+      for( int j = 0; j < w; j++ )
       {
-        return false;
-      }
-      unsigned char* p = &pixbuf[0];
-      if (i >= (int)h)
-      {
-        continue;
-      }
-      for (int j = 0; j < w; j++)
-      {
-        unsigned char a, r, g, b;
-        if (j >= (int)w)
-        {
-          break;
-        }
-        b = p[0];
-        g = p[1];
-        r = p[2];
         a = p[3];
-        p += 4;
-        if (a)
+        if( a )
         {
           none_zero_alpha = 1;
         }
-        *pix = ARGB_JOIN(a, r, g, b);
-        pix++;
+        *pix++ = ARGB_JOIN( a, p[0], p[1], p[2] );
+        p += 4;
       }
+      // Move the output up 1 line (we subtract 2 lines because we moved forward one line while copying).
+      pix -= ( w * 2 );
     }
   }
+
   if (!none_zero_alpha)
   {
+    std::cout << "todor: LoadBitmapFromIco: bc=!nza" << std::endl;
+#if 0
     if (!read_mem(&map[0], fsize, &position, &maskbuf[0], stride * 4 * h))
     {
       return false;
@@ -729,10 +714,14 @@ bool LoadBitmapFromIco( const ResourceLoadingClient& client, const ImageLoader::
         pix++;
       }
     }
+#endif
   }
+
+  std::cout << "todor: LoadBitmapFromIco: gh x1" << std::endl;
   pixels = bitmap.GetPackedPixelsProfile()->ReserveBuffer(Pixel::RGBA8888, w, h);
   memset(pixels, 0, w * h * 4);
   memcpy(pixels, (unsigned char*)&surface[0], w * h * 4);
+  std::cout << "todor: LoadBitmapFromIco: gh x9" << std::endl;
 
   return true;
 }
