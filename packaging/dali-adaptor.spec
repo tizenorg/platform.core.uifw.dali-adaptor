@@ -74,6 +74,7 @@ BuildRequires:  pkgconfig(capi-system-info)
 BuildRequires:  pkgconfig(ecore-wayland)
 BuildRequires:  pkgconfig(wayland-egl)
 BuildRequires:  pkgconfig(wayland-client)
+BuildRequires:  wayland-extension-client-devel
 %else
 BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(xi)

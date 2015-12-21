@@ -232,7 +232,7 @@ fi
 fi # ubuntu profile test
 
 if test "x$enable_wayland" = "xyes"; then
-PKG_CHECK_MODULES(WAYLAND, [ecore-wayland egl wayland-egl wayland-client >= 1.2.0 xkbcommon],
+PKG_CHECK_MODULES(WAYLAND, [ecore-wayland egl wayland-egl wayland-client >= 1.2.0 xdg-shell-client xkbcommon],
                   [DALI_HAS_ECOREWL=yes],
                   [DALI_HAS_ECOREWL=no])
 else
