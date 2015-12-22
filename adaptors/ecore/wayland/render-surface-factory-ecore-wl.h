@@ -1,6 +1,9 @@
 #ifndef __DALI_INTERNAL_ADAPTOR_ECORE_WL_RENDER_SURFACE_FACTORY_H__
 #define __DALI_INTERNAL_ADAPTOR_ECORE_WL_RENDER_SURFACE_FACTORY_H__
 
+asdasdasd
+
+
 /*
  * Copyright (c) 2014 Samsung Electronics Co., Ltd.
  *
