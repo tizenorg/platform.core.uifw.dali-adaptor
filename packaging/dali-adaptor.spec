@@ -64,6 +64,7 @@ BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(glesv2)
 BuildRequires:  pkgconfig(egl)
 BuildRequires:  libcurl-devel
+BuildRequires:  pkgconfig(tpkp-curl)
 
 
 %if 0%{?tizen_2_2_compatibility} != 1
