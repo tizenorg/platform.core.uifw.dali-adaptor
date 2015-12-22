@@ -74,6 +74,11 @@ BuildRequires:  pkgconfig(capi-system-info)
 BuildRequires:  pkgconfig(ecore-wayland)
 BuildRequires:  pkgconfig(wayland-egl)
 BuildRequires:  pkgconfig(wayland-client)
+BuildRequires:  pkgconfig(wayland-devel)
+# Currently Tizen Common does not use wayland extensions like xdg-shell
+%if "%{profile}" != "common"
+BuildRequires:  wayland-extension-client-devel
+%endif
 %else
 BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(xi)
