@@ -21,7 +21,7 @@
 // EXTERNAL INCLUDES
 #include <wayland-client.h> // from wayland-devel package
 
-#ifdef WAYLAND_EXTENSIONS_SUPPORTED
+#ifndef WAYLAND_EXTENSIONS_NOT_SUPPORTED
 #include <wayland-extension/xdg-shell-client-protocol.h>   // from wayland
 #endif
 
@@ -47,14 +47,12 @@ typedef ::wl_pointer_listener WlPointerListener;
 typedef ::wl_touch_listener WlTouchListener;
 typedef ::wl_keyboard_listener WlKeyboardListener;
 
-#ifdef WAYLAND_EXTENSIONS_SUPPORTED
-typedef ::xdg_shell WlXdgShell;
-typedef ::xdg_surface WlXdgShellSurface;
-#else
+#ifdef WAYLAND_EXTENSIONS_NOT_SUPPORTED
 typedef void* WlXdgShell;
 typedef void* WlXdgShellSurface;
-
-
+#else
+typedef ::xdg_shell WlXdgShell;
+typedef ::xdg_surface WlXdgShellSurface;
 #endif
 
 } // namespace Dali
