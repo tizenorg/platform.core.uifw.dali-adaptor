@@ -113,12 +113,12 @@ void Adaptor::Initialize( Dali::Configuration::ContextLoss configuration )
   // Note, Tizen does not use DALI_RETAINS_ALL_DATA, as it can reload images from
   // files automatically.
 
-//#if defined(NETWORK_LOGGING_ENABLED)
+#if defined(NETWORK_LOGGING_ENABLED)
   if( mEnvironmentOptions->PerformanceServerRequired() )
   {
     mPerformanceInterface = Dali::Internal::Adaptor::PerformanceInterfaceFactory::CreateInterface( *this, *mEnvironmentOptions );
   }
-//#endif
+#endif
 
   mCallbackManager = CallbackManager::New();
 
