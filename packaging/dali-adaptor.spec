@@ -37,9 +37,6 @@ Source0:    %{name}-%{version}.tar.gz
 %define shaderbincache_flag DISABLE
 %endif
 
-# macro is enabled by passing --define "with_node_js 1"
-%define build_with_node_js 0%{?with_node_js:1}
-
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 Requires:       giflib
@@ -69,18 +66,36 @@ BuildRequires:  pkgconfig(egl)
 BuildRequires:  libcurl-devel
 BuildRequires:  pkgconfig(tpkp-curl)
 
-%if %{?build_with_node_js}
-BuildRequires:  nodejs-devel
+
+%if 0%{?tizen_2_2_compatibility} != 1
+BuildRequires:  pkgconfig(capi-system-info)
 %endif
+
+# Tizen currently does not have libuv as a separate libuv package
+# So we have to look into the uv headers bundled inside node-js
+BuildRequires:  nodejs-devel
 
 %if 0%{?over_tizen_2_2}
 BuildRequires:  pkgconfig(capi-system-info)
 %endif
 
 %if %{with wayland}
-BuildRequires:  pkgconfig(ecore-wayland)
 BuildRequires:  pkgconfig(wayland-egl)
 BuildRequires:  pkgconfig(wayland-client)
+
+BuildRequires:  wayland-devel
+# Currently Tizen Common we use does not have wayland extensions like xdg-shell
+%if "%{profile}" != "common"
+BuildRequires:  wayland-extension-client-devel
+%endif
+
+# dali-adaptor-uv uses libuv mainloop and has its own wayland client (it needs wayland-client headers).
+BuildRequires:  libxkbcommon-devel
+
+# dali-adaptor uses ecore mainloop
+BuildRequires:  pkgconfig(ecore-wayland)
+
+####### BUILDING FOR X11#######
 %else
 BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(xi)
@@ -187,6 +202,8 @@ FONT_DOWNLOADED_PATH="%{font_downloaded_path}" ; export FONT_DOWNLOADED_PATH
 FONT_APPLICATION_PATH="%{font_application_path}"  ; export FONT_APPLICATION_PATH
 FONT_CONFIGURATION_FILE="%{font_configuration_file}" ; export FONT_CONFIGURATION_FILE
 
+#--with-node-js=/usr/include/node/ \ # only affects dali-adaptor-uv
+
 %configure --prefix=$PREFIX --with-jpeg-turbo --enable-gles=20 --enable-shaderbincache=%{shaderbincache_flag} --enable-profile=%{dali_profile} \
 %if 0%{?dali_feedback_plugin}
            --enable-feedback \
@@ -194,9 +211,7 @@ FONT_CONFIGURATION_FILE="%{font_configuration_file}" ; export FONT_CONFIGURATION
 %if 0%{?over_tizen_2_2}
            --with-over-tizen_2_2 \
 %endif
-%if %{?build_with_node_js}
            --with-node-js=/usr/include/node/ \
-%endif
            $configure_flags --libdir=%{_libdir}
 
 make %{?jobs:-j%jobs}
@@ -278,6 +293,7 @@ exit 0
 %{dev_include_path}/dali/devel-api/*
 %{dev_include_path}/dali/doc/*
 %{_libdir}/pkgconfig/dali.pc
+%{_libdir}/pkgconfig/dali-uv.pc
 
 %files integration-devel
 %defattr(-,root,root,-)
