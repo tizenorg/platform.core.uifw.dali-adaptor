@@ -78,7 +78,7 @@ BuildRequires:  pkgconfig(wayland-client)
 BuildRequires:  wayland-devel
 # Currently Tizen Common does not use wayland extensions like xdg-shell
 %if "%{profile}" != "common"
-BuildRequires:  pkgconfig(wayland-extension-client)
+BuildRequires:  libwayland-extension-client
 BuildRequires:  wayland-extension-client-devel
 %endif
 %else
