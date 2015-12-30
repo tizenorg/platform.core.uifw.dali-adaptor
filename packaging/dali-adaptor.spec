@@ -2,38 +2,40 @@
 
 Name:       dali-adaptor
 Summary:    The DALi Tizen Adaptor
-Version:    1.1.7
+Version:    1.1.15
 Release:    1
 Group:      System/Libraries
 License:    Apache-2.0, BSD-2.0, MIT
 URL:        https://review.tizen.org/git/?p=platform/core/uifw/dali-adaptor.git;a=summary
 Source0:    %{name}-%{version}.tar.gz
 
+# Get the profile from tizen_profile_name if it exists.
+%if 0%{?tizen_profile_name:1}
+%define profile %{tizen_profile_name}
+%endif
+
 %if "%{profile}" == "mobile"
 %define dali_profile MOBILE
 %define dali_feedback_plugin 0
-%define over_tizen_2_2 1
 %define shaderbincache_flag DISABLE
 %endif
 
 %if "%{profile}" == "tv"
 %define dali_profile TV
 %define dali_feedback_plugin 0
-%define over_tizen_2_2 1
 %define shaderbincache_flag ENABLE
 %endif
 
 %if "%{profile}" == "wearable"
 %define dali_profile WEARABLE
 %define dali_feedback_plugin 0
-%define over_tizen_2_2 1
 %define shaderbincache_flag DISABLE
 %endif
 
 %if "%{profile}" == "common"
 %define dali_profile COMMON
 %define dali_feedback_plugin 0
-%define over_tizen_2_2 0
+%define tizen_2_2_compatibility 1
 %define shaderbincache_flag DISABLE
 %endif
 
@@ -52,8 +54,7 @@ BuildRequires:  libjpeg-turbo-devel
 BuildRequires:  pkgconfig(evas)
 BuildRequires:  dali-devel
 BuildRequires:  dali-integration-devel
-BuildRequires:  vconf-devel
-BuildRequires:  vconf-keys-devel
+BuildRequires:  pkgconfig(vconf)
 BuildRequires:  tts-devel
 BuildRequires:  pkgconfig(dlog)
 BuildRequires:  libdrm-devel
@@ -65,7 +66,7 @@ BuildRequires:  pkgconfig(egl)
 BuildRequires:  libcurl-devel
 
 
-%if 0%{?over_tizen_2_2}
+%if 0%{?tizen_2_2_compatibility} != 1
 BuildRequires:  pkgconfig(capi-system-info)
 %endif
 
@@ -73,6 +74,12 @@ BuildRequires:  pkgconfig(capi-system-info)
 BuildRequires:  pkgconfig(ecore-wayland)
 BuildRequires:  pkgconfig(wayland-egl)
 BuildRequires:  pkgconfig(wayland-client)
+BuildRequires:  wayland-devel
+# Currently Tizen Common does not use wayland extensions like xdg-shell
+%if "%{profile}" != "common"
+BuildRequires:  pkgconfig(wayland-extension-client)
+BuildRequires:  wayland-extension-client-devel
+%endif
 %else
 BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(xi)
@@ -161,9 +168,9 @@ CXXFLAGS+=" -DWAYLAND"
 configure_flags="--enable-wayland"
 %endif
 
-%if 0%{?over_tizen_2_2}
-CFLAGS+=" -DOVER_TIZEN_SDK_2_2"
-CXXFLAGS+=" -DOVER_TIZEN_SDK_2_2"
+%if 0%{?tizen_2_2_compatibility}
+CFLAGS+=" -DTIZEN_SDK_2_2_COMPATIBILITY"
+CXXFLAGS+=" -DTIZEN_SDK_2_2_COMPATIBILITY"
 %endif
 
 libtoolize --force
@@ -181,8 +188,8 @@ FONT_CONFIGURATION_FILE="%{font_configuration_file}" ; export FONT_CONFIGURATION
 %if 0%{?dali_feedback_plugin}
            --enable-feedback \
 %endif
-%if 0%{?over_tizen_2_2}
-           --with-over-tizen_2_2 \
+%if 0%{?tizen_2_2_compatibility}
+           --with-tizen-2-2-compatibility \
 %endif
            $configure_flags --libdir=%{_libdir}
 

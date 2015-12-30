@@ -155,12 +155,12 @@ else
   AC_MSG_NOTICE("build for node_js == no");
 fi
 
-
-AC_ARG_WITH([over-tizen_2_2],
-            [AC_HELP_STRING([--with-over-tizen_2_2],
-                            [Use tizen API over ver. 2.2])],
-            [with_over_tizen_2_2=yes],
-            [with_over_tizen_2_2=no])
+# Option to allow building with Tizen SDK 2.2
+AC_ARG_WITH([tizen-2-2-compatibility],
+            [AC_HELP_STRING([--with-tizen-2-2-compatibility],
+                            [Use Tizen SDK 2.2 compatibility])],
+            [with_tizen_2_2_compatibility=$withval],
+            [with_tizen_2_2_compatibility=no])
 
 # Tizen Profile options
 AC_ARG_ENABLE([profile],
@@ -182,21 +182,43 @@ AC_ARG_ENABLE(wayland,
 DALI_ADAPTOR_CFLAGS="$DALI_ADAPTOR_CFLAGS -DDALI_PROFILE_${enable_profile}"
 DALI_PROFILE_CFLAGS=" -DDALI_PROFILE_${enable_profile}"
 AM_CONDITIONAL([COMMON_PROFILE], [test x$enable_profile = xCOMMON])
+AM_CONDITIONAL([WAYLAND_EXTENSIONS_SUPPORTED], [test x$enable_profile != xCOMMON])
 AM_CONDITIONAL([MOBILE_PROFILE], [test x$enable_profile = xMOBILE])
 AM_CONDITIONAL([WEARABLE_PROFILE], [test x$enable_profile = xWEARABLE])
 AM_CONDITIONAL([TV_PROFILE], [test x$enable_profile = xTV])
 AM_CONDITIONAL([UBUNTU_PROFILE], [test x$enable_profile = xUBUNTU])
 AM_CONDITIONAL([WAYLAND], [test x$enable_wayland = xyes])
 
-AM_CONDITIONAL([ENABLE_NETWORK_LOGGING], [test x$enable_network_logging = xyes])
+AM_CONDITIONAL([ENABLE_NETWORK_LOGGING], [test x$enable_networklogging = xyes])
 
 # Platforms should either enable features or remove them, they
 # should not disable features. This allows the developer to override
 # features through the command line.
 
+if test "x$enable_profile" = "xCOMMON"; then
 PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
+fi
 
-if test "x$enable_profile" != "xUBUNTU"; then
+if test "x$enable_profile" = "xMOBILE"; then
+PKG_CHECK_MODULES(OPENGLES20, gles20)
+enable_assimp=no
+fi
+
+if test "x$enable_profile" = "xLITE"; then
+PKG_CHECK_MODULES(OPENGLES20, gles20)
+fi
+
+if test "x$enable_profile" = "xWEARABLE"; then
+PKG_CHECK_MODULES(OPENGLES20, gles20)
+fi
+
+if test "x$enable_profile" = "xTV"; then
+PKG_CHECK_MODULES(OPENGLES20, glesv2)
+fi
+
+if test "x$enable_profile" = "xUBUNTU"; then
+PKG_CHECK_MODULES(OPENGLES20, glesv2 egl)
+else
 PKG_CHECK_MODULES(CAPI_APPFW_APPLICATION, capi-appfw-application)
 PKG_CHECK_MODULES(DLOG, dlog)
 PKG_CHECK_MODULES(SENSOR, sensor)
@@ -204,7 +226,7 @@ PKG_CHECK_MODULES(TTS, tts)
 PKG_CHECK_MODULES(VCONF, vconf)
 PKG_CHECK_MODULES(CAPI_SYSTEM_SYSTEM_SETTINGS, capi-system-system-settings)
 
-if test "x$with_over_tizen_2_2" = "xyes"; then
+if test "x$with_tizen_2_2_compatibility" = "xno"; then
 PKG_CHECK_MODULES(CAPI_SYSTEM_INFO, capi-system-info)
 fi
 
@@ -214,6 +236,11 @@ if test "x$enable_wayland" = "xyes"; then
 PKG_CHECK_MODULES(WAYLAND, [ecore-wayland egl wayland-egl wayland-client >= 1.2.0 xkbcommon],
                   [DALI_HAS_ECOREWL=yes],
                   [DALI_HAS_ECOREWL=no])
+
+# common profile currently does not have wayland extensions like xdg-shell
+if test "x$enable_profile" != "xCOMMON"; then
+PKG_CHECK_MODULES(WAYLAND_EXTENSION, xdg-shell-client)
+fi
 else
 PKG_CHECK_MODULES(ECORE_X, [ecore-x],
                   [DALI_HAS_ECOREX=yes],
@@ -297,12 +324,12 @@ Configuration
   Profile:                          $enable_profile
   Data Dir (Read/Write):            $dataReadWriteDir
   Data Dir (Read Only):             $dataReadOnlyDir
-  OVERTIZEN2.2:                     $with_over_tizen_2_2
+  Tizen SDK 2.2 compatibility:      $with_tizen_2_2_compatibility
   EldBus:                           $eldbus_available
   Shader Binary Cache:              $enable_shaderbincache
   Build for Node.JS (LibUV)         $build_for_node_js
   Ecore Version At Least 1.13.0     $ecore_imf_1_13
-  Network logging enabled:          $enable_network_logging
+  Network logging enabled:          $enable_networklogging
   Font config file:                 $fontConfigurationFile
 "
 # optional output of node.js source path if we're building for node.js
