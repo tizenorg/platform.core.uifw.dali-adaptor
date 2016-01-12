@@ -23,6 +23,9 @@
 #include <Ecore_Input.h>
 #include <Ecore_X.h>
 
+#include <dconf/dconf.h>
+#include <gobject/gsignal.h>
+
 #include <X11/Xlib.h>
 #include <X11/extensions/XInput2.h>
 #include <X11/extensions/XI2.h>
@@ -276,6 +279,11 @@ static unsigned int GetCurrentMilliSeconds(void)
   return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
 }
 
+static void some_settings_cb( GSettings* settings, const gchar  *key, gpointer  user_data )
+{
+  std::cout << "happy" << std::endl;
+};
+
 } // unnamed namespace
 
 // Impl to hide EFL implementation.
@@ -413,6 +421,17 @@ struct EventHandler::Impl
       vconf_notify_key_changed( DALI_VCONFKEY_SETAPPL_ACCESSIBILITY_FONT_NAME, VconfNotifyFontNameChanged, handler );
       vconf_notify_key_changed( VCONFKEY_SETAPPL_ACCESSIBILITY_FONT_SIZE, VconfNotifyFontSizeChanged, handler );
 #endif // DALI_PROFILE_UBUNTU
+
+      DConfClient* c = dconf_client_new();
+      dconf_client_watch_fast( c, "/org/cinnamon/desktop/interface/font-name");
+
+      GSettings* settings = g_settings_new("org.cinnamon.desktop.interface");
+      //GSettings* settings = g_settings_new("org.gnome.desktop.interface");
+
+      g_signal_connect ( settings, "changed::font-name", G_CALLBACK (some_settings_cb), NULL );
+
+      char* value = g_settings_get_string (settings, "font-name");
+      std::cout << "value:" << value << std::endl;
 
 #ifdef DALI_ELDBUS_AVAILABLE
 

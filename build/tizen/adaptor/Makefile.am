@@ -325,6 +325,7 @@ libdali_adaptor_la_CXXFLAGS = \
                       $(LIBDRM_CFLAGS) \
                       $(LIBEXIF_CFLAGS) \
                       $(LIBCURL_CFLAGS) \
+                      $(DCONF_CFLAGS) \
                       $(TPKP_CURL_CFLAGS)
 
 # Todo, as soon as common repos are updated on build server remove this.
@@ -348,6 +349,7 @@ libdali_adaptor_la_LIBADD = \
                       $(LIBEXIF_LIBS) \
                       $(LIBCURL_LIBS) \
                       $(HARFBUZZ_LIBS) \
+                      $(DCONF_LIBS) \
                       $(TPKP_CURL_LIBS) \
                       -lgif \
                       -lpthread \
