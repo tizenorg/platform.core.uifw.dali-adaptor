@@ -112,8 +112,11 @@ BuildRequires:  libxkbcommon-devel
 # dali-adaptor uses ecore mainloop
 BuildRequires:  pkgconfig(ecore-wayland)
 
-####### BUILDING FOR X11#######
+# tpkp-curl (certificate pinning for libcurl functions) is only available in Tizen 3.0
+BuildRequires:  pkgconfig(tpkp-curl)
+
 %else
+####### BUILDING FOR X11#######
 BuildRequires:  pkgconfig(egl)
 BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(xi)
