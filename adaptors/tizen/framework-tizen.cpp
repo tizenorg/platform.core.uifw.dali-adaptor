@@ -1,4 +1,14 @@
 /*
+#ifndef TIZEN_SDK_2_2_COMPATIBILITY
+#include <system_info.h>
+#include <app_control_internal.h>
+#include <bundle_internal.h>
+#endif
+#ifndef TIZEN_SDK_2_2_COMPATIBILITY
+#include <system_info.h>
+#include <app_control_internal.h>
+#include <bundle_internal.h>
+#endif
  * Copyright (c) 2014 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,6 +36,7 @@
 #ifdef OVER_TIZEN_SDK_2_2
 #include <system_info.h>
 #include <app_control_internal.h>
+#include <bundle_internal.h>
 #endif
 
 #include <dali/integration-api/debug.h>
@@ -322,7 +333,11 @@ void Framework::Run()
 
 void Framework::Quit()
 {
+#ifdef TIZEN_SDK_2_2_COMPATIBILITY
   app_efl_exit();
+#else
+  ui_app_exit();
+#endif
 }
 
 bool Framework::IsMainLoopRunning()
