@@ -39,17 +39,22 @@ namespace Internal
 namespace Adaptor
 {
 
-namespace
+struct Clipboard::Impl
 {
-BaseHandle Create()
-{
-  BaseHandle handle( Clipboard::Get() );
+  Impl()
+  {
+  }
 
-  return handle;
+  // Put implementation here.
+};
+
+Clipboard::Clipboard(Impl* impl)
+: mImpl(impl)
+{
+  Impl()
+  {
+  }
 }
-TypeRegistration CLIPBOARD_TYPE( typeid(Dali::Clipboard), typeid(Dali::BaseHandle), Create, true /* Create Instance At Startup */ );
-
-} // unnamed namespace
 
 Clipboard::~Clipboard()
 {
@@ -68,6 +73,12 @@ Dali::Clipboard Clipboard::Get()
     {
       // If so, downcast the handle
       clipboard = Dali::Clipboard( dynamic_cast< Clipboard* >( handle.GetObjectPtr() ) );
+    }
+    else
+    {
+      Clipboard::Impl* impl( new Clipboard::Impl() );
+      clipboard = Dali::Clipboard( new Clipboard(impl) );
+      service.Register( typeid(Dali::Clipboard), clipboard );
     }
   }
 

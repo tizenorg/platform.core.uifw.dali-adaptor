@@ -42,15 +42,6 @@ namespace Adaptor
 namespace
 {
 
-BaseHandle Create()
-{
-  return ImfManager::Get();
-}
-
-TypeRegistration IMF_MANAGER_TYPE( typeid(Dali::ImfManager), typeid(Dali::BaseHandle), Create );
-
-} // unnamed namespace
-
 bool ImfManager::IsAvailable()
 {
   return false;
