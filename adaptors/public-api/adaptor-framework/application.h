@@ -44,6 +44,7 @@ class Application;
 }
 }
 /**
+ * @SINCE_1_0.0
  * An Application class object should be created by every application
  * that wishes to use Dali.  It provides a means for initialising the
  * resources required by the Dali::Core.
@@ -97,59 +98,67 @@ public:
   typedef Signal< void (Application&, void *) > AppControlSignalType;
 
   /**
+   * @SINCE_1_0.0
    * Decides whether a Dali application window is opaque or transparent.
    */
   enum WINDOW_MODE
   {
-    OPAQUE = 0,       ///< The window will be opaque
-    TRANSPARENT = 1   ///< The window transparency will match the alpha value set in Dali::Stage::SetBackgroundcolor()
+    OPAQUE = 0,       ///< The window will be opaque @SINCE_1_0.0
+    TRANSPARENT = 1   ///< The window transparency will match the alpha value set in Dali::Stage::SetBackgroundcolor() @SINCE_1_0.0
   };
 
 public:
 
   /**
+   * @SINCE_1_0.0
    * This is the constructor for applications without an argument list.
    */
   static Application New();
 
   /**
-   * This is the constructor for applications.
-   *
+   * @SINCE_1_0.0
    * @param[in,out]  argc        A pointer to the number of arguments
    * @param[in,out]  argv        A pointer the the argument list
+   * This is the constructor for applications.
+   *
    */
   static Application New( int* argc, char **argv[] );
 
   /**
-   * This is the constructor for applications with a name
-   *
+   * @SINCE_1_0.0
    * @param[in,out]  argc        A pointer to the number of arguments
    * @param[in,out]  argv        A pointer the the argument list
    * @param[in]      stylesheet  The path to user defined theme file
+   * This is the constructor for applications with a name
+   *
    */
   static Application New( int* argc, char **argv[], const std::string& stylesheet );
 
   /**
-   * This is the constructor for applications with a name
-   *
+   * @SINCE_1_0.0
    * @param[in,out]  argc        A pointer to the number of arguments
    * @param[in,out]  argv        A pointer the the argument list
    * @param[in]      stylesheet  The path to user defined theme file
    * @param[in]      windowMode  A member of WINDOW_MODE
+   * This is the constructor for applications with a name
+   *
    */
   static Application New( int* argc, char **argv[], const std::string& stylesheet, WINDOW_MODE windowMode );
 
   /**
+   * @SINCE_1_0.0
    * Construct an empty handle
    */
   Application();
 
   /**
+   * @SINCE_1_0.0
    * Copy Constructor
    */
   Application( const Application& application );
 
   /**
+   * @SINCE_1_0.0
    * Assignment operator
    */
   Application& operator=( const Application& applicaton );
@@ -158,11 +167,13 @@ public:
    * @brief Destructor
    *
    * This is non-virtual since derived Handle types must not contain data or virtual methods.
+   * @SINCE_1_0.0
    */
   ~Application();
 
 public:
   /**
+   * @SINCE_1_0.0
    * This starts the application. Choosing this form of main loop indicates that the default
    * application configuration of APPLICATION_HANDLES_CONTEXT_LOSS is used. On platforms where
    * context loss can occur, the application is responsible for tearing down and re-loading UI.
@@ -171,6 +182,7 @@ public:
   void MainLoop();
 
   /**
+   * @SINCE_1_0.0
    * This starts the application, and allows the app to choose a different configuration.
    * If the application plans on using the ReplaceSurface or ReplaceWindow API, then this will
    * trigger context loss & regain.
@@ -179,17 +191,22 @@ public:
   void MainLoop(Configuration::ContextLoss configuration);
 
   /**
+   * @SINCE_1_0.0
    * This lowers the application to bottom without actually quitting it
    */
   void Lower();
 
   /**
+   * @SINCE_1_0.0
    * This quits the application.  Tizen applications should use Lower to improve re-start performance unless they need to Quit completely.
    */
   void Quit();
 
   /**
-   * Ensures that the function passed in is called from the main loop when it is idle.
+   * @SINCE_1_0.0
+   * @param[in]  callback  The function to call.
+   * @return true if added successfully, false otherwise
+   *
    * @note Function must be called from main event thread only
    *
    * A callback of the following type may be used:
@@ -197,96 +214,107 @@ public:
    *   void MyFunction();
    * @endcode
    *
-   * @param[in]  callback  The function to call.
-   * @return true if added successfully, false otherwise
-   *
    * @note Ownership of the callback is passed onto this class.
+   * Ensures that the function passed in is called from the main loop when it is idle.
    */
   bool AddIdle( CallbackBase* callback );
 
   /**
+   * @SINCE_1_0.0
+   * @return A handle to the window
    * Retrieves the window used by the Application class.
    * The application writer can use the window to change indicator and orientation
    * properties.
-   * @return A handle to the window
    */
   Window GetWindow();
 
   /**
+   * @SINCE_1_0.0
+   * @param[in] windowPosition The position and size parameters of the new window
+   * @param[in] name The name of the new window
    * Replace the current window.
    * This will force context loss.
    * If you plan on using this API in your application, then you should configure
    * it to prevent discard behaviour when handling the Init signal.
-   * @param[in] windowPosition The position and size parameters of the new window
-   * @param[in] name The name of the new window
    */
   void ReplaceWindow(PositionSize windowPosition, const std::string& name);
 
 public: // Stereoscopy
 
   /**
-   * Set the viewing mode for the application.
+   * @SINCE_1_0.0
    * @param[in] viewMode The new viewing mode.
+   * Set the viewing mode for the application.
    */
   void SetViewMode( ViewMode viewMode );
 
   /**
-   * Get the current viewing mode.
+   * @SINCE_1_0.0
    * @return The current viewing mode.
+   * Get the current viewing mode.
    */
   ViewMode GetViewMode() const;
 
   /**
+   * @SINCE_1_0.0
+   * @param[in] stereoBase The stereo base (eye separation) for Stereoscopic 3D
    * Set the stereo base (eye separation) for Stereoscopic 3D
    *
-   * @param[in] stereoBase The stereo base (eye separation) for Stereoscopic 3D
    */
   void SetStereoBase( float stereoBase );
 
   /**
+   * @SINCE_1_0.0
+   * @return The stereo base (eye separation) for Stereoscopic 3D
    * Get the stereo base (eye separation) for Stereoscopic 3D
    *
-   * @return The stereo base (eye separation) for Stereoscopic 3D
    */
   float GetStereoBase() const;
 
 public:  // Signals
 
   /**
+   * @SINCE_1_0.0
    * The user should connect to this signal to determine when they should initialise
    * their application.
    */
   AppSignalType& InitSignal();
 
   /**
+   * @SINCE_1_0.0
    * The user should connect to this signal to determine when they should terminate
    * their application
    */
   AppSignalType& TerminateSignal();
 
   /**
+   * @SINCE_1_0.0
    * The user should connect to this signal if they need to perform any special
    * activities when the application is about to be paused.
    */
   AppSignalType& PauseSignal();
 
   /**
+   * @SINCE_1_0.0
    * The user should connect to this signal if they need to perform any special
    * activities when the application has resumed.
    */
   AppSignalType& ResumeSignal();
 
   /**
+   * @SINCE_1_0.0
    * This signal is sent when the system requires the user to reinitialise itself.
    */
   AppSignalType& ResetSignal();
 
   /**
+   * @SINCE_1_0.0
    * This signal is emitted when the window the application is rendering on is resized.
    */
   AppSignalType& ResizeSignal();
 
   /**
+  * @SINCE_1_0.0
   * This signal is emitted when another application sends a launch request to the application.
   * When the application is launched, this signal is emitted after the main loop of the application starts up.
   * The passed parameter describes the launch request and contains the information about why the application is launched.
@@ -294,27 +322,32 @@ public:  // Signals
   AppControlSignalType& AppControlSignal();
 
   /**
+   * @SINCE_1_0.0
    * This signal is emitted when the language is changed on the device.
    */
   AppSignalType& LanguageChangedSignal();
 
   /**
+  * @SINCE_1_0.0
   * This signal is emitted when the region of the device is changed.
   */
   AppSignalType& RegionChangedSignal();
 
   /**
+  * @SINCE_1_0.0
   * This signal is emitted when the battery level of the device is low.
   */
   AppSignalType& BatteryLowSignal();
 
   /**
+  * @SINCE_1_0.0
   * This signal is emitted when the memory level of the device is low.
   */
   AppSignalType& MemoryLowSignal();
 
 public: // Not intended for application developers
   /**
+   * @SINCE_1_0.0
    * Internal constructor
    */
   explicit DALI_INTERNAL Application(Internal::Adaptor::Application* application);
