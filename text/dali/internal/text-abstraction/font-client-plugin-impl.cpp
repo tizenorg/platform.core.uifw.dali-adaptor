@@ -660,10 +660,11 @@ void FontClient::Plugin::GetFontMetrics( FontId fontId,
 
     // Adjust the metrics if the fixed-size font should be down-scaled
     if( font.mIsFixedSizeBitmap &&
-        ( maxFixedSize > 0 ) &&
-        ( font.mFixedHeightPixels > maxFixedSize ) )
+        ( maxFixedSize > 0 ) )
     {
       float scaleFactor = static_cast<float>(maxFixedSize) / static_cast<float>(font.mFixedHeightPixels);
+
+      std::cout << "scaleFactor: " << scaleFactor << std::endl;
 
       metrics.ascender           *= scaleFactor;
       metrics.descender          *= scaleFactor;
@@ -726,8 +727,7 @@ bool FontClient::Plugin::GetGlyphMetrics( GlyphInfo* array,
           array[i].yBearing = font.mFixedHeightPixels;
 
           // Adjust the metrics if the fixed-size font should be down-scaled
-          if( ( maxFixedSize > 0 ) &&
-              ( font.mFixedHeightPixels > maxFixedSize ) )
+          if( maxFixedSize > 0 )
           {
             float scaleFactor = static_cast<float>(maxFixedSize) / static_cast<float>(font.mFixedHeightPixels);
 
