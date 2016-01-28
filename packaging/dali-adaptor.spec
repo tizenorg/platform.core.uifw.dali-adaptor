@@ -63,6 +63,9 @@ BuildRequires:  pkgconfig(glesv2)
 %define gles_requirement_setup 1
 %endif
 
+# If you want to use ttrace, set enable_ttrace to 1 and build dali-adaptor again.
+%define enable_ttrace 0
+
 # If we have not set a BuildRequires for the gles version, default it here.
 %{!?gles_requirement_setup: BuildRequires:  pkgconfig(glesv2)}
 
@@ -135,7 +138,9 @@ BuildRequires:  pkgconfig(capi-system-system-settings)
 BuildRequires:  pkgconfig(capi-system-info)
 %endif
 
-
+%if 0%{?enable_ttrace}
+BuildRequires:  pkgconfig(ttrace)
+%endif
 
 %description
 The DALi Tizen Adaptor provides a Tizen specific implementation of the dali-core
@@ -219,6 +224,10 @@ CFLAGS+=" -DTIZEN_SDK_2_2_COMPATIBILITY"
 CXXFLAGS+=" -DTIZEN_SDK_2_2_COMPATIBILITY"
 %endif
 
+%if 0%{?enable_ttrace}
+CXXFLAGS+=" -DENABLE_TTRACE"
+%endif
+
 libtoolize --force
 cd %{_builddir}/%{name}-%{version}/build/tizen
 autoreconf --install
@@ -249,6 +258,9 @@ FONT_CONFIGURATION_FILE="%{font_configuration_file}" ; export FONT_CONFIGURATION
            --enable-efl=no \
 %else
            --enable-efl=yes \
+%endif
+%if 0%{?enable_ttrace}
+           --enable-networklogging \
 %endif
            --enable-appfw=yes \
            --with-libuv=/usr/include/node/ \
