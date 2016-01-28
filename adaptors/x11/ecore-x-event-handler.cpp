@@ -677,7 +677,7 @@ struct EventHandler::Impl
       {
         std::string keyName( keyEvent->keyname );
         std::string keyString( "" );
-        int keyCode = ecore_x_keysym_keycode_get(keyEvent->keyname);
+        int keyCode = KeyLookup::GetDaliKeyCode( keyEvent->keyname );
         int modifier( keyEvent->modifiers );
         unsigned long time = keyEvent->timestamp;
 
@@ -749,7 +749,7 @@ struct EventHandler::Impl
       {
         std::string keyName( keyEvent->keyname );
         std::string keyString( "" );
-        int keyCode = ecore_x_keysym_keycode_get(keyEvent->keyname);
+        int keyCode = KeyLookup::GetDaliKeyCode( keyEvent->keyname );
         int modifier( keyEvent->modifiers );
         unsigned long time( keyEvent->timestamp );
 
