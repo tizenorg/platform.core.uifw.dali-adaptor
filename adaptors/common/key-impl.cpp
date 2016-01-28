@@ -20,6 +20,7 @@
 
 // EXTERNAL INCLUDES
 #include <map>
+#include <stdlib.h>
 #include <string.h>
 #include <iostream>
 
@@ -126,6 +127,19 @@ const char* GetKeyName( Dali::KEY daliKey )
 {
   return globalKeyLookup.GetKeyName( daliKey );
 }
+
+int GetDaliKeyCode( const char* keyName )
+{
+  int keyCode;
+
+  if (!strncmp(keyName, "Keycode-", 8))
+    keyCode = atoi(keyName + 8);
+  else
+    keyCode = globalKeyLookup.GetDaliKeyEnum( keyName );
+
+  return keyCode;
+}
+
 
 } // namespace KeyLookup
 

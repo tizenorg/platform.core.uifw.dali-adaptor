@@ -65,6 +65,14 @@ bool IsDeviceButton( const char* keyName );
  */
 const char* GetKeyName( Dali::KEY daliKey );
 
+/**
+ * get Dali key code from the given key name string.
+ * @param keyName A pointer to the key name
+ * @return keyCode, DALI_KEY_INVALID(-1) if the daliKey does not exist in the supported key lookup table.
+ */
+int GetDaliKeyCode( const char* keyName );
+
+
 } // namespace KeyLookup
 
 } // namespace Adaptor
