@@ -55,6 +55,20 @@ Add: --enable-gles=X
 With gbs:
 Add to the gbs build line: --define "%target_gles_version X"
 
+
+NodeJS JavaScript support using LibUV:
+
+Download, build and install Node.JS 4.2 from source. Then install node-gyp ( required to build node-addon in toolkit).
+sudo npm install -g node-gyp
+
+Pass the following option to configure:
+Add: --with-libuv= full path to libuv folder inside node/deps/uv path. E.g.
+--with-libuv=/home/user/software/node-v4.2.6/deps/uv
+
+With gbs (tizen.org already had node js support):
+Add to the gbs build line: --define "with_libuv 1"
+
+
 2.4. Building and executing test cases
 --------------------------------------
 
