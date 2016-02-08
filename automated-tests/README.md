@@ -78,13 +78,23 @@ Or without cleaning down the build area (Useful for fast build/run/debug cycles)
 Executing the tests
 -------------------
 
+To see a list of all of the options:
+
+    ./execute.sh -h
+
 To execute tests, cd into automated-tests and run
 
     ./execute.sh
 
 This will execute dali and dali-internal test sets. Note that the output summary for the first will be printed before running the second.
 
-By default the tests execute in parallel, which is faster but does not produce any test case output.  Use this to execute the tests in series:
+By default the tests execute in parallel, which is faster but does not produce any test case output.  Use this to execute the tests serially:
+
+    ./execute.sh -S
+
+This produces test output on stdout+err, and is relatively quick compared to test-kit lite.
+
+To execute the tests using test-kit-lite framework:
 
     ./execute.sh -s
 
@@ -92,15 +102,12 @@ To see the results, copy the style folder from web-tct_2.2.1_r1/tools/tct-mgr/st
 
     firefox --new-window summary.xml
 
-To see a list of all of the options:
-
-    ./execute.sh -h
-
 To execute a subset of tests, you can run individual test sets, e.g.
 
     ./execute.sh dali-adaptor
 
-To get coverage output, run
+To get coverage output, (you need to first build dali with --coverage
+run
 
     ./coverage.sh
 
