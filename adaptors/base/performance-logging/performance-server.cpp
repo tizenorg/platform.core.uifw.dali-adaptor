@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2016 Samsung Electronics Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,10 +45,7 @@ PerformanceServer::PerformanceServer( AdaptorInternalServices& adaptorServices,
 : mEnvironmentOptions( environmentOptions ),
   mKernelTrace( adaptorServices.GetKernelTraceInterface() ),
   mSystemTrace( adaptorServices.GetSystemTraceInterface() ),
-#if defined(NETWORK_LOGGING_ENABLED)
-  mNetworkServer( adaptorServices, environmentOptions ),
-  mNetworkControlEnabled( mEnvironmentOptions.GetNetworkControlMode()),
-#endif
+  mNetworkServer( NULL ),
   mStatContextManager( *this ),
   mStatisticsLogBitmask( 0 ),
   mLoggingEnabled( false ),
@@ -58,23 +55,32 @@ PerformanceServer::PerformanceServer( AdaptorInternalServices& adaptorServices,
               mEnvironmentOptions.GetPerformanceTimeStampOutput(),
               mEnvironmentOptions.GetPerformanceStatsLoggingFrequency());
 
-#if defined(NETWORK_LOGGING_ENABLED)
+  // Network control and logging is enabled if specified by the environment variable.
+  mNetworkControlEnabled = mEnvironmentOptions.GetNetworkControlMode() != 0;
   if( mNetworkControlEnabled )
   {
-    mLoggingEnabled  = true;
-    mNetworkServer.Start();
+    // Only create the server if required.
+    mNetworkServer = new NetworkPerformanceServer( adaptorServices, environmentOptions );
+    if( mNetworkServer )
+    {
+      mLoggingEnabled  = true;
+      mNetworkServer->Start();
+    }
+    else
+    {
+      // If server creation failed, disable network control.
+      mNetworkControlEnabled = false;
+    }
   }
-#endif
 }
 
 PerformanceServer::~PerformanceServer()
 {
-#if defined(NETWORK_LOGGING_ENABLED)
   if( mNetworkControlEnabled )
   {
-    mNetworkServer.Stop();
+    mNetworkServer->Stop();
+    delete mNetworkServer;
   }
-#endif
 
   if( mLogFunctionInstalled )
   {
@@ -192,13 +198,11 @@ void PerformanceServer::LogContextStatistics( const char* const text )
 
 void PerformanceServer::LogMarker( const PerformanceMarker& marker, const char* const description )
 {
-#if defined(NETWORK_LOGGING_ENABLED)
   // log to the network ( this is thread safe )
   if( mNetworkControlEnabled )
   {
-    mNetworkServer.TransmitMarker( marker, description );
+    mNetworkServer->TransmitMarker( marker, description );
   }
-#endif
 
   // log to kernel trace
   if( mPerformanceOutputBitmask & OUTPUT_KERNEL_TRACE )
@@ -225,7 +229,6 @@ void PerformanceServer::LogMarker( const PerformanceMarker& marker, const char* 
                                     "%.6f (seconds), %s\n",
                                     (float)( marker.GetTimeStamp().microseconds * MICROSECONDS_TO_SECOND ),
                                     description);
-
   }
 }
 
