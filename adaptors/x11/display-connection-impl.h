@@ -53,10 +53,10 @@ public:
 
   /**
    * @brief Create an initialized DisplayConnection.
-   *
+   * @param[in] currentConnection current display connection ( not used on X)
    * @return A handle to a newly allocated DisplayConnection resource.
    */
-  static DisplayConnection* New();
+  static DisplayConnection* New( Any currentConnection );
 
 public:
 
@@ -64,11 +64,6 @@ public:
    * @copydoc Dali::DisplayConnection::GetDisplay
    */
   Any GetDisplay();
-
-  /**
-   * @copydoc Dali::DisplayConnection::GetDpi
-   */
-  static void GetDpi(unsigned int& dpiHorizontal, unsigned int& dpiVertical);
 
   /**
    * @copydoc Dali::DisplayConnection::ConsumeEvents

@@ -212,6 +212,19 @@ struct EventHandler::Impl
     }
   }
 
+  void GetDpi(unsigned int& dpiHorizontal, unsigned int& dpiVertical)
+  {
+    // calculate DPI
+    float xres, yres;
+
+    // 1 inch = 25.4 millimeters
+    xres = ecore_wl_dpi_get();
+    yres = ecore_wl_dpi_get();
+
+    dpiHorizontal = int(xres + 0.5f);  // rounding
+    dpiVertical   = int(yres + 0.5f);
+  }
+
   // Static methods
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -836,6 +849,10 @@ void EventHandler::SetRotationObserver( RotationObserver* observer )
   mRotationObserver = observer;
 }
 
+void EventHandler::GetDpi(unsigned int& dpiHorizontal, unsigned int& dpiVertical)
+{
+  mImpl->GetDpi( dpiHorizontal, dpiVertical );
+}
 } // namespace Adaptor
 
 } // namespace Internal

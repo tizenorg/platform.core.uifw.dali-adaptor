@@ -30,7 +30,7 @@
 #include <gl/egl-implementation.h>
 #include <trigger-event.h>
 #include <base/interfaces/window-event-interface.h>
-#include <wayland-manager.h>
+//#include "../wayland-surface-manager.h"
 
 
 namespace Dali
@@ -44,22 +44,23 @@ RenderSurface::RenderSurface(Dali::PositionSize positionSize,
                                            const std::string& name,
                                            bool isTransparent)
 : mRenderNotification(NULL),
-  mColorDepth(isTransparent ? COLOR_DEPTH_32 : COLOR_DEPTH_24)
+  mColorDepth(isTransparent ? COLOR_DEPTH_32 : COLOR_DEPTH_24),
+  mEglWindow( NULL )
 {
   mWindow.mPosition = positionSize;
   mWindow.mTitle = name;
-  mWaylandManager = new  Dali::Internal::Adaptor::WaylandManager;
-  mWaylandManager->Initialise();
+  mWaylandSurfaceManager = new  Dali::Internal::Adaptor::WaylandSurfaceManager;
+  mWaylandSurfaceManager->Initialise();
 }
 
 RenderSurface::~RenderSurface()
 {
-  delete mWaylandManager;
+  delete mWaylandSurfaceManager;
 }
 
 void RenderSurface::CreateSurface()
 {
-  mWaylandManager->CreateSurface( mWindow );
+  mWaylandSurfaceManager->CreateSurface( mWindow );
 }
 
 Window* RenderSurface::GetWindow()
@@ -70,7 +71,7 @@ Window* RenderSurface::GetWindow()
 
 void RenderSurface::AssignWindowEventInterface( Dali::Internal::Adaptor::WindowEventInterface* eventInterface)
 {
-  mWaylandManager->AssignWindowEventInterface( eventInterface );
+  //mWaylandSurfaceManager->AssignWindowEventInterface( eventInterface );
 }
 
 PositionSize RenderSurface::GetPositionSize() const
@@ -82,7 +83,7 @@ void RenderSurface::InitializeEgl( EglInterface& egl )
 {
   Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( egl );
 
-  if (!eglImpl.InitializeGles(static_cast<EGLNativeDisplayType>( mWaylandManager->mDisplay )))
+  if (!eglImpl.InitializeGles(static_cast<EGLNativeDisplayType>( mWaylandSurfaceManager->mDisplay )))
   {
     DALI_LOG_ERROR("Failed to initialize GLES.");
   }
@@ -96,7 +97,7 @@ void RenderSurface::CreateEglSurface( EglInterface& egl )
 
   CreateSurface();
 
-  mEglWindow = wl_egl_window_create( mWaylandManager->GetSurface(), mWindow.mPosition.width, mWindow.mPosition.height);
+  mEglWindow = wl_egl_window_create( mWaylandSurfaceManager->GetSurface(), mWindow.mPosition.width, mWindow.mPosition.height);
 
   eglImpl.CreateSurfaceWindow( (EGLNativeWindowType)mEglWindow, mColorDepth ); // reinterpret_cast does not compile
 

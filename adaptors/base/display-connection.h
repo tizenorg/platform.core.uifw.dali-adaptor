@@ -43,10 +43,11 @@ public:
 
   /**
    * @brief Create an initialized DisplayConnection.
+   * @param[in] currentConnection, On Wayland the display connection is shared by all threads on X this will be ignored)
    *
    * @return A handle to a newly allocated DisplayConnection resource.
    */
-  static DisplayConnection* New();
+  static DisplayConnection* New( Any currentConnection );
 
   /**
    * @brief Create a DisplayConnection handle; this can be initialised with DisplayConnection::New().
@@ -68,13 +69,6 @@ public:
    * @return display
    */
   Any GetDisplay();
-
-  /**
-   * @brief Get DPI
-   * @param[out] dpiHorizontal set to the horizontal dpi
-   * @param[out] dpiVertical set to the vertical dpi
-   */
-  static void GetDpi(unsigned int& dpiHorizontal, unsigned int& dpiVertical);
 
   /**
    * @brief Consumes any possible events on the queue so that there is no leaking between frames

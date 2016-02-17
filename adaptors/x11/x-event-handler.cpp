@@ -130,6 +130,7 @@ struct EventHandler::Impl : public WindowEventInterface
   Impl( EventHandler* handler, XID window, Display* display )
   : mXEventManager(window, display, this),
     mHandler( handler ),
+    mXdisplay( display ),
     mPaused( false )
   {
     mXEventManager.Initialize();
@@ -140,6 +141,13 @@ struct EventHandler::Impl : public WindowEventInterface
   ~Impl()
   {
   }
+
+  void GetDpi(unsigned int& dpiHorizontal, unsigned int& dpiVertical)
+  {
+    dpiHorizontal = (static_cast<float>( DisplayWidth( mXdisplay,0)) * 25.4f) / static_cast<float>( DisplayWidthMM( mXdisplay, 0));
+    dpiVertical = (static_cast<float>( DisplayHeight( mXdisplay,0)) * 25.4f) / static_cast<float>( DisplayHeightMM( mXdisplay, 0));
+  }
+
   // @todo Consider allowing the EventHandler class to inherit from WindowEventInterface directly
   virtual void TouchEvent( Dali::TouchPoint& point, unsigned long timeStamp )
   {
@@ -169,6 +177,7 @@ struct EventHandler::Impl : public WindowEventInterface
   // Data
   XEventManager mXEventManager;
   EventHandler* mHandler;
+  Display* mXdisplay;
   bool mPaused;
 };
 
@@ -350,6 +359,11 @@ void EventHandler::SetDragAndDropDetector( DragAndDropDetectorPtr detector )
 void EventHandler::SetRotationObserver( RotationObserver* observer )
 {
   mRotationObserver = observer;
+}
+
+void EventHandler::GetDpi(unsigned int& dpiHorizontal, unsigned int& dpiVertical)
+{
+  mImpl->GetDpi( dpiHorizontal, dpiVertical );
 }
 
 } // namespace Adaptor

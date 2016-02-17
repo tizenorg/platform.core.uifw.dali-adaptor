@@ -46,7 +46,7 @@ class GestureManager;
 class StyleMonitor;
 
 /**
- * The Event Handler class is responsible for setting up receiving of Ecore events and then converts them
+ * The Event Handler class is responsible for setting up receiving windowing events and then converts them
  * to TouchEvents when it does receive them.
  *
  * These TouchEvents are then passed on to Core.
@@ -115,6 +115,13 @@ public:
    * @param[in] observer The rotation observer
    */
   void SetRotationObserver( RotationObserver* observer );
+
+  /**
+   * @brief Get DPI
+   * @param[out] dpiHorizontal set to the horizontal dpi
+   * @param[out] dpiVertical set to the vertical dpi
+   */
+  void GetDpi(unsigned int& dpiHorizontal, unsigned int& dpiVertical);
 
 private:
 

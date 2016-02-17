@@ -48,15 +48,16 @@ public:
 
   /**
    * @brief Default constructor
+   * @param[in] currentConnection current display connection
    */
-  DisplayConnection();
+  DisplayConnection( Any currentConnection );
 
   /**
    * @brief Create an initialized DisplayConnection.
-   *
+   * @param[in] currentConnection current display connection
    * @return A handle to a newly allocated DisplayConnection resource.
    */
-  static DisplayConnection* New();
+  static DisplayConnection* New( Any currentConnection );
 
 public:
 

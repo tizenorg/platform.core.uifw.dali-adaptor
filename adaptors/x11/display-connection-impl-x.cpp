@@ -34,7 +34,7 @@ namespace Internal
 namespace Adaptor
 {
 
-DisplayConnection* DisplayConnection::New()
+DisplayConnection* DisplayConnection::New( Any currentConnection )
 {
   DisplayConnection* pDisplayConnection(new DisplayConnection());
 
@@ -93,19 +93,6 @@ bool DisplayConnection::InitializeEgl(EglInterface& egl)
   }
 
   return true;
-}
-
-void DisplayConnection::GetDpi(unsigned int& dpiHorizontal, unsigned int& dpiVertical)
-{
-  // calculate DPI
-  float xres, yres;
-
-  // 1 inch = 25.4 millimeters
-  xres = ecore_x_dpi_get();
-  yres = ecore_x_dpi_get();
-
-  dpiHorizontal = int(xres + 0.5f);  // rounding
-  dpiVertical   = int(yres + 0.5f);
 }
 
 } // namespace Adaptor

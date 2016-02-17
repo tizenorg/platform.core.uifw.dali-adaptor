@@ -15,9 +15,6 @@
  *
  */
 // CLASS HEADER
-#include "wayland-manager.h"
-
-// EXTERNAL INCLUDES
 #include <stdio.h>
 #include <cstring>
 
@@ -26,6 +23,7 @@
 #include <base/interfaces/performance-interface.h>
 #include <input/input-listeners.h>
 #include <input/seat.h>
+#include "wayland-surface-manager.h"
 
 namespace Dali
 {
@@ -65,22 +63,7 @@ struct xdg_shell_listener XdgShellListener=
   XdgShellPing,
 };
 
-void RegisterSeatListener( WaylandManager* client,
-                          struct wl_registry *wlRegistry,
-                          uint32_t name,
-                          const char *interface,
-                          uint32_t version)
-{
-  Dali::WlSeat* seatInterface = static_cast<Dali::WlSeat*>( wl_registry_bind( wlRegistry, name,  &wl_seat_interface, version ));
 
-  Seat* seat = new Seat( &client->mInputManager, seatInterface );
-
-  client->mInputManager.AddSeat( seat );
-
-  // listen to seat events
-  wl_seat_add_listener( seatInterface, Wayland::GetSeatListener(), &client->mInputManager );
-
-}
 void RegistryGlobalCallback( void *data,
            struct wl_registry *wlRegistry,
            uint32_t name,
@@ -88,16 +71,11 @@ void RegistryGlobalCallback( void *data,
            uint32_t version)
 {
 
-  WaylandManager* client = static_cast<   WaylandManager* >( data );
+  WaylandSurfaceManager* client = static_cast<   WaylandSurfaceManager* >( data );
 
   if (strcmp( interface, wl_compositor_interface.name) == 0)
   {
     client->mCompositor = static_cast<Dali::WlCompositor*>(wl_registry_bind( wlRegistry, name , &wl_compositor_interface, version ));
-  }
-  else if( strcmp( interface, wl_seat_interface.name) == 0  )
-  {
-    // register for seat callbacks and add a new seat to the input manager
-    RegisterSeatListener( client, wlRegistry, name, interface, version);
   }
   else if (strcmp(interface, wl_shell_interface.name) == 0)
   {
@@ -110,8 +88,6 @@ void RegistryGlobalCallback( void *data,
     // xdg_shell@7: error 0: Must call use_unstable_version first
     xdg_shell_use_unstable_version(client->mXdgShell, 5);
   }
-
-
 }
 
 
@@ -126,9 +102,11 @@ const struct wl_registry_listener RegistryListener =
    RegistryGlobalCallbackRemove,
 };
 
+
+
 } //unnamed namespace
 
-WaylandManager::WaylandManager()
+WaylandSurfaceManager::WaylandSurfaceManager()
 :mDisplay( NULL ),
  mShell( NULL ),
  mCompositor( NULL ),
@@ -140,7 +118,7 @@ WaylandManager::WaylandManager()
  mXdgSurface( NULL )
 {
 }
-WaylandManager::~WaylandManager()
+WaylandSurfaceManager::~WaylandSurfaceManager()
 {
   if( mXdgShell)
   {
@@ -162,7 +140,7 @@ WaylandManager::~WaylandManager()
   delete mFileDescriptorMonitor;
 }
 
-void WaylandManager::Initialise()
+void WaylandSurfaceManager::Initialise()
 {
   if( mDisplay )
   {
@@ -184,11 +162,7 @@ void WaylandManager::Initialise()
 
 }
 
-void WaylandManager::AssignWindowEventInterface( WindowEventInterface* eventInterface)
-{
-  mInputManager.AssignWindowEventInterface( eventInterface );
-}
-void WaylandManager::GetWaylandInterfaces()
+void WaylandSurfaceManager::GetWaylandInterfaces()
 {
   // get and listen to the registry
   WlRegistry* registry = wl_display_get_registry( mDisplay );
@@ -201,13 +175,13 @@ void WaylandManager::GetWaylandInterfaces()
   wl_registry_destroy( registry );
 }
 
-void WaylandManager::InstallFileDescriptorMonitor()
+void WaylandSurfaceManager::InstallFileDescriptorMonitor()
 {
   // get the file descriptor
   mDisplayFileDescriptor = wl_display_get_fd( mDisplay );
 
   // create the callback that gets triggered when a read / write event occurs
-  CallbackBase* callback =  MakeCallback( this, &WaylandManager::FileDescriptorCallback);
+  CallbackBase* callback =  MakeCallback( this, &WaylandSurfaceManager::FileDescriptorCallback);
 
   // monitor read and write events
   int events = FileDescriptorMonitor::FD_READABLE;
@@ -215,7 +189,7 @@ void WaylandManager::InstallFileDescriptorMonitor()
   mFileDescriptorMonitor = new FileDescriptorMonitor( mDisplayFileDescriptor, callback, events );
 
 }
-void WaylandManager::FileDescriptorCallback( FileDescriptorMonitor::EventType eventTypeMask )
+void WaylandSurfaceManager::FileDescriptorCallback( FileDescriptorMonitor::EventType eventTypeMask )
 {
   if( eventTypeMask & FileDescriptorMonitor::FD_READABLE )
   {
@@ -224,7 +198,7 @@ void WaylandManager::FileDescriptorCallback( FileDescriptorMonitor::EventType ev
   }
 }
 
-void WaylandManager::CreateSurface( Dali::Wayland::Window& window )
+void WaylandSurfaceManager::CreateSurface( Dali::Wayland::Window& window )
 {
   // Create the surface
   // A Wayland surface is a rectangular area that is displayed on the screen.
@@ -274,7 +248,7 @@ void WaylandManager::CreateSurface( Dali::Wayland::Window& window )
   wl_display_roundtrip( mDisplay );
 }
 
-WlSurface* WaylandManager::GetSurface()
+WlSurface* WaylandSurfaceManager::GetSurface()
 {
    return mSurface;
 }

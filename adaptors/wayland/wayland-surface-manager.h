@@ -1,5 +1,5 @@
-#ifndef __DALI_WAYLAND_MANAGER_H__
-#define __DALI_WAYLAND_MANAGER_H__
+#ifndef __DALI_WAYLAND_SURFACE_MANAGER_H__
+#define __DALI_WAYLAND_SURFACE_MANAGER_H__
 
 /*
  * Copyright (c) 2015 Samsung Electronics Co., Ltd.
@@ -26,6 +26,7 @@
 #include <file-descriptor-monitor.h>
 #include "input-manager.h"
 #include "wayland-window.h"
+#include "compositor-output-region/compositor-output.h"
 
 namespace Dali
 {
@@ -42,34 +43,12 @@ class WindowEventInterface;
 class PerformanceInterface;
 
 /**
- * Client used to talk to Wayland server over a UNIX domain stream socket.
+ * Responsible for talking to Wayland compositor to control surfaces.
  *
- * Brief overview of Wayland:
- *
- * Transport mechanism = Socket
- * Display = handles all the data sent from and to the compositor
- * Display has a file descriptor that can be monitored for read / write events
- *
- * wl client function calls will place messages in a queue
- * Calling wl_display_flush() will flush the messages to  the server
- *
- * Incoming data is handled in two steps: queueing and dispatching.
- * In the queue step, the data coming from the display fd is interpreted and
- * added to a queue. On the dispatch step, the handler for the incoming event is called.
- *
- * default queue is dispatched by calling wl_display_dispatch().
- *
- * The compositor sends out the frame event every time it draws a frame.
- * wl_display_frame_callback() to schedule a callback per frame.
- *
- *
- * wl_display_dispatch(). This will dispatch any events queued on the default queue and
- * attempt to read from the display fd if it's empty.
- * Events read are then queued on the appropriate queues according to the proxy assignment.
  *
  *
  */
-class WaylandManager
+class WaylandSurfaceManager
 {
 
 public:
@@ -77,23 +56,17 @@ public:
   /**
    * @brief Constructor
    */
-  WaylandManager();
+  WaylandSurfaceManager();
 
   /**
    * @brief Destructor
    */
-  ~WaylandManager();
+  ~WaylandSurfaceManager();
 
   /**
    * @brief Connect to Wayland server and setup internal data structures
    */
   void Initialise();
-
-  /**
-   * @brief Assign window event interface.
-   * @param[in] eventInterface window event interface
-   */
-  void AssignWindowEventInterface( WindowEventInterface* eventInterface);
 
   /**
    * @brief create a surface for a window
@@ -129,7 +102,6 @@ private: // change to private
 public:
 
 
-  InputManager  mInputManager;
   WlDisplay* mDisplay;        ///< Wayland display, handles all the data sent from and to the compositor
   WlShell* mShell;            ///< shell
   WlCompositor* mCompositor;  ///< compositor

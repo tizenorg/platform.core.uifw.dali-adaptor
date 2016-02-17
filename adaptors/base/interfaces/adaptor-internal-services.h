@@ -114,6 +114,11 @@ public:
    */
   virtual TraceInterface& GetSystemTraceInterface()  = 0;
 
+  /**
+   * @return the object used represent a window system connection. E.g. a Wayland display object
+   */
+  virtual Any GetWindowSystemConnection()  = 0;
+
 
 protected:
 

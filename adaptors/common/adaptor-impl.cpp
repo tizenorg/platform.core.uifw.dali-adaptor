@@ -17,6 +17,7 @@
 
 // CLASS HEADER
 #include "adaptor-impl.h"
+#include "stdio.h"
 
 // EXTERNAL INCLUDES
 #include <dali/public-api/common/dali-common.h>
@@ -244,7 +245,13 @@ void Adaptor::Start()
 
   unsigned int dpiHor, dpiVer;
   dpiHor = dpiVer = 0;
-  Dali::DisplayConnection::GetDpi(dpiHor, dpiVer);
+
+
+
+  // get the DPI from the windowing system
+  mEventHandler->GetDpi(dpiHor, dpiVer);
+
+  printf("DPI from mEventHandler= %d %d \n", dpiHor, dpiHor );
 
   // tell core about the DPI value
   mCore->SetDpi(dpiHor, dpiVer);

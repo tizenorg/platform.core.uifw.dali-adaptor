@@ -20,13 +20,13 @@
 
 // EXTERNAL INCLUDES
 #include <dali/public-api/common/dali-common.h>
-#include <wayland-manager.h>
 #include <wayland-egl.h>
 
 // INTERNAL INCLUDES
 #include <wayland-window.h>
 #include <render-surface.h>
 #include <egl-interface.h> // for color depth
+#include "../wayland-surface-manager.h"
 
 namespace Dali
 {
@@ -37,7 +37,7 @@ namespace Internal
 {
 namespace Adaptor
 {
-class WaylandManager;
+class WaylandEventManager;
 class WindowEventInterface;
 }
 }
@@ -166,7 +166,7 @@ protected: // Data
   Window                      mWindow;
   TriggerEventInterface*      mRenderNotification; ///< Render notification trigger
   Dali::ColorDepth            mColorDepth;         ///< Color depth
-  Dali::Internal::Adaptor::WaylandManager*   mWaylandManager; ///< wayland manager
+  Dali::Internal::Adaptor::WaylandSurfaceManager*   mWaylandSurfaceManager; ///< wayland surface manager
   wl_egl_window*              mEglWindow;
 
 };

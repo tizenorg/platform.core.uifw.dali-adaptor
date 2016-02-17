@@ -41,6 +41,7 @@
 #include <style-monitor-impl.h>
 #include <base/core-event-interface.h>
 #include <base/interfaces/window-event-interface.h>
+#include <wayland-event-manager.h>
 
 
 
@@ -64,6 +65,10 @@ struct EventHandler::Impl : public WindowEventInterface
   : mHandler( handler ),
     mPaused( false )
   {
+    mWaylandManager.AssignWindowEventInterface( this );
+
+    // connect to compositor and start listening to input events / get dpi etc.
+    mWaylandManager.Initialise();
   }
   /**
    * Destructor
@@ -96,7 +101,13 @@ struct EventHandler::Impl : public WindowEventInterface
   {
     // used to do some work with ime
   }
+  void GetDpi(unsigned int& dpiHorizontal, unsigned int& dpiVertical)
+  {
+    mWaylandManager.GetDpi( dpiHorizontal, dpiVertical );
+  }
   // Data
+
+  WaylandEventManager mWaylandManager;
   EventHandler* mHandler;
   bool mPaused;
 };
@@ -119,11 +130,11 @@ EventHandler::EventHandler( RenderSurface* surface, CoreEventInterface& coreEven
 
 
   // this code only works with the wayland RenderSurface so need to downcast
-  Wayland::RenderSurface* waylandSurface = dynamic_cast< Wayland::RenderSurface* >( surface );
+  //Wayland::RenderSurface* waylandSurface = dynamic_cast< Wayland::RenderSurface* >( surface );
 
-  mImpl = new Impl(this );
+  mImpl = new Impl( this );
 
-  waylandSurface->AssignWindowEventInterface( mImpl );
+  //waylandSurface->AssignWindowEventInterface( mImpl );
 }
 
 EventHandler::~EventHandler()
@@ -275,6 +286,12 @@ void EventHandler::SetRotationObserver( RotationObserver* observer )
 {
   mRotationObserver = observer;
 }
+
+void EventHandler::GetDpi(unsigned int& dpiHorizontal, unsigned int& dpiVertical)
+{
+  mImpl->GetDpi( dpiHorizontal, dpiVertical );
+}
+
 
 } // namespace Adaptor
 

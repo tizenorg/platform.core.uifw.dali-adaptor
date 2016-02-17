@@ -54,10 +54,12 @@ public:
 
   /**
    * @brief Create an initialized DisplayConnection.
-   *
+   * @param[in] currentConnection current display connection
+   * currentConnection not required on EFL Wayland implementation because they
+   * store it as a global variable accessible by ecore_wl_display_get()
    * @return A handle to a newly allocated DisplayConnection resource.
    */
-  static DisplayConnection* New();
+  static DisplayConnection* New( Any currentConnection );
 
 public:
 
@@ -65,11 +67,6 @@ public:
    * @copydoc Dali::DisplayConnection::GetDisplay
    */
   Any GetDisplay();
-
-  /**
-   * @copydoc Dali::DisplayConnection::GetDpi
-   */
-  static void GetDpi(unsigned int& dpiHorizontal, unsigned int& dpiVertical);
 
   /**
    * @copydoc Dali::DisplayConnection::ConsumeEvents

@@ -27,9 +27,9 @@
 namespace Dali
 {
 
-DisplayConnection* DisplayConnection::New()
+DisplayConnection* DisplayConnection::New(  Any currentConnection )
 {
-  Internal::Adaptor::DisplayConnection* internal(Internal::Adaptor::DisplayConnection::New());
+  Internal::Adaptor::DisplayConnection* internal(Internal::Adaptor::DisplayConnection::New( currentConnection ));
 
   return new DisplayConnection(internal);
 }
@@ -56,11 +56,6 @@ DisplayConnection::~DisplayConnection()
 Any DisplayConnection::GetDisplay()
 {
   return mImpl->GetDisplay();
-}
-
-void DisplayConnection::GetDpi(unsigned int& dpiHorizontal, unsigned int& dpiVertical)
-{
-  Internal::Adaptor::DisplayConnection::GetDpi(dpiHorizontal, dpiVertical);
 }
 
 void DisplayConnection::ConsumeEvents()
