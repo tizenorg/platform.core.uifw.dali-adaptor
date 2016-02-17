@@ -17,6 +17,10 @@
 
 #include "test-application.h"
 
+#include <dali/devel-api/text-abstraction/font-client.h>
+
+using Dali::TextAbstraction::FontClient;
+
 namespace Dali
 {
 
@@ -73,6 +77,13 @@ void TestApplication::Initialize()
   mCore->ContextCreated();
   mCore->SurfaceResized( mSurfaceWidth, mSurfaceHeight );
   mCore->SetDpi( mDpi.x, mDpi.y );
+
+  // set the DPI value for font rendering
+  FontClient fontClient = FontClient::Get();
+  if( fontClient )
+  {
+    fontClient.SetDpi( mDpi.x, mDpi.y );
+  }
 
   Dali::Integration::Log::LogFunction logFunction(&TestApplication::LogMessage);
   Dali::Integration::Log::InstallLogFunction(logFunction);
