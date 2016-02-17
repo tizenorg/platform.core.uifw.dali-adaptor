@@ -23,6 +23,11 @@
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/bitmap.h>
 
+// We need to check if giflib has the new open and close API (including error parameter).
+#ifdef GIFLIB_MAJOR
+#define LIBGIF_VERSION_5_1_OR_ABOVE
+#endif
+
 namespace Dali
 {
 using Integration::Bitmap;
@@ -240,6 +245,12 @@ bool HandleExtensionRecordType( GifFileType* gifInfo )
   image.ExtensionBlocks     = NULL;
   image.ExtensionBlockCount = 0;
   GifByteType *extensionByte( NULL );
+
+#ifdef LIBGIF_VERSION_5_1_OR_ABOVE
+  int *extensionBlockTypePointer = &image.ExtensionBlocks->Function;
+#else
+  int *extensionBlockTypePointer = &image.Function;
+#endif
 
   // Not really interested in the extensions so just skip them unless there is an error.
   for ( int extRetCode = DGifGetExtension( gifInfo, &image.Function, &extensionByte );
