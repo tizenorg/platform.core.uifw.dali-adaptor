@@ -19,6 +19,7 @@
 #include <key-grab.h>
 
 // EXTERNAL INCLUDES
+#include <Ecore.h>
 #include <Ecore_X.h>
 #include <utilX.h>
 

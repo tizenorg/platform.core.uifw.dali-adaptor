@@ -450,6 +450,15 @@ libdali_adaptor_la_CXXFLAGS += $(HAPTIC_CFLAGS)
 libdali_adaptor_la_LIBADD +=
 endif
 
+if !UBUNTU_PROFILE
+if WAYLAND
+else
+# X11
+libdali_adaptor_la_CXXFLAGS += $(UTILX_CFLAGS)
+libdali_adaptor_la_LIBADD += $(UTILX_LIBS)
+endif
+endif
+
 if UBUNTU_PROFILE
 libdali_adaptor_la_LIBADD += -ljpeg
 CFLAGS += -fPIC

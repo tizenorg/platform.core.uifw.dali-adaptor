@@ -24,17 +24,8 @@
 
 namespace Dali
 {
-/**
- * @addtogroup dali_adaptor_framework
- * @{
- */
-
 class Window;
 
-/**
- * @brief Key grab functions.
- * @SINCE_1_0.0
- */
 namespace KeyGrab
 {
 
@@ -42,78 +33,68 @@ namespace KeyGrab
  * @brief Grabs the key specfied by @a key for @a window only when @a window is the topmost window.
  *
  * This function can be used for following example scenarios:
- * - Mobile - Using volume up/down as zoom up/down in camera apps.
+ * Mobile - Using volume up/down as zoom up/down in camera apps.
  *
- * @SINCE_1_0.0
+ * @privlevel public
+ * @note This function is only specified by Tizen.
  * @param[in] window The window to set
- * @param[in] daliKey The key code to grab (defined in key.h)
- * @return true if the grab succeeds.
+ * @param[in] dailKey The key code to grab (defined in key.h)
+ * @return true if the grab succeed.
  */
 DALI_IMPORT_API bool GrabKeyTopmost( Window window, Dali::KEY daliKey );
 
 /**
  * @brief Ungrabs the key specfied by @a key for @a window.
  *
- * @SINCE_1_0.0
+ * @privlevel public
+ * @note This function is only specified by Tizen.
  * @param[in] window The window to set
- * @param[in] daliKey The key code to ungrab (defined in key.h)
- * @return true if the ungrab succeeds.
- * @note If this function is called between key down and up events of a grabbed key,
- * an application doesn't receive the key up event.
+ * @param[in] dailKey The key code to ungrab (defined in key.h)
+ * @return true if the ungrab succeed.
  */
 DALI_IMPORT_API bool UngrabKeyTopmost( Window window, Dali::KEY daliKey );
 
 /**
  * @brief Key grab mode for platform-level APIs.
- * @SINCE_1_0.0
  */
 enum KeyGrabMode
 {
-  TOPMOST = 0,             ///< Grab a key only when on the top of the grabbing-window stack mode. @SINCE_1_0.0
-  SHARED,                  ///< Grab a key together with the other client window(s) mode. @SINCE_1_0.0
-  OVERRIDE_EXCLUSIVE,      ///< Grab a key exclusively regardless of the grabbing-window's position on the window stack with the possibility of overriding the grab by the other client window mode. @SINCE_1_0.0
-  EXCLUSIVE                ///< Grab a key exclusively regardless of the grabbing-window's position on the window stack mode. @SINCE_1_0.0
+  TOPMOST = 0,             ///< Grab a key only when on the top of the grabbing-window stack mode.
+  SHARED,                  ///< Grab a key together with the other client window(s) mode.
+  OVERRIDE_EXCLUSIVE,      ///< Grab a key exclusively regardless of the grabbing-window's position on the window stack with the possibility of overriding the grab by the other client window mode.
+  EXCLUSIVE                ///< Grab a key exclusively regardless of the grabbing-window's position on the window stack mode.
 };
 
 /**
- * @PLATFORM
  * @brief Grabs the key specfied by @a key for @a window in @a grabMode.
  *
- * @details This function can be used for following example scenarios:
- * - TV - A user might want to change the volume or channel of the background TV contents while focusing on the foregrund app.
- * - Mobile - When a user presses Home key, the homescreen appears regardless of current foreground app.
- * - Mobile - Using volume up/down as zoom up/down in camera apps.
+ * This function can be used for following example scenarios:
+ * TV - A user might want to change the volume or channel of the background TV contents while focusing on the foregrund app.
+ * Mobile - When a user presses Home key, the homescreen appears regardless of current foreground app.
+ * Mobile - Using volume up/down as zoom up/down in camera apps.
  *
- * @SINCE_1_0.0
- * @PRIVLEVEL_PLATFORM
- * @PRIVILEGE_KEYGRAB
+ * @privlevel platform
+ * @note This function is only specified by Tizen.
  * @param[in] window The window to set
- * @param[in] daliKey The key code to grab (defined in key.h)
+ * @param[in] dailKey The key code to grab (defined in key.h)
  * @param[in] grabMode The grab mode for the key
- * @return true if the grab succeeds.
+ * @return true if the grab succeed.
  */
 DALI_IMPORT_API bool GrabKey( Window window, Dali::KEY daliKey, KeyGrabMode grabMode );
 
 /**
- * @PLATFORM
  * @brief Ungrabs the key specfied by @a key for @a window.
  *
- * @SINCE_1_0.0
- * @PRIVLEVEL_PLATFORM
- * @PRIVILEGE_KEYGRAB
+ * @privlevel platform
+ * @note This function is only specified by Tizen.
  * @param[in] window The window to set
- * @param[in] daliKey The key code to ungrab (defined in key.h)
- * @return true if the ungrab succeeds.
- * @note If this function is called between key down and up events of a grabbed key,
- * an application doesn't receive the key up event.
+ * @param[in] dailKey The key code to ungrab (defined in key.h)
+ * @return true if the ungrab succeed.
  */
 DALI_IMPORT_API bool UngrabKey( Window window, Dali::KEY daliKey );
 
 } // namespace KeyGrab
 
-/**
- * @}
- */
 } // namespace Dali
 
 #endif // __DALI_KEY_GRAB_H__
