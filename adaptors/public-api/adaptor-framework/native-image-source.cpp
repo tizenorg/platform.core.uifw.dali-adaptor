@@ -55,9 +55,9 @@ bool NativeImageSource::EncodeToFile(const std::string& filename) const
   return mImpl->EncodeToFile(filename);
 }
 
-void NativeImageSource::SetNativeImageSource( Any nativeImageSource )
+void NativeImageSource::SetSource( Any source, bool reused )
 {
-  mImpl->SetNativeImageSource( nativeImageSource );
+  mImpl->SetSource( source, reused );
 }
 
 bool NativeImageSource::GlExtensionCreate()
@@ -77,7 +77,7 @@ unsigned int NativeImageSource::TargetTexture()
 
 void NativeImageSource::PrepareTexture()
 {
-
+  mImpl->PrepareTexture();
 }
 
 unsigned int NativeImageSource::GetWidth() const

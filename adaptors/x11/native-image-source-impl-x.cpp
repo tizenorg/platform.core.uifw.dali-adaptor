@@ -273,9 +273,9 @@ bool NativeImageSource::EncodeToFile(const std::string& filename) const
   return false;
 }
 
-void NativeImageSource::SetNativeImageSource( Any nativeImageSource )
+void NativeImageSource::SetSource( Any source, bool reused )
 {
-  mPixmap = GetPixmapFromAny( nativeImageSource );
+  mPixmap = GetPixmapFromAny( source );
 
   if (mPixmap)
   {
@@ -316,6 +316,10 @@ unsigned int NativeImageSource::TargetTexture()
   mEglImageExtensions->TargetTextureKHR(mEglImageKHR);
 
   return 0;
+}
+
+void NativeImageSource::PrepareTexture()
+{
 }
 
 int NativeImageSource::GetPixelDepth(Dali::NativeImageSource::ColorDepth depth) const

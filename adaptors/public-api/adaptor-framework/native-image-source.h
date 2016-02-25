@@ -126,7 +126,7 @@ public:
    *
    * @param[in] source Any handle with native image source
    */
-  void SetNativeImageSource( Any source );
+  void SetSource( Any source, bool reused = true );
 
 private:   // native image
 

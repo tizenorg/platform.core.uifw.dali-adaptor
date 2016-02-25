@@ -70,9 +70,9 @@ public:
   bool EncodeToFile(const std::string& filename) const;
 
   /**
-   * @copydoc Dali::NativeImageSource::SetNativeImageSource( Any nativeImageSource )
+   * @copydoc Dali::NativeImageSource::SetSource( Any source )
    */
-  void SetNativeImageSource( Any nativeImageSource );
+  void SetSource( Any source, bool reused );
 
   /**
    * destructor
@@ -93,6 +93,11 @@ public:
    * @copydoc Dali::NativeImageSource::TargetTexture()
    */
   unsigned int TargetTexture();
+
+  /**
+   * @copydoc Dali::NativeImageSource::PrepareTexture()
+   */
+  void PrepareTexture();
 
   /**
    * @copydoc Dali::NativeImageSource::GetWidth()
