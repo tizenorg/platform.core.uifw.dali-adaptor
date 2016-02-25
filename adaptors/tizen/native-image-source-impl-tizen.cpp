@@ -70,7 +70,9 @@ NativeImageSource::NativeImageSource( unsigned int width, unsigned int height, D
   mBlendingRequired( false ),
   mColorDepth( depth ),
   mEglImageKHR( NULL ),
-  mEglImageExtensions( NULL )
+  mEglImageExtensions( NULL ),
+  mReused( false ),
+  mEglImageCreated( false )
 {
   DALI_ASSERT_ALWAYS( Adaptor::IsAvailable() );
   EglFactory& eglFactory = Adaptor::GetImplementation( Adaptor::Get() ).GetEGLFactory();
@@ -171,6 +173,16 @@ NativeImageSource::~NativeImageSource()
     {
       DALI_LOG_ERROR( "Failed to destroy tbm_surface" );
     }
+  }
+
+  for( Dali::Vector< TbmEglImagePair >::Iterator iter = mTbmsurfaceContainer.Begin(); iter != mTbmsurfaceContainer.End(); ++iter)
+  {
+    mEglImageExtensions->DestroyImageKHR( (*iter).eglImage );
+  }
+
+  if( !mReused && mEglImageKHR != NULL)
+  {
+    mEglImageExtensions->DestroyImageKHR( mEglImageKHR );
   }
 }
 
@@ -289,8 +301,15 @@ bool NativeImageSource::EncodeToFile(const std::string& filename) const
   return false;
 }
 
-void NativeImageSource::SetNativeImageSource( Any nativeImageSource )
+void NativeImageSource::SetSource( Any nativeImageSource, bool reused )
 {
+  tbm_surface_h newSurface = GetSurfaceFromAny( nativeImageSource );
+
+  if( newSurface == mTbmsurface )
+  {
+    return;
+  }
+
   if( mOwnTbmsurface && mTbmsurface != NULL )
   {
     if( tbm_surface_destroy( mTbmsurface ) != TBM_SURFACE_ERROR_NONE )
@@ -301,7 +320,24 @@ void NativeImageSource::SetNativeImageSource( Any nativeImageSource )
     mTbmsurface = NULL;
   }
 
-  mTbmsurface = GetSurfaceFromAny( nativeImageSource );
+  mEglImageCreated = true;
+  mReused = reused;
+
+  if( mReused )
+  {
+    for( Dali::Vector< TbmEglImagePair >::Iterator iter = mTbmsurfaceContainer.Begin(); iter != mTbmsurfaceContainer.End(); ++iter)
+    {
+      if( newSurface == (*iter).tbmSurface && (*iter).eglImage != NULL )
+      {
+        mEglImageCreated = false;
+        mTbmsurface = (*iter).tbmSurface;
+        mEglImageKHR = (*iter).eglImage;
+        break;
+      }
+    }
+  }
+
+  mTbmsurface = newSurface;
   mOwnTbmsurface = false;
 
   if( mTbmsurface != NULL )
@@ -309,15 +345,15 @@ void NativeImageSource::SetNativeImageSource( Any nativeImageSource )
     mWidth = tbm_surface_get_width( mTbmsurface );
     mHeight = tbm_surface_get_height( mTbmsurface );
   }
+
+  if( !mReused && mEglImageCreated )
+  {
+    GlExtensionDestroy();
+  }
 }
 
 bool NativeImageSource::GlExtensionCreate()
 {
-  if( mEglImageKHR != NULL )
-  {
-    GlExtensionDestroy();
-  }
-
   // casting from an unsigned int to a void *, which should then be cast back
   // to an unsigned int in the driver.
   EGLClientBuffer eglBuffer = reinterpret_cast< EGLClientBuffer > (mTbmsurface);
@@ -336,9 +372,30 @@ void NativeImageSource::GlExtensionDestroy()
 
 unsigned int NativeImageSource::TargetTexture()
 {
+  if( mReused && mEglImageCreated )
+  {
+    mEglImageCreated = false;
+    mTbmsurfaceContainer.PushBack( TbmEglImagePair( mTbmsurface, mEglImageKHR ) );
+  }
+
   mEglImageExtensions->TargetTextureKHR(mEglImageKHR);
 
   return 0;
+}
+
+void NativeImageSource::PrepareTexture()
+{
+  if( mReused )
+  {
+    if( mEglImageCreated && !GlExtensionCreate() )
+    {
+      return;
+    }
+
+    TargetTexture();
+  }
+
+  return;
 }
 
 int NativeImageSource::GetPixelDepth(Dali::NativeImageSource::ColorDepth depth) const

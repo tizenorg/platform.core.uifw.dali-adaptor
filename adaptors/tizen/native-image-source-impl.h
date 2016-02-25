@@ -21,6 +21,7 @@
 // EXTERNAL INCLUDES
 #include <tbm_surface.h>
 #include <dali/devel-api/images/native-image-interface-extension.h>
+#include <dali/public-api/common/dali-vector.h>
 
 // INTERNAL INCLUDES
 #include <native-image-source.h>
@@ -34,6 +35,18 @@ namespace Internal
 namespace Adaptor
 {
 class EglImageExtensions;
+
+struct TbmEglImagePair
+{
+  TbmEglImagePair( tbm_surface_h surface, void* image )
+  {
+    tbmSurface = surface;
+    eglImage = image;
+  }
+
+  tbm_surface_h tbmSurface;
+  void* eglImage;
+};
 
 /**
  * Dali internal NativeImageSource.
@@ -74,7 +87,7 @@ public:
   /**
    * @copydoc Dali::NativeImageSource::SetNativeImageSource( Any nativeImageSource )
    */
-  void SetNativeImageSource( Any nativeImageSource );
+  void SetSource( Any nativeImageSource, bool reused );
 
   /**
    * destructor
@@ -95,6 +108,11 @@ public:
    * @copydoc Dali::NativeImageSource::TargetTexture()
    */
   unsigned int TargetTexture();
+
+  /**
+   * @copydoc Dali::NativeImageSource::PrepareTexture()
+   */
+  void PrepareTexture();
 
   /**
    * @copydoc Dali::NativeImageSource::GetWidth()
@@ -168,6 +186,9 @@ private:
   Dali::NativeImageSource::ColorDepth mColorDepth;  ///< color depth of image
   void* mEglImageKHR;                         ///< From EGL extension
   EglImageExtensions* mEglImageExtensions;    ///< The EGL Image Extensions
+  bool mReused;
+  bool mEglImageCreated;
+  Vector< TbmEglImagePair > mTbmsurfaceContainer;
 };
 
 } // namespace Adaptor
