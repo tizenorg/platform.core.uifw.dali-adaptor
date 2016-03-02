@@ -101,11 +101,12 @@ EnvironmentOptions::EnvironmentOptions()
   mPanGestureSmoothingAmount(-1.0f),
   mPanMinimumDistance(-1),
   mPanMinimumEvents(-1),
-  mGlesCallTime(0),
+  mGlesCallTime( 0 ),
   mWindowWidth( 0 ),
   mWindowHeight( 0 ),
   mThreadingMode( ThreadingMode::COMBINED_UPDATE_RENDER ),
   mRenderRefreshRate( 1 ),
+  mGlesCallCumulate( false ),
   mLogFunction( NULL )
 {
   ParseEnvironmentOptions();
@@ -227,6 +228,11 @@ int EnvironmentOptions::GetGlesCallTime() const
   return mGlesCallTime;
 }
 
+bool EnvironmentOptions::GetGlesCallCumulate() const
+{
+  return mGlesCallCumulate;
+}
+
 const std::string& EnvironmentOptions::GetWindowName() const
 {
   return mWindowName;
@@ -339,6 +345,12 @@ void EnvironmentOptions::ParseEnvironmentOptions()
   if ( GetIntegerEnvironmentVariable(DALI_GLES_CALL_TIME, glesCallTime ))
   {
     mGlesCallTime = glesCallTime;
+  }
+
+  int glesCallCumulate( 0 );
+  if ( GetIntegerEnvironmentVariable( DALI_GLES_CALL_CUMULATE, glesCallCumulate ) )
+  {
+    mGlesCallCumulate = glesCallCumulate != 0;
   }
 
   int windowWidth(0), windowHeight(0);
