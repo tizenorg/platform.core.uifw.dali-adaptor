@@ -64,9 +64,18 @@ public:
 
   /**
    * @brief listen to events on this seat
-   * @param seatInterface[in] output interface
+   * @param[in] seatInterface output interface
    */
   void AddSeatListener( Dali::WlSeat* seatInterface );
+
+  /**
+   * @brief add text input manager interface
+   * @param[in] textInputManager text input manager
+   */
+  void AddTextInputManager( Dali::WlTextInputManager* textInputManager );
+
+
+  Seat* GetFirstSeat();
 
 
 protected: //InputInterface, pointer events
@@ -199,6 +208,7 @@ private:
 
  Dali::Vector< Seat* > mSeats;
  WindowEventInterface* mWindowEventInterface;
+ WlTextInputManager* mTextInputManager; ///< Tizen Text input manager
 
 };
 

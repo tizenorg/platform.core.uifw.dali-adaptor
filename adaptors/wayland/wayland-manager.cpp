@@ -36,6 +36,7 @@ namespace Adaptor
 namespace
 {
 
+
 const int NO_EVENTS_ALREADY_IN_QUEUE = 0;
 
 
@@ -77,33 +78,50 @@ void RegistryGlobalCallback( void *data,
 
   WaylandManager* client = static_cast<   WaylandManager* >( data );
 
-  if (strcmp( interface, wl_compositor_interface.name) == 0)
+  if( strcmp( interface, wl_compositor_interface.name ) == 0 )
   {
-    client->mCompositor = static_cast<Dali::WlCompositor*>(wl_registry_bind( wlRegistry, name , &wl_compositor_interface, version ));
+    client->mCompositor = static_cast< Dali::WlCompositor* >( wl_registry_bind( wlRegistry, name, &wl_compositor_interface, version ) );
   }
-  else if( strcmp( interface, wl_seat_interface.name) == 0  )
+  else if( strcmp( interface, wl_seat_interface.name ) == 0 )
   {
     // register for seat callbacks and add a new seat to the input manager
-    Dali::WlSeat* seatInterface = static_cast<Dali::WlSeat*>( wl_registry_bind( wlRegistry, name,  &wl_seat_interface, version ));
+    Dali::WlSeat* seatInterface = static_cast< Dali::WlSeat* >( wl_registry_bind( wlRegistry, name, &wl_seat_interface, version ) );
 
     client->mInputManager.AddSeatListener( seatInterface );
   }
-  else if ( strcmp( interface, wl_output_interface.name ) == 0)
+  else if( strcmp( interface, wl_output_interface.name ) == 0 )
   {
     // get the interface and add the listener
-    Dali::WlOutput* output =  static_cast< Dali::WlOutput* >(wl_registry_bind(wlRegistry, name, &wl_output_interface, version));
+    Dali::WlOutput* output = static_cast< Dali::WlOutput* >( wl_registry_bind( wlRegistry, name, &wl_output_interface, version ) );
     client->mCompositorOutput.AddListener( output );
   }
-  else if (strcmp(interface, wl_shell_interface.name) == 0)
+  else if( strcmp( interface, wl_shell_interface.name ) == 0 )
   {
-    client->mShell = static_cast<Dali::WlShell*>(wl_registry_bind( wlRegistry, name , &wl_shell_interface, version));
+    client->mShell = static_cast< Dali::WlShell* >( wl_registry_bind( wlRegistry, name, &wl_shell_interface, version ) );
   }
-  else if ( strcmp( interface, xdg_shell_interface.name ) == 0)
+  else if( strcmp( interface, xdg_shell_interface.name ) == 0 )
   {
-    client->mXdgShell  =  static_cast< struct xdg_shell* >(wl_registry_bind(wlRegistry, name, &xdg_shell_interface, version));
+    client->mXdgShell = static_cast< struct xdg_shell* >( wl_registry_bind( wlRegistry, name, &xdg_shell_interface, version ) );
     // without this line Tizen 3 reports...
     // xdg_shell@7: error 0: Must call use_unstable_version first
-    xdg_shell_use_unstable_version(client->mXdgShell, 5);
+    xdg_shell_use_unstable_version( client->mXdgShell, 5 );
+  }
+  else if( strcmp( interface, wl_text_input_manager_interface.name ) == 0 )
+  {
+    printf( "got text input manager \n" );
+
+    Dali::WlTextInputManager* inputManager = static_cast< Dali::WlTextInputManager* >( wl_registry_bind( wlRegistry, name, &wl_text_input_manager_interface, version ) );
+
+    mInputManager.AddTextInputManager( inputManager );
+
+
+
+    //   wl_text_input_manager_create_text_input(imcontext->text_input_manager);
+    // if (imcontext->text_input)
+    //   wl_text_input_add_listener(imcontext->text_input,
+    ///                              &text_input_listener, imcontext);
+
+
   }
 
 
@@ -132,7 +150,8 @@ WaylandManager::WaylandManager()
  mXdgShell( NULL ),
  mSurface( NULL ),
  mShellSurface( NULL ),
- mXdgSurface( NULL )
+ mXdgSurface( NULL ),
+ mCount( 0 )
 {
 }
 WaylandManager::~WaylandManager()
@@ -252,6 +271,34 @@ void WaylandManager::FileDescriptorCallback( FileDescriptorMonitor::EventType ev
   {
     // read and dispatch events
     ReadAndDispatchEvents();
+    mCount++;
+  }
+
+  if ( mCount == 200)
+  {
+    printf(" displaying keyboard -----------------\n");
+    mTextInput = wl_text_input_manager_create_text_input( mTextInputManager );
+
+
+    wl_text_input_add_listener( mTextInput, &TextInputListener, this );
+
+    Seat* seat = mInputManager.GetFirstSeat();
+    wl_text_input_activate( mTextInput,seat->GetSeatInterface() , mSurface );
+    wl_text_input_show_input_panel( mTextInput );
+    wl_text_input_set_surrounding_text(mTextInput, "Yellow ducky" ,0 ,0 );
+
+  }
+  if( mCount == 600)
+  {
+    printf(" showing virtual keyboard\n");
+         wl_text_input_set_surrounding_text(mTextInput, "Yellow ducky" ,0 ,0 );
+         wl_text_input_show_input_panel( mTextInput );
+  }
+  if( mCount == 2000 )
+  {
+    printf(" hiding virtual keyboard\n");
+
+    wl_text_input_hide_input_panel( mTextInput );
   }
 }
 

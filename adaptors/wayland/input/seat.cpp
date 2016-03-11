@@ -50,6 +50,7 @@ Seat::Seat( InputInterface* inputInterface,  WlSeat* seatInterface )
  mKeyboard( NULL ),
  mTouch( NULL ),
  mWaylandSeat( seatInterface ),
+ mTextInput( NULL ),
  mInputInterface( inputInterface ),
  mPointerPosition( 0, 0),
  mDepressedKeyboardModifiers(0),
@@ -63,6 +64,11 @@ Seat::~Seat()
   DestroyPointerInterface();
   DestroyTouchInterface();
   DestroyKeyboardInterface();
+}
+
+void Seat::SetTextInputInterface( WlTextInput* textInput )
+{
+  mTextInput = textInput;
 }
 
 void Seat::SetPointerInterface( InterfaceStatus status )

@@ -86,6 +86,12 @@ public:
   ~Seat();
 
   /**
+   * @brief set Tizen Wayland Text Input interface
+   * @param[in] textInputManager interface
+   */
+  void SetTextInput( WlTextInput* textInput );
+
+  /**
    * @brief Set the pointer interface
    * @param[in] pointer Wayland pointer interface
    * @param[in] status of the interface
@@ -129,6 +135,12 @@ public:
    * @return Wayland keyboard interface
    */
   WlSeat* GetSeatInterface();
+
+  /**
+   * @brief Get the text input interface
+   * @return Wayland text input interface
+   */
+  WlTextInput* GetTextInputInterface();
 
   /**
    * @brief calls wl_pointer_destroy on the pointer interface
@@ -253,6 +265,7 @@ private:  // data specific to a single seat
   WlKeyboard* mKeyboard;     ///< Wayland Keyboard interface ( for multiple keyboards )
   WlTouch* mTouch;           ///< Wayland Touch interface ( for multiple touch devices )
   WlSeat* mWaylandSeat;      ///< Wayland Seat interface
+  WlTextInput* mTextInput;   ///< Wayland Tizen Text input interface (Virtual Keyboard / IMF)
   InputInterface* mInputInterface;  ///< DALi Wayland Input interface
   Vector2 mPointerPosition; ///< Current pointer X,Y position
   unsigned int mDepressedKeyboardModifiers; ///< keyboard modifiers
