@@ -20,6 +20,9 @@
 
 // INTERNAL INCLUDES
 #include <input/input-listeners.h>
+#include <input/text/text-input-listeners.h>
+
+#include <virtual-keyboard.h>
 
 namespace Dali
 {
@@ -39,7 +42,8 @@ const unsigned int TOUCH_DEVICE_ID = 3;
 } // unnamed namespace
 
 InputManager::InputManager()
-:mWindowEventInterface( NULL )
+:mDisplay( NULL ),
+ mWindowEventInterface( NULL )
 {
 
 }
@@ -55,18 +59,57 @@ InputManager::~InputManager()
 void InputManager::AssignWindowEventInterface( WindowEventInterface* eventInterface)
 {
   mWindowEventInterface = eventInterface;
+  mTextInputManger.AssignWindowEventInterface( mWindowEventInterface );
 }
+
+void InputManager::AssignDisplay( WlDisplay* display )
+{
+  mDisplay = display;
+  mTextInputManger.AssignDisplay( mDisplay );
+}
+
+void InputManager::AssignSurface( WlSurface* surface)
+{
+  for( Dali::Vector< Seat* >::Iterator iter = mSeats.Begin(); iter != mSeats.End() ; ++iter )
+  {
+    Seat* seat = (*iter);
+    seat->SetSurfaceInterface( surface );
+  }
+}
+
 
 void InputManager::AddSeatListener( Dali::WlSeat* seatInterface )
 {
   Seat* seat = new Seat( this, seatInterface );
 
   AddSeat( seat );
+  mTextInputManger.AddSeat( seat );
 
   // listen to seat events
   wl_seat_add_listener( seatInterface, Wayland::GetSeatListener(), this );
 
 }
+
+void InputManager::AddTextInputManager( Dali::WlTextInputManager* textInputManager )
+{
+
+  for( Dali::Vector< Seat* >::Iterator iter = mSeats.Begin(); iter != mSeats.End() ; ++iter )
+  {
+    Seat* seat = (*iter);
+    // Create a text input object for each seat
+    WlTextInput* textInput = wl_text_input_manager_create_text_input( textInputManager );
+    seat->SetTextInputInterface( textInput );
+    printf("wl_text_input_add_listener\n ");
+    wl_text_input_add_listener( textInput, Wayland::GetTextInputListener(), &mTextInputManger );
+  }
+
+}
+
+Seat* InputManager::GetFirstSeat()
+{
+  return mSeats[0];
+}
+
 void InputManager::PointerEnter( Seat* seat, unsigned int serial, WlSurface* surface, float x, float y )
 {
   if( mWindowEventInterface )
@@ -127,11 +170,14 @@ void InputManager::PointerAxis( Seat* seat, unsigned int timestamp, unsigned int
 
 void InputManager::KeyboardKeymap( Seat* seat, unsigned int format, int fd, unsigned int size )
 {
+  printf("InputManager:: keyboard map \n");
   seat->KeyboardKeymap( format, fd, size );
 }
 
 void InputManager::KeyFocusEnter( Seat* seat, unsigned int serial, WlSurface* surface, WlArray* keys )
 {
+  printf(" InputManager::keyboard enter\n");
+
   // ignore for now
 }
 
@@ -143,7 +189,7 @@ void InputManager::KeyFocusLeave( Seat* seat, unsigned int serial, WlSurface* su
 void InputManager::KeyEvent( Seat* seat, unsigned int serial, unsigned int timestamp, unsigned int keycode, unsigned int state )
 {
   Dali::KeyEvent keyEvent = seat->GetDALiKeyEvent( serial, timestamp, keycode, state );
-
+  printf(" InputManager::KeyEvent\n");
   mWindowEventInterface->KeyEvent( keyEvent);
 
 }

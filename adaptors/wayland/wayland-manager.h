@@ -140,7 +140,9 @@ public:
   WlSurface* mSurface;                  ///< Wayland surface
   WlShellSurface* mShellSurface;        ///< Shell surface
   WlXdgShellSurface*  mXdgSurface;      ///< XDG Shell surface
+ // WlTextInput* mTextInput;              ///< Tizen Text input
 
+  int mCount;
 
 };
 } // Internal

@@ -60,6 +60,11 @@ public:
   static Dali::ImfManager Get();
 
   /**
+   * Constructor
+   */
+  ImfManager();
+
+  /**
    * Connect Callbacks required for IMF.
    * If you don't connect imf callbacks, you can't get the key events.
    * The events are PreeditChanged, Commit and DeleteSurrounding.

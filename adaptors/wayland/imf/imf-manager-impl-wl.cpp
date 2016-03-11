@@ -39,22 +39,88 @@ bool ImfManager::IsAvailable()
 
 Dali::ImfManager ImfManager::Get()
 {
-  // Return empty handle as not supported
-  return Dali::ImfManager();
+  Dali::ImfManager manager;
+
+  return manager;
+/*  Dali::SingletonService service( SingletonService::Get() );
+  if( !service )
+  {
+    return manager;
+  }
+
+  // Check whether the singleton is already created
+  Dali::BaseHandle handle = service.GetSingleton( typeid( Dali::ImfManager ) );
+  if( handle )
+  {
+    // If so, downcast the handle
+    manager = Dali::ImfManager( dynamic_cast< ImfManager* >( handle.GetObjectPtr() ) );
+  }
+  else if ( Adaptor::IsAvailable() )
+  {
+       // Create instance and register singleton only if the adaptor is available
+       manager = Dali::ImfManager( new ImfManager() );
+       service.Register( typeid( manager ), manager );
+   }
+
+   return manager;*/
+}
+
+ImfManager::ImfManager()
+{
+
 }
 
 ImfManager::~ImfManager()
 {
 }
 
+/*
 void ImfManager::ConnectCallbacks()
 {
+  // Callbacks for predicitive text support.
+ TextInputManager& textinputManager( TextInputManager::Get() );
+
+  DALI_LOG_INFO( gLogFilter, Debug::General, "ImfManager::ConnectCallbacks\n" );
+
+  textinputManager.t`
+
+
+
+  void ImfManager::ConnectCallbacks()
+  {
+
+  if ( mIMFContext )
+  {
+      DALI_LOG_INFO( gLogFilter, Debug::General, "ImfManager::ConnectCallbacks\n" );
+
+      ecore_imf_context_event_callback_add( mIMFContext, ECORE_IMF_CALLBACK_PREEDIT_CHANGED,    PreEdit,    this );
+      ecore_imf_context_event_callback_add( mIMFContext, ECORE_IMF_CALLBACK_COMMIT,             Commit,     this );
+      ecore_imf_context_event_callback_add( mIMFContext, ECORE_IMF_CALLBACK_DELETE_SURROUNDING, ImfDeleteSurrounding, this );
+
+      ecore_imf_context_retrieve_surrounding_callback_set( mIMFContext, ImfRetrieveSurrounding, this);
+    }
+  }
+
+  void ImfManager::DisconnectCallbacks()
+  {
+    if ( mIMFContext )
+    {
+      DALI_LOG_INFO( gLogFilter, Debug::General, "ImfManager::DisconnectCallbacks\n" );
+
+      ecore_imf_context_event_callback_del( mIMFContext, ECORE_IMF_CALLBACK_PREEDIT_CHANGED,    PreEdit );
+      ecore_imf_context_event_callback_del( mIMFContext, ECORE_IMF_CALLBACK_COMMIT,             Commit );
+      ecore_imf_context_event_callback_del( mIMFContext, ECORE_IMF_CALLBACK_DELETE_SURROUNDING, ImfDeleteSurrounding );
+
+      // We do not need to unset the retrieve surrounding callback.
+    }
+
+
 }
 
 void ImfManager::DisconnectCallbacks()
 {
 }
-
+ }*/
 void ImfManager::Activate()
 {
 }
