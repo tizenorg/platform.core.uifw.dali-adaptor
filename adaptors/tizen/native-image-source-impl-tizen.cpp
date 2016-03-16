@@ -65,12 +65,13 @@ NativeImageSource* NativeImageSource::New(unsigned int width, unsigned int heigh
 NativeImageSource::NativeImageSource( unsigned int width, unsigned int height, Dali::NativeImageSource::ColorDepth depth, Any nativeImageSource )
 : mWidth( width ),
   mHeight( height ),
-  mOwnTbmsurface( true ),
+  mOwnTbmsurface( false ),
   mTbmsurface( NULL ),
   mBlendingRequired( false ),
   mColorDepth( depth ),
   mEglImageKHR( NULL ),
-  mEglImageExtensions( NULL )
+  mEglImageExtensions( NULL ),
+  mSetSource( false )
 {
   DALI_ASSERT_ALWAYS( Adaptor::IsAvailable() );
   EglFactory& eglFactory = Adaptor::GetImplementation( Adaptor::Get() ).GetEGLFactory();
@@ -88,9 +89,8 @@ NativeImageSource::NativeImageSource( unsigned int width, unsigned int height, D
 
 void NativeImageSource::Initialize()
 {
-  if( mTbmsurface != NULL )
+  if( mTbmsurface != NULL || mWidth == 0 || mHeight == 0 )
   {
-    mOwnTbmsurface = false;
     return;
   }
 
@@ -144,6 +144,7 @@ void NativeImageSource::Initialize()
   mBlendingRequired = ( depth == 32 || depth == 8 );
 
   mTbmsurface = tbm_surface_create( mWidth, mHeight, format );
+  mOwnTbmsurface = true;
 }
 
 tbm_surface_h NativeImageSource::GetSurfaceFromAny( Any source ) const
@@ -299,25 +300,26 @@ void NativeImageSource::SetSource( Any source )
     }
 
     mTbmsurface = NULL;
+    mOwnTbmsurface = false;
   }
 
   mTbmsurface = GetSurfaceFromAny( source );
-  mOwnTbmsurface = false;
+  mSetSource = true;
 
   if( mTbmsurface != NULL )
   {
     mWidth = tbm_surface_get_width( mTbmsurface );
     mHeight = tbm_surface_get_height( mTbmsurface );
   }
+
+  if( mEglImageKHRContainer.Size() > 5 )
+  {
+    mEglImageKHRContainer.Clear();
+  }
 }
 
 bool NativeImageSource::GlExtensionCreate()
 {
-  if( mEglImageKHR != NULL )
-  {
-    GlExtensionDestroy();
-  }
-
   // casting from an unsigned int to a void *, which should then be cast back
   // to an unsigned int in the driver.
   EGLClientBuffer eglBuffer = reinterpret_cast< EGLClientBuffer > (mTbmsurface);
@@ -339,6 +341,16 @@ unsigned int NativeImageSource::TargetTexture()
   mEglImageExtensions->TargetTextureKHR(mEglImageKHR);
 
   return 0;
+}
+
+void NativeImageSource::PrepareTexture()
+{
+  if( mSetSource && GlExtensionCreate() )
+  {
+    mEglImageKHRContainer.PushBack( mEglImageKHR );
+    TargetTexture();
+    mSetSource = false;
+  }
 }
 
 int NativeImageSource::GetPixelDepth(Dali::NativeImageSource::ColorDepth depth) const
