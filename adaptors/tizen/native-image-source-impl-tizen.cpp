@@ -65,14 +65,12 @@ NativeImageSource* NativeImageSource::New(unsigned int width, unsigned int heigh
 NativeImageSource::NativeImageSource( unsigned int width, unsigned int height, Dali::NativeImageSource::ColorDepth depth, Any nativeImageSource )
 : mWidth( width ),
   mHeight( height ),
-  mOwnTbmsurface( true ),
+  mOwnTbmsurface( false ),
   mTbmsurface( NULL ),
   mBlendingRequired( false ),
   mColorDepth( depth ),
   mEglImageKHR( NULL ),
-  mEglImageExtensions( NULL ),
-  mReused( false ),
-  mEglImageCreated( false )
+  mEglImageExtensions( NULL )
 {
   DALI_ASSERT_ALWAYS( Adaptor::IsAvailable() );
   EglFactory& eglFactory = Adaptor::GetImplementation( Adaptor::Get() ).GetEGLFactory();
@@ -90,9 +88,8 @@ NativeImageSource::NativeImageSource( unsigned int width, unsigned int height, D
 
 void NativeImageSource::Initialize()
 {
-  if( mTbmsurface != NULL )
+  if( mTbmsurface != NULL || mWidth == 0 || mHeight == 0 )
   {
-    mOwnTbmsurface = false;
     return;
   }
 
@@ -146,6 +143,7 @@ void NativeImageSource::Initialize()
   mBlendingRequired = ( depth == 32 || depth == 8 );
 
   mTbmsurface = tbm_surface_create( mWidth, mHeight, format );
+  mOwnTbmsurface = true;
 }
 
 tbm_surface_h NativeImageSource::GetSurfaceFromAny( Any source ) const
@@ -173,16 +171,6 @@ NativeImageSource::~NativeImageSource()
     {
       DALI_LOG_ERROR( "Failed to destroy tbm_surface" );
     }
-  }
-
-  for( Dali::Vector< TbmEglImagePair >::Iterator iter = mTbmsurfaceContainer.Begin(); iter != mTbmsurfaceContainer.End(); ++iter)
-  {
-    mEglImageExtensions->DestroyImageKHR( (*iter).eglImage );
-  }
-
-  if( !mReused && mEglImageKHR != NULL)
-  {
-    mEglImageExtensions->DestroyImageKHR( mEglImageKHR );
   }
 }
 
@@ -303,13 +291,6 @@ bool NativeImageSource::EncodeToFile(const std::string& filename) const
 
 void NativeImageSource::SetSource( Any source )
 {
-  tbm_surface_h newSurface = GetSurfaceFromAny( source );
-
-  if( newSurface == mTbmsurface )
-  {
-    return;
-  }
-
   if( mOwnTbmsurface && mTbmsurface != NULL )
   {
     if( tbm_surface_destroy( mTbmsurface ) != TBM_SURFACE_ERROR_NONE )
@@ -318,30 +299,17 @@ void NativeImageSource::SetSource( Any source )
     }
 
     mTbmsurface = NULL;
+    mOwnTbmsurface = false;
   }
 
-  mEglImageCreated = true;
-  mReused = true;
-
-  for( Dali::Vector< TbmEglImagePair >::Iterator iter = mTbmsurfaceContainer.Begin(); iter != mTbmsurfaceContainer.End(); ++iter)
-  {
-    if( newSurface == (*iter).tbmSurface && (*iter).eglImage != NULL )
-    {
-      mEglImageCreated = false;
-      mTbmsurface = (*iter).tbmSurface;
-      mEglImageKHR = (*iter).eglImage;
-      break;
-    }
-  }
-
-  mTbmsurface = newSurface;
-  mOwnTbmsurface = false;
+  mTbmsurface = GetSurfaceFromAny( source );
 
   if( mTbmsurface != NULL )
   {
     mWidth = tbm_surface_get_width( mTbmsurface );
     mHeight = tbm_surface_get_height( mTbmsurface );
   }
+
 }
 
 bool NativeImageSource::GlExtensionCreate()
@@ -364,12 +332,6 @@ void NativeImageSource::GlExtensionDestroy()
 
 unsigned int NativeImageSource::TargetTexture()
 {
-  if( mReused && mEglImageCreated )
-  {
-    mEglImageCreated = false;
-    mTbmsurfaceContainer.PushBack( TbmEglImagePair( mTbmsurface, mEglImageKHR ) );
-  }
-
   mEglImageExtensions->TargetTextureKHR(mEglImageKHR);
 
   return 0;
@@ -377,17 +339,6 @@ unsigned int NativeImageSource::TargetTexture()
 
 void NativeImageSource::PrepareTexture()
 {
-  if( mReused )
-  {
-    if( mEglImageCreated && !GlExtensionCreate() )
-    {
-      return;
-    }
-
-    TargetTexture();
-  }
-
-  return;
 }
 
 int NativeImageSource::GetPixelDepth(Dali::NativeImageSource::ColorDepth depth) const
