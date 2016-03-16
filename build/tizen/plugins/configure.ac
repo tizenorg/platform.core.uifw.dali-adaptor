@@ -19,6 +19,9 @@ AM_CONDITIONAL([TV_PROFILE], [test x$enable_profile = xTV])
 AM_CONDITIONAL([UBUNTU_PROFILE], [test x$enable_profile = xUBUNTU])
 
 AM_CONDITIONAL([USE_FEEDBACK], [test x$enable_feedback = xyes])
+AM_CONDITIONAL([USE_VIDEOPLAYER], [test x$enable_videoplayer = xyes])
+
+if test "x$enable_feedback" = "xyes"; then
 
 if test "x$enable_profile" = "xCOMMON" || test "x$enable_profile" = "xTV"; then
 PKG_CHECK_MODULES(HAPTIC, haptic)
@@ -30,6 +33,14 @@ fi
 
 PKG_CHECK_MODULES(FEEDBACK, feedback)
 PKG_CHECK_MODULES(MMFSOUND, mm-sound)
+
+fi # enable_feedback
+
+if test "x$enable_videoplayer" = "xyes"; then
+if test "x$enable_profile" = "xMOBILE"; then
+PKG_CHECK_MODULES(CAPI-MEDIA-PLAYER, capi-media-player)
+fi
+fi # enable_videoplayer
 
 AC_CONFIG_FILES(Makefile)
 

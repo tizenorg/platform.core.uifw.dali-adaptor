@@ -3,3 +3,5 @@
 plugin_src_files = \
    $(plugin_src_dir)/dali-feedback.cpp
 
+tizenvideoplayer_plugin_src_files = \
+   $(plugin_src_dir)/video-player/tizen-video-player.cpp
