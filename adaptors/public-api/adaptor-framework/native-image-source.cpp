@@ -77,7 +77,7 @@ unsigned int NativeImageSource::TargetTexture()
 
 void NativeImageSource::PrepareTexture()
 {
-
+  mImpl->PrepareTexture();
 }
 
 unsigned int NativeImageSource::GetWidth() const
