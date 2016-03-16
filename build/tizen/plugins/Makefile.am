@@ -29,6 +29,10 @@ if USE_FEEDBACK
 lib_LTLIBRARIES += libdali-feedback-plugin.la
 endif
 
+if USE_VIDEOPLAYER
+lib_LTLIBRARIES += libdali-video-player-plugin.la
+endif
+
 if USE_FEEDBACK
 dalisounddir = ${dataReadOnlyDir}/plugins/sounds/
 dalisound_DATA = ${dali_plugin_sound_files}
@@ -87,3 +91,30 @@ libdali_feedback_plugin_la_LIBADD += \
                       $(FEEDBACK_LIBS)
 
 endif
+
+# VideoPlayer
+if USE_VIDEOPLAYER
+
+libdali_videoplayer_plugin_la_SOURCES = \
+                     $(plugin_src_files)
+
+libdali_videoplayer_plugin_la_DEPENDENCIES =
+
+libdali_videoplayer_plugin_la_CXXFLAGS = -DDALI_COMPILATION \
+                      $(DLOG_CFLAGS) \
+                      $(DALICORE_CFLAGS) \
+                      $(CAPI_MEDIA_PLAYER_CFLAGS) \
+                      $(DALI_PROFILE_CFLAGS) \
+                      $(DALI_ADAPTOR_CFLAGS) \
+                      -I../../../adaptors/public-api \
+                      -I../../../adaptors/integration-api \
+                      -I../../../adaptors/public-api/adaptor-framework \
+                      -Werror -Wall
+
+libdali_videoplayer_plugin_la_LIBADD = \
+                      $(DLOG_LIBS) \
+                      $(CAPI_MEDIA_PLAYER_LIBS)
+
+libdali_videoplayer_plugin_la_LDFLAGS = \
+                      -rdynamic
+endif # USE_VIDEOPLAYER
