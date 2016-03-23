@@ -143,6 +143,12 @@ public: // from Dali::RenderSurface
    */
   virtual void ReleaseLock();
 
+//papasparrow
+  virtual Any GetWleglWindow();
+
+//papasparrow
+  virtual Any GetWlDisplay();
+
 protected:
 
   /**
@@ -158,7 +164,9 @@ protected:
 private: // Data
 
   Ecore_Wl_Window*   mWlWindow; ///< Wayland-Window
-  wl_egl_window*     mEglWindow;
+  wl_egl_window*        mEglWindow;
+  void*                           mEgl_Win;     //papasparrow
+  void*                           mWlDisplay; //papasparrow
   bool             mNeedToApproveDeiconify; ///< Whether need to send ECORE_X_ATOM_E_DEICONIFY_APPROVE event
 
 }; // class WindowRenderSurface

@@ -157,6 +157,10 @@ public:
    */
   Dali::Any GetNativeHandle() const;
 
+  Dali::Any GetNativeSurface() const;
+
+  Dali::Any GetNativeDisplay() const;
+
   /**
    * Called from Orientation after the Change signal has been sent
    */

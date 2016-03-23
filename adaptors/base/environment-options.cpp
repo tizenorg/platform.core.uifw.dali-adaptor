@@ -104,7 +104,7 @@ EnvironmentOptions::EnvironmentOptions()
   mGlesCallTime( 0 ),
   mWindowWidth( 0 ),
   mWindowHeight( 0 ),
-  mThreadingMode( ThreadingMode::COMBINED_UPDATE_RENDER ),
+  mThreadingMode( ThreadingMode::SINGLE_THREADED ),
   mRenderRefreshRate( 1 ),
   mGlesCallAccumulate( false ),
   mLogFunction( NULL )
@@ -375,6 +375,8 @@ void EnvironmentOptions::ParseEnvironmentOptions()
   int threadingMode(0);
   if ( GetIntegerEnvironmentVariable( DALI_THREADING_MODE, threadingMode ) )
   {
+    //papasparrow
+    threadingMode  = ThreadingMode::SINGLE_THREADED;
     switch( threadingMode )
     {
       case ThreadingMode::SEPARATE_UPDATE_RENDER:

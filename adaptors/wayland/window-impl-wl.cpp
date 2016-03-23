@@ -202,6 +202,18 @@ Dali::Any Window::GetNativeHandle() const
   return surface->GetWindow();
 }
 
+//papasparrow
+Dali::Any Window::GetNativeSurface() const
+{
+    return Dali::Any();
+}
+
+Dali::Any Window::GetNativeDisplay() const
+{
+   return Dali::Any();
+}
+//papasparrow
+
 void Window::OnStart()
 {
 }

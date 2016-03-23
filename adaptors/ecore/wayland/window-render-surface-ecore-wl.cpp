@@ -51,6 +51,8 @@ WindowRenderSurface::WindowRenderSurface( Dali::PositionSize positionSize,
                                           bool isTransparent)
 : EcoreWlRenderSurface( positionSize, surface, name, isTransparent ),
   mEglWindow( NULL ),
+  mEgl_Win(NULL),    //papasparrow
+  mWlDisplay(NULL), //papasparrow
   mNeedToApproveDeiconify( false )
 {
   DALI_LOG_INFO( gRenderSurfaceLogFilter, Debug::Verbose, "Creating Window\n" );
@@ -63,6 +65,7 @@ WindowRenderSurface::~WindowRenderSurface()
   {
     wl_egl_window_destroy(mEglWindow);
     mEglWindow = NULL;
+    mEgl_Win = NULL;
   }
 
   if( mOwnSurface )
@@ -107,7 +110,7 @@ void WindowRenderSurface::CreateEglSurface( EglInterface& eglIf )
   DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
   Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( eglIf );
-
+#if 0 //papasparrow
   // Temporary code for opaque window. We have to modify it after wayland team finish the work.
   if( mColorDepth == COLOR_DEPTH_32 )
   {
@@ -121,6 +124,7 @@ void WindowRenderSurface::CreateEglSurface( EglInterface& eglIf )
   // create the EGL surface
   ecore_wl_window_surface_create(mWlWindow);
   mEglWindow = wl_egl_window_create(ecore_wl_window_surface_get(mWlWindow), mPosition.width, mPosition.height);
+#endif    //papasparrow
   eglImpl.CreateSurfaceWindow( (EGLNativeWindowType)mEglWindow, mColorDepth ); // reinterpret_cast does not compile
 }
 
@@ -135,6 +139,7 @@ void WindowRenderSurface::DestroyEglSurface( EglInterface& eglIf )
   {
     wl_egl_window_destroy(mEglWindow);
     mEglWindow = NULL;
+    mEgl_Win = NULL; //papasparrow
   }
 }
 
@@ -146,6 +151,7 @@ bool WindowRenderSurface::ReplaceEGLSurface( EglInterface& egl )
   {
     wl_egl_window_destroy(mEglWindow);
     mEglWindow = NULL;
+    mEgl_Win = NULL; //papasparrow
   }
 
   // Temporary code for opaque window. We have to modify it after wayland team finish the work.
@@ -159,6 +165,7 @@ bool WindowRenderSurface::ReplaceEGLSurface( EglInterface& egl )
   }
 
   mEglWindow = wl_egl_window_create(ecore_wl_window_surface_get(mWlWindow), mPosition.width, mPosition.height);
+   mEgl_Win = (void*)mEglWindow; //papasparrow
 
   Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( egl );
   return eglImpl.ReplaceSurfaceWindow( (EGLNativeWindowType)mEglWindow ); // reinterpret_cast does not compile
@@ -256,6 +263,13 @@ void WindowRenderSurface::CreateWlRenderable()
       DALI_ASSERT_ALWAYS(0 && "Failed to create X window");
   }
 
+  //papasparrow
+  // create the EGL surface
+  ecore_wl_window_surface_create(mWlWindow);
+  mEglWindow = wl_egl_window_create(ecore_wl_window_surface_get(mWlWindow), mPosition.width, mPosition.height);
+  mEgl_Win = (void*) mEglWindow;
+  mWlDisplay = (void*)ecore_wl_display_get();
+  //papasparrow
   //FIXME
 }
 
@@ -272,6 +286,18 @@ void WindowRenderSurface::SetThreadSynchronization( ThreadSynchronizationInterfa
 void WindowRenderSurface::ReleaseLock()
 {
   // Nothing to do.
+}
+
+//papasparrow
+Any WindowRenderSurface::GetWleglWindow()
+{
+  return Any( mEgl_Win );
+}
+
+//papasparrow
+Any WindowRenderSurface::GetWlDisplay()
+{
+  return Any( mWlDisplay );
 }
 
 } // namespace ECore

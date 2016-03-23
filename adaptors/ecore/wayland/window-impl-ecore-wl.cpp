@@ -384,6 +384,34 @@ Dali::Any Window::GetNativeHandle() const
   }
 }
 
+Dali::Any Window::GetNativeSurface() const
+{
+//papasparrow
+  ECore::WindowRenderSurface* wlWindow( dynamic_cast< ECore::WindowRenderSurface * >( mSurface ) );
+  if (wlWindow)
+  {
+    return wlWindow->GetWleglWindow();
+  }
+  else
+  {
+    return Dali::Any();
+  }
+}
+
+Dali::Any Window::GetNativeDisplay() const
+{
+//papasparrow
+  ECore::WindowRenderSurface* wlWindow( dynamic_cast< ECore::WindowRenderSurface * >( mSurface ) );
+  if (wlWindow)
+  {
+    return wlWindow->GetWlDisplay();
+  }
+  else
+  {
+    return Dali::Any();
+  }
+}
+
 void Window::OnStart()
 {
   DoShowIndicator( mIndicatorOrientation );

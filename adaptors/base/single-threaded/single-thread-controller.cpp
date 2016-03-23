@@ -90,8 +90,9 @@ void SingleThreadController::Start()
 {
   DALI_LOG_INFO( gLogFilter, Debug::General, "%s()\n", __FUNCTION__ );
 
-  mRenderHelper.Start();
-  mRenderHelper.InitializeEgl();
+//papasparrow
+//  mRenderHelper.Start();
+//  mRenderHelper.InitializeEgl();
 
   // tell core it has a context
   mCore.ContextCreated();
@@ -177,19 +178,22 @@ void SingleThreadController::RequestUpdateOnce()
     mCore.Update( 0.0f, mLastUpdateRenderTime, mLastUpdateRenderTime + mRefreshRate * MILLISECONDS_PER_FRAME, status );
 
     Integration::RenderStatus renderStatus;
-    mRenderHelper.PreRender();
+//papasparrow
+    //mRenderHelper.PreRender();
     mCore.Render( renderStatus );
-    if( renderStatus.HasRendered() )
-    {
-      mRenderHelper.PostRender();
-    }
+//papasparrow
+//    if( renderStatus.HasRendered() )
+//    {
+//      mRenderHelper.PostRender();
+//    }
   }
 }
 
 void SingleThreadController::ReplaceSurface( RenderSurface* newSurface )
 {
   DALI_LOG_INFO( gLogFilter, Debug::General, "%s()\n", __FUNCTION__ );
-  mRenderHelper.ReplaceSurface( newSurface );
+//papasparrow  
+//  mRenderHelper.ReplaceSurface( newSurface );
 }
 
 void SingleThreadController::SetRenderRefreshRate( unsigned int refreshRate )
@@ -336,11 +340,13 @@ void SingleThreadController::ChangeState( State::Type state )
 
 void SingleThreadController::StopRendering()
 {
-  mRenderHelper.Stop();
+//papasparrow
+//  mRenderHelper.Stop();
 
   // Inform core of context destruction & shutdown EGL
   mCore.ContextDestroyed();
-  mRenderHelper.ShutdownEgl();
+//papasparrow
+//  mRenderHelper.ShutdownEgl();
 }
 
 } // namespace Adaptor

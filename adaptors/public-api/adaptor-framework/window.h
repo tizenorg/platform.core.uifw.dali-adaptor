@@ -244,6 +244,10 @@ public:
    */
   Any GetNativeHandle() const;
 
+  Any GetNativeSurface() const;
+
+  Any GetNativeDisplay() const;
+
 public: // Signals
   /**
    * @brief The user should connect to this signal to get a timing when indicator was shown / hidden.

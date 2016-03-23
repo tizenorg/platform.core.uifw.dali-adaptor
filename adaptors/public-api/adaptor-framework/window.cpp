@@ -126,6 +126,16 @@ Any Window::GetNativeHandle() const
   return GetImplementation(*this).GetNativeHandle();
 }
 
+Any Window::GetNativeSurface() const
+{
+  return GetImplementation(*this).GetNativeSurface();
+}
+
+Any Window::GetNativeDisplay() const
+{
+  return GetImplementation(*this).GetNativeDisplay();
+}
+
 Window::Window( Internal::Adaptor::Window* window )
 : BaseHandle( window )
 {
