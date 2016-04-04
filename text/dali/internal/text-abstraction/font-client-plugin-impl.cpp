@@ -678,7 +678,7 @@ void FontClient::Plugin::GetFontMetrics( FontId fontId,
 }
 
 GlyphIndex FontClient::Plugin::GetGlyphIndex( FontId fontId,
-                                              Character charcode )
+                                              Character charCode )
 {
   GlyphIndex index( 0 );
 
@@ -687,8 +687,10 @@ GlyphIndex FontClient::Plugin::GetGlyphIndex( FontId fontId,
   {
     FT_Face ftFace = mFontCache[fontId-1].mFreeTypeFace;
 
-    index = FT_Get_Char_Index( ftFace, charcode );
+    index = FT_Get_Char_Index( ftFace, charCode );
   }
+
+  DALI_LOG_INFO( gLogFilter, Debug::Verbose, "FontClient::Plugin::GetGlyphIndex charCode %d index %d\n", charCode, index );
 
   return index;
 }
@@ -769,6 +771,9 @@ bool FontClient::Plugin::GetGlyphMetrics( GlyphInfo* array,
           success = false;
         }
       }
+
+      DALI_LOG_INFO( gLogFilter, Debug::Verbose, "FontClient::Plugin::GetGlyphMetrics fontId: %d, index: %d width: %f height: %f xBearing: %f yBearing: %f advance: %f scaleFactor: %f\n",
+                     array[i].fontId, array[i].index, array[i].width, array[i].height, array[i].xBearing, array[i].yBearing, array[i].advance, array[i].scaleFactor );
     }
     else
     {
@@ -782,6 +787,8 @@ bool FontClient::Plugin::GetGlyphMetrics( GlyphInfo* array,
 BufferImage FontClient::Plugin::CreateBitmap( FontId fontId,
                                               GlyphIndex glyphIndex )
 {
+  DALI_LOG_INFO( gLogFilter, Debug::Verbose, "FontClient::Plugin::CreateBitmap fontId %d glyphIndex %d\n", fontId, glyphIndex );
+
   BufferImage bitmap;
 
   if( fontId > 0 &&
@@ -1046,6 +1053,8 @@ FontId FontClient::Plugin::CreateFont( const FontPath& path,
                                        FaceIndex faceIndex,
                                        bool cacheDescription )
 {
+  DALI_LOG_INFO( gLogFilter, Debug::Verbose, "FontClient::Plugin::CreateFont path %s pointSize %f\n", path.c_str(), static_cast< float >(pointSize)*FROM_266 );
+
   FontId id( 0 );
 
   // Create & cache new font face
