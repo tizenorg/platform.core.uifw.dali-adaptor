@@ -20,9 +20,9 @@
 
 // EXTERNAL INCLUDES
 #ifdef CAPI_SYSTEM_SENSOR_SUPPORT
-#include <sensor/sensor.h>
+//#include <sensor/sensor.h>
 
-#define SENSOR_ENABLED
+//#define SENSOR_ENABLED
 #endif
 
 #include <deque>
