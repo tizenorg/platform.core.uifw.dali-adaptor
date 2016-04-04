@@ -8,6 +8,7 @@
 // INTERNAL INCLUDES
 #include "debug/x-input2-debug.h"
 
+#include <stdio.h>
 
 namespace Dali
 {
@@ -111,18 +112,74 @@ void XInput2::CreateKeyEvent( const XIDeviceEvent* deviceEvent, KeyEvent& keyEve
 
 }
 
-void XInput2::ProcessEvent( XGenericEventCookie* cookie )
+// prototyping implementation
+void XInput2::ProcessKeyEvent( XKeyEvent* xEvent )
+{
+  KeyEvent keyEvent;
+  keyEvent.keyCode = xEvent->keycode;
+  keyEvent.state = KeyEvent::Down;
+  //keyEvent.keyModifier = deviceEvent->mods.effective;
+
+  KeySym sym = XkbKeycodeToKeysym( mDisplay, xEvent->keycode, 0 /* group */ , keyEvent.IsShiftModifier() );
+  char* keyname = XKeysymToString( sym );
+  keyEvent.keyPressedName = keyname;
+  keyEvent.time = xEvent->time;
+
+  mEventInterface->KeyEvent( keyEvent );
+}
+void XInput2::ProcessClientMessage( XEvent* event )
+{
+  Atom input_atom = XInternAtom( mDisplay, "VDINPUT_KEYEVENT", false);
+  KeyEvent keyEvent;
+
+  keyEvent.state = KeyEvent::Down;
+
+  //printf(" ProcessClientMessage \n");
+  // if atom is "VDINPUT_KEYEVENT"
+  if( input_atom == event->xclient.message_type )
+  {
+
+   // printf(" ProcessClientMessage::VDINPUT_KEYEVENT \n");
+
+    keyEvent.keyModifier = event->xclient.data.l[1];
+    keyEvent.keyCode = event->xclient.data.l[2];
+
+    if( event->xclient.data.l[3] != 2)
+    {
+      //printf(" ProcessClientMessage:: key not == down\n");
+
+      return; // 2 = key down, 3 = key re;ease//type = KeyPress;
+    }
+
+    KeySym sym = XkbKeycodeToKeysym( mDisplay,  keyEvent.keyCode, 0 /* group */ , keyEvent.IsShiftModifier() );
+    char* keyname = XKeysymToString( sym );
+    keyEvent.keyPressedName = keyname;
+    keyEvent.time = event->xclient.data.l[0];
+
+    //printf(" transmitting key event \n");
+    mEventInterface->KeyEvent( keyEvent );
+    /// release type = KeyRelease;
+  }
+}
+
+void XInput2::ProcessGenericEvent( XGenericEventCookie* cookie )
 {
   XIDeviceEvent* deviceEvent = static_cast< XIDeviceEvent* >(cookie->data);
 
   X11Debug::LogXI2Event( cookie );
 
+  printf(" ProcessGenericEvent X\n");
+
   bool requiresProcessing  = PreProcessEvent( deviceEvent );
 
   if( ! requiresProcessing )
   {
+    printf(" Doesn't Requires processing X\n");
+
     return;
   }
+
+  printf(" Requires processing X\n");
 
   TouchPoint point ( deviceEvent->deviceid, TouchPoint::Last, deviceEvent->event_x, deviceEvent->event_y );
   Time time( deviceEvent->time ); // X is using uint32 for time field ( see XI2proto.h )
@@ -280,8 +337,8 @@ void XInput2::SelectInputEvents()
 
     eventFilter.Clear();
 
-    if( ( device.use == XIFloatingSlave ) || ( device.use == XISlavePointer ))
-    {
+  //  if( ( device.use == XIFloatingSlave ) || ( device.use == XISlavePointer ))
+ //   {
       if( device.buttonClass )
       {
         eventFilter.PushBack( XI_ButtonPress );
@@ -295,18 +352,21 @@ void XInput2::SelectInputEvents()
         eventFilter.PushBack( XI_TouchEnd );
       }
       SelectEvents( device.deviceId, eventFilter );
-    }
+  //  }
     // @todo work out if we should just be listening to MasterKeyboard
-    else if( device.use == XISlaveKeyboard )
-    {
+    // Floating slave devices also can generate key events. For example, TV remote controllers.
+ //   if( ( device.use == XIFloatingSlave ) || ( device.use == XISlaveKeyboard ) )
+  //  {
       if( device.keyClass )
       {
         eventFilter.PushBack( XI_KeyPress );
         eventFilter.PushBack( XI_KeyRelease );
-
-        SelectEvents( device.deviceId, eventFilter );
       }
+   // }
 
+    if( eventFilter.Count() > 0 )
+    {
+      SelectEvents( device.deviceId, eventFilter );
     }
   }
 }

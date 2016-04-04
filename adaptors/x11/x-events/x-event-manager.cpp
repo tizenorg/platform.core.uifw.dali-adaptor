@@ -46,6 +46,8 @@ void XEventManager::Initialize()
     return;
   }
 
+  XSelectInput( mDisplay, mWindow, StructureNotifyMask | ExposureMask | KeyPressMask | KeyReleaseMask );
+
   mXInput2.Initialize();
 
   // Start monitoring for X events on a file descriptor return via ConnectionNumber.
@@ -75,13 +77,33 @@ void XEventManager::XEventReceived( FileDescriptorMonitor::EventType eventMask )
     // cookie data pointer is undefined until XGetEventData is called.
     XGenericEventCookie* cookie = &xEvent.xcookie;
 
-    if (XGetEventData( mDisplay, cookie))
+    if( xEvent.type == ClientMessage)
     {
-      if( cookie->extension == mXInput2.GetExtensionId() )
+      // Process Client Message
+      mXInput2.ProcessClientMessage( &xEvent );
+    }
+
+    // not all events are generic events
+    if( xEvent.type == KeyPress )
+    {
+      mXInput2.ProcessKeyEvent( (XKeyEvent*)&xEvent );
+    }
+    // else if( ...another event type )
+    // else if( ...another event type2 )
+    // ...
+    // We really should consider a mapping structure like map[event_type] = ProcessThatEvent
+    // to avoid overhead from continuous comparisions in if/else if or switch.
+    // Please refer ecore_x_init() in ecore_x.c
+    else if( xEvent.type == GenericEvent )
+    {
+      if( XGetEventData( mDisplay, cookie ) )
       {
-        mXInput2.ProcessEvent( cookie );
+        if( cookie->extension == mXInput2.GetExtensionId() )
+        {
+          mXInput2.ProcessGenericEvent( cookie );
+        }
+        XFreeEventData( mDisplay, cookie );
       }
-      XFreeEventData( mDisplay, cookie );
     }
   }
 }

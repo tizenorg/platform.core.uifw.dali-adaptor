@@ -76,7 +76,13 @@ public:
    * @brief process an XInput2 event
    * @param cookie X cookie
    */
-  void ProcessEvent( XGenericEventCookie* cookie );
+  void ProcessGenericEvent( XGenericEventCookie* cookie );
+
+   // Actually this is not related to XInput2. Refactoring is needed.
+   void ProcessKeyEvent( XKeyEvent* xEvent );
+
+
+   void ProcessClientMessage( XEvent* event );
 
 
 private:
