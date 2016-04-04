@@ -24,6 +24,9 @@ Source0:    %{name}-%{version}.tar.gz
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 Requires:       giflib
+BuildRequires:  opengl-es-t760
+
+
 
 # Get the profile from tizen_profile_name if tizen version is 2.x and tizen_profile_name exists.
 
@@ -31,7 +34,9 @@ Requires:       giflib
 %define profile %{tizen_profile_name}
 %endif
 
+
 %if "%{profile}" == "mobile"
+Mobile profile
 %define dali_profile MOBILE
 %define dali_feedback_plugin 0
 %define shaderbincache_flag DISABLE
@@ -39,15 +44,16 @@ BuildRequires:  pkgconfig(gles20)
 %define gles_requirement_setup 1
 %endif
 
-%if "%{profile}" == "tv"
+
 %define dali_profile TV
 %define dali_feedback_plugin 0
 %define shaderbincache_flag ENABLE
 BuildRequires:  pkgconfig(glesv2)
 %define gles_requirement_setup 1
-%endif
+
 
 %if "%{profile}" == "wearable"
+wearable profile
 %define dali_profile WEARABLE
 %define dali_feedback_plugin 0
 %define shaderbincache_flag DISABLE
@@ -56,6 +62,7 @@ BuildRequires:  pkgconfig(gles20)
 %endif
 
 %if "%{profile}" == "common"
+common profile
 %define dali_profile COMMON
 %define dali_feedback_plugin 0
 %define tizen_2_2_compatibility 1
@@ -63,6 +70,7 @@ BuildRequires:  pkgconfig(gles20)
 BuildRequires:  pkgconfig(glesv2)
 %define gles_requirement_setup 1
 %endif
+
 
 # If we have not set a BuildRequires for the gles version, default it here.
 %{!?gles_requirement_setup: BuildRequires:  pkgconfig(glesv2)}
@@ -81,7 +89,8 @@ BuildRequires:  pkgconfig(dlog)
 BuildRequires:  libdrm-devel
 BuildRequires:  pkgconfig(libexif)
 BuildRequires:  pkgconfig(libpng)
-BuildRequires:  pkgconfig(egl)
+#BuildRequires:  opengl-es
+BuildRequires:  opengl-es-t760-devel
 BuildRequires:  libcurl-devel
 BuildRequires:  pkgconfig(harfbuzz)
 BuildRequires:  fribidi-devel
@@ -121,7 +130,7 @@ BuildRequires:  pkgconfig(tpkp-curl)
 
 ####### BUILDING FOR X11#######
 %else
-BuildRequires:  pkgconfig(egl)
+# BuildRequires:  pkgconfig(egl)
 BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(xi)
 BuildRequires:  pkgconfig(xfixes)
