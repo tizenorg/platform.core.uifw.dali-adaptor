@@ -1181,11 +1181,11 @@ EMSCRIPTEN_BINDINGS(dali_wrapper)
 
   class_<Dali::TextureSet, base<Dali::Handle>>("TextureSet")
     .constructor<>(&Dali::TextureSet::New)
-    .function("setShader", &Dali::TextureSet::SetShader)
-    .function("getShader", &Dali::TextureSet::GetShader)
-    .function("addTexture", &Dali::TextureSet::AddTexture)
-    .function("getNumberOfTextures", &Dali::TextureSet::GetNumberOfTextures)
-    .function("removeTexture", &Dali::TextureSet::RemoveTexture)
+    .function("setImage", &Dali::TextureSet::SetImage)
+    .function("setSampler", &Dali::TextureSet::SetSampler)
+    .function("getImage", &Dali::TextureSet::GetImage)
+    .function("getSampler", &Dali::TextureSet::GetSampler)
+    .function("getTextureCount", &Dali::TextureSet::GetTextureCount)
 ;
 
   class_<Dali::Renderer, base<Dali::Handle>>("Renderer")
