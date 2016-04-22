@@ -48,7 +48,7 @@ TriggerEvent::TriggerEvent( CallbackBase* callback, TriggerEventInterface::Optio
   if (mFileDescriptor >= 0)
   {
     // Now Monitor the created event file descriptor
-    mFileDescriptorMonitor = new FileDescriptorMonitor( mFileDescriptor, MakeCallback( this, &TriggerEvent::Triggered ), FileDescriptorMonitor::FD_READABLE );
+    mFileDescriptorMonitor = new FileDescriptorMonitor( mFileDescriptor, MakeCallback( this, &TriggerEvent::Triggered ), NULL, NULL, FileDescriptorMonitor::FD_READABLE );
   }
   else
   {

@@ -39,10 +39,12 @@ namespace Adaptor
 struct FileDescriptorMonitor::Impl
 {
   // Construction
-  Impl( int fileDescriptor, CallbackBase* callback, int eventsToMonitor)
+  Impl( int fileDescriptor, CallbackBase* callback, CallbackBase* preCallback, CallbackBase* awakeCallback, int eventsToMonitor )
   : mFileDescriptor( fileDescriptor ),
     mEventsToMonitor( eventsToMonitor ),
     mCallback( callback ),
+    mPreCallback( preCallback ),
+    mAwakeCallback( awakeCallback ),
     mHandler( NULL )
   {
   }
@@ -56,6 +58,8 @@ struct FileDescriptorMonitor::Impl
   int mFileDescriptor;
   int mEventsToMonitor;              ///< what file descriptor events to monitor
   CallbackBase* mCallback;
+  CallbackBase* mPreCallback;
+  CallbackBase* mAwakeCallback;
   Ecore_Fd_Handler* mHandler;
 
   // Static Methods
@@ -102,11 +106,51 @@ struct FileDescriptorMonitor::Impl
 
     return ECORE_CALLBACK_RENEW;
   }
+
+  /**
+    * Called before entering the main loop select function.
+    */
+  static void PrepareEvent( void* data, Ecore_Fd_Handler* handler )
+  {
+    Impl* impl = reinterpret_cast<Impl*>(data);
+
+    if( impl->mPreCallback )
+    {
+      CallbackBase::Execute( *impl->mPreCallback );
+    }
+  }
+
+  static void AwakeCallback( void*data )
+  {
+    Impl* impl = reinterpret_cast<Impl*>(data);
+
+    if( impl->mAwakeCallback )
+    {
+      bool awakenByMyFd = false;
+
+      int events = 0;
+      if( impl->mEventsToMonitor & FileDescriptorMonitor::FD_READABLE)
+      {
+        events = ECORE_FD_READ;
+      }
+      if( impl->mEventsToMonitor & FileDescriptorMonitor::FD_WRITABLE)
+      {
+        events |= ECORE_FD_WRITE;
+      }
+
+      if( ecore_main_fd_handler_active_get( impl->mHandler, static_cast< Ecore_Fd_Handler_Flags >( events ) ) )
+      {
+        awakenByMyFd = true;
+      }
+
+      CallbackBase::Execute( *impl->mAwakeCallback, awakenByMyFd );
+    }
+  }
 };
 
-FileDescriptorMonitor::FileDescriptorMonitor( int fileDescriptor, CallbackBase* callback, int eventBitmask)
+FileDescriptorMonitor::FileDescriptorMonitor( int fileDescriptor, CallbackBase* callback, CallbackBase* preCallback, CallbackBase* awakeCallback, int eventBitmask)
 {
-  mImpl = new Impl(fileDescriptor, callback, eventBitmask);
+  mImpl = new Impl(fileDescriptor, callback, preCallback, awakeCallback, eventBitmask);
 
   if (fileDescriptor < 1)
   {
@@ -126,6 +170,9 @@ FileDescriptorMonitor::FileDescriptorMonitor( int fileDescriptor, CallbackBase* 
   mImpl->mEventsToMonitor = events;
   mImpl->mHandler = ecore_main_fd_handler_add( fileDescriptor, static_cast<Ecore_Fd_Handler_Flags >( events ), &Impl::EventDispatch, mImpl, NULL, NULL );
 
+  ecore_main_fd_handler_prepare_callback_set( mImpl->mHandler, &Impl::PrepareEvent, mImpl );
+
+  ecore_main_awake_handler_add( &Impl::AwakeCallback, mImpl );
 }
 
 FileDescriptorMonitor::~FileDescriptorMonitor()

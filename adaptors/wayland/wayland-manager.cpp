@@ -138,7 +138,8 @@ WaylandManager::WaylandManager()
  mXdgShell( NULL ),
  mSurface( NULL ),
  mShellSurface( NULL ),
- mXdgSurface( NULL )
+ mXdgSurface( NULL ),
+ mPrepareRead( false )
 {
 }
 WaylandManager::~WaylandManager()
@@ -184,42 +185,26 @@ void WaylandManager::Initialise()
 
   // Get the interfaces to compositor / shell etc
   GetWaylandInterfaces();
-
 }
+
 void WaylandManager::ReadAndDispatchEvents()
 {
-  // Wayland client uses a single file descriptor to communicate with the compositor.
-  // Because DALi can have multiple client threads ( event thread for input, render thread for Tizen buffer management / TPL )
-  // it has to use the Wayland client thread safe API to prevent a dead lock
-
-  // prepare_read announces the calling thread's intention to read from the file descriptor
-  // If there is already events queued up in the default queue, then dispatch those first
-  while( wl_display_prepare_read( mDisplay ) != NO_EVENTS_ALREADY_IN_QUEUE )
-  {
-    // dispatch the event, e.g. a touch event or a clipboard event
-    wl_display_dispatch_pending( mDisplay );
-  }
-
   // At this point the default queue is empty.
   // We read data from the file descriptor in their respective queues
   // This is thread safe. No other threads will read from the fd and queue events during this operation.
-  int ret = wl_display_read_events( mDisplay );
+  wl_display_read_events( mDisplay );
 
-  if( ret == 0 )
-  {
-    // dispatch the events from the default queue
-    wl_display_dispatch_pending( mDisplay );
-  }
-  else
-  {
-    DALI_LOG_ERROR("wl_display_read_events error");
-  }
+  // dispatch the events from the default queue
+  wl_display_dispatch_pending( mDisplay );
 
+  mPrepareRead = false;
 }
+
 void WaylandManager::AssignWindowEventInterface( WindowEventInterface* eventInterface)
 {
   mInputManager.AssignWindowEventInterface( eventInterface );
 }
+
 void WaylandManager::GetWaylandInterfaces()
 {
   // get and listen to the registry
@@ -246,12 +231,13 @@ void WaylandManager::InstallFileDescriptorMonitor()
 
   // create the callback that gets triggered when a read / write event occurs
   CallbackBase* callback =  MakeCallback( this, &WaylandManager::FileDescriptorCallback);
+  CallbackBase* preCallback =  MakeCallback( this, &WaylandManager::FileDescriptorPreCallback);
+  CallbackBase* awakeCallback =  MakeCallback( this, &WaylandManager::FileDescriptorAwakeCallback);
 
   // monitor read and write events
   int events = FileDescriptorMonitor::FD_READABLE;
 
-  mFileDescriptorMonitor = new FileDescriptorMonitor( mDisplayFileDescriptor, callback, events );
-
+  mFileDescriptorMonitor = new FileDescriptorMonitor( mDisplayFileDescriptor, callback, preCallback, awakeCallback, events );
 }
 
 void WaylandManager::FileDescriptorCallback( FileDescriptorMonitor::EventType eventTypeMask )
@@ -261,8 +247,50 @@ void WaylandManager::FileDescriptorCallback( FileDescriptorMonitor::EventType ev
     // read and dispatch events
     ReadAndDispatchEvents();
   }
+  else
+  {
+    if( mPrepareRead )
+    {
+      wl_display_cancel_read( mDisplay );
+
+      mPrepareRead = false;
+    }
+  }
 }
 
+void WaylandManager::FileDescriptorPreCallback()
+{
+  // Wayland client uses a single file descriptor to communicate with the compositor.
+  // Because DALi can have multiple client threads ( event thread for input, render thread for Tizen buffer management / TPL )
+  // it has to use the Wayland client thread safe API to prevent a dead lock
+
+  // prepare_read announces the calling thread's intention to read from the file descriptor
+  // If there is already events queued up in the default queue, then dispatch those first
+  while( wl_display_prepare_read( mDisplay ) != NO_EVENTS_ALREADY_IN_QUEUE )
+  {
+    // dispatch the event, e.g. a touch event or a clipboard event
+    wl_display_dispatch_pending( mDisplay );
+  }
+
+  wl_display_flush( mDisplay );
+
+  mPrepareRead = true;
+}
+
+void WaylandManager::FileDescriptorAwakeCallback( bool awakenByMyFd )
+{
+  if( !mPrepareRead )
+  {
+    return;
+  }
+
+  if( !awakenByMyFd )
+  {
+    wl_display_cancel_read( mDisplay );
+
+    mPrepareRead = false;
+  }
+}
 
 void WaylandManager::CreateSurface( Dali::Wayland::Window& window )
 {
