@@ -55,7 +55,7 @@ void XEventManager::Initialize()
 
   CallbackBase* callback =  MakeCallback( this, &XEventManager::XEventReceived);
 
-  mFileDescriptorMonitor = new FileDescriptorMonitor( fileDescriptor, callback, FileDescriptorMonitor::FD_READABLE );
+  mFileDescriptorMonitor = new FileDescriptorMonitor( fileDescriptor, callback, NULL, NULL, FileDescriptorMonitor::FD_READABLE );
 
   mInitialized = true;
 }

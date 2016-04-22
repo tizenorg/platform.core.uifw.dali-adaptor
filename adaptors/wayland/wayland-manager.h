@@ -116,6 +116,18 @@ private: // change to private
   void FileDescriptorCallback( FileDescriptorMonitor::EventType eventTypeMask );
 
   /**
+   * @brief File descriptor prepare callback function, triggered prior to fd handler's callback function
+   * (even the other fd handlers), before entering the main loop select function.
+   */
+  void FileDescriptorPreCallback();
+
+  /**
+   * @brief File descriptor awake callback function, triggered after polling (even the other fd handlers).
+   * @param[in] awakenByMyFd true if triggered by my fd, false otherwise.
+   */
+  void FileDescriptorAwakeCallback( bool awakenByMyFd );
+
+  /**
    * @brief Reads and dispatches any events from the Wayland compositor
    * We have a file descriptor monitor active to decide when to call this function
    */
@@ -127,7 +139,6 @@ private: // change to private
   void GetWaylandInterfaces();
 
 public:
-
 
   InputManager  mInputManager;
   CompositorOutput mCompositorOutput;     ///< handles monitor information and DPI
@@ -141,7 +152,7 @@ public:
   WlShellSurface* mShellSurface;        ///< Shell surface
   WlXdgShellSurface*  mXdgSurface;      ///< XDG Shell surface
 
-
+  bool mPrepareRead;          ///< flag for prepare read
 };
 } // Internal
 } // Adaptor
