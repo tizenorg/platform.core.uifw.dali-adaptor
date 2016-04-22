@@ -120,7 +120,7 @@ public:
 };
 
 
-FileDescriptorMonitor::FileDescriptorMonitor( int fileDescriptor, CallbackBase* callback, int eventBitmask )
+FileDescriptorMonitor::FileDescriptorMonitor( int fileDescriptor, CallbackBase* callback, CallbackBase* preCallback, CallbackBase* awakeCallback, int eventBitmask )
 {
   if (fileDescriptor < 1)
   {

@@ -87,7 +87,7 @@ public:
    * readable or writable even when it isn’t. The developer should check for handle EAGAIN or equivalent
    * when reading from or write to the fd.
    */
-  FileDescriptorMonitor( int fileDescriptor, CallbackBase* callback, int eventBitmask );
+  FileDescriptorMonitor( int fileDescriptor, CallbackBase* callback, CallbackBase* preCallback, CallbackBase* awakeCallback, int eventBitmask );
 
   /**
    * Destructor
