@@ -55,7 +55,7 @@ public:
    * @brief Notify the text input has received focus. Typically in response to an activate request.
    *
    * @param[in] seat the seat that produced the event
-   * @param[in] serial  serial number
+   * @param[in] surface wayland surface
    */
   virtual void Enter( Seat* seat, WlSurface* surface ) = 0;
 
@@ -135,6 +135,7 @@ public:
    *
    * @param[in] seat the seat that produced the event
    * @param[in] serial of the latest known text input state
+   * @param[in] text the text to commit
    */
   virtual void CommitString( Seat* seat, uint32_t serial, const char *text ) = 0;
 
@@ -170,6 +171,9 @@ public:
    * (where the modifier indices are set by the modifiers_map event)
    * @param[in] seat the seat that produced the event
    * @param[in] serial of the latest known text input state
+   * @param[in] time time stamp
+   * @param[in] sym symbol
+   * @param[in] state modifiers state
    */
   virtual void Keysym( Seat* seat,
                        uint32_t serial,
@@ -182,7 +186,7 @@ public:
    * @brief Set the language of the input text.
    * @param[in] seat the seat that produced the event
    * @param[in] serial of the latest known text input state
-   * @param[in] The "language" argument is a RFC-3066 format language tag.
+   * @param[in] language The "language" argument is a RFC-3066 format language tag.
    */
   virtual void Language( Seat* seat, uint32_t serial, const char *language ) = 0;
 
@@ -194,6 +198,7 @@ public:
    * direction text is laid out properly.
     *
    * @param[in] seat the seat that produced the event
+   * @param[in] serial of the latest known text input state
    * @param[in] direction ( see text_direction enum in wayland-extension/protocol/text.xml )
    */
   virtual void TextDirection( Seat* seat, uint32_t serial, uint32_t direction ) = 0;
@@ -204,8 +209,8 @@ public:
    *
    * @param[in] seat the seat that produced the event
    * @param[in] serial of the latest known text input state
-   * @param[in] start index
-   * @param[in] start index
+   * @param[in] start start index
+   * @param[in] end end index
    */
   virtual void SelectionRegion( Seat* seat, uint32_t serial, int32_t start, int32_t end) = 0;
 
@@ -213,12 +218,13 @@ public:
    * @brief Notify when the input panels ask to send private command
    * @param[in] seat the seat that produced the event
    * @param[in] serial of the latest known text input state
-   * @param[in] start index
+   * @param[in] command private command string
    */
   virtual void PrivateCommand( Seat* seat, uint32_t serial, const char *command) = 0;
 
   /**
-   * @ Notify when the geometry of the input panel changed.
+   * @brief Notify when the geometry of the input panel changed.
+   * @param[in] seat the seat that produced the event
    * @param[in] x position
    * @param[in] y position
    * @param[in] width panel width
@@ -229,6 +235,20 @@ public:
                                    uint32_t y,
                                    uint32_t width,
                                    uint32_t height) = 0;
+
+  /**
+   * @brief Notify when the input panels ask to send input panel data
+   * Not sure what this is for exactly
+   * @param[in] seat the seat that produced the event
+   * @param[in] serial of the latest known text input state
+   * @param[in] data input panel data
+   * @param[in] dataLength data length
+   *
+   */
+  virtual void InputPanelData( Seat* seat,
+                               uint32_t serial,
+                               const char* data,
+                               uint32_t dataLength ) = 0;
 
 public: // Helper functions used to find the seat associated with the keyboard/pointer/touch device
 
