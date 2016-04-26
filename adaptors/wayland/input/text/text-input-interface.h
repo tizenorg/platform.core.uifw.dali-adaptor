@@ -218,7 +218,7 @@ public:
   virtual void PrivateCommand( Seat* seat, uint32_t serial, const char *command) = 0;
 
   /**
-   * @ Notify when the geometry of the input panel changed.
+   * @brief Notify when the geometry of the input panel changed.
    * @param[in] x position
    * @param[in] y position
    * @param[in] width panel width
@@ -229,6 +229,15 @@ public:
                                    uint32_t y,
                                    uint32_t width,
                                    uint32_t height) = 0;
+
+  /**
+   *  @brief Notify when the input panels ask to send input panel data
+   *  Not sure what this is for exactly
+   */
+  virtual void InputPanelData( Seat* seat,
+                               uint32_t serial,
+                               const char* data,
+                               uint32_t dataLength ) = 0;
 
 public: // Helper functions used to find the seat associated with the keyboard/pointer/touch device
 
