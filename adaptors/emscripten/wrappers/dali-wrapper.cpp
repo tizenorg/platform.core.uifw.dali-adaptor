@@ -1047,8 +1047,6 @@ EMSCRIPTEN_BINDINGS(dali_wrapper)
     .function("setIndexBuffer", &SetIndexBufferDataRaw)
     .function("setGeometryType", &Dali::Geometry::SetGeometryType)
     .function("getGeometryType", &Dali::Geometry::GetGeometryType)
-    .function("setRequiresDepthTesting", &Dali::Geometry::SetRequiresDepthTesting)
-    .function("getRequiresDepthTesting", &Dali::Geometry::GetRequiresDepthTesting)
 ;
 
   class_<Dali::Image>("Image")
