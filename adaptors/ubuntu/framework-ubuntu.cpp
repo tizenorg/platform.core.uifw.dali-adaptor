@@ -124,7 +124,7 @@ struct Framework::Impl
 
 };
 
-Framework::Framework( Framework::Observer& observer, int *argc, char ***argv )
+Framework::Framework( Framework::Observer& observer, int *argc, char ***argv, APPLICATION_TYPE type )
 : mObserver(observer),
   mInitialised(false),
   mRunning(false),
