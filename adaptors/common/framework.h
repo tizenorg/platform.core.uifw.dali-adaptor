@@ -42,6 +42,11 @@ namespace Adaptor
 class Framework
 {
 public:
+  enum ApplicationType
+  {
+    NORMAL,       ///<  normal appFramework
+    WATCH     ///< watch appFramework
+  };
 
   /**
    * Observer class for the framework.
@@ -82,6 +87,21 @@ public:
     virtual void OnAppControl(void *) {}
 
     /**
+     * Invoked at every second
+     */
+    virtual void OnTimeTick(void *) {}
+
+    /**
+     * Invoked at every second in ambient mode
+     */
+    virtual void OnAmbientTick(void *) {}
+
+    /**
+     * Invoked when the device enters or exits ambient mode
+     */
+    virtual void OnAmbientChanged(bool ambient) {}
+
+    /**
      * Invoked when the language of the device is changed.
      */
     virtual void OnLanguageChanged() {}
@@ -104,13 +124,14 @@ public:
 
 public:
 
-  /**
+    /**
    * Constructor
    * @param[in]  observer  The observer of the Framework.
    * @param[in]  argc      A pointer to the number of arguments.
    * @param[in]  argv      A pointer the the argument list.
+   * @param[in]  type      A pointer the the argument list.
    */
-  Framework( Observer& observer, int* argc, char ***argv );
+  Framework( Observer& observer, int* argc, char ***argv, ApplicationType type = NORMAL );
 
   /**
    * Destructor
@@ -160,6 +181,12 @@ private:
   Framework& operator=(Framework&);
 
 private:
+
+  /**
+   * Called when the application is created.
+   */
+  bool Create();
+
   /**
    * Called by the App framework when an application lifecycle event occurs.
    * @param[in] type The type of event occurred.
@@ -201,7 +228,6 @@ private: // impl members
 
   struct Impl;
   Impl* mImpl;
-
 };
 
 } // namespace Adaptor
