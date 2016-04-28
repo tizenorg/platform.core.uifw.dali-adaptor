@@ -85,6 +85,8 @@ BuildRequires:  pkgconfig(egl)
 BuildRequires:  libcurl-devel
 BuildRequires:  pkgconfig(harfbuzz)
 BuildRequires:  fribidi-devel
+BuildRequires:  pkgconfig(capi-appfw-watch-application)
+BuildRequires:  pkgconfig(appcore-watch)
 
 %if 0%{?tizen_2_2_compatibility} != 1
 BuildRequires:  pkgconfig(capi-system-info)
