@@ -54,6 +54,11 @@ typedef IntrusivePtr<Application> ApplicationPtr;
 class Application : public BaseObject, public Framework::Observer
 {
 public:
+  enum APPLICATION_TYPE
+  {
+    NORMAL,       ///<  Create as normal application
+    WATCH     ///< Create as watch Application
+  };
 
   typedef Dali::Application::AppSignalType AppSignalType;
   typedef Dali::Application::AppControlSignalType AppControlSignalType;
@@ -66,7 +71,8 @@ public:
    * @param[in]  stylesheet  The path to user defined theme file
    * @param[in]  windowMode  A member of Dali::Application::WINDOW_MODE
    */
-  static ApplicationPtr New( int* argc, char **argv[], const std::string& stylesheet, WINDOW_MODE windowMode );
+  static ApplicationPtr New( int* argc, char **argv[], const std::string& stylesheet,
+    WINDOW_MODE windowMode, APPLICATION_TYPE applicationType );
 
 public:
 
@@ -245,7 +251,7 @@ public:  // Signals
   */
   Dali::Application::AppSignalType& MemoryLowSignal() { return mMemoryLowSignal; }
 
-private:
+protected:
 
   /**
    * Private Constructor
@@ -254,12 +260,15 @@ private:
    * @param[in]  stylesheet  The path to user defined theme file
    * @param[in]  windowMode  A member of Dali::Application::WINDOW_MODE
    */
-  Application( int* argc, char **argv[], const std::string& stylesheet, WINDOW_MODE windowMode );
+  Application( int* argc, char **argv[], const std::string& stylesheet,
+      WINDOW_MODE windowMode, APPLICATION_TYPE applicationType );
 
   /**
    * Destructor
    */
   virtual ~Application();
+
+private:
 
   // Undefined
   Application(const Application&);
