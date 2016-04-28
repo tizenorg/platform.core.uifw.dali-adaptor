@@ -49,7 +49,8 @@ PKG_CHECK_MODULES(FRIBIDI, fribidi)
 PKG_CHECK_MODULES(TTRACE,  ttrace, AC_DEFINE(ENABLE_TTRACE, 1, [ttrace available]),
                   [ AC_MSG_NOTICE([Tizen Trace not avaiable]) ]
                   )
-
+PKG_CHECK_MODULES(APPFW_WATCH, capi-appfw-watch-application)
+PKG_CHECK_MODULES(APPCORE_WATCH, appcore-watch)
 
 # Currently, dali-adaptor always requires EFL on all platforms.
 # (on Wayland & X11, on Tizen devices & Ubuntu PC).
