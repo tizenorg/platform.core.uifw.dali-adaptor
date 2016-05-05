@@ -342,20 +342,22 @@ Indicator::Indicator( Adaptor* adaptor, Dali::Window::WindowOrientation orientat
   mServerConnection( NULL ),
   mObserver( observer ),
   mOrientation( orientation ),
-  mImageWidth( 0 ),
-  mImageHeight( 0 ),
+  mImageWidth( 600 ),
+  mImageHeight( 50 ),
   mVisible( Dali::Window::INVISIBLE ),
   mIsShowing( true ),
   mIsAnimationPlaying( false ),
   mCurrentSharedFile( 0 )
 {
-  mIndicatorImageActor = Dali::ImageActor::New();
+  mIndicatorImageActor = Dali::ImageActor::New(Dali::BufferImage::WHITE());
+  mIndicatorImageActor.SetColor( Dali::Color::RED );
   mIndicatorImageActor.SetBlendFunc( Dali::BlendingFactor::ONE, Dali::BlendingFactor::ONE_MINUS_SRC_ALPHA,
                                     Dali::BlendingFactor::ONE, Dali::BlendingFactor::ONE );
 
   mIndicatorImageActor.SetParentOrigin( ParentOrigin::TOP_CENTER );
   mIndicatorImageActor.SetAnchorPoint( AnchorPoint::TOP_CENTER );
   mIndicatorImageActor.SetSortModifier( 1.0f );
+  mIndicatorImageActor.SetSize( 600.f, 50.f );
 
   // Indicator image handles the touch event including "leave"
   mIndicatorImageActor.SetLeaveRequired( true );
@@ -931,11 +933,12 @@ bool Indicator::CopyToBuffer( int bufferNumber )
 void Indicator::CreateNewPixmapImage()
 {
   DALI_LOG_TRACE_METHOD_FMT( gIndicatorLogFilter, "W:%d H:%d", mImageWidth, mImageHeight );
-  Dali::NativeImageSourcePtr nativeImageSource = Dali::NativeImageSource::New( mPixmap );
+  //Dali::NativeImageSourcePtr nativeImageSource = Dali::NativeImageSource::New( mPixmap );
 
-  if( nativeImageSource )
+  if( true/*nativeImageSource*/ )
   {
-    mIndicatorImageActor.SetImage( Dali::NativeImage::New(*nativeImageSource) );
+    //mIndicatorImageActor.SetImage( Dali::NativeImage::New(*nativeImageSource) );
+    mIndicatorImageActor.SetImage( Dali::BufferImage::WHITE() );
     mIndicatorImageActor.SetSize( mImageWidth, mImageHeight );
     mIndicatorActor.SetSize( mImageWidth, mImageHeight );
     mEventActor.SetSize(mImageWidth, mImageHeight);
@@ -959,11 +962,12 @@ void Indicator::CreateNewImage( int bufferNumber )
 {
   DALI_LOG_TRACE_METHOD_FMT( gIndicatorLogFilter, "W:%d H:%d", mSharedFileInfo[bufferNumber].mImageWidth, mSharedFileInfo[bufferNumber].mImageHeight );
   mIndicatorBuffer = new IndicatorBuffer( mAdaptor, mSharedFileInfo[bufferNumber].mImageWidth, mSharedFileInfo[bufferNumber].mImageHeight, Pixel::BGRA8888 );
-  Dali::Image image = Dali::NativeImage::New( mIndicatorBuffer->GetNativeImage() );
+  //Dali::Image image = Dali::NativeImage::New( mIndicatorBuffer->GetNativeImage() );
 
   if( CopyToBuffer( bufferNumber ) ) // Only create images if we have valid image buffer
   {
-    mIndicatorImageActor.SetImage( image );
+    //mIndicatorImageActor.SetImage( image );
+    mIndicatorImageActor.SetImage( Dali::BufferImage::WHITE() );
   }
   else
   {

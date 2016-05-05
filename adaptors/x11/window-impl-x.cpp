@@ -27,6 +27,9 @@
 #include <dali/public-api/render-tasks/render-task.h>
 #include <dali/public-api/render-tasks/render-task-list.h>
 
+#include <dali/public-api/common/stage.h>
+#include <dali/public-api/images/buffer-image.h>
+
 // INTERNAL HEADERS
 #include <window-render-surface.h>
 #include <drag-and-drop-detector-impl.h>
@@ -414,7 +417,18 @@ void Window::DoShowIndicator( Dali::Window::WindowOrientation lastOrientation )
       mIndicator->SetOpacityMode( mIndicatorOpacityMode );
       Dali::Actor actor = mIndicator->GetActor();
       SetIndicatorActorRotation();
-      mOverlay->Add(actor);
+
+
+     Dali::ImageActor testActor = Dali::ImageActor::New(Dali::BufferImage::WHITE());
+     testActor.SetColor( Dali::Color::GREEN );
+     testActor.SetParentOrigin( ParentOrigin::CENTER );
+     testActor.SetAnchorPoint( AnchorPoint::CENTER );
+     testActor.SetSize( 400.f, 400.f );
+     mOverlay->Add(actor);
+     mOverlay->Add(testActor);
+//
+//     Dali::Stage::GetCurrent().Add(actor);
+//     Dali::Stage::GetCurrent().Add(testActor);
     }
     // else don't create a hidden indicator
   }
