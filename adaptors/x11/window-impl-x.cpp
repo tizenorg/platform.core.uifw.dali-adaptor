@@ -27,6 +27,8 @@
 #include <dali/public-api/render-tasks/render-task.h>
 #include <dali/public-api/render-tasks/render-task-list.h>
 
+#include <dali/public-api/images/buffer-image.h>
+
 // INTERNAL HEADERS
 #include <window-render-surface.h>
 #include <drag-and-drop-detector-impl.h>
@@ -608,6 +610,14 @@ Dali::Any Window::GetNativeHandle() const
 void Window::OnStart()
 {
   ShowIndicator( mIndicatorVisible );
+
+  Dali::ImageActor testActor = Dali::ImageActor::New(Dali::BufferImage::WHITE());
+  testActor.SetColor( Dali::Color::GREEN );
+  testActor.SetParentOrigin( ParentOrigin::CENTER );
+  testActor.SetAnchorPoint( AnchorPoint::CENTER );
+  testActor.SetSize( 400.f, 400.f );
+  mOverlay->Add(testActor);
+
 }
 
 void Window::OnPause()
