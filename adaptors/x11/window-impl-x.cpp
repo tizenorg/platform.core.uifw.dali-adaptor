@@ -27,6 +27,8 @@
 #include <dali/public-api/render-tasks/render-task.h>
 #include <dali/public-api/render-tasks/render-task-list.h>
 
+#include <dali/public-api/images/buffer-image.h>
+
 // INTERNAL HEADERS
 #include <window-render-surface.h>
 #include <drag-and-drop-detector-impl.h>
