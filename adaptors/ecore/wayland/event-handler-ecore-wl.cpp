@@ -50,6 +50,11 @@
 #include <style-monitor-impl.h>
 #include <base/core-event-interface.h>
 
+
+//ssong. test.
+//#define DALI_LOG_INFO(filter, level, format, args...) DALI_LOG_ERROR(format, ## args)
+
+
 namespace Dali
 {
 
@@ -238,8 +243,13 @@ struct EventHandler::Impl
         state = TouchPoint::Interrupted;
       }
 
-      TouchPoint point( touchEvent->multi.device, state, touchEvent->x, touchEvent->y );
+      TouchPoint point( touchEvent->multi.device, state, touchEvent->x, touchEvent->y, touchEvent->multi.radius, \
+                                touchEvent->multi.radius_x, touchEvent->multi.radius_y, touchEvent->multi.pressure, touchEvent->multi.angle);
+      //TouchPoint point( touchEvent->multi.device, state, touchEvent->x, touchEvent->y );
+
       handler->SendEvent( point, touchEvent->timestamp );
+
+      DALI_LOG_ERROR("EcoreEventMouseButtonDown() radius=%f, pressure=%f, angle=%f \n", point.radius, point.pressure, point.angle);
     }
 
     return ECORE_CALLBACK_PASS_ON;
@@ -255,8 +265,15 @@ struct EventHandler::Impl
 
     if ( touchEvent->window == (unsigned int)ecore_wl_window_id_get(handler->mImpl->mWindow) )
     {
-      TouchPoint point( touchEvent->multi.device, TouchPoint::Up, touchEvent->x, touchEvent->y );
-      handler->SendEvent( point, touchEvent->timestamp );
+
+      TouchPoint point( touchEvent->multi.device, TouchPoint::Up, touchEvent->x, touchEvent->y, touchEvent->multi.radius, \
+                                touchEvent->multi.radius_x, touchEvent->multi.radius_y, touchEvent->multi.pressure, touchEvent->multi.angle);
+
+      //TouchPoint point( touchEvent->multi.device, TouchPoint::Up, touchEvent->x, touchEvent->y );
+
+	  handler->SendEvent( point, touchEvent->timestamp );
+	  
+         DALI_LOG_ERROR("EcoreEventMouseButtonUp() radius=%f, pressure=%f, angle=%f \n", point.radius, point.pressure, point.angle);
     }
 
     return ECORE_CALLBACK_PASS_ON;
@@ -290,7 +307,15 @@ struct EventHandler::Impl
 
     if ( touchEvent->window == (unsigned int)ecore_wl_window_id_get(handler->mImpl->mWindow) )
     {
+
       TouchPoint point( touchEvent->multi.device, TouchPoint::Motion, touchEvent->x, touchEvent->y );
+	  
+      point.radius = (float)touchEvent->multi.radius;
+      point.radiusX = (float)touchEvent->multi.radius_x;
+      point.radiusY = (float)touchEvent->multi.radius_y;
+      point.pressure = (float)touchEvent->multi.pressure;
+      point.angle = (float)touchEvent->multi.angle;
+
       handler->SendEvent( point, touchEvent->timestamp );
     }
 
