@@ -235,109 +235,6 @@ Dali::Actor HitTest(float x, float y)
   return results.actor;
 }
 
-/**
- * Creates a solid colour actor
- */
-Dali::Actor CreateSolidColorActor( const Dali::Vector4& color, bool border, const Dali::Vector4& borderColor, const unsigned int borderSize )
-{
-  static const unsigned int MAX_BORDER_SIZE( 9 );
-
-  Dali::ImageActor image;
-  if( borderSize > MAX_BORDER_SIZE )
-  {
-    return image;
-  }
-
-  const unsigned int bitmapWidth = borderSize * 2 + 2;
-
-  // Using a (2 + border) x (2 + border) image gives a better blend with the GL implementation
-  // than a (1 + border) x (1 + border) image
-  const unsigned int bitmapSize = bitmapWidth * bitmapWidth;
-  const unsigned int topLeft = bitmapWidth * borderSize + borderSize;
-  const unsigned int topRight = topLeft + 1;
-  const unsigned int bottomLeft = bitmapWidth * (borderSize + 1) + borderSize;
-  const unsigned int bottomRight = bottomLeft + 1;
-
-  Dali::BufferImage imageData;
-  if(color.a != 1.0 || borderColor.a != 1.0)
-  {
-    imageData = Dali::BufferImage::New( bitmapWidth, bitmapWidth, Dali::Pixel::RGBA8888 );
-
-    // Create the image
-    Dali::PixelBuffer* pixbuf = imageData.GetBuffer();
-    Dali::Vector4 outerColor = color;
-    if ( border )
-    {
-      outerColor = borderColor;
-    }
-
-    for( size_t i = 0; i < bitmapSize; ++i )
-    {
-      if( i == topLeft ||
-          i == topRight ||
-          i == bottomLeft ||
-          i == bottomRight )
-      {
-        pixbuf[i*4+0] = 0xFF * color.r;
-        pixbuf[i*4+1] = 0xFF * color.g;
-        pixbuf[i*4+2] = 0xFF * color.b;
-        pixbuf[i*4+3] = 0xFF * color.a;
-      }
-      else
-      {
-        pixbuf[i*4+0] = 0xFF * outerColor.r;
-        pixbuf[i*4+1] = 0xFF * outerColor.g;
-        pixbuf[i*4+2] = 0xFF * outerColor.b;
-        pixbuf[i*4+3] = 0xFF * outerColor.a;
-      }
-    }
-  }
-  else
-  {
-    imageData = Dali::BufferImage::New( bitmapWidth, bitmapWidth, Dali::Pixel::RGB888 );
-
-    // Create the image
-    Dali::PixelBuffer* pixbuf = imageData.GetBuffer();
-    Dali::Vector4 outerColor = color;
-    if ( border )
-    {
-      outerColor = borderColor;
-    }
-
-    for( size_t i = 0; i < bitmapSize; ++i )
-    {
-      if( i == topLeft ||
-          i == topRight ||
-          i == bottomLeft ||
-          i == bottomRight )
-      {
-        pixbuf[i*3+0] = 0xFF * color.r;
-        pixbuf[i*3+1] = 0xFF * color.g;
-        pixbuf[i*3+2] = 0xFF * color.b;
-      }
-      else
-      {
-        pixbuf[i*3+0] = 0xFF * outerColor.r;
-        pixbuf[i*3+1] = 0xFF * outerColor.g;
-        pixbuf[i*3+2] = 0xFF * outerColor.b;
-      }
-    }
-  }
-
-  imageData.Update();
-  image = Dali::ImageActor::New( imageData );
-  image.SetAnchorPoint( Dali::AnchorPoint::CENTER );
-  image.SetParentOrigin( Dali::ParentOrigin::CENTER );
-
-  // if( border )
-  // {
-  //   image.SetStyle( Dali::ImageActor::STYLE_NINE_PATCH );
-  //   image.SetNinePatchBorder( Dali::Vector4::ONE * (float)borderSize * 2.0f );
-  // }
-
-  return image;
-}
-
 } // anon namespace
 
 /**
@@ -675,7 +572,6 @@ EMSCRIPTEN_BINDINGS(dali_wrapper)
   emscripten::function("VersionString", &VersionString);
   emscripten::function("__createActor", &CreateActor);
   emscripten::function("__createHandle", &CreateHandle);
-  emscripten::function("__createSolidColorActor", &CreateSolidColorActor);
 
   //
   // Helper functions
