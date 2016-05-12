@@ -22,6 +22,7 @@
 #endif // DALI_PROFILE_UBUNTU
 #include <dirent.h>
 
+#include <dali/public-api/common/dali-common.h>
 #include <dali/integration-api/debug.h>
 #include <dali/integration-api/bitmap.h>
 #include <dali/integration-api/resource-types.h>
@@ -30,6 +31,10 @@
 #include "resource-loader/resource-loader.h"
 #include "image-loaders/image-loader.h"
 #include "portable/file-closer.h"
+
+
+// Dodgy externed global
+int DALI_EXPORT_API gPlatformFontSize=1;
 
 namespace Dali
 {
@@ -76,6 +81,9 @@ int TizenPlatformAbstraction::GetDefaultFontSize() const
 
 #ifndef DALI_PROFILE_UBUNTU
   vconf_get_int( VCONFKEY_SETAPPL_ACCESSIBILITY_FONT_SIZE, &fontSize );
+#else
+  fontSize = gPlatformFontSize;
+
 #endif // DALI_PROFILE_UBUNTU
 
   return fontSize;
