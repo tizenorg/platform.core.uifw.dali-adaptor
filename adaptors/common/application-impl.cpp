@@ -160,9 +160,6 @@ void Application::QuitFromMainLoop()
 {
   mAdaptor->Stop();
 
-  Dali::Application application(this);
-  mTerminateSignal.Emit( application );
-
   mFramework->Quit();
   // This will trigger OnTerminate(), below, after the main loop has completed.
 }
@@ -228,6 +225,9 @@ void Application::OnTerminate()
   }
 
   mWindow.Reset();
+
+  Dali::Application application(this);
+  mTerminateSignal.Emit( application );
 }
 
 void Application::OnPause()
