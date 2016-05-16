@@ -216,6 +216,8 @@ void WindowRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstract
   Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( egl );
   eglImpl.SwapBuffers();
 
+  mRenderNotification->Trigger();
+
   // When the window is deiconified, it approves the deiconify operation to window manager after rendering
   if(mNeedToApproveDeiconify)
   {
