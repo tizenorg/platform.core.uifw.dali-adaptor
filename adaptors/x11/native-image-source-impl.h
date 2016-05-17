@@ -75,6 +75,11 @@ public:
   void SetSource( Any source );
 
   /**
+   * @copydoc Dali::NativeImageSource::CheckSupportColorDepth( ColorDepth colorDepth )
+   */
+  bool CheckSupportColorDepth( ColorDepth colorDepth );
+
+  /**
    * destructor
    */
   ~NativeImageSource();

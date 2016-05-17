@@ -287,6 +287,11 @@ void NativeImageSource::SetSource( Any source )
   }
 }
 
+bool CheckSupportColorDepth( ColorDepth colorDepth )
+{
+  return true;
+}
+
 bool NativeImageSource::GlExtensionCreate()
 {
   // if the image existed previously delete it.
