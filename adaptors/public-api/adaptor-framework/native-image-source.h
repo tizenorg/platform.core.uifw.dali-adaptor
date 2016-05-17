@@ -136,6 +136,14 @@ public:
    */
   void SetSource( Any source );
 
+  /**
+   * @brief check if color depth is supported or not
+   *
+   * @SINCE_1_1.34
+   * @param[in] colorDepth check if supported or not
+   */
+  bool IsSupportedColorDepth( ColorDepth colorDepth );
+
 private:   // native image
 
   /**
