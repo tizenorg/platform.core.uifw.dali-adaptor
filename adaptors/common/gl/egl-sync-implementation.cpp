@@ -36,9 +36,9 @@
 #ifdef _ARCH_ARM_
 
 // function pointers
-static PFNEGLCREATESYNCKHRPROC     eglCreateSyncKHR = NULL;
-static PFNEGLCLIENTWAITSYNCKHRPROC eglClientWaitSyncKHR = NULL;
-static PFNEGLDESTROYSYNCKHRPROC    eglDestroySyncKHR = NULL;
+static PFNEGLCREATESYNCKHRPROC     eglCreateSyncKHRProc = NULL;
+static PFNEGLCLIENTWAITSYNCKHRPROC eglClientWaitSyncKHRProc = NULL;
+static PFNEGLDESTROYSYNCKHRPROC    eglDestroySyncKHRProc = NULL;
 
 #endif
 
@@ -56,7 +56,7 @@ EglSyncObject::EglSyncObject( EglImplementation& eglSyncImpl )
   mEglImplementation(eglSyncImpl)
 {
   EGLDisplay display = mEglImplementation.GetDisplay();
-  mEglSync = eglCreateSyncKHR( display, EGL_SYNC_FENCE_KHR, NULL );
+  mEglSync = eglCreateSyncKHRProc( display, EGL_SYNC_FENCE_KHR, NULL );
   if (mEglSync == EGL_NO_SYNC_KHR)
   {
     DALI_LOG_ERROR("eglCreateSyncKHR failed %#0.4x\n", eglGetError());
@@ -68,7 +68,7 @@ EglSyncObject::~EglSyncObject()
 {
   if( mEglSync != NULL )
   {
-    eglDestroySyncKHR( mEglImplementation.GetDisplay(), mEglSync );
+    eglDestroySyncKHRProc( mEglImplementation.GetDisplay(), mEglSync );
     EGLint error = eglGetError();
     if( EGL_SUCCESS != error )
     {
@@ -83,7 +83,7 @@ bool EglSyncObject::IsSynced()
 
   if( mEglSync != NULL )
   {
-    EGLint result = eglClientWaitSyncKHR( mEglImplementation.GetDisplay(), mEglSync, 0, 0ull );
+    EGLint result = eglClientWaitSyncKHRProc( mEglImplementation.GetDisplay(), mEglSync, 0, 0ull );
     EGLint error = eglGetError();
     if( EGL_SUCCESS != error )
     {
@@ -152,12 +152,12 @@ void EglSyncImplementation::InitializeEglSync()
 {
   if( ! mSyncInitializeFailed )
   {
-    eglCreateSyncKHR = (PFNEGLCREATESYNCKHRPROC)eglGetProcAddress("eglCreateSyncKHR");
-    eglClientWaitSyncKHR = (PFNEGLCLIENTWAITSYNCKHRPROC)eglGetProcAddress("eglClientWaitSyncKHR");
-    eglDestroySyncKHR = (PFNEGLDESTROYSYNCKHRPROC)eglGetProcAddress("eglDestroySyncKHR");
+    eglCreateSyncKHRProc = (PFNEGLCREATESYNCKHRPROC)eglGetProcAddress("eglCreateSyncKHR");
+    eglClientWaitSyncKHRProc = (PFNEGLCLIENTWAITSYNCKHRPROC)eglGetProcAddress("eglClientWaitSyncKHR");
+    eglDestroySyncKHRProc = (PFNEGLDESTROYSYNCKHRPROC)eglGetProcAddress("eglDestroySyncKHR");
   }
 
-  if( eglCreateSyncKHR && eglClientWaitSyncKHR && eglDestroySyncKHR )
+  if( eglCreateSyncKHRProc && eglClientWaitSyncKHRProc && eglDestroySyncKHRProc )
   {
     mSyncInitialized = true;
   }
