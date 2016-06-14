@@ -375,9 +375,9 @@ void TextInputManager::Reset()
 
 void TextInputManager::SetSurroundingText( std::string text, unsigned int cursor, unsigned int anchor )
 {
-  TextInputManager::SeatInfo& info = TextInputManager::Get().GetLastActiveSeat();
+  //TextInputManager::SeatInfo& info = TextInputManager::Get().GetLastActiveSeat();
 
-  wl_text_input_set_surrounding_text( info.mSeat->GetTextInputInterface(), text.c_str(), cursor, anchor );
+  //wl_text_input_set_surrounding_text( info.mSeat->GetTextInputInterface(), text.c_str(), cursor, anchor );
 
   wl_display_flush( mDisplay );
 }
