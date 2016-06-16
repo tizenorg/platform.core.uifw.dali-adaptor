@@ -107,12 +107,12 @@ struct EmscriptenTouchedSignal : public BaseSignalSlot
 
       switch(pt.state)
       {
-        case TouchPoint::Down:        { pointMap["state"] = "Down"; break; }
-        case TouchPoint::Up:          { pointMap["state"] = "Up"; break; }
-        case TouchPoint::Motion:      { pointMap["state"] = "Motion"; break; }
+        case PointState::DOWN:        { pointMap["state"] = "Down"; break; }
+        case PointState::UP:          { pointMap["state"] = "Up"; break; }
+        case PointState::MOTION:      { pointMap["state"] = "Motion"; break; }
         case TouchPoint::Leave:       { pointMap["state"] = "Leave"; break; }
-        case TouchPoint::Stationary:  { pointMap["state"] = "Stationary"; break; }
-        case TouchPoint::Interrupted: { pointMap["state"] = "Interrupted"; break; }
+        case PointState::STATIONARY:  { pointMap["state"] = "Stationary"; break; }
+        case PointState::INTERRUPTED: { pointMap["state"] = "Interrupted"; break; }
         case TouchPoint::Last:        { pointMap["state"] = "Last"; break; }
       };
 
@@ -145,12 +145,12 @@ struct EmscriptenTouchedSignal : public BaseSignalSlot
 
       switch(pt.state)
       {
-        case TouchPoint::Down:        { pointMap["state"] = "Down"; break; }
-        case TouchPoint::Up:          { pointMap["state"] = "Up"; break; }
-        case TouchPoint::Motion:      { pointMap["state"] = "Motion"; break; }
+        case PointState::DOWN:        { pointMap["state"] = "Down"; break; }
+        case PointState::UP:          { pointMap["state"] = "Up"; break; }
+        case PointState::MOTION:      { pointMap["state"] = "Motion"; break; }
         case TouchPoint::Leave:       { pointMap["state"] = "Leave"; break; }
-        case TouchPoint::Stationary:  { pointMap["state"] = "Stationary"; break; }
-        case TouchPoint::Interrupted: { pointMap["state"] = "Interrupted"; break; }
+        case PointState::STATIONARY:  { pointMap["state"] = "Stationary"; break; }
+        case PointState::INTERRUPTED: { pointMap["state"] = "Interrupted"; break; }
         case TouchPoint::Last:        { pointMap["state"] = "Last"; break; }
       };
 

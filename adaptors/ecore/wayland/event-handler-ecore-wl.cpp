@@ -228,14 +228,14 @@ struct EventHandler::Impl
 
     if ( touchEvent->window == (unsigned int)ecore_wl_window_id_get(handler->mImpl->mWindow) )
     {
-      TouchPoint::State state ( TouchPoint::Down );
+      TouchPoint::State state ( PointState::DOWN );
 
       // Check if the buttons field is set and ensure it's the primary touch button.
       // If this event was triggered by buttons other than the primary button (used for touch), then
       // just send an interrupted event to Core.
       if ( touchEvent->buttons && (touchEvent->buttons != PRIMARY_TOUCH_BUTTON_ID ) )
       {
-        state = TouchPoint::Interrupted;
+        state = PointState::INTERRUPTED;
       }
 
       TouchPoint point( touchEvent->multi.device, state, touchEvent->x, touchEvent->y );
@@ -255,7 +255,7 @@ struct EventHandler::Impl
 
     if ( touchEvent->window == (unsigned int)ecore_wl_window_id_get(handler->mImpl->mWindow) )
     {
-      TouchPoint point( touchEvent->multi.device, TouchPoint::Up, touchEvent->x, touchEvent->y );
+      TouchPoint point( touchEvent->multi.device, PointState::UP, touchEvent->x, touchEvent->y );
       handler->SendEvent( point, touchEvent->timestamp );
     }
 
@@ -290,7 +290,7 @@ struct EventHandler::Impl
 
     if ( touchEvent->window == (unsigned int)ecore_wl_window_id_get(handler->mImpl->mWindow) )
     {
-      TouchPoint point( touchEvent->multi.device, TouchPoint::Motion, touchEvent->x, touchEvent->y );
+      TouchPoint point( touchEvent->multi.device, PointState::MOTION, touchEvent->x, touchEvent->y );
       handler->SendEvent( point, touchEvent->timestamp );
     }
 
@@ -798,7 +798,7 @@ void EventHandler::Reset()
 
   // Any touch listeners should be told of the interruption.
   Integration::TouchEvent event;
-  TouchPoint point(0, TouchPoint::Interrupted, 0, 0);
+  TouchPoint point(0, PointState::INTERRUPTED, 0, 0);
   event.AddPoint( point );
 
   // First the touch event & related gesture events are queued
