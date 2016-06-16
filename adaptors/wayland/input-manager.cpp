@@ -126,7 +126,7 @@ void InputManager::PointerMotion( Seat* seat, unsigned int timestamp, float x, f
 {
   if( mWindowEventInterface )
   {
-    TouchPoint point ( POINTER_DEVICE_ID, TouchPoint::Motion, x , y);
+    TouchPoint point ( POINTER_DEVICE_ID, PointState::MOTION, x , y);
     mWindowEventInterface->TouchEvent( point, timestamp );
   }
 }
@@ -138,10 +138,10 @@ void InputManager::PointerButton( Seat* seat, unsigned int serial, unsigned int 
   {
     const Dali::Vector2& pointer( seat->GetLastPointerPosition() );
 
-    TouchPoint point ( POINTER_DEVICE_ID, TouchPoint::Up,  pointer.x,  pointer.y );
+    TouchPoint point ( POINTER_DEVICE_ID, PointState::UP,  pointer.x,  pointer.y );
     if( state == 1)
     {
-      point.state = TouchPoint::Down;
+      point.state = PointState::DOWN;
     }
     mWindowEventInterface->TouchEvent( point, timestamp );
   }
@@ -212,7 +212,7 @@ void InputManager::TouchDown( Seat* seat, unsigned int serial, unsigned int time
   {
     const Dali::Vector2& pointer( seat->GetLastPointerPosition() );
 
-    TouchPoint point ( touchId, TouchPoint::Down,  pointer.x,  pointer.y );
+    TouchPoint point ( touchId, PointState::DOWN,  pointer.x,  pointer.y );
     mWindowEventInterface->TouchEvent( point, timestamp );
   }
 }
@@ -224,7 +224,7 @@ void InputManager::TouchUp( Seat* seat, unsigned int serial, unsigned int timest
   {
     const Dali::Vector2& pointer( seat->GetLastPointerPosition() );
 
-    TouchPoint point ( touchId, TouchPoint::Up,  pointer.x,  pointer.y );
+    TouchPoint point ( touchId, PointState::UP,  pointer.x,  pointer.y );
     mWindowEventInterface->TouchEvent( point, timestamp );
   }
 }
@@ -235,7 +235,7 @@ void InputManager::TouchMotion( Seat* seat, unsigned int timestamp, int touchId,
   {
     const Dali::Vector2& pointer( seat->GetLastPointerPosition() );
 
-    TouchPoint point ( touchId, TouchPoint::Motion,  pointer.x,  pointer.y );
+    TouchPoint point ( touchId, PointState::MOTION,  pointer.x,  pointer.y );
     mWindowEventInterface->TouchEvent( point, timestamp );
   }
 }
@@ -253,7 +253,7 @@ void InputManager::TouchCancel( Seat* seat )
 
     // it looks like DALi just checks the first touch point for interruption
     // so touchId can be zero
-    TouchPoint point ( 0, TouchPoint::Interrupted,  pointer.x,  pointer.y );
+    TouchPoint point ( 0, PointState::INTERRUPTED,  pointer.x,  pointer.y );
     mWindowEventInterface->TouchEvent( point, 0 );
   }
 }

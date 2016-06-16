@@ -188,21 +188,21 @@ void XInput2::ProcessGenericEvent( XGenericEventCookie* cookie )
     case XI_TouchUpdate:
     case XI_Motion:
     {
-      point.state = TouchPoint::Motion;
+      point.state = PointState::MOTION;
       mEventInterface->TouchEvent( point, time );
       break;
     }
     case XI_TouchBegin:
     case XI_ButtonPress:
     {
-      point.state = TouchPoint::Down;
+      point.state = PointState::DOWN;
       mEventInterface->TouchEvent( point, time );
       break;
     }
     case XI_TouchEnd:
     case XI_ButtonRelease:
     {
-      point.state = TouchPoint::Up;
+      point.state = PointState::UP;
       mEventInterface->TouchEvent( point, time );
       break;
     }

@@ -481,17 +481,23 @@ struct EventHandler::Impl
 
     if ( touchEvent->window == handler->mImpl->mWindow )
     {
-      TouchPoint::State state ( TouchPoint::Down );
+      PointState::Type state ( PointState::DOWN );
 
       // Check if the buttons field is set and ensure it's the primary touch button.
       // If this event was triggered by buttons other than the primary button (used for touch), then
       // just send an interrupted event to Core.
       if ( touchEvent->buttons && (touchEvent->buttons != PRIMARY_TOUCH_BUTTON_ID ) )
       {
-        state = TouchPoint::Interrupted;
+        state = PointState::INTERRUPTED;
       }
 
-      TouchPoint point( touchEvent->multi.device, state, touchEvent->x, touchEvent->y );
+      Integration::Point point;
+      point.SetDeviceId( touchEvent->multi.device );
+      point.SetState( state );
+      point.SetScreenPosition( Vector2( touchEvent->x, touchEvent->y ) );
+      point.SetRadius( touchEvent->multi.radius, Vector2( touchEvent->multi.radius_x, touchEvent->multi.radius_y ) );
+      point.SetPressure( touchEvent->multi.pressure );
+      point.SetAngle( Degree( touchEvent->multi.angle ) );
       handler->SendEvent( point, touchEvent->timestamp );
     }
 
@@ -508,7 +514,13 @@ struct EventHandler::Impl
 
     if ( touchEvent->window == handler->mImpl->mWindow )
     {
-      TouchPoint point( touchEvent->multi.device, TouchPoint::Up, touchEvent->x, touchEvent->y );
+      Integration::Point point;
+      point.SetDeviceId( touchEvent->multi.device );
+      point.SetState( PointState::UP );
+      point.SetScreenPosition( Vector2( touchEvent->x, touchEvent->y ) );
+      point.SetRadius( touchEvent->multi.radius, Vector2( touchEvent->multi.radius_x, touchEvent->multi.radius_y ) );
+      point.SetPressure( touchEvent->multi.pressure );
+      point.SetAngle( Degree( touchEvent->multi.angle ) );
       handler->SendEvent( point, touchEvent->timestamp );
     }
 
@@ -525,7 +537,13 @@ struct EventHandler::Impl
 
     if ( touchEvent->window == handler->mImpl->mWindow )
     {
-      TouchPoint point( touchEvent->multi.device, TouchPoint::Motion, touchEvent->x, touchEvent->y );
+      Integration::Point point;
+      point.SetDeviceId( touchEvent->multi.device );
+      point.SetState( PointState::MOTION );
+      point.SetScreenPosition( Vector2( touchEvent->x, touchEvent->y ) );
+      point.SetRadius( touchEvent->multi.radius, Vector2( touchEvent->multi.radius_x, touchEvent->multi.radius_y ) );
+      point.SetPressure( touchEvent->multi.pressure );
+      point.SetAngle( Degree( touchEvent->multi.angle ) );
       handler->SendEvent( point, touchEvent->timestamp );
     }
 
@@ -1043,23 +1061,23 @@ struct EventHandler::Impl
           // mouse state : e->data.l[2] (0: mouse down, 1: mouse move, 2: mouse up)
           // x : e->data.l[3]
           // y : e->data.l[4]
-          TouchPoint::State state(TouchPoint::Down);
+          TouchPoint::State state(PointState::DOWN);
 
           if ((unsigned int)clientMessageEvent->data.l[2] == 0)
           {
-            state = TouchPoint::Down; // mouse down
+            state = PointState::DOWN; // mouse down
           }
           else if ((unsigned int)clientMessageEvent->data.l[2] == 1)
           {
-            state = TouchPoint::Motion; // mouse move
+            state = PointState::MOTION; // mouse move
           }
           else if ((unsigned int)clientMessageEvent->data.l[2] == 2)
           {
-            state = TouchPoint::Up; // mouse up
+            state = PointState::UP; // mouse up
           }
           else
           {
-            state = TouchPoint::Interrupted; // error
+            state = PointState::INTERRUPTED; // error
           }
 
           DALI_LOG_INFO(gClientMessageLogFilter, Debug::General,
@@ -1080,23 +1098,23 @@ struct EventHandler::Impl
           // mouse state : e->data.l[2] (0: mouse down, 1: mouse move, 2: mouse up)
           // x : e->data.l[3]
           // y : e->data.l[4]
-          TouchPoint::State state(TouchPoint::Down);
+          TouchPoint::State state(PointState::DOWN);
 
           if ((unsigned int)clientMessageEvent->data.l[2] == 0)
           {
-            state = TouchPoint::Down; // mouse down
+            state = PointState::DOWN; // mouse down
           }
           else if ((unsigned int)clientMessageEvent->data.l[2] == 1)
           {
-            state = TouchPoint::Motion; // mouse move
+            state = PointState::MOTION; // mouse move
           }
           else if ((unsigned int)clientMessageEvent->data.l[2] == 2)
           {
-            state = TouchPoint::Up; // mouse up
+            state = PointState::UP; // mouse up
           }
           else
           {
-            state = TouchPoint::Interrupted; // error
+            state = PointState::INTERRUPTED; // error
           }
 
           DALI_LOG_INFO(gClientMessageLogFilter, Debug::General,
@@ -1378,22 +1396,22 @@ struct EventHandler::Impl
     }
 
     // Create a touch point object.
-    TouchPoint::State touchPointState( TouchPoint::Down );
+    TouchPoint::State touchPointState( PointState::DOWN );
     if ( state == 0 )
     {
-      touchPointState = TouchPoint::Down; // Mouse down.
+      touchPointState = PointState::DOWN; // Mouse down.
     }
     else if ( state == 1 )
     {
-      touchPointState = TouchPoint::Motion; // Mouse move.
+      touchPointState = PointState::MOTION; // Mouse move.
     }
     else if ( state == 2 )
     {
-      touchPointState = TouchPoint::Up; // Mouse up.
+      touchPointState = PointState::UP; // Mouse up.
     }
     else
     {
-      touchPointState = TouchPoint::Interrupted; // Error.
+      touchPointState = PointState::INTERRUPTED; // Error.
     }
 
     // Send touch event to accessibility adaptor.
@@ -1406,7 +1424,7 @@ struct EventHandler::Impl
     {
       case 1:
       {
-        if( gestureType == GESTURE_TYPE_SINGLE_TAP || ( gestureType == GESTURE_TYPE_HOVER && touchPointState == TouchPoint::Motion ) )
+        if( gestureType == GESTURE_TYPE_SINGLE_TAP || ( gestureType == GESTURE_TYPE_HOVER && touchPointState == PointState::MOTION ) )
         {
           // Focus, read out.
           accessibilityAdaptor->HandleActionReadEvent( (unsigned int)xS, (unsigned int)yS, true /* allow read again */ );
@@ -1712,7 +1730,7 @@ EventHandler::~EventHandler()
   mGestureManager.Stop();
 }
 
-void EventHandler::SendEvent(TouchPoint& point, unsigned long timeStamp)
+void EventHandler::SendEvent(Integration::Point& point, unsigned long timeStamp)
 {
   if(timeStamp < 1)
   {
@@ -1724,7 +1742,7 @@ void EventHandler::SendEvent(TouchPoint& point, unsigned long timeStamp)
   Integration::TouchEventCombiner::EventDispatchType type = mCombiner.GetNextTouchEvent(point, timeStamp, touchEvent, hoverEvent);
   if(type != Integration::TouchEventCombiner::DispatchNone )
   {
-    DALI_LOG_INFO(gTouchEventLogFilter, Debug::General, "%d: Device %d: Button state %d (%.2f, %.2f)\n", timeStamp, point.deviceId, point.state, point.local.x, point.local.y);
+    DALI_LOG_INFO(gTouchEventLogFilter, Debug::General, "%d: Device %d: Button state %d (%.2f, %.2f)\n", timeStamp, point.GetDeviceId(), point.GetState(), point.GetScreenPosition().x, point.GetScreenPosition().y);
 
     // First the touch and/or hover event & related gesture events are queued
     if(type == Integration::TouchEventCombiner::DispatchTouch || type == Integration::TouchEventCombiner::DispatchBoth)
@@ -1798,7 +1816,9 @@ void EventHandler::SendRotationRequestEvent( )
 
 void EventHandler::FeedTouchPoint( TouchPoint& point, int timeStamp)
 {
-  SendEvent(point, timeStamp);
+  Integration::Point convertedPoint( point );
+
+  SendEvent(convertedPoint, timeStamp);
 }
 
 void EventHandler::FeedWheelEvent( WheelEvent& wheelEvent )
@@ -1823,7 +1843,8 @@ void EventHandler::Reset()
 
   // Any touch listeners should be told of the interruption.
   Integration::TouchEvent event;
-  TouchPoint point(0, TouchPoint::Interrupted, 0, 0);
+  Integration::Point point;
+  point.SetState( PointState::INTERRUPTED );
   event.AddPoint( point );
 
   // First the touch event & related gesture events are queued

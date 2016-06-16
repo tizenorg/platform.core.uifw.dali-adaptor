@@ -246,7 +246,7 @@ void EventHandler::Reset()
 
   // Any touch listeners should be told of the interruption.
   Integration::TouchEvent event;
-  TouchPoint point(0, TouchPoint::Interrupted, 0, 0);
+  TouchPoint point(0, PointState::INTERRUPTED, 0, 0);
   event.AddPoint( point );
 
   // First the touch event & related gesture events are queued
