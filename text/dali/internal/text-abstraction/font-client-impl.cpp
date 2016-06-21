@@ -175,7 +175,10 @@ FontId FontClient::GetFontId( const FontPath& path, PointSize26Dot6 pointSize, F
 {
   CreatePlugin();
 
-  return mPlugin->GetFontId( path, pointSize, faceIndex );
+  return mPlugin->GetFontId( path,
+                             pointSize,
+                             pointSize,
+                             faceIndex );
 }
 
 FontId FontClient::GetFontId( const FontDescription& fontDescription,
@@ -186,14 +189,15 @@ FontId FontClient::GetFontId( const FontDescription& fontDescription,
 
   return mPlugin->GetFontId( fontDescription,
                              pointSize,
+                             pointSize,
                              faceIndex );
 }
 
-void FontClient::GetFontMetrics( FontId fontId, FontMetrics& metrics, int desiredFixedSize )
+void FontClient::GetFontMetrics( FontId fontId, FontMetrics& metrics )
 {
   CreatePlugin();
 
-  return mPlugin->GetFontMetrics( fontId, metrics, desiredFixedSize );
+  return mPlugin->GetFontMetrics( fontId, metrics );
 }
 
 GlyphIndex FontClient::GetGlyphIndex( FontId fontId, Character charcode )
@@ -203,11 +207,11 @@ GlyphIndex FontClient::GetGlyphIndex( FontId fontId, Character charcode )
   return mPlugin->GetGlyphIndex( fontId, charcode );
 }
 
-bool FontClient::GetGlyphMetrics( GlyphInfo* array, uint32_t size, GlyphType type, bool horizontal, int desiredFixedSize )
+bool FontClient::GetGlyphMetrics( GlyphInfo* array, uint32_t size, GlyphType type, bool horizontal )
 {
   CreatePlugin();
 
-  return mPlugin->GetGlyphMetrics( array, size, type, horizontal, desiredFixedSize );
+  return mPlugin->GetGlyphMetrics( array, size, type, horizontal );
 }
 
 BufferImage FontClient::CreateBitmap( FontId fontId, GlyphIndex glyphIndex )

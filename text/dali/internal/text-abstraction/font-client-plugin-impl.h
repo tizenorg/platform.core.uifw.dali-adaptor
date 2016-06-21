@@ -211,13 +211,18 @@ struct FontClient::Plugin
    *
    * @param[in] cacheDescription Whether to cache the font description.
    */
-  FontId GetFontId( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex, bool cacheDescription = true );
+  FontId GetFontId( const FontPath& path,
+                    PointSize26Dot6 requestedSize,
+                    PointSize26Dot6 actualSize,
+                    FaceIndex faceIndex,
+                    bool cacheDescription = true );
 
   /**
    * @copydoc Dali::FontClient::GetFontId( const FontDescription& fontDescription, PointSize26Dot6 pointSize, FaceIndex faceIndex )
    */
   FontId GetFontId( const FontDescription& fontDescription,
-                    PointSize26Dot6 pointSize,
+                    PointSize26Dot6 requestedSize,
+                    PointSize26Dot6 actualSize,
                     FaceIndex faceIndex );
 
   /**
@@ -244,7 +249,7 @@ struct FontClient::Plugin
   /**
    * @copydoc Dali::FontClient::GetFontMetrics()
    */
-  void GetFontMetrics( FontId fontId, FontMetrics& metrics, int desiredFixedSize );
+  void GetFontMetrics( FontId fontId, FontMetrics& metrics );
 
   /**
    * @copydoc Dali::FontClient::GetGlyphIndex()
@@ -254,17 +259,17 @@ struct FontClient::Plugin
   /**
    * @copydoc Dali::FontClient::GetGlyphMetrics()
    */
-  bool GetGlyphMetrics( GlyphInfo* array, uint32_t size, GlyphType type, bool horizontal, int desiredFixedSize );
+  bool GetGlyphMetrics( GlyphInfo* array, uint32_t size, GlyphType type, bool horizontal );
 
   /**
    * Helper for GetGlyphMetrics when using bitmaps
    */
-  bool GetBitmapMetrics( GlyphInfo* array, uint32_t size, bool horizontal, int desiredFixedSize );
+  bool GetBitmapMetrics( GlyphInfo* array, uint32_t size, bool horizontal );
 
   /**
    * Helper for GetGlyphMetrics when using vectors
    */
-  bool GetVectorMetrics( GlyphInfo* array, uint32_t size, bool horizontal, int desiredFixedSize );
+  bool GetVectorMetrics( GlyphInfo* array, uint32_t size, bool horizontal );
 
   /**
    * @copydoc Dali::FontClient::CreateBitmap()
@@ -340,25 +345,18 @@ private:
    * @brief Creates a font.
    *
    * @param[in] path The path to the font file name.
-   * @param[in] pointSize The font point size.
+   * @param[in] requestedSize The requested size
+   * @param[in] actualSize The actual size (for color emojis)
    * @param[in] faceIndex A face index.
    * @param[in] cacheDescription Whether to cache the font description.
    *
    * @return The font id.
    */
-  FontId CreateFont( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex, bool cacheDescription );
-
-  /**
-   * @brief Creates a fixed size font
-   *
-   * @param[in] path The path to the font file name.
-   * @param[in] pointSize The font point size( must be an available size ).
-   * @param[in] faceIndex A face index.
-   * @param[in] cacheDescription Whether to cache the font description.
-   *
-   * @return The font id.
-   */
-  FontId CreateFixedSizeFont( const FontPath& path, PointSize26Dot6 pointSize, FaceIndex faceIndex, bool cacheDescription );
+  FontId CreateFont( const FontPath& path,
+                     PointSize26Dot6 requestedSize,
+                     PointSize26Dot6 actualSize,
+                     FaceIndex faceIndex,
+                     bool cacheDescription );
 
   /**
    *
