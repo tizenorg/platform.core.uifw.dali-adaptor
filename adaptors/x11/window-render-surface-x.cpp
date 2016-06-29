@@ -59,8 +59,9 @@ WindowRenderSurface::WindowRenderSurface( Dali::PositionSize positionSize,
                                           const std::string& className,
                                           bool isTransparent)
 : EcoreXRenderSurface( positionSize, surface, name, isTransparent ),
+  mClassName(className),
   mNeedToApproveDeiconify(false),
-  mClassName(className)
+  mWindowMapped(false)
 {
   DALI_LOG_INFO( gRenderSurfaceLogFilter, Debug::Verbose, "Creating Window\n" );
   Init( surface );
@@ -221,6 +222,12 @@ void WindowRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstract
     XSync(display, false);
 
     mNeedToApproveDeiconify = false;
+  }
+
+  if( !mWindowMapped )
+  {
+    Map();
+    mWindowMapped = true;
   }
 }
 
