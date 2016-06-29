@@ -161,6 +161,7 @@ private: // Data
   Ecore_X_Window   mX11Window; ///< X-Window
   bool             mNeedToApproveDeiconify; ///< Whether need to send ECORE_X_ATOM_E_DEICONIFY_APPROVE event
   std::string      mClassName;          ///< The class name of the window
+  int              mFrameCount;         ///< The frame-count used to decide when to map the window
 
 }; // class WindowRenderSurface
 
