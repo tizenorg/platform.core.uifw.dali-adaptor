@@ -154,7 +154,10 @@ void Application::Lower()
 void Application::Quit()
 {
   // Actually quit the application.
-  AddIdle( MakeCallback( this, &Application::QuitFromMainLoop ) );
+  if( !AddIdle( MakeCallback( this, &Application::QuitFromMainLoop ) ) )
+  {
+    QuitFromMainLoop();
+  }
 }
 
 void Application::QuitFromMainLoop()
