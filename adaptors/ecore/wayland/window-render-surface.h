@@ -159,7 +159,8 @@ private: // Data
 
   Ecore_Wl_Window*   mWlWindow; ///< Wayland-Window
   wl_egl_window*     mEglWindow;
-  bool             mNeedToApproveDeiconify; ///< Whether need to send ECORE_X_ATOM_E_DEICONIFY_APPROVE event
+  bool               mNeedToApproveDeiconify : 1; ///< Whether need to send ECORE_X_ATOM_E_DEICONIFY_APPROVE event
+  bool               mWindowMapped           : 1; ///< Whether the window has been mapped
 
 }; // class WindowRenderSurface
 

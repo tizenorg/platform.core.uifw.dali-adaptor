@@ -159,8 +159,9 @@ protected:
 private: // Data
 
   Ecore_X_Window   mX11Window; ///< X-Window
-  bool             mNeedToApproveDeiconify; ///< Whether need to send ECORE_X_ATOM_E_DEICONIFY_APPROVE event
   std::string      mClassName;          ///< The class name of the window
+  bool             mNeedToApproveDeiconify : 1; ///< Whether need to send ECORE_X_ATOM_E_DEICONIFY_APPROVE event
+  bool             mWindowMapped           : 1; ///< Whether the window has been mapped
 
 }; // class WindowRenderSurface
 

@@ -51,7 +51,8 @@ WindowRenderSurface::WindowRenderSurface( Dali::PositionSize positionSize,
                                           bool isTransparent)
 : EcoreWlRenderSurface( positionSize, surface, name, isTransparent ),
   mEglWindow( NULL ),
-  mNeedToApproveDeiconify( false )
+  mNeedToApproveDeiconify( false ),
+  mWindowMapped(false)
 {
   DALI_LOG_INFO( gRenderSurfaceLogFilter, Debug::Verbose, "Creating Window\n" );
   Init( surface );
@@ -230,6 +231,14 @@ void WindowRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstract
     //FIXME
 
     mNeedToApproveDeiconify = false;
+  }
+  else
+  {
+    if(!mWindowMapped)
+    {
+      Map();
+      mWindowMapped = true;
+    }
   }
 }
 
