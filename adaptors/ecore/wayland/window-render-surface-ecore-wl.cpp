@@ -41,7 +41,8 @@ namespace ECore
 namespace
 {
 
-const int MINIMUM_DIMENSION_CHANGE( 1 ); ///< Minimum change for window to be considered to have moved
+const int MINIMUM_DIMENSION_CHANGE        = 1; ///< Minimum change for window to be considered to have moved
+const int SHOW_WINDOW_WAYLAND_FRAME_COUNT = 1; ///< Number of frames to render before mapping window
 
 } // unnamed namespace
 
@@ -51,7 +52,8 @@ WindowRenderSurface::WindowRenderSurface( Dali::PositionSize positionSize,
                                           bool isTransparent)
 : EcoreWlRenderSurface( positionSize, surface, name, isTransparent ),
   mEglWindow( NULL ),
-  mNeedToApproveDeiconify( false )
+  mNeedToApproveDeiconify( false ),
+  mFrameCount( 0 )
 {
   DALI_LOG_INFO( gRenderSurfaceLogFilter, Debug::Verbose, "Creating Window\n" );
   Init( surface );
@@ -230,6 +232,20 @@ void WindowRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstract
     //FIXME
 
     mNeedToApproveDeiconify = false;
+    // We are resuming from a Deiconify message, don't show window until next frame.
+    //todor: Do we do this? will this catch resume?
+    mFrameCount = 0;
+  }
+
+  // Check if we should show the window on this frame.
+  // We do a 2-stage check here after the window is displayed, so only 1 comparison is done.
+  if( mFrameCount <= SHOW_WINDOW_WAYLAND_FRAME_COUNT )
+  {
+    if( mFrameCount++ == SHOW_WINDOW_WAYLAND_FRAME_COUNT )
+    {
+      // Show the window
+      Map();
+    }
   }
 }
 
