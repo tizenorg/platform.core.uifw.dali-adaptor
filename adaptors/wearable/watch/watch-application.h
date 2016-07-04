@@ -191,6 +191,8 @@ public: // Not intended for application developers
    * @internal
    * @brief Internal constructor
    * @SINCE_1_1.37
+   * @PRIVLEVEL_PUBLIC
+   * @PRIVILEGE_ALARM_SET
    */
   explicit DALI_INTERNAL WatchApplication(Internal::Adaptor::WatchApplication* implementation);
 };
