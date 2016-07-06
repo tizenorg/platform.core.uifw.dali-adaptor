@@ -27,6 +27,8 @@
 #include <trigger-event.h>
 #include <gl/egl-implementation.h>
 #include <base/display-connection.h>
+#include <dlog.h>
+#include <app.h>
 
 namespace Dali
 {
@@ -260,6 +262,10 @@ void WindowRenderSurface::CreateWlRenderable()
   {
       DALI_ASSERT_ALWAYS(0 && "Failed to create X window");
   }
+  char *app_id = NULL;
+  app_get_id(&app_id);
+  dlog_print(DLOG_INFO, "NativeTCT", "WindowRenderSurface::CreateWlRenderable() appID = %s", app_id);
+  ecore_wl_window_class_name_set(mWlWindow, app_id);
 
   //FIXME
 }
