@@ -1,5 +1,5 @@
-#ifndef __DALI_ECORE_X_PIXMAP_RENDER_SURFACE_H__
-#define __DALI_ECORE_X_PIXMAP_RENDER_SURFACE_H__
+#ifndef __DALI_TIZEN_BUFFER_RENDER_SURFACE_H__
+#define __DALI_TIZEN_BUFFER_RENDER_SURFACE_H__
 
 /*
  * Copyright (c) 2014 Samsung Electronics Co., Ltd.
@@ -18,45 +18,51 @@
  *
  */
 
+// EXTERNAL INCLUDES
+#include <tbm_surface.h>
+#include <dali/public-api/common/dali-common.h>
+
 // INTERNAL INCLUDES
-#include <ecore-wl-render-surface.h>
+#include <render-surface.h>
+#include <egl-interface.h>
 
 namespace Dali
-{
-
-namespace ECore
 {
 
 /**
  * Ecore X11 implementation of render surface.
  */
-class PixmapRenderSurface : public EcoreWlRenderSurface
+class DALI_IMPORT_API NativeSourceRenderSurface : public Dali::RenderSurface
 {
 public:
 
   /**
     * Uses an Wayland surface to render to.
     * @param [in] positionSize the position and size of the surface
-    * @param [in] surface can be a Wayland-window (type must be unsigned int).
     * @param [in] name optional name of surface passed in
     * @param [in] isTransparent if it is true, surface has 32 bit color depth, otherwise, 24 bit
     */
-  PixmapRenderSurface( Dali::PositionSize positionSize,
-                       Any surface,
-                       const std::string& name,
-                       bool isTransparent = false);
+  NativeSourceRenderSurface( Dali::PositionSize positionSize,
+                             const std::string& name,
+                             bool isTransparent = false );
 
   /**
    * @copydoc Dali::RenderSurface::~RenderSurface
    */
-  virtual ~PixmapRenderSurface();
+  virtual ~NativeSourceRenderSurface();
 
 public: // API
 
   /**
-   * @copydoc Dali::ECore::EcoreWlRenderSurface::GetDrawable()
+   * @brief Sets the render notification trigger to call when render thread is completed a frame
+   *
+   * @param renderNotification to use
    */
-  virtual Ecore_Wl_Window* GetDrawable();
+  void SetRenderNotification( TriggerEventInterface* renderNotification );
+
+  /**
+   */
+  virtual tbm_surface_h GetDrawable();
 
   /**
    * @brief GetSurface
@@ -112,25 +118,9 @@ public: // from Dali::RenderSurface
    */
   virtual void SetThreadSynchronization( ThreadSynchronizationInterface& threadSynchronization );
 
+  virtual RenderSurface::Type GetSurfaceType();
+
 private:
-  enum SyncMode
-  {
-    SYNC_MODE_NONE,
-    SYNC_MODE_WAIT
-  };
-
-  /**
-   * Set the sync mode.
-   * @param[in] syncMode The sync mode
-   */
-  void SetSyncMode( SyncMode syncMode );
-
-  /**
-   * If sync mode is WAIT, then acquire a lock. This prevents render thread from
-   * continuing until the pixmap has been drawn by the compositor.
-   * It must be released for rendering to continue.
-   */
-  void AcquireLock();
 
   /**
    * Release any locks.
@@ -142,17 +132,14 @@ private:
    */
   virtual void CreateWlRenderable();
 
-  /**
-   * @copydoc Dali::Internal::Adaptor::ECore::RenderSurface::UseExistingRenderable
-   */
-  virtual void UseExistingRenderable( unsigned int surfaceId );
-
 private: // Data
+
+  struct Impl;
+
+  Impl* mImpl;
 
 };
 
-} // namespace ECore
-
 } // namespace Dali
 
-#endif // __DALI_ECORE_X_PIXMAP_RENDER_SURFACE_H__
+#endif // __DALI_TIZEN_BUFFER_RENDER_SURFACE_H__

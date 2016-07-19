@@ -126,6 +126,11 @@ unsigned int EcoreWlRenderSurface::GetSurfaceId( Any surface ) const
   return surfaceId;
 }
 
+RenderSurface::Type EcoreWlRenderSurface::GetSurfaceType()
+{
+  return RendeerSurface::ECORE_RENDER_SURFACE;
+}
+
 } // namespace ECore
 
 } // namespace Dali
