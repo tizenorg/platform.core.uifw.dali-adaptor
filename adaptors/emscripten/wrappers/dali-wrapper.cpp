@@ -855,10 +855,10 @@ EMSCRIPTEN_BINDINGS(dali_wrapper)
     .value("HINT_DOESNT_MODIFY_GEOMETRY", Dali::ShaderEffect::HINT_DOESNT_MODIFY_GEOMETRY)
 ;
 
-  enum_<Dali::Shader::ShaderHints>("ShaderHints")
-    .value("HINT_NONE",                      Dali::Shader::HINT_NONE)
-    .value("HINT_OUTPUT_IS_TRANSPARENT",     Dali::Shader::HINT_OUTPUT_IS_TRANSPARENT)
-    .value("HINT_MODIFIES_GEOMETRY",         Dali::Shader::HINT_MODIFIES_GEOMETRY)
+  enum_<Dali::Shader::Hints::Value>("ShaderHints")
+    .value("NONE",                      Dali::Shader::Hints::NONE)
+    .value("OUTPUT_IS_TRANSPARENT",     Dali::Shader::Hints::OUTPUT_IS_TRANSPARENT)
+    .value("MODIFIES_GEOMETRY",         Dali::Shader::Hints::MODIFIES_GEOMETRY)
 ;
 
   enum_<Dali::Animation::EndAction>("EndAction")
