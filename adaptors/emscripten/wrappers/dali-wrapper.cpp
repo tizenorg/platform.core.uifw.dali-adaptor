@@ -872,7 +872,7 @@ EMSCRIPTEN_BINDINGS(dali_wrapper)
     .value("Cubic", Dali::Animation::Interpolation::Cubic)
 ;
 
-  enum_<Dali::Geometry::GeometryType>("GeometryType")
+  enum_<Dali::Geometry::Type>("Type")
     .value("POINTS",          Dali::Geometry::POINTS)
     .value("LINES",           Dali::Geometry::LINES)
     .value("LINE_LOOP",       Dali::Geometry::LINE_LOOP)
