@@ -62,6 +62,46 @@ public:
     CONNECTED
   };
 
+  enum Type
+  {
+    INDICATOR_TYPE_UNKNOWN,
+    INDICATOR_TYPE_1,
+    INDICATOR_TYPE_2
+  };
+
+  /**
+   * copied from ecore_evas_extn_engine.h
+   */
+  enum BufferType
+  {
+    BUFFER_TYPE_SHM = 0,        ///< shared memory-based buffer backend
+    BUFFER_TYPE_DRI2_PIXMAP,    ///< dri2 pixmap-based buffer backend
+    BUFFER_TYPE_EVASGL_PIXMAP,  ///< pixmap backend for Evas GL only (DEPRECATED)
+    BUFFER_TYPE_GL_PIXMAP,      ///< double buffered GL pixmap backend
+  };
+
+public:
+  class Observer
+  {
+  public:
+    /**
+     * Notify the observer if the indicator type changes
+     * @param[in] type The new indicator type
+     */
+    virtual void IndicatorTypeChanged( Type type ) = 0;
+
+    /**
+     * Notify the observer when the upload has completed.
+     * @param[in] indicator The indicator that has finished uploading.
+     */
+    virtual void IndicatorClosed(Indicator* indicator) = 0;
+
+    /**
+     * Notify the observer when the indicator visible status is changed.
+     * @param[in] isShowing Whether the indicator is visible.
+     */
+    virtual void IndicatorVisibilityChanged( bool isVisible ) = 0;
+  };
 
 protected:
   /**
@@ -423,6 +463,11 @@ private:
 
   int                              mCurrentSharedFile;   ///< Current shared file number
   SharedFileInfo                   mSharedFileInfo[SHARED_FILE_NUMBER];    ///< Table to store shared file info
+
+  BufferType                       mSharedBufferType;    ///< Shared buffer type which is used to render indicator
+
+  struct Impl; ///< Contains Ecore specific information
+  Impl* mImpl; ///< Created on construction and destroyed on destruction.
 
   bool                             mBackgroundVisible;   ///< Indicate whether background is visible
 };
