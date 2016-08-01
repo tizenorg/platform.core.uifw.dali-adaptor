@@ -81,6 +81,9 @@ public:
    */
   bool InitializeEgl(EglInterface& egl);
 
+  /**
+   * @brief Sets surface type
+   */
   void SetSurfaceType( RenderSurface::Type type );
 
 public:
@@ -92,9 +95,15 @@ public:
 
 protected:
 
-  EGLNativeDisplayType GetNativeSourceDisplay();
+  /**
+   * @brief Gets display connection for native surface
+   */
+  EGLNativeDisplayType GetNativeDisplay();
 
-  void ReleaseNativeSourceDisplay();
+  /**
+   * @brief Release display connection for native surface
+   */
+  void ReleaseNativeDisplay();
 
   // Undefined
   DisplayConnection(const DisplayConnection&);

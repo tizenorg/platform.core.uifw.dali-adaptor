@@ -91,9 +91,9 @@ public:
 
 protected:
 
-  EGLNativeDisplayType GetNativeSourceDisplay();
+  EGLNativeDisplayType GetNativeDisplay();
 
-  void ReleaseNativeSourceDisplay();
+  void ReleaseNativeDisplay();
 
   // Undefined
   DisplayConnection(const DisplayConnection&);

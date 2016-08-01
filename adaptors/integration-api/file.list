@@ -9,8 +9,8 @@ adaptor_integration_api_header_files = \
 adaptor_integration_wayland_api_header_files = \
   $(adaptor_integration_api_dir)/wayland/wl-types.h \
   $(adaptor_integration_api_dir)/wayland/ecore-wl-render-surface.h \
-  $(adaptor_integration_api_dir)/wayland/native-source-render-surface.h \
-  $(adaptor_integration_api_dir)/native-source-render-surface-factory.h
+  $(adaptor_integration_api_dir)/wayland/native-render-surface.h \
+  $(adaptor_integration_api_dir)/native-render-surface-factory.h
 
 adaptor_integration_x11_api_header_files = \
   $(adaptor_integration_api_dir)/x11/ecore-x-types.h \

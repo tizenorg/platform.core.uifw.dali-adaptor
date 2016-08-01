@@ -23,7 +23,7 @@
 #include <dali/integration-api/debug.h>
 
 // INTERNAL HEADERS
-#include <native-source-render-surface.h>
+#include <native-render-surface.h>
 
 namespace Dali
 {
@@ -47,9 +47,9 @@ DisplayConnection::DisplayConnection()
 
 DisplayConnection::~DisplayConnection()
 {
-  if( mSurfaceType == RenderSurface::NATIVE_SOURCE_RENDER_SURFACE )
+  if( mSurfaceType == RenderSurface::NATIVE_RENDER_SURFACE )
   {
-    ReleaseNativeSourceDisplay();
+    ReleaseNativeDisplay();
   }
 }
 
@@ -79,9 +79,9 @@ void DisplayConnection::SetSurfaceType( RenderSurface::Type type )
 {
   mSurfaceType = type;
 
-  if( mSurfaceType == RenderSurface::NATIVE_SOURCE_RENDER_SURFACE )
+  if( mSurfaceType == RenderSurface::NATIVE_RENDER_SURFACE )
   {
-    mDisplay = GetNativeSourceDisplay();
+    mDisplay = GetNativeDisplay();
   }
   else
   {
