@@ -1,5 +1,5 @@
-#ifndef __DALI_TIZEN_BUFFER_RENDER_SURFACE_H__
-#define __DALI_TIZEN_BUFFER_RENDER_SURFACE_H__
+#ifndef __DALI_NATIVE_RENDER_SURFACE_H__
+#define __DALI_NATIVE_RENDER_SURFACE_H__
 
 /*
  * Copyright (c) 2014 Samsung Electronics Co., Ltd.
@@ -39,7 +39,7 @@ class TriggerEventInterface;
 /**
  * Ecore X11 implementation of render surface.
  */
-class DALI_IMPORT_API NativeSourceRenderSurface : public Dali::RenderSurface
+class DALI_IMPORT_API NativeRenderSurface : public Dali::RenderSurface
 {
 public:
 
@@ -49,14 +49,14 @@ public:
     * @param [in] name optional name of surface passed in
     * @param [in] isTransparent if it is true, surface has 32 bit color depth, otherwise, 24 bit
     */
-  NativeSourceRenderSurface( Dali::PositionSize positionSize,
+  NativeRenderSurface( Dali::PositionSize positionSize,
                              const std::string& name,
                              bool isTransparent = false );
 
   /**
    * @copydoc Dali::RenderSurface::~RenderSurface
    */
-  virtual ~NativeSourceRenderSurface();
+  virtual ~NativeRenderSurface();
 
 public: // API
 
@@ -68,19 +68,28 @@ public: // API
   void SetRenderNotification( TriggerEventInterface* renderNotification );
 
   /**
+   * @brief Get the surface as an tbm surface
    */
   virtual tbm_surface_h GetDrawable();
 
   /**
-   * @brief GetSurface
+   * @brief Get the surface
    *
-   * @return pixmap
+   * @return tbm surface
    */
   virtual Any GetSurface();
 
-  virtual void ReleaseNativeSource();
+  /**
+   * @brief Release surface
+   */
+  virtual void ReleaseSurface();
 
 public: // from Dali::RenderSurface
+
+  /**
+   * @copydoc Dali::RenderSurface::GetPositionSize()
+   */
+  virtual PositionSize GetPositionSize() const;
 
   /**
    * @copydoc Dali::RenderSurface::InitializeEgl()
@@ -101,6 +110,16 @@ public: // from Dali::RenderSurface
    * @copydoc Dali::RenderSurface::ReplaceEGLSurface()
    */
   virtual bool ReplaceEGLSurface( EglInterface& egl );
+
+  /**
+   * @copydoc Dali::RenderSurface::MoveResize()
+   */
+  virtual void MoveResize( Dali::PositionSize positionSize);
+
+  /**
+   * @copydoc Dali::RenderSurface::SetViewMode()
+   */
+  void SetViewMode( ViewMode viewMode );
 
   /**
    * @copydoc Dali::RenderSurface::StartRender()
@@ -127,25 +146,17 @@ public: // from Dali::RenderSurface
    */
   virtual void SetThreadSynchronization( ThreadSynchronizationInterface& threadSynchronization );
 
+  /**
+   * @copydoc Dali::RenderSurface::GetSurfaceType()
+   */
   virtual RenderSurface::Type GetSurfaceType();
-
-  virtual PositionSize GetPositionSize() const;
-
-  virtual void MoveResize( Dali::PositionSize positionSize );
-
-  virtual void SetViewMode( ViewMode viewMode );
 
 private:
 
   /**
-   * Release any locks.
+   * Create tbm surface
    */
-  void ReleaseLock();
-
-  /**
-   * Create XPixmap
-   */
-  virtual void CreateWlRenderable();
+  virtual void CreateNativeRenderable();
 
 private: // Data
 
@@ -157,4 +168,4 @@ private: // Data
 
 } // namespace Dali
 
-#endif // __DALI_TIZEN_BUFFER_RENDER_SURFACE_H__
+#endif // __DALI_NATIVE_RENDER_SURFACE_H__

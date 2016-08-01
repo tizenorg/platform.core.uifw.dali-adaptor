@@ -35,12 +35,12 @@ namespace Internal
 namespace Adaptor
 {
 
-EGLNativeDisplayType DisplayConnection::GetNativeSourceDisplay()
+EGLNativeDisplayType DisplayConnection::GetNativeDisplay()
 {
   return (EGLNativeDisplayType)tbm_bufmgr_init( -1 );
 }
 
-void DisplayConnection::ReleaseNativeSourceDisplay()
+void DisplayConnection::ReleaseNativeDisplay()
 {
   if( mDisplay )
   {

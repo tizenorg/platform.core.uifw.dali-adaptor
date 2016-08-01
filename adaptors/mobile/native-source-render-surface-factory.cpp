@@ -16,17 +16,17 @@
  */
 
 // INTERNAL INCLUDES
-#include <native-source-render-surface.h>
+#include <native-render-surface.h>
 
 namespace Dali
 {
 
-DALI_EXPORT_API NativeSourceRenderSurface* CreateNativeSourceSurface(
+DALI_EXPORT_API NativeRenderSurface* CreateNativeSurface(
                                      PositionSize       positionSize,
                                      const std::string& name,
                                      bool               isTransparent)
 {
-  return new NativeSourceRenderSurface( positionSize, name, isTransparent );
+  return new NativeRenderSurface( positionSize, name, isTransparent );
 }
 
 } // namespace Dali

@@ -40,7 +40,7 @@ namespace Dali
 extern Debug::Filter* gRenderSurfaceLogFilter;
 #endif
 
-struct NativeSourceRenderSurface::Impl
+struct NativeRenderSurface::Impl
 {
   Impl( Dali::PositionSize positionSize, const std::string& name, bool isTransparent )
   : mPosition( positionSize ),
@@ -67,16 +67,16 @@ struct NativeSourceRenderSurface::Impl
   ConditionalWait mTbmSurfaceCondition;
 };
 
-NativeSourceRenderSurface::NativeSourceRenderSurface(Dali::PositionSize positionSize,
+NativeRenderSurface::NativeRenderSurface(Dali::PositionSize positionSize,
                                          const std::string& name,
                                          bool isTransparent)
 : mImpl( new Impl( positionSize, name, isTransparent ) )
 {
   ecore_wl_init(NULL);
-  CreateWlRenderable();
+  CreateNativeRenderable();
 }
 
-NativeSourceRenderSurface::~NativeSourceRenderSurface()
+NativeRenderSurface::~NativeRenderSurface()
 {
   // release the surface if we own one
   if( mImpl->mOwnSurface )
@@ -99,24 +99,24 @@ NativeSourceRenderSurface::~NativeSourceRenderSurface()
   }
 }
 
-void NativeSourceRenderSurface::SetRenderNotification( TriggerEventInterface* renderNotification )
+void NativeRenderSurface::SetRenderNotification( TriggerEventInterface* renderNotification )
 {
   mImpl->mRenderNotification = renderNotification;
 }
 
-tbm_surface_h NativeSourceRenderSurface::GetDrawable()
+tbm_surface_h NativeRenderSurface::GetDrawable()
 {
   ConditionalWait::ScopedLock lock( mImpl->mTbmSurfaceCondition );
 
   return mImpl->mConsumeSurface;
 }
 
-Any NativeSourceRenderSurface::GetSurface()
+Any NativeRenderSurface::GetSurface()
 {
   return Any( NULL );
 }
 
-void NativeSourceRenderSurface::InitializeEgl( EglInterface& egl )
+void NativeRenderSurface::InitializeEgl( EglInterface& egl )
 {
   DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
@@ -125,7 +125,7 @@ void NativeSourceRenderSurface::InitializeEgl( EglInterface& egl )
   eglImpl.ChooseConfig( true, mImpl->mColorDepth );
 }
 
-void NativeSourceRenderSurface::CreateEglSurface( EglInterface& egl )
+void NativeRenderSurface::CreateEglSurface( EglInterface& egl )
 {
   DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
@@ -134,7 +134,7 @@ void NativeSourceRenderSurface::CreateEglSurface( EglInterface& egl )
   eglImpl.CreateSurfaceWindow( (EGLNativeWindowType)mImpl->mTbmQueue, mImpl->mColorDepth );
 }
 
-void NativeSourceRenderSurface::DestroyEglSurface( EglInterface& egl )
+void NativeRenderSurface::DestroyEglSurface( EglInterface& egl )
 {
   DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
@@ -142,7 +142,7 @@ void NativeSourceRenderSurface::DestroyEglSurface( EglInterface& egl )
   eglImpl.DestroySurface();
 }
 
-bool NativeSourceRenderSurface::ReplaceEGLSurface( EglInterface& egl )
+bool NativeRenderSurface::ReplaceEGLSurface( EglInterface& egl )
 {
   DALI_LOG_TRACE_METHOD( gRenderSurfaceLogFilter );
 
@@ -157,7 +157,7 @@ bool NativeSourceRenderSurface::ReplaceEGLSurface( EglInterface& egl )
     tbm_surface_queue_destroy( mImpl->mTbmQueue );
   }
 
-  CreateWlRenderable();
+  CreateNativeRenderable();
 
   if( !mImpl->mTbmQueue )
   {
@@ -169,17 +169,17 @@ bool NativeSourceRenderSurface::ReplaceEGLSurface( EglInterface& egl )
   return eglImpl.ReplaceSurfaceWindow( (EGLNativeWindowType)mImpl->mTbmQueue ); // reinterpret_cast does not compile
 }
 
-void NativeSourceRenderSurface::StartRender()
+void NativeRenderSurface::StartRender()
 {
 }
 
-bool NativeSourceRenderSurface::PreRender( EglInterface&, Integration::GlAbstraction& )
+bool NativeRenderSurface::PreRender( EglInterface&, Integration::GlAbstraction& )
 {
   // nothing to do for pixmaps
   return true;
 }
 
-void NativeSourceRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, DisplayConnection* displayConnection, bool replacingSurface )
+void NativeRenderSurface::PostRender( EglInterface& egl, Integration::GlAbstraction& glAbstraction, DisplayConnection* displayConnection, bool replacingSurface )
 {
   Internal::Adaptor::EglImplementation& eglImpl = static_cast<Internal::Adaptor::EglImplementation&>( egl );
   eglImpl.SwapBuffers();
@@ -212,35 +212,35 @@ void NativeSourceRenderSurface::PostRender( EglInterface& egl, Integration::GlAb
 
 }
 
-void NativeSourceRenderSurface::StopRender()
+void NativeRenderSurface::StopRender()
 {
   ReleaseLock();
 }
 
-PositionSize NativeSourceRenderSurface::GetPositionSize() const
+PositionSize NativeRenderSurface::GetPositionSize() const
 {
   return mImpl->mPosition;
 }
 
-void NativeSourceRenderSurface::MoveResize( Dali::PositionSize positionSize )
+void NativeRenderSurface::MoveResize( Dali::PositionSize positionSize )
 {
 }
 
-void NativeSourceRenderSurface::SetViewMode( ViewMode viewMode )
+void NativeRenderSurface::SetViewMode( ViewMode viewMode )
 {
 }
 
-void NativeSourceRenderSurface::SetThreadSynchronization( ThreadSynchronizationInterface& threadSynchronization )
+void NativeRenderSurface::SetThreadSynchronization( ThreadSynchronizationInterface& threadSynchronization )
 {
   mImpl->mThreadSynchronization = &threadSynchronization;
 }
 
-RenderSurface::Type NativeSourceRenderSurface::GetSurfaceType()
+RenderSurface::Type NativeRenderSurface::GetSurfaceType()
 {
-  return RenderSurface::NATIVE_SOURCE_RENDER_SURFACE;
+  return RenderSurface::NATIVE_RENDER_SURFACE;
 }
 
-void NativeSourceRenderSurface::CreateWlRenderable()
+void NativeRenderSurface::CreateNativeRenderable()
 {
   // check we're creating one with a valid size
   DALI_ASSERT_ALWAYS( mImpl->mPosition.width > 0 && mImpl->mPosition.height > 0 && "Pixmap size is invalid" );
@@ -257,7 +257,7 @@ void NativeSourceRenderSurface::CreateWlRenderable()
   }
 }
 
-void NativeSourceRenderSurface::ReleaseNativeSource()
+void NativeRenderSurface::ReleaseSurface()
 {
   if( mImpl->mConsumeSurface )
   {
@@ -266,7 +266,7 @@ void NativeSourceRenderSurface::ReleaseNativeSource()
   }
 }
 
-void NativeSourceRenderSurface::ReleaseLock()
+void NativeRenderSurface::ReleaseLock()
 {
   if( mImpl->mThreadSynchronization )
   {

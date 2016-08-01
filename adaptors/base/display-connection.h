@@ -51,7 +51,9 @@ public:
 
   /**
    * @brief Create an initialized DisplayConnection.
+   * Native surface will need this instead of DisplayConnection::New()
    *
+   * @param[in] type Render surface type
    * @return A handle to a newly allocated DisplayConnection resource.
    */
   static DisplayConnection* New( RenderSurface::Type type );
