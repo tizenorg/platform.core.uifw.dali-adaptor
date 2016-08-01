@@ -1,5 +1,5 @@
-#ifndef __DALI_INTEGRATION_NATIVE_SOURCE_RENDER_SURFACE_FACTORY_H__
-#define __DALI_INTEGRATION_NATIVE_SOURCE_RENDER_SURFACE_FACTORY_H__
+#ifndef __DALI_INTEGRATION_NATIVE_RENDER_SURFACE_FACTORY_H__
+#define __DALI_INTEGRATION_NATIVE_RENDER_SURFACE_FACTORY_H__
 
 /*
  * Copyright (c) 2014 Samsung Electronics Co., Ltd.
@@ -28,20 +28,20 @@
 namespace Dali
 {
 
-class NativeSourceRenderSurface;
+class NativeRenderSurface;
 
 /**
- * Surface factory function for native source
- * A native source surface is created.
+ * Factory function for native surface
+ * A native surface is created.
  *
  * @param [in] positionSize the position and size of the surface to create
  * @param [in] name Name of surface passed in
  * @param [in] isTransparent Whether the surface has an alpha channel
  */
-NativeSourceRenderSurface* CreateNativeSourceSurface( PositionSize positionSize,
-                                                      const std::string& name,
-                                                      bool isTransparent );
+NativeRenderSurface* CreateNativeSurface( PositionSize positionSize,
+                                                const std::string& name,
+                                                bool isTransparent );
 
 } // namespace Dali
 
-#endif // __DALI_INTEGRATION_NATIVE_SOURCE_RENDER_SURFACE_FACTORY_H__
+#endif // __DALI_INTEGRATION_NATIVE_RENDER_SURFACE_FACTORY_H__
