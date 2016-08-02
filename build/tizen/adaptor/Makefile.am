@@ -94,10 +94,6 @@ adaptor_tv_dir = ../../../adaptors/tv
 include ../../../adaptors/tv/file.list
 endif
 
-# IVI
-adaptor_mobile_dir = ../../../adaptors/mobile
-include ../../../adaptors/mobile/file.list
-
 # Public API
 adaptor_public_api_dir = ../../../adaptors/public-api
 include ../../../adaptors/public-api/file.list
