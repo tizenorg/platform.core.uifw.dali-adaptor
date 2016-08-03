@@ -102,6 +102,29 @@ class Application;
  * @endcode
  *
  * When the above options are found, they are stripped from argv, and argc is updated appropriately.
+ * Usage example: -
+ *
+ * @code
+ * int main (void)
+ * {
+ *   const char* argList[] =
+ *   {
+ *       "program",
+ *       "--width", "800",
+ *       "--height", "1000",
+ *       "--dpi", "3x4",
+ *       "--no-vsync",
+ *       "--help"
+ *   };
+ *   int argc( sizeof( argList ) / sizeof( argList[0] ) );
+ *   char** argv = const_cast<char**>(argList);
+ *
+ *   Application app = Application::New( &argc, &argv );
+ *   MyTestApp testApp( app );
+ *   app.MainLoop();
+ * }
+ * @endcode
+ *
  * @SINCE_1_0.0
  */
 class DALI_IMPORT_API Application : public BaseHandle
