@@ -106,6 +106,19 @@ public:
    */
   void HideClipboard();
 
+  /**
+  * @brief get clipboard window visibility.
+  */
+  bool IsVisible();
+
+  /**
+   * @brief Send or receive the string on call-back from clipboard server
+   * @param[in] type           True for set send buffer / False for set receive buffer
+   * @param[in] event         The event information.
+   * @return chat*              Sent or received buffer according to given type
+   */
+  DALI_INTERNAL char* ExcuteBuffered( int type, void *event );
+
 };
 } // namespace Dali
 
