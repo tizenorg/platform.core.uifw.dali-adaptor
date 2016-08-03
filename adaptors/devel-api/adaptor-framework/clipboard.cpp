@@ -39,29 +39,40 @@ Clipboard Clipboard::Get()
 {
   return Internal::Adaptor::Clipboard::Get();
 }
+
 bool Clipboard::SetItem( const std::string &itemData)
 {
-  return GetImplementation(*this).SetItem( itemData );
+  return Internal::Adaptor::Clipboard::GetImplementation(*this).SetItem( itemData );
 }
 
 std::string Clipboard::GetItem( unsigned int index )
 {
-  return GetImplementation(*this).GetItem( index );
+  return Internal::Adaptor::Clipboard::GetImplementation(*this).GetItem( index );
 }
 
 unsigned int Clipboard::NumberOfItems()
 {
-  return GetImplementation(*this).NumberOfItems();
+  return Internal::Adaptor::Clipboard::GetImplementation(*this).NumberOfItems();
 }
 
 void Clipboard::ShowClipboard()
 {
-  GetImplementation(*this).ShowClipboard();
+  Internal::Adaptor::Clipboard::GetImplementation(*this).ShowClipboard();
 }
 
 void Clipboard::HideClipboard()
 {
-  GetImplementation(*this).HideClipboard();
+  Internal::Adaptor::Clipboard::GetImplementation(*this).HideClipboard(false);
+}
+
+bool Clipboard::IsVisible()
+{
+  return Internal::Adaptor::Clipboard::GetImplementation(*this).IsVisible();
+}
+
+char *Clipboard::ExcuteBuffered( int type, void *event )
+{
+  return Internal::Adaptor::Clipboard::GetImplementation(*this).ExcuteBuffered(type, event);
 }
 
 } // namespace Dali

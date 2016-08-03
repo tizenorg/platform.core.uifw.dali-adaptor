@@ -111,10 +111,19 @@ void Clipboard::ShowClipboard()
 {
 }
 
-void Clipboard::HideClipboard()
+void Clipboard::HideClipboard(bool skipFirstHide)
 {
 }
 
+bool Clipboard::IsVisible()
+{
+  return false;
+}
+
+char* Clipboard::ExcuteBuffered( int type, void *event )
+{
+  return NULL;
+}
 
 } // namespace Adaptor
 
