@@ -83,7 +83,17 @@ public:
   /**
    * @copydoc Dali::Clipboard::HideClipboard()
    */
-  void HideClipboard();
+  void HideClipboard(bool skipFirstHide);
+
+  /**
+  * @copydoc Dali::Clipboard::IsVisible()
+  */
+  bool IsVisible();
+
+  /**
+  * @copydoc Dali::Clipboard::ExcuteBuffered()
+  */
+  char* ExcuteBuffered( int type, void *event );
 
 private:
 
@@ -95,26 +105,27 @@ private:
 
   Impl* mImpl;
 
-}; // class clipboard
+public:
 
+inline static Internal::Adaptor::Clipboard& GetImplementation(Dali::Clipboard& clipboard)
+{
+  DALI_ASSERT_ALWAYS( clipboard && "Clipboard handle is empty" );
+  BaseObject& handle = clipboard.GetBaseObject();
+  return static_cast<Internal::Adaptor::Clipboard&>(handle);
+}
+
+inline static const  Internal::Adaptor::Clipboard& GetImplementation(const Dali::Clipboard& clipboard)
+{
+  DALI_ASSERT_ALWAYS( clipboard && "Clipboard handle is empty" );
+  const BaseObject& handle = clipboard.GetBaseObject();
+  return static_cast<const Internal::Adaptor::Clipboard&>(handle);
+}
+
+}; // class clipboard
 
 } // namespace Adaptor
 
 } // namespace Internal
-
-  inline static Internal::Adaptor::Clipboard& GetImplementation(Dali::Clipboard& clipboard)
-  {
-    DALI_ASSERT_ALWAYS( clipboard && "Clipboard handle is empty" );
-    BaseObject& handle = clipboard.GetBaseObject();
-    return static_cast<Internal::Adaptor::Clipboard&>(handle);
-  }
-
-  inline static const  Internal::Adaptor::Clipboard& GetImplementation(const Dali::Clipboard& clipboard)
-  {
-    DALI_ASSERT_ALWAYS( clipboard && "Clipboard handle is empty" );
-    const BaseObject& handle = clipboard.GetBaseObject();
-    return static_cast<const Internal::Adaptor::Clipboard&>(handle);
-  }
 
 } // namespace Dali
 

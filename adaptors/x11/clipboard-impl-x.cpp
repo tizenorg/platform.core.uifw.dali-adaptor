@@ -190,7 +190,7 @@ void Clipboard::ShowClipboard()
   ECore::WindowInterface::SendXEvent( ecore_x_display_get(), cbhmWin, False, NoEventMask, atomCbhmMsg, 8, SHOW );
 }
 
-void Clipboard::HideClipboard()
+void Clipboard::HideClipboard(bool skipFirstHide)
 {
   Ecore_X_Window cbhmWin = ECore::WindowInterface::GetWindow();
   // Launch the clipboard window
